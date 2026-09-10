@@ -296,6 +296,7 @@ def map_ctml_general_fields(trial_schema, trial_data) -> dict:
 
     try:    
         trial_schema['nct_id'] = nct_id
+        trial_schema['age'] = map_age_group(trial_data)
         trial_schema['long_title'] = trial_data['protocolSection']['identificationModule']['officialTitle']
         trial_schema['principal_investigator_institution'] = trial_data['protocolSection']['identificationModule']['organization']['fullName']
         trial_schema['principal_investigator'] = 'NA' # overwrriten later if a PI is found in overall officials list
@@ -522,14 +523,76 @@ def _enrich_genomic_criteria(nct_id: str, genomic_criteria: list, criteria_text:
     
     return genomic_criteria
 
+# Conversion factors to years for every unit clinicaltrials.gov uses in
+# minimumAge. Paediatric trials routinely state ages in months, weeks or days,
+# so restricting this to "Years" silently drops the lower age bound.
+_AGE_UNIT_IN_YEARS = {
+    "year": 1.0,
+    "month": 1.0 / 12.0,
+    "week": 1.0 / 52.1775,
+    "day": 1.0 / 365.25,
+    "hour": 1.0 / (365.25 * 24),
+    "minute": 1.0 / (365.25 * 24 * 60),
+}
+
+
+def map_age_group(trial_data: dict) -> str:
+    """
+    Derive the CTML `age` label from the trial's stdAges bands.
+
+    The schema default is "Adults", which is wrong for any trial enrolling
+    children. Labels are configurable in src/trial_config.py because the
+    vocabulary MatchMiner accepts here is deployment-specific.
+    """
+    std_ages = tdh.safe_get(trial_data, ['protocolSection', 'eligibilityModule', 'stdAges']) or []
+    bands = {a.upper() for a in std_ages}
+    enrols_children = 'CHILD' in bands
+    enrols_adults = bool(bands & {'ADULT', 'OLDER_ADULT'})
+
+    if enrols_children and enrols_adults:
+        return getattr(config, 'AGE_LABEL_ALL', 'All')
+    if enrols_children:
+        return getattr(config, 'AGE_LABEL_CHILDREN', 'Children')
+    if enrols_adults:
+        return getattr(config, 'AGE_LABEL_ADULTS', 'Adults')
+
+    logger.warning(f"No stdAges on {get_nct_id(trial_data)}; leaving age as schema default")
+    return cs.get_ctml_schema()['age']
+
+
 def map_age_numerical(trial_data: dict) -> str:
-    minimum_age = tdh.safe_get(trial_data, ['protocolSection','eligibilityModule','minimumAge'])
-    if minimum_age:
-        min_age_components = minimum_age.split()
-        if len(min_age_components) > 1 and min_age_components[1].lower() == "years":
-            min_age = f">={min_age_components[0]}"
-            return min_age
-    return ""
+    """
+    Map minimumAge to a CTML age_numerical expression, in years.
+
+    Handles every unit clinicaltrials.gov emits (singular and plural), not just
+    "Years". Sub-year ages become decimals - 6 Months -> ">=0.5" - so that
+    infant and neonatal trials keep a usable lower bound.
+    """
+    minimum_age = tdh.safe_get(trial_data, ['protocolSection', 'eligibilityModule', 'minimumAge'])
+    if not minimum_age:
+        return ""
+
+    components = minimum_age.split()
+    if len(components) < 2:
+        logger.warning(f"Could not parse minimumAge {minimum_age!r}; omitting age_numerical")
+        return ""
+
+    try:
+        value = float(components[0])
+    except ValueError:
+        logger.warning(f"Non-numeric minimumAge {minimum_age!r}; omitting age_numerical")
+        return ""
+
+    unit = components[1].lower().rstrip('s')  # "Months" -> "month", "Year" -> "year"
+    if unit not in _AGE_UNIT_IN_YEARS:
+        logger.warning(f"Unknown age unit in {minimum_age!r}; omitting age_numerical")
+        return ""
+
+    years = round(value * _AGE_UNIT_IN_YEARS[unit], 2)
+    # Keep whole years as integers (">=18"); express the rest to 2dp (">=0.5").
+    if years == int(years):
+        return f">={int(years)}"
+    return f">={years}"
 
 def map_her2_er_pr_status(nct_id: str, eligibilityCriteria: str, keywords:list):    
     result = ai.get_her2_er_pr_status(nct_id, eligibilityCriteria, keywords)

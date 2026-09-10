@@ -79,7 +79,7 @@ These keep the default values from the CTML template:
 
 | CTML field | Default value |
 |------------|----------------|
-| `age` | `Adults` |
+| `age` | Derived from `stdAges`: `All` (enrols children and adults), `Children` (children only), `Adults` (no child band). Labels configurable in `src/trial_config.py`. |
 | `data_table4` | `Interventional` |
 | `protocol_type` | `INTERVENTIONAL` |
 | `status` | `open to accrual` |
@@ -156,7 +156,7 @@ These are derived from **global** eligibility text (plus NCT conditions/keywords
 | CTML clinical field | Primary NCT / text sources | How the value is obtained |
 |---------------------|----------------------------|---------------------------|
 | `oncotree_primary_diagnosis` | `protocolSection.conditionsModule.conditions` (+ fallback) | See [Diagnosis (OncoTree)](#diagnosis-oncotree). |
-| `age_numerical` | `protocolSection.eligibilityModule.minimumAge` | Only if age is given in **years** (e.g. `18 Years` → `>=18`). Other units are omitted. |
+| `age_numerical` | `protocolSection.eligibilityModule.minimumAge` | Converted to years for **all** units (e.g. `18 Years` → `>=18`, `6 Months` → `>=0.5`, `29 Days` → `>=0.08`). Whole years stay integers; sub-year ages use 2 decimals. |
 | `gender` | `protocolSection.eligibilityModule.sex` | `MALE` → `Male`, `FEMALE` → `Female`. `ALL` or other values → field omitted. |
 | `disease_status` | Global eligibility text + `conditionsModule.keywords` | AI reads text and keywords; values must be in `yaml_clinical_schema` — see [Allowed values](#allowed-values-authoritative-schema). |
 | `her2_status`, `er_status`, `pr_status` | Global eligibility text + keywords | AI; only kept if value is a recognized status (see allowed values). |
@@ -253,7 +253,7 @@ Each entry lives under `clinical:`. **Allowed values** are defined in [`yaml_cli
 | Field | Populated by nct2ctml? | Notes |
 |-------|-------------------------|--------|
 | `oncotree_primary_diagnosis` | Yes | OncoTree name or `_SOLID_` / `_LIQUID_`; not an enum in `data_model.py` — see [Diagnosis (OncoTree)](#diagnosis-oncotree) |
-| `age_numerical` | Yes | From NCT minimum age when unit is years (e.g. `>=18`) |
+| `age_numerical` | Yes | From NCT minimum age, converted to years from any unit (e.g. `>=18`, `>=0.5`) |
 | `gender` | Yes | From NCT sex; only maps `Male` / `Female` (other NCT sex values omitted) |
 | `disease_status` | Yes | AI from global eligibility + keywords - Currently this field is not involved in matching the criteria to patients
 | `her2_status`, `er_status`, `pr_status` | Yes | AI; values not in schema `allowed` or `Unknown` are dropped by the converter |
@@ -313,7 +313,7 @@ Use this when reviewing a generated CTML file against the NCT record.
 - [ ] Arm-level diagnoses (if any) match **that arm’s** cohort wording in eligibility, not another cohort.
 
 ### Clinical match
-- [ ] Minimum age on NCT matches `age_numerical` (years only).
+- [ ] Minimum age on NCT matches `age_numerical` (expressed in years; months/weeks/days are converted, e.g. `6 Months` → `>=0.5`).
 - [ ] Sex restriction matches `gender` (if present).
 - [ ] Disease stage words in eligibility (metastatic, recurrent, untreated, etc.) match `disease_status`.
 - [ ] HER2/ER/PR/PD-L1/MMR/MSI statements in eligibility match biomarker fields (if present).
