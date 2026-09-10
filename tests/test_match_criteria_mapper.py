@@ -438,43 +438,68 @@ class TestContradictoryGenomicCriteria(unittest.TestCase):
                         "protein_change": "p.V600E"}}
     TP53_EXC = {"genomic": {"hugo_symbol": "TP53", "variant_category": "!Mutation"}}
 
-    def test_drops_gene_required_and_excluded(self):
-        inc, exc, dropped = resolve_contradictory_genes([self.MYCN_AMP], [self.MYCN_NONE])
-        self.assertEqual(dropped, ["MYCN"])
+    NBL_TEXT = ("High risk neuroblastoma defined as either: INSS stage 2, 3, 4 and 4s "
+                "with MYCN amplification, or INSS stage 4 without MYCN amplification "
+                "aged > 12 months at diagnosis.")
+    GLIOMA_TEXT = "Histologically diagnosed H3 K27M-mutant diffuse glioma (new diagnosis)."
+
+    def test_cohort_wording_drops_both_sides(self):
+        # "with ... or without" means both cohorts enrol, so the net
+        # requirement on the gene is none.
+        inc, exc, notes = resolve_contradictory_genes(
+            [self.MYCN_AMP], [self.MYCN_NONE], self.NBL_TEXT)
         self.assertEqual(inc, [])
+        self.assertEqual(exc, [])
+        self.assertIn("alternative cohorts", notes[0])
+
+    def test_spurious_exclusion_keeps_the_inclusion(self):
+        # Disease names embed gene names, so a disease mention in an unrelated
+        # exclusion is misread as a genomic exclusion. The inclusion is right.
+        h3_inc = {"genomic": {"hugo_symbol": "H3F3B", "variant_category": "Any Variation"}}
+        h3_exc = {"genomic": {"hugo_symbol": "H3F3B", "variant_category": "!Any Variation"}}
+        inc, exc, notes = resolve_contradictory_genes([h3_inc], [h3_exc], self.GLIOMA_TEXT)
+        self.assertEqual(inc, [h3_inc])
+        self.assertEqual(exc, [])
+        self.assertIn("spurious exclusion", notes[0])
+
+    def test_defaults_to_keeping_inclusion_without_text(self):
+        inc, exc, _ = resolve_contradictory_genes([self.MYCN_AMP], [self.MYCN_NONE])
+        self.assertEqual(inc, [self.MYCN_AMP])
         self.assertEqual(exc, [])
 
     def test_same_category_negation_also_contradicts(self):
         mycn_not_cnv = {"genomic": {"hugo_symbol": "MYCN",
                                     "variant_category": "!Copy Number Variation"}}
-        _, _, dropped = resolve_contradictory_genes([self.MYCN_AMP], [mycn_not_cnv])
-        self.assertEqual(dropped, ["MYCN"])
+        _, _, notes = resolve_contradictory_genes(
+            [self.MYCN_AMP], [mycn_not_cnv], self.NBL_TEXT)
+        self.assertTrue(notes)
 
     def test_leaves_unrelated_inclusion_and_exclusion_alone(self):
-        inc, exc, dropped = resolve_contradictory_genes([self.BRAF], [self.TP53_EXC])
-        self.assertEqual(dropped, [])
+        inc, exc, notes = resolve_contradictory_genes([self.BRAF], [self.TP53_EXC])
+        self.assertEqual(notes, [])
         self.assertEqual(inc, [self.BRAF])
         self.assertEqual(exc, [self.TP53_EXC])
 
-    def test_drops_only_the_contradictory_gene(self):
-        inc, exc, dropped = resolve_contradictory_genes(
-            [self.MYCN_AMP, self.BRAF], [self.MYCN_NONE, self.TP53_EXC])
-        self.assertEqual(dropped, ["MYCN"])
+    def test_touches_only_the_contradictory_gene(self):
+        inc, exc, notes = resolve_contradictory_genes(
+            [self.MYCN_AMP, self.BRAF], [self.MYCN_NONE, self.TP53_EXC], self.NBL_TEXT)
+        self.assertEqual(len(notes), 1)
         self.assertEqual(inc, [self.BRAF])
         self.assertEqual(exc, [self.TP53_EXC])
 
-    def test_schema_conversion_yields_no_genomic_constraint(self):
+    def test_cohort_trial_yields_no_genomic_constraint(self):
         # The trial keeps its clinical criteria and matches neuroblastoma
         # patients regardless of MYCN status, instead of matching nobody.
-        result = convert_to_ctml_genomic_schema([self.MYCN_AMP], [self.MYCN_NONE])
+        result = convert_to_ctml_genomic_schema(
+            [self.MYCN_AMP], [self.MYCN_NONE], self.NBL_TEXT)
         self.assertEqual(result, {})
 
     def test_different_categories_do_not_contradict(self):
         # Requiring a mutation while excluding a fusion is satisfiable.
         braf_fusion_exc = {"genomic": {"hugo_symbol": "BRAF",
                                        "variant_category": "!Structural Variation"}}
-        _, _, dropped = resolve_contradictory_genes([self.BRAF], [braf_fusion_exc])
-        self.assertEqual(dropped, [])
+        _, _, notes = resolve_contradictory_genes([self.BRAF], [braf_fusion_exc])
+        self.assertEqual(notes, [])
 
 
 class TestFindUnsatisfiableGenes(unittest.TestCase):

@@ -64,7 +64,11 @@ MAPPING_CUTOFF_DAYS = 1
 # Guard rails for self-hosted models.
 # LLM_REQUEST_TIMEOUT_SECONDS bounds every LLM HTTP call; without it a runaway
 # generation loop blocks the pipeline indefinitely.
-LLM_REQUEST_TIMEOUT_SECONDS = 600
+# 2048 tokens at the ~2.4 tok/s a 14B manages on a 16 GB M3 needs ~850s, so the
+# timeout must exceed that or it fires before num_predict can cap a runaway.
+LLM_REQUEST_TIMEOUT_SECONDS = 1200
 # Ollama defaults num_ctx to 4096, too small for the genomic prompts.
-OLLAMA_NUM_CTX = 16384
+# Prompts peak around 12k chars (~3k tokens), so 8192 is ample; 16384 only adds
+# KV cache pressure on a machine already swapping under the 9.3 GB model.
+OLLAMA_NUM_CTX = 8192
 OLLAMA_NUM_PREDICT = 2048

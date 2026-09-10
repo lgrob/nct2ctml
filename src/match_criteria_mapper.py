@@ -179,24 +179,48 @@ def _base_category(variant_category: str) -> str:
     return (variant_category or "").lstrip("!").strip().lower()
 
 
-def resolve_contradictory_genes(inclusions: list, exclusions: list) -> tuple[list, list, list]:
+# Wording in the inclusion text that signals genuine alternative cohorts,
+# i.e. the trial enrols patients both with and without the alteration.
+_COHORT_NEGATION_CUES = (
+    "without", "non-amplified", "not amplified", "negative for", "absence of",
+    "lack of", "wild-type", "wildtype", "wild type", "non-mutated", "unmutated",
+)
+
+
+def resolve_contradictory_genes(inclusions: list, exclusions: list,
+                                inclusion_text: str = "") -> tuple[list, list, list]:
     """
-    Drop constraints on genes that are required and forbidden at the same time.
+    Reconcile genes that are required and forbidden at the same time.
 
-    Inclusions are OR-ed and exclusions AND-ed, then the two are AND-ed
-    together, so a gene appearing on both sides makes the whole match tree
-    unsatisfiable and the trial matches no patient at all.
+    Inclusions are OR-ed and exclusions AND-ed, then the two are AND-ed, so a
+    gene on both sides makes the tree unsatisfiable: the trial matches nobody,
+    silently. There are two quite different causes, and they need opposite
+    treatment.
 
-    This nearly always comes from alternative-cohort wording, e.g. SIOPEN
-    high-risk neuroblastoma: "stage 2, 3, 4, 4s WITH MYCN amplification, or
-    stage 4 WITHOUT MYCN amplification". Both cohorts enrol, so the trial's
-    net requirement on that gene is none - dropping it is closer to the
-    protocol than keeping either side, and unlike keeping them it does not
-    silently reduce the trial to zero matches.
+    1. A spurious exclusion. Oncology disease names embed gene names -
+       "H3 K27M-mutant diffuse glioma", "BCR-ABL positive ALL",
+       "EGFR-mutant NSCLC" - so a disease mention inside an unrelated
+       exclusion (say a prior-therapy rule) gets misread as a genomic
+       exclusion. Observed on NCT05580562, where "since the initial diagnosis
+       of H3 K27M-mutant diffuse glioma" in a bevacizumab exclusion produced
+       H3F3B !Any Variation. Here the inclusion is right and the exclusion is
+       an artefact, so only the exclusion is dropped. This is the common case,
+       because disease-name-contains-gene-name is ubiquitous.
 
-    Returns (inclusions, exclusions, dropped_genes). The two-level CTML shape
-    cannot express per-cohort criteria, so the dropped genes are reported for
-    the manual review step rather than quietly discarded.
+    2. Genuine alternative cohorts. The inclusion text itself negates the
+       gene, e.g. SIOPEN high-risk neuroblastoma: "stage 2, 3, 4, 4s WITH MYCN
+       amplification, or stage 4 WITHOUT MYCN amplification". Both cohorts
+       enrol, so the net requirement on that gene is none and both sides go.
+       The two-level CTML shape cannot express per-cohort criteria, so this
+       loses the cohort distinction either way; dropping both at least keeps
+       the trial matchable rather than matching nobody.
+
+    `inclusion_text` distinguishes them. Without it, case 1 is assumed, since
+    it is both more common and the safer error: keeping a real requirement is
+    better than discarding it on the strength of a fabricated exclusion.
+
+    Returns (inclusions, exclusions, notes) where notes describes what was
+    dropped and why, for the manual review step.
     """
     def gene_of(alteration):
         return (alteration.get("genomic", {}) or {}).get("hugo_symbol")
@@ -221,17 +245,37 @@ def resolve_contradictory_genes(inclusions: list, exclusions: list) -> tuple[lis
     if not contradictory:
         return inclusions, exclusions, []
 
-    dropped = sorted(set(contradictory))
-    for gene in dropped:
+    text = (inclusion_text or "").lower()
+    cohort_genes, artefact_genes = set(), set()
+    for gene in sorted(set(contradictory)):
+        if any(cue in text for cue in _COHORT_NEGATION_CUES):
+            cohort_genes.add(gene)
+        else:
+            artefact_genes.add(gene)
+
+    notes = []
+    for gene in sorted(artefact_genes):
         logger.warning(
             f"Contradictory genomic criteria for {gene}: required and excluded in the "
-            f"same match tree, which matches no patient. Dropping both constraints - "
-            f"the trial most likely enrols alternative cohorts with and without the "
-            f"alteration. Flag for manual review."
+            f"same match tree. The inclusion text does not negate {gene}, so the "
+            f"exclusion is most likely a disease-name mention misread as a genomic "
+            f"exclusion. Keeping the inclusion and dropping the exclusion."
         )
-    keep_inc = [a for a in inclusions if gene_of(a) not in dropped]
-    keep_exc = [a for a in exclusions if gene_of(a) not in dropped]
-    return keep_inc, keep_exc, dropped
+        notes.append(f"{gene}: dropped spurious exclusion")
+    for gene in sorted(cohort_genes):
+        logger.warning(
+            f"Contradictory genomic criteria for {gene}: required and excluded in the "
+            f"same match tree, which matches no patient. The inclusion text negates "
+            f"{gene}, so the trial enrols alternative cohorts with and without the "
+            f"alteration; its net requirement is none. Dropping both constraints. "
+            f"Flag for manual review - the cohort distinction cannot be expressed."
+        )
+        notes.append(f"{gene}: dropped both (alternative cohorts)")
+
+    keep_inc = [a for a in inclusions if gene_of(a) not in cohort_genes]
+    keep_exc = [a for a in exclusions
+                if gene_of(a) not in cohort_genes and gene_of(a) not in artefact_genes]
+    return keep_inc, keep_exc, notes
 
 
 def find_unsatisfiable_genes(match_node) -> list:
@@ -277,7 +321,8 @@ def find_unsatisfiable_genes(match_node) -> list:
     return sorted(set(findings))
 
 
-def convert_to_ctml_genomic_schema(inclusion_genomic_criteria: list, exclusion_genomic_criteria: list) -> dict: 
+def convert_to_ctml_genomic_schema(inclusion_genomic_criteria: list, exclusion_genomic_criteria: list,
+                                   inclusion_text: str = "") -> dict: 
     inclusions = []
     exclusions = []
     print(tdh.get_all_keys(inclusion_genomic_criteria))
@@ -302,9 +347,10 @@ def convert_to_ctml_genomic_schema(inclusion_genomic_criteria: list, exclusion_g
             if alteration not in exclusions:
                 exclusions.append(alteration)
 
-    inclusions, exclusions, dropped_genes = resolve_contradictory_genes(inclusions, exclusions)
-    if dropped_genes:
-        print(f"Dropped contradictory gene constraints: {dropped_genes}")
+    inclusions, exclusions, contradiction_notes = resolve_contradictory_genes(
+        inclusions, exclusions, inclusion_text)
+    if contradiction_notes:
+        print(f"Contradictory gene constraints resolved: {contradiction_notes}")
 
     #combine inclusions with a top level 'or' and exclusions with a top level 'and'
     if inclusions:

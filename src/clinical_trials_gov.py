@@ -414,7 +414,8 @@ def map_ctml_match_genomic_criteria(trial_data: dict, gene_synonym_mapping:Dict[
             )
             print(f'exclusion_genomic_criteria after enrichment: {exclusion_genomic_criteria}')
 
-        genomic_ctml = mcm.convert_to_ctml_genomic_schema(inlcusion_genomic_criteria, exclusion_genomic_criteria)
+        genomic_ctml = mcm.convert_to_ctml_genomic_schema(
+            inlcusion_genomic_criteria, exclusion_genomic_criteria, inclusion_text)
         logger.debug(f"genomic criteria as CTML: {genomic_ctml}")
         return genomic_ctml
     else:
