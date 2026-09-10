@@ -36,8 +36,11 @@ Examples:
         description='Download clinical trial data from ClinicalTrials.gov API and cache locally.',
         epilog="""
 Examples:
-  python main.py pull --all                    # Pull all eligible trials
-  python main.py pull --nct_id NCT03997435    # Pull specific trial  
+  python main.py pull --all                          # Pull all eligible ClinicalTrials.gov trials
+  python main.py pull --all --source ctis            # Pull paediatric trials from EU CTIS
+  python main.py pull --all --source all             # Pull from both registries
+  python main.py pull --nct_id NCT03997435           # Pull specific ClinicalTrials.gov trial
+  python main.py pull --ct_number 2025-522006-21-00  # Pull specific CTIS trial
         """
     )
     pull_group = pull_parser.add_mutually_exclusive_group(required=True)
@@ -52,6 +55,20 @@ Examples:
         type=str, 
         metavar='NCT_ID',
         help='Pull study data for a specific NCT ID (e.g., NCT03997435)'
+    )
+    pull_group.add_argument(
+        '--ct_number',
+        type=str,
+        metavar='CT_NUMBER',
+        help='Pull a specific CTIS trial by EU CT number (e.g., 2025-522006-21-00). Implies --source ctis.'
+    )
+
+    pull_parser.add_argument(
+        '--source',
+        choices=['nct', 'ctis', 'all'],
+        default='nct',
+        help="Registry to pull from with --all: 'nct' (ClinicalTrials.gov, default), "
+             "'ctis' (EU Clinical Trials Information System), or 'all' for both."
     )
 
     # Subparser for 'map'
@@ -103,7 +120,12 @@ Examples:
 
     if args.command == 'pull':
         if args.all:
-            pull_all()
+            if args.source in ('nct', 'all'):
+                pull_all()
+            if args.source in ('ctis', 'all'):
+                pull_all_ctis()
+        elif args.ct_number:
+            pull_ctis(args.ct_number)
         else:
             pull_nct(args.nct_id)
 
@@ -143,6 +165,28 @@ def pull_nct(nct_id):
     from src.trial_pull_manager import TrialPullManager
     sync = TrialPullManager()
     sync.pull_single_trial(nct_id)
+
+def pull_all_ctis():
+    """Pull paediatric trials from the EU CTIS register"""
+    from src.ctis_pull_manager import CtisPullManager
+
+    try:
+        sync = CtisPullManager()
+        results = sync.sync_trials()
+        print("CTIS synchronization completed successfully!")
+        print(f"Searched {results['searched']} unique trials from CTIS")
+        print(f"Inserted {results['insertions']} new trials")
+        print(f"Updated {results['updates']} existing trials")
+        print(f"Skipped {results['skipped']} unchanged trials")
+        print(f"Failed {results['failed']} retrievals")
+        print(f"Of these, {results['duplicates_of_nct']} are also in the ClinicalTrials.gov cache")
+    except Exception as e:
+        logger.error(f"Error in pull_all_ctis: {e}")
+        raise
+
+def pull_ctis(ct_number):
+    from src.ctis_pull_manager import CtisPullManager
+    CtisPullManager().pull_single_trial(ct_number)
 
 def map_all(nct_files_path, ctml_files_path, args):
     """Map all NCT files to CTML format"""
