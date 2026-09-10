@@ -3,13 +3,22 @@
 #GPU_SERVER_HOSTNAME = "http://127.0.0.1"
 GPU_SERVER_HOSTNAME = "http://localhost"
 
-#LLM_PLATFORM = "Ollama"  # Options: Local_ai, vllm, SGLang, Ollama
-LLM_PLATFORM = "SGLang"
+#LLM_PLATFORM = "Ollama"  # Options: Local_ai, vllm, SGLang, Ollama, Anthropic
+LLM_PLATFORM = "Anthropic"
+
+# Anthropic (hosted Claude API) settings.
+# Auth comes from the ANTHROPIC_API_KEY environment variable - do not put a key here.
+# Only used when LLM_PLATFORM = "Anthropic"; GPU_SERVER_HOSTNAME is ignored in that case.
+ANTHROPIC_EFFORT = "high"      # low | medium | high | xhigh | max
+ANTHROPIC_MAX_TOKENS = 16000
 
 # deepseek library
 #LLM_AI_MODEL = "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B"
 #LLM_AI_MODEL = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
-LLM_AI_MODEL = "neuralmagic/DeepSeek-R1-Distill-Qwen-32B-quantized.w4a16"
+#LLM_AI_MODEL = "neuralmagic/DeepSeek-R1-Distill-Qwen-32B-quantized.w4a16"
+
+# Anthropic model (used when LLM_PLATFORM = "Anthropic")
+LLM_AI_MODEL = "claude-opus-5"
 
 # gemma library
 #LLM_AI_MODEL = "hf.co/unsloth/gemma-4-31B-it-GGUF:UD-Q4_K_XL"

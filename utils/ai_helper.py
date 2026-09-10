@@ -277,6 +277,16 @@ def parse_ai_response(ai_response):
 
 def send_ai_request(id, prompt, json_schema=None):
     """Send AI request using the configured platform."""
+    # Hosted platforms (e.g. Anthropic) own their transport and auth via an
+    # official SDK, so they expose send() instead of going through the
+    # unauthenticated hostname:port POST used by the self-hosted platforms.
+    sender = getattr(_llm_platform, 'send', None)
+    if callable(sender):
+        logger.debug(f"AI request | ID:{id} | {prompt[:200]}")
+        ai_response = sender(prompt, json_schema)
+        logger.debug(f"AI response | ID:{id} | {ai_response}")
+        return ai_response
+
     req_body = _llm_platform.get_request_body(prompt, json_schema)
     req_body_json = json.dumps(req_body)
     logger.debug(f"AI request | ID:{id} | {req_body_json}")

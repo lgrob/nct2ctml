@@ -275,6 +275,127 @@ def create_llm_platform(platform_name: str, model: str, hostname: str) -> LLMPla
         return VLLMPlatform(model, hostname)
     elif platform_name_lower == "local_ai":
         return LocalAIPlatform(model, hostname)
+    elif platform_name_lower == "anthropic":
+        print( "Creating Anthropic platform..." )
+        return AnthropicPlatform(model, hostname)
     else:
         raise ValueError(f"Unsupported LLM platform: {platform_name}")
 
+
+
+class AnthropicPlatform(LLMPlatform):
+    """
+    Anthropic (Claude) platform implementation.
+
+    Unlike the self-hosted platforms above, this talks to a hosted API over
+    HTTPS using the official `anthropic` SDK, so it bypasses the
+    hostname:port + requests.post path in ai_helper.send_ai_request by
+    exposing a `send()` method. Authentication is resolved by the SDK from
+    ANTHROPIC_API_KEY (or an `ant auth login` profile) - never hardcode a key.
+    """
+
+    SYSTEM_PROMPT = "You are a biomedical researcher specializing in cancer genomics and clinical trials."
+
+    def __init__(self, model: str, hostname: str):
+        super().__init__(model, hostname)
+        self._client = None
+
+    @property
+    def port(self) -> int:
+        # Not used - send() bypasses the hostname:port construction entirely.
+        return 443
+
+    @property
+    def chat_endpoint(self) -> str:
+        return "v1/messages"
+
+    def get_endpoint_url(self) -> str:
+        return "https://api.anthropic.com/v1/messages"
+
+    def get_request_body(self, prompt: str, json_schema: Optional[Dict] = None) -> Dict[str, Any]:
+        """Build the Messages API request kwargs."""
+        import config
+
+        body: Dict[str, Any] = {
+            "model": self.model,
+            "max_tokens": getattr(config, "ANTHROPIC_MAX_TOKENS", 16000),
+            "system": self.SYSTEM_PROMPT,
+            "messages": [{"role": "user", "content": prompt}],
+            "thinking": {"type": "adaptive"},
+        }
+
+        output_config: Dict[str, Any] = {"effort": getattr(config, "ANTHROPIC_EFFORT", "high")}
+        if json_schema:
+            # Every prompt builder in this repo currently returns json_schema=None,
+            # so this branch is untested against the live API.
+            output_config["format"] = {"type": "json_schema", "schema": json_schema}
+        body["output_config"] = output_config
+
+        return body
+
+    def send(self, prompt: str, json_schema: Optional[Dict] = None) -> Dict[str, Any]:
+        """Call the Messages API and return a response dict for parse_response()."""
+        import anthropic
+
+        if self._client is None:
+            self._client = anthropic.Anthropic()
+
+        body = self.get_request_body(prompt, json_schema)
+
+        try:
+            response = self._client.messages.create(**body)
+        except anthropic.AuthenticationError:
+            logger.error(
+                "Anthropic authentication failed. Set ANTHROPIC_API_KEY or run `ant auth login`."
+            )
+            raise
+        except anthropic.RateLimitError as ex:
+            logger.error(f"Anthropic rate limit hit: {ex}")
+            raise
+        except anthropic.APIStatusError as ex:
+            logger.error(f"Anthropic API error {ex.status_code}: {ex.message}")
+            raise
+        except anthropic.APIConnectionError as ex:
+            logger.error(f"Could not reach the Anthropic API: {ex}")
+            raise
+
+        if response.stop_reason == "refusal":
+            category = getattr(response.stop_details, "category", None)
+            logger.error(f"Anthropic declined the request (category={category})")
+            return {"text": "", "stop_reason": "refusal"}
+
+        if response.stop_reason == "max_tokens":
+            logger.warning(
+                f"Anthropic response hit max_tokens ({body['max_tokens']}); JSON is likely truncated."
+            )
+
+        text = "".join(block.text for block in response.content if block.type == "text")
+        logger.debug(
+            f"Anthropic usage | in={response.usage.input_tokens} out={response.usage.output_tokens}"
+        )
+        return {"text": text, "stop_reason": response.stop_reason}
+
+    def parse_response(self, ai_response: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract the JSON object out of the model's text response."""
+        response_dict: Dict[str, Any] = {}
+        content = (ai_response or {}).get("text", "")
+        if not content:
+            return response_dict
+
+        # Strip a ```json fence if the model wrapped its answer in one.
+        prefix_pos = content.find('```json')
+        if prefix_pos > -1:
+            begin = prefix_pos + len('```json')
+            end = content.find('```', begin)
+            response_string = content[begin:end].strip()
+        else:
+            response_string = content.strip()
+
+        sanitized_res = re.sub(r'\\(?![\\\\"/bfnrtu])', '', response_string.replace('\\\\', '\\'))
+        try:
+            response_dict = json.loads(sanitized_res, strict=False)
+            if isinstance(response_dict, dict):
+                response_dict.pop("error", None)
+        except json.JSONDecodeError as ex:
+            logger.error(f"Unexpected response format: {ex=} | response_string = {sanitized_res}")
+        return response_dict
