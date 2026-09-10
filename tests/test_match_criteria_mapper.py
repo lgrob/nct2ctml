@@ -11,6 +11,8 @@ from match_criteria_mapper import (
     convert_to_ctml_clinical_schema,
     combine_clinical_and_genomic_ctml,
     _clean_protein_change_fields,
+    resolve_contradictory_genes,
+    find_unsatisfiable_genes,
 )
 
 
@@ -416,6 +418,92 @@ class TestCleanProteinChangeFields(unittest.TestCase):
         criteria = [{"genomic": {"hugo_symbol": "KRAS", "variant_category": "Mutation", "protein_change": "p.G12C"}}]
         result = _clean_protein_change_fields(criteria)
         self.assertEqual(result[0]["genomic"]["protein_change"], "p.G12C")
+
+
+class TestContradictoryGenomicCriteria(unittest.TestCase):
+    """
+    Inclusions are OR-ed, exclusions AND-ed, then the two are AND-ed, so a gene
+    on both sides makes the tree unsatisfiable and the trial matches nobody.
+
+    Observed on NCT01704716 (SIOPEN high-risk neuroblastoma), whose criteria
+    read "stage 2, 3, 4, 4s WITH MYCN amplification, or stage 4 WITHOUT MYCN
+    amplification": both cohorts enrol, so the net requirement on MYCN is none.
+    """
+
+    MYCN_AMP = {"genomic": {"hugo_symbol": "MYCN",
+                            "variant_category": "Copy Number Variation",
+                            "cnv_call": "High Amplification"}}
+    MYCN_NONE = {"genomic": {"hugo_symbol": "MYCN", "variant_category": "!Any Variation"}}
+    BRAF = {"genomic": {"hugo_symbol": "BRAF", "variant_category": "Mutation",
+                        "protein_change": "p.V600E"}}
+    TP53_EXC = {"genomic": {"hugo_symbol": "TP53", "variant_category": "!Mutation"}}
+
+    def test_drops_gene_required_and_excluded(self):
+        inc, exc, dropped = resolve_contradictory_genes([self.MYCN_AMP], [self.MYCN_NONE])
+        self.assertEqual(dropped, ["MYCN"])
+        self.assertEqual(inc, [])
+        self.assertEqual(exc, [])
+
+    def test_same_category_negation_also_contradicts(self):
+        mycn_not_cnv = {"genomic": {"hugo_symbol": "MYCN",
+                                    "variant_category": "!Copy Number Variation"}}
+        _, _, dropped = resolve_contradictory_genes([self.MYCN_AMP], [mycn_not_cnv])
+        self.assertEqual(dropped, ["MYCN"])
+
+    def test_leaves_unrelated_inclusion_and_exclusion_alone(self):
+        inc, exc, dropped = resolve_contradictory_genes([self.BRAF], [self.TP53_EXC])
+        self.assertEqual(dropped, [])
+        self.assertEqual(inc, [self.BRAF])
+        self.assertEqual(exc, [self.TP53_EXC])
+
+    def test_drops_only_the_contradictory_gene(self):
+        inc, exc, dropped = resolve_contradictory_genes(
+            [self.MYCN_AMP, self.BRAF], [self.MYCN_NONE, self.TP53_EXC])
+        self.assertEqual(dropped, ["MYCN"])
+        self.assertEqual(inc, [self.BRAF])
+        self.assertEqual(exc, [self.TP53_EXC])
+
+    def test_schema_conversion_yields_no_genomic_constraint(self):
+        # The trial keeps its clinical criteria and matches neuroblastoma
+        # patients regardless of MYCN status, instead of matching nobody.
+        result = convert_to_ctml_genomic_schema([self.MYCN_AMP], [self.MYCN_NONE])
+        self.assertEqual(result, {})
+
+    def test_different_categories_do_not_contradict(self):
+        # Requiring a mutation while excluding a fusion is satisfiable.
+        braf_fusion_exc = {"genomic": {"hugo_symbol": "BRAF",
+                                       "variant_category": "!Structural Variation"}}
+        _, _, dropped = resolve_contradictory_genes([self.BRAF], [braf_fusion_exc])
+        self.assertEqual(dropped, [])
+
+
+class TestFindUnsatisfiableGenes(unittest.TestCase):
+    """A finished-tree check, independent of how the tree was assembled."""
+
+    def test_detects_contradiction_under_and(self):
+        tree = {"and": [
+            {"clinical": {"oncotree_primary_diagnosis": "Neuroblastoma"}},
+            {"and": [
+                {"genomic": {"hugo_symbol": "MYCN", "variant_category": "Copy Number Variation"}},
+                {"genomic": {"hugo_symbol": "MYCN", "variant_category": "!Any Variation"}},
+            ]},
+        ]}
+        self.assertEqual(find_unsatisfiable_genes(tree), ["MYCN"])
+
+    def test_clean_tree_reports_nothing(self):
+        tree = {"and": [
+            {"genomic": {"hugo_symbol": "BRAF", "variant_category": "Mutation"}},
+            {"genomic": {"hugo_symbol": "TP53", "variant_category": "!Mutation"}},
+        ]}
+        self.assertEqual(find_unsatisfiable_genes(tree), [])
+
+    def test_or_branch_is_satisfiable(self):
+        # The same pair under 'or' is a legitimate "either cohort" expression.
+        tree = {"or": [
+            {"genomic": {"hugo_symbol": "MYCN", "variant_category": "Copy Number Variation"}},
+            {"genomic": {"hugo_symbol": "MYCN", "variant_category": "!Any Variation"}},
+        ]}
+        self.assertEqual(find_unsatisfiable_genes(tree), [])
 
 
 if __name__ == '__main__':

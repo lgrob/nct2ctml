@@ -293,7 +293,14 @@ def send_ai_request(id, prompt, json_schema=None):
     endpoint_url = _llm_platform.get_endpoint_url()
     print(endpoint_url)
 
-    response = requests.post(endpoint_url, data=req_body_json, headers={"Content-Type":"application/json"})    
+    # Without a timeout a stalled or runaway model blocks the pipeline forever:
+    # a local 14B in a constrained-JSON generation loop was observed emitting
+    # 30k+ tokens over 3.5 hours on a single call.
+    timeout = getattr(config, 'LLM_REQUEST_TIMEOUT_SECONDS', 600)
+    response = requests.post(endpoint_url, data=req_body_json,
+                             headers={"Content-Type": "application/json"},
+                             timeout=timeout)
+
     response.raise_for_status()
 
     print(response.status_code)

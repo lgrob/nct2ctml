@@ -1,5 +1,10 @@
 from collections.abc import Iterable, Mapping
 
+try:
+    import src.trial_config as _config
+except ImportError:  # pragma: no cover - allows standalone import in tests
+    _config = None
+
 
 class TrialCriteriaToGenes:
     """
@@ -16,6 +21,11 @@ class TrialCriteriaToGenes:
     ):
         self.trial_criteria = trial_criteria or ""
         self.synonym_to_symbol = synonym_to_symbol
+        self.blocked = {
+            b.upper() for b in getattr(_config, 'blocked_gene_synonyms', [])
+        }
+        self.contextual = getattr(_config, 'contextual_gene_synonyms', {}) or {}
+        self._criteria_lower = self.trial_criteria.lower()
 
     @staticmethod
     def _normalize_token(s: str) -> str:
@@ -66,7 +76,27 @@ class TrialCriteriaToGenes:
     def _lookup_official_symbols(self, token: str) -> list[str]:
         """
         Lookup a token in the synonym mapping.
+
+        Blocked synonyms never resolve via the NCBI-derived table, because in
+        trial criteria they overwhelmingly mean something other than the gene.
+        A blocked synonym may still resolve through a context rule, which
+        requires supporting keywords to appear in the criteria text.
         """
+        upper = token.upper()
+
+        rule = self.contextual.get(upper) or self.contextual.get(token)
+        if rule:
+            keywords, symbols = rule
+            if any(k.lower() in self._criteria_lower for k in keywords):
+                print(f"Context mapping for token: {token} : {symbols}")
+                return list(symbols)
+            # Context absent - fall through to the block check below.
+
+        if upper in self.blocked:
+            print(f"Blocked ambiguous synonym: {token} "
+                  f"(would have mapped to {self._as_list(self.synonym_to_symbol.get(token))})")
+            return []
+
         if token in self.synonym_to_symbol:
             print(f"Found mapping for token: {token} : {self.synonym_to_symbol[token]}")
             return self._as_list(self.synonym_to_symbol[token])

@@ -143,6 +143,24 @@ class VLLMPlatform(SGLangPlatform):
         return "v1/chat/completions"
 
 
+def _ollama_num_ctx() -> int:
+    """Context window for Ollama, overridable via config.OLLAMA_NUM_CTX."""
+    try:
+        import config
+        return getattr(config, 'OLLAMA_NUM_CTX', 16384)
+    except Exception:
+        return 16384
+
+
+def _ollama_num_predict() -> int:
+    """Max tokens Ollama may generate, overridable via config.OLLAMA_NUM_PREDICT."""
+    try:
+        import config
+        return getattr(config, 'OLLAMA_NUM_PREDICT', 2048)
+    except Exception:
+        return 2048
+
+
 class OllamaPlatform(LLMPlatform):
     """Ollama platform implementation."""
     
@@ -200,7 +218,15 @@ class OllamaPlatform(LLMPlatform):
                     #"think": True,
                     "temperature": 0,
                     "seed": 42,
-                    "top_k": 1
+                    "top_k": 1,
+                    # Ollama defaults num_ctx to 4096, which the genomic prompts
+                    # (criteria text plus the ~4.4 KB gene list) overflow; the
+                    # model then sees truncated input and degenerates.
+                    "num_ctx": _ollama_num_ctx(),
+                    # Cap generation. With "format": "json" a confused model can
+                    # loop indefinitely because constrained decoding will not let
+                    # it stop until it closes the JSON.
+                    "num_predict": _ollama_num_predict(),
                 }
             }
 

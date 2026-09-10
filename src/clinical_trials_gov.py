@@ -102,6 +102,15 @@ def map_nct_to_clinical_and_genomic_criteria(trial_data: dict,
     match_list = trial_schema['treatment_list']['step'][0]['match']
     match_list.append(trial_level_match_result)
 
+    # Defence in depth: a match tree that requires and forbids the same gene
+    # matches no patient, and does so silently. Surface it for manual review.
+    unsatisfiable = mcm.find_unsatisfiable_genes(trial_level_match_result)
+    if unsatisfiable:
+        logger.error(
+            f"NCTID: {nct_id} | Trial-level match tree is unsatisfiable for "
+            f"{', '.join(unsatisfiable)} - it will match no patient. Needs manual review."
+        )
+
     _map_arm_level_matches(
         nct_id=nct_id,
         trial_data=trial_data,

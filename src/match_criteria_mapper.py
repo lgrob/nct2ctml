@@ -171,6 +171,112 @@ def convert_to_ctml_clinical_schema(clinical_critera) -> dict:
 
 
 # Checks that the genomic crietria returned by AI model is not empty and has "hugo_symbol", "variant_category" keys
+def _negated(variant_category: str) -> bool:
+    return (variant_category or "").startswith("!")
+
+
+def _base_category(variant_category: str) -> str:
+    return (variant_category or "").lstrip("!").strip().lower()
+
+
+def resolve_contradictory_genes(inclusions: list, exclusions: list) -> tuple[list, list, list]:
+    """
+    Drop constraints on genes that are required and forbidden at the same time.
+
+    Inclusions are OR-ed and exclusions AND-ed, then the two are AND-ed
+    together, so a gene appearing on both sides makes the whole match tree
+    unsatisfiable and the trial matches no patient at all.
+
+    This nearly always comes from alternative-cohort wording, e.g. SIOPEN
+    high-risk neuroblastoma: "stage 2, 3, 4, 4s WITH MYCN amplification, or
+    stage 4 WITHOUT MYCN amplification". Both cohorts enrol, so the trial's
+    net requirement on that gene is none - dropping it is closer to the
+    protocol than keeping either side, and unlike keeping them it does not
+    silently reduce the trial to zero matches.
+
+    Returns (inclusions, exclusions, dropped_genes). The two-level CTML shape
+    cannot express per-cohort criteria, so the dropped genes are reported for
+    the manual review step rather than quietly discarded.
+    """
+    def gene_of(alteration):
+        return (alteration.get("genomic", {}) or {}).get("hugo_symbol")
+
+    contradictory = []
+    for inc in inclusions:
+        gene = gene_of(inc)
+        if not gene:
+            continue
+        inc_cat = _base_category((inc.get("genomic", {}) or {}).get("variant_category"))
+        for exc in exclusions:
+            if gene_of(exc) != gene:
+                continue
+            exc_cat = _base_category((exc.get("genomic", {}) or {}).get("variant_category"))
+            # "!Any Variation" negates every alteration in the gene, so it
+            # contradicts any positive requirement on it; otherwise the
+            # categories have to match to contradict.
+            if exc_cat in ("any variation", inc_cat):
+                contradictory.append(gene)
+                break
+
+    if not contradictory:
+        return inclusions, exclusions, []
+
+    dropped = sorted(set(contradictory))
+    for gene in dropped:
+        logger.warning(
+            f"Contradictory genomic criteria for {gene}: required and excluded in the "
+            f"same match tree, which matches no patient. Dropping both constraints - "
+            f"the trial most likely enrols alternative cohorts with and without the "
+            f"alteration. Flag for manual review."
+        )
+    keep_inc = [a for a in inclusions if gene_of(a) not in dropped]
+    keep_exc = [a for a in exclusions if gene_of(a) not in dropped]
+    return keep_inc, keep_exc, dropped
+
+
+def find_unsatisfiable_genes(match_node) -> list:
+    """
+    Report genes that a match tree both requires and forbids under an 'and'.
+
+    A defence-in-depth check over the finished tree, independent of how it was
+    assembled, so a contradiction introduced anywhere still gets surfaced.
+    """
+    findings: list[str] = []
+
+    def walk(node):
+        if isinstance(node, dict):
+            if "and" in node and isinstance(node["and"], list):
+                positive, negative = {}, {}
+                def collect(n):
+                    if isinstance(n, dict):
+                        if "genomic" in n and isinstance(n["genomic"], dict):
+                            g = n["genomic"].get("hugo_symbol")
+                            c = n["genomic"].get("variant_category")
+                            if g:
+                                (negative if _negated(c) else positive).setdefault(
+                                    g, set()).add(_base_category(c))
+                        for k in ("and", "or"):
+                            if isinstance(n.get(k), list):
+                                for child in n[k]:
+                                    collect(child)
+                for branch in node["and"]:
+                    collect(branch)
+                for gene, neg_cats in negative.items():
+                    pos_cats = positive.get(gene)
+                    if not pos_cats:
+                        continue
+                    if "any variation" in neg_cats or (neg_cats & pos_cats):
+                        findings.append(gene)
+            for v in node.values():
+                walk(v)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v)
+
+    walk(match_node)
+    return sorted(set(findings))
+
+
 def convert_to_ctml_genomic_schema(inclusion_genomic_criteria: list, exclusion_genomic_criteria: list) -> dict: 
     inclusions = []
     exclusions = []
@@ -195,6 +301,10 @@ def convert_to_ctml_genomic_schema(inclusion_genomic_criteria: list, exclusion_g
         for alteration in exclusion_genomic_criteria:
             if alteration not in exclusions:
                 exclusions.append(alteration)
+
+    inclusions, exclusions, dropped_genes = resolve_contradictory_genes(inclusions, exclusions)
+    if dropped_genes:
+        print(f"Dropped contradictory gene constraints: {dropped_genes}")
 
     #combine inclusions with a top level 'or' and exclusions with a top level 'and'
     if inclusions:

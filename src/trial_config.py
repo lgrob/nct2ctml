@@ -56,3 +56,26 @@ ctis_conditions = [
 # hasRecruitmentStarted flag drives the `countries` column in ctis_status.csv,
 # so an open trial with no countries listed is authorised but not yet recruiting.
 ctis_open_statuses = ['Authorised']
+
+
+# --- Gene synonym disambiguation ----------------------------------------
+# ref/synonym_to_gene_symbol.tsv is derived from NCBI alias data, where some
+# genes carry short historical aliases that mean something entirely different
+# in oncology text. Measured across 924 paediatric trials, these fired as:
+#   'ALL' in 133 trials -> BCR   (ALL = acute lymphoblastic leukaemia)
+#   'H3'  in  14 trials -> FGFR1 (H3  = histone H3; FGFR1 once carried H2-H5)
+#   'CAP' in   2 trials -> BRD4  (CAP = a chemotherapy regimen / capecitabine)
+# A spurious candidate gene is then offered to the LLM, which invites exactly
+# the hallucination it is meant to avoid.
+#
+# Synonyms that must never resolve to a gene symbol.
+blocked_gene_synonyms = ['ALL', 'CAP', 'H3', 'H4', 'H5']
+
+# Synonyms that resolve only when the criteria text also contains one of the
+# context keywords (case-insensitive). This recovers the true meaning of the
+# blocked histone aliases above: in an H3 K27M trial, 'H3' should map to the
+# histone H3 genes, never to FGFR1.
+contextual_gene_synonyms = {
+    'H3': (['k27', 'k27m', 'g34', 'histone'], ['H3F3A', 'H3F3B', 'HIST1H3B']),
+    'H4': (['histone'], ['HIST1H4I']),
+}
