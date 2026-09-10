@@ -27,10 +27,20 @@ class TrialPullManager:
         self.cache_nct_dir = "cache/nct"
         self.regions = config.regions
         self.conditions = config.conditions
+        self.std_ages = getattr(config, 'std_ages', [])
+        self.query_term = self._build_query_term()
         # Ensure directories exist
         os.makedirs(self.cache_nct_dir, exist_ok=True)
         self._ensure_trial_status_file()
     
+    def _build_query_term(self) -> str:
+        """Build the query.term expression from configured search filters."""
+        terms = ['AREA[StudyType]INTERVENTIONAL']
+        if self.std_ages:
+            ages = ' OR '.join(f'AREA[StdAge]{age}' for age in self.std_ages)
+            terms.append(f'({ages})' if len(self.std_ages) > 1 else ages)
+        return ' AND '.join(terms)
+
     def _ensure_trial_status_file(self):
         """Create trial_status.csv if it doesn't exist"""
         if not os.path.exists(self.trial_status_file):
@@ -89,17 +99,20 @@ class TrialPullManager:
         """Fetch trial summaries from clinicaltrials.gov API"""
         endpoint = "studies"
         
-        regions_str = ' OR '.join(self.regions)
         condition_str = ' OR '.join(self.conditions)
         # Default filters
         params = {
             'query.cond': condition_str,
-            'query.locn': regions_str,
-            'query.term': 'AREA[StudyType]INTERVENTIONAL',
+            'query.term': self.query_term,
             'pageSize': 50,
             'sort': 'LastUpdatePostDate',
             'fields': 'NCTId|OverallStatus|LastUpdatePostDate|InterventionType|Location'
         }
+
+        # An empty regions list means worldwide - omit the location filter entirely
+        # rather than sending an empty query.locn.
+        if self.regions:
+            params['query.locn'] = ' OR '.join(self.regions)
         
         trials = []
         
@@ -197,7 +210,8 @@ class TrialPullManager:
             # Apply filters: recruiting in HK and correct intervention types
             is_recruiting = tdh.check_if_recruiting_in_any_region(study, self.regions)
             if not is_recruiting:
-                msg = f"Study {nct_id} is not recruiting actively in {self.regions}. Skipping"
+                where = ', '.join(self.regions) if self.regions else 'any country'
+                msg = f"Study {nct_id} is not recruiting actively in {where}. Skipping"
                 print(msg)
                 logger.info(msg)
                 return False
