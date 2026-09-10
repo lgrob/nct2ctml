@@ -324,7 +324,7 @@ class TrialPullManager:
         # Step 5: Process updates
         logger.info(f"Processing {len(trials_to_be_updated)} updates")
         for tu in trials_to_be_updated:
-            if self.fetch_and_cache_trial(nct_trial['nct_id']): # download the latest trial data from clinicaltrials.gov
+            if self.fetch_and_cache_trial(tu['nct_id']): # download the latest trial data from clinicaltrials.gov
                 self.modify_trial_status_file(
                     tu['nct_id'], 
                     '',

@@ -35,11 +35,19 @@ def remove_unused_keys(trial_data: dict):
     return trial_data
 
 def check_if_recruiting_in_any_region(trial_data: dict, regions: list[str]) -> bool:
+    """
+    True if the trial is actively recruiting at a site in one of `regions`.
+
+    An empty `regions` list means "anywhere in the world" - the country check is
+    skipped and any recruiting site qualifies. Note that clinicaltrials.gov omits
+    the per-location `status` key entirely on trials that are not recruiting, so
+    a missing status is treated as not recruiting.
+    """
     locations = trial_data["protocolSection"]["contactsLocationsModule"]["locations"]
     target_countries = {region.lower() for region in regions}
     return any(
-        location["country"].lower() in target_countries
-        and location["status"].lower() == "recruiting"
+        (not target_countries or location["country"].lower() in target_countries)
+        and location.get("status", "").lower() == "recruiting"
         for location in locations
     )
     
