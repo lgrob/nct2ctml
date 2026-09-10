@@ -2,3 +2,12 @@ results/*
 *.log
 __pycache__/*
 *.pyc
+
+# Local virtualenv
+.venv/
+
+# Pulled trial data - regenerable with `python main.py pull --all`
+cache/
+
+# Runtime logs
+logs/
