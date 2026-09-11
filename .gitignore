@@ -23,3 +23,12 @@ ref/.ncbi_gene_cache.json
 # Build artefact of utils/build_gene_synonyms.py - identical to the adopted
 # ref/synonym_to_gene_symbol.tsv, so tracking both would just duplicate it.
 ref/synonym_to_gene_symbol.generated.tsv
+
+# Transient hand-off queue: matchminer-admin POSTs these to the MatchMiner
+# API and deletes them. Tracking them would just churn the history.
+ctml/json/*
+!ctml/json/.gitkeep
+
+# Awaiting review - working state, not a record of anything yet.
+ctml/pending/*
+!ctml/pending/.gitkeep
