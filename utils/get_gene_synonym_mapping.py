@@ -1,4 +1,10 @@
-# one time script to get the gene synonym mapping from the Census_gene_list.csv file
+# One-time script that built the original ref/synonym_to_gene_symbol.tsv from
+# the COSMIC Cancer Gene Census. Superseded by utils/build_gene_synonyms.py,
+# which harvests aliases live from NCBI Gene and reports ambiguous ones.
+#
+# ref/Census_gene_list.csv is no longer tracked - the COSMIC licence restricts
+# redistribution - so this script only runs if you download the Census
+# yourself from https://cancer.sanger.ac.uk/census and place it there.
 import pandas as pd
 
 df = pd.read_csv("../ref/Census_gene_list.csv", dtype=str).fillna("")

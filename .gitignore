@@ -11,3 +11,15 @@ cache/
 
 # Runtime logs
 logs/
+
+# COSMIC Cancer Gene Census - redistribution is restricted by the COSMIC
+# licence. Kept locally for utils/get_gene_synonym_mapping.py (a one-time
+# script, not used at runtime); never committed to this public fork.
+ref/Census_gene_list.csv
+
+# NCBI harvest cache - regenerable with utils/build_gene_synonyms.py
+ref/.ncbi_gene_cache.json
+
+# Build artefact of utils/build_gene_synonyms.py - identical to the adopted
+# ref/synonym_to_gene_symbol.tsv, so tracking both would just duplicate it.
+ref/synonym_to_gene_symbol.generated.tsv

@@ -63,10 +63,16 @@ ctis_open_statuses = ['Authorised']
 # genes carry short historical aliases that mean something entirely different
 # in oncology text. Measured across 924 paediatric trials, these fired as:
 #   'ALL' in 133 trials -> BCR   (ALL = acute lymphoblastic leukaemia)
-#   'H3'  in  14 trials -> FGFR1 (H3  = histone H3; FGFR1 once carried H2-H5)
+#   'H3'  in  14 trials -> FGFR1 (H3  = histone H3)
 #   'CAP' in   2 trials -> BRD4  (CAP = a chemotherapy regimen / capecitabine)
 # A spurious candidate gene is then offered to the LLM, which invites exactly
 # the hallucination it is meant to avoid.
+#
+# Rebuilding the table from live NCBI (utils/build_gene_synonyms.py) removed
+# the FGFR1 mappings - current NCBI lists no histone alias on FGFR1 - but did
+# not remove the need for this list. NCBI still genuinely records ALL on BCR,
+# CAP on BRD4, H4 on CCDC6, H5 on SEPTIN5 and H3 on H3C14. Those are correct
+# as history and wrong as an oncology lookup, so the block stays.
 #
 # Synonyms that must never resolve to a gene symbol.
 blocked_gene_synonyms = ['ALL', 'CAP', 'H3', 'H4', 'H5']
@@ -74,8 +80,12 @@ blocked_gene_synonyms = ['ALL', 'CAP', 'H3', 'H4', 'H5']
 # Synonyms that resolve only when the criteria text also contains one of the
 # context keywords (case-insensitive). This recovers the true meaning of the
 # blocked histone aliases above: in an H3 K27M trial, 'H3' should map to the
-# histone H3 genes, never to FGFR1.
+# histone H3 genes, not to H3C14 (which is histone H3.2).
+#
+# Symbols here must be current HGNC names, matching ref/genes.txt - the
+# pre-2019 forms (H3F3A, HIST1H3B, HIST1H4I) live in the synonym table, which
+# maps them onto these.
 contextual_gene_synonyms = {
-    'H3': (['k27', 'k27m', 'g34', 'histone'], ['H3F3A', 'H3F3B', 'HIST1H3B']),
-    'H4': (['histone'], ['HIST1H4I']),
+    'H3': (['k27', 'k27m', 'g34', 'histone'], ['H3-3A', 'H3-3B', 'H3C2']),
+    'H4': (['histone'], ['H4C9']),
 }
