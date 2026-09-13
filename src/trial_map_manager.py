@@ -11,6 +11,7 @@ from typing import Any, Dict, List
 from loguru import logger
 from collections import defaultdict
 import src.clinical_trials_gov as ctg
+import src.ctis as ctis
 import src.trial_data_helper as tdh
 
 
@@ -289,6 +290,35 @@ class TrialMapManager:
             'skipped': skipped_count
         }
     
+    def map_single_ctis_trial(self, ct_number: str, ctis_files_path: str, ctml_files_path: str) -> bool:
+        """
+        Map one CTIS record to CTML.
+
+        Separate entry point rather than a branch inside map_single_trial:
+        the two registries publish different documents, and local trial info
+        is keyed on NCT ids so it does not apply here.
+        """
+        try:
+            logger.info(f"Mapping CTIS number: {ct_number}")
+            trial_data = tdh.read_from_file(ctis_files_path, ct_number, 'json')
+        except FileNotFoundError:
+            logger.error(f'File {ct_number}.json not found at {ctis_files_path}')
+            return False
+        except Exception as e:
+            logger.exception(f'Error reading file {ct_number}.json: {e}')
+            return False
+
+        genes = self.get_gene_list()
+        gene_synonym_mapping = self.get_gene_synonym_mapping()
+        try:
+            mapped_ctml = ctis.map_ctis_to_ctml(trial_data, genes, gene_synonym_mapping)
+            tdh.save_to_file(mapped_ctml, ctml_files_path, ct_number, 'yaml')
+            logger.info(f"Successfully mapped and saved {ct_number}")
+            return True
+        except Exception as ex:
+            logger.exception(f"ct_number: {ct_number} | Unexpected error while mapping: {ex}")
+            return False
+
     def map_single_trial(self, nct_id: str, nct_files_path: str, ctml_files_path: str) -> bool:
         """Map a specific NCT ID to CTML format with local trial info integration"""
         logger.info("Using ctml_files_path: {}".format(ctml_files_path))

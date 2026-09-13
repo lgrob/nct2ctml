@@ -115,6 +115,22 @@ def get_disease_status(nct_id:str, eligibilityCriteria: str, keywords: list)-> d
     return disease_status_dict
 
 
+def get_minimum_age(nct_id: str, inclusion_criteria: str) -> dict:
+    """
+    Read the minimum eligible age out of free-text criteria.
+
+    ClinicalTrials.gov publishes a structured minimumAge field; CTIS does not,
+    and the text is too varied for a pattern ("Age >=1 and <80 years",
+    "Patients aged 1 to <=21 years", "Children between 1 year (>= 12 months)
+    and 18 years"). It also contains ages that are not eligibility bounds at
+    all, such as the Karnofsky/Lansky split at 16 years, which a pattern
+    reliably mistakes for one.
+    """
+    prompt = get_minimum_age_prompt(inclusion_criteria)
+    ai_response = send_ai_request(nct_id, prompt)
+    return parse_ai_response(ai_response)
+
+
 def get_arm_criteria_mapping(nct_id: str, arm_groups: list, inclusion_criteria: str, exclusion_criteria: str) -> dict:
     """
     Call the LLM to classify eligibility criteria into global vs per-arm text.
@@ -417,6 +433,30 @@ def get_disease_status_prompt(eligibilityCriteria, keywords):
         "disease_status": [],
         }}
         where each disease_status is in ["Untreated", "Localized", "Locally Advanced", "Metastatic", "Advanced", "Recurrent", "Refractory", "Unresectable", "Early Stage"].
+        """
+    return cleandoc(prompt)
+
+
+def get_minimum_age_prompt(inclusion_criteria):
+    prompt = f"""Task: From the InclusionCriteria, find the minimum age a participant must be to be eligible.
+
+        InclusionCriteria: {inclusion_criteria}
+
+        Rules:
+        - Report only an age a participant must MEET OR EXCEED to enrol.
+        - Ignore ages that are not eligibility limits, for example the age at
+          which a different performance scale is used (Karnofsky vs Lansky),
+          the age at original diagnosis when enrolment age differs, or ages
+          appearing in exclusion or dosing text.
+        - Ignore maximum ages entirely.
+        - Convert to years: 12 months = 1, 6 months = 0.5, 28 days = 0.08.
+        - If the criteria state no minimum age, return null.
+
+        Output in JSON format:
+        {{
+        "minimum_age_years": null
+        }}
+        where minimum_age_years is a number or null.
         """
     return cleandoc(prompt)
 

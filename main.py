@@ -96,6 +96,12 @@ Examples:
         metavar='NCT_ID',
         help='Map a specific NCT ID to CTML format'
     )
+    map_group.add_argument(
+        '--ct_number',
+        type=str,
+        metavar='CT_NUMBER',
+        help='Map a specific CTIS trial number (EU registry) to CTML format'
+    )
     
     map_parser.add_argument(
         '--test_mode',
@@ -106,6 +112,13 @@ Examples:
         help='Enable test mode for mapping (e.g., map a small subset of trials for testing purposes). Use --test_mode or --test_mode true/false.'
     )
     
+    map_parser.add_argument(
+        '--source',
+        choices=['nct', 'ctis'],
+        default='nct',
+        help="Which registry to map from when using --all (default: nct)."
+    )
+
     # Add cutoff days option for map --all
     map_parser.add_argument(
         '--cutoff-days', 
@@ -116,7 +129,8 @@ Examples:
 
     args = parser.parse_args()
 
-    nct_files_path = 'cache/nct'    
+    nct_files_path = 'cache/nct'
+    ctis_files_path = 'cache/ctis'    
 
     if args.command == 'pull':
         if args.all:
@@ -140,9 +154,36 @@ Examples:
         else:
             ctml_files_path = "cache/ctml/"
         if args.all:
-            map_all(nct_files_path, ctml_files_path, args)
+            if args.source == 'ctis':
+                map_all_ctis(ctis_files_path, ctml_files_path, args)
+            else:
+                map_all(nct_files_path, ctml_files_path, args)
+        elif args.ct_number:
+            map_ctis(args.ct_number, ctis_files_path, ctml_files_path)
         else:
             map_nct(args.nct_id, nct_files_path, ctml_files_path)
+
+def map_ctis(ct_number, ctis_files_path, ctml_files_path):
+    """Map one CTIS trial to CTML."""
+    from src.trial_map_manager import TrialMapManager
+    manager = TrialMapManager()
+    ok = manager.map_single_ctis_trial(ct_number, ctis_files_path, ctml_files_path)
+    print(f"{ct_number}: {'mapped' if ok else 'FAILED'}")
+
+
+def map_all_ctis(ctis_files_path, ctml_files_path, args):
+    """Map every cached CTIS trial to CTML."""
+    import os
+    from src.trial_map_manager import TrialMapManager
+    manager = TrialMapManager()
+    numbers = sorted(f[:-5] for f in os.listdir(ctis_files_path) if f.endswith('.json'))
+    done = failed = 0
+    for n, ct in enumerate(numbers, 1):
+        ok = manager.map_single_ctis_trial(ct, ctis_files_path, ctml_files_path)
+        done, failed = done + bool(ok), failed + (not ok)
+        print(f"  [{n}/{len(numbers)}] {ct}: {'ok' if ok else 'FAILED'}")
+    print(f"\nmapped {done}, failed {failed}")
+
 
 def pull_all():
     """Trial synchronization implementation"""

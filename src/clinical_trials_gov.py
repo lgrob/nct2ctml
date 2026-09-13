@@ -97,7 +97,7 @@ def map_nct_to_clinical_and_genomic_criteria(trial_data: dict,
     # map global genomic criteria
 
     logger.info(f"NCTID: {nct_id} | Mapping global genomic criteria")
-    global_genomic_ctml = map_ctml_match_genomic_criteria(trial_data, gene_synonym_mapping, global_inclusion_text, global_exclusion_text)
+    global_genomic_ctml = map_ctml_match_genomic_criteria(nct_id, gene_synonym_mapping, global_inclusion_text, global_exclusion_text)
     trial_level_match_result = mcm.combine_clinical_and_genomic_ctml(global_clinical_ctml, global_genomic_ctml)
     match_list = trial_schema['treatment_list']['step'][0]['match']
     match_list.append(trial_level_match_result)
@@ -113,7 +113,6 @@ def map_nct_to_clinical_and_genomic_criteria(trial_data: dict,
 
     _map_arm_level_matches(
         nct_id=nct_id,
-        trial_data=trial_data,
         all_arms_criteria=all_arms_criteria,
         trial_schema=trial_schema,
         keywords=keywords,
@@ -142,7 +141,6 @@ def _map_biomarker_statuses(
 
 def _map_arm_level_matches(
     nct_id: str,
-    trial_data: dict,
     all_arms_criteria: ArmCriteriaBlocks,
     trial_schema: dict,
     keywords: list,
@@ -183,7 +181,7 @@ def _map_arm_level_matches(
 
         logger.info(f"NCTID: {nct_id} | Mapping arm level genomic criteria for arm {level_code}")
         arm_genomic_ctml = map_ctml_match_genomic_criteria(
-            trial_data, gene_synonym_mapping, arm_inclusion_text, arm_exclusion_text
+            nct_id, gene_synonym_mapping, arm_inclusion_text, arm_exclusion_text
         )
         arm_level_match_result = mcm.combine_clinical_and_genomic_ctml(
             arm_clinical_ctml, arm_genomic_ctml
@@ -379,8 +377,15 @@ def map_ctml_general_fields(trial_schema, trial_data) -> dict:
     #logger.debug(f"CTML: After general mapping | {trial_schema}")
     return trial_schema
 
-def map_ctml_match_genomic_criteria(trial_data: dict, gene_synonym_mapping:Dict[str, List[str]], inclusion_text: str, exclusion_text: str):
-    nct_id = get_nct_id(trial_data)
+def map_ctml_match_genomic_criteria(trial_id: str, gene_synonym_mapping:Dict[str, List[str]], inclusion_text: str, exclusion_text: str):
+    """
+    Map genomic criteria out of free-text eligibility.
+
+    Source-agnostic: takes the trial's identifier rather than a
+    ClinicalTrials.gov document, so CTIS records reach the same gene
+    extraction, contradiction resolution and enrichment path.
+    """
+    nct_id = trial_id
     eligibilityCriteria = inclusion_text + "\n" + exclusion_text
     contains_gene_info = mcm.check_if_eligibility_criteria_contains_gene_info(gene_synonym_mapping, eligibilityCriteria) #check if eligibility criteria contains any gene before asking AI
 
