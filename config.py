@@ -21,9 +21,25 @@ ANTHROPIC_MAX_TOKENS = 16000
 # Anthropic model (used when LLM_PLATFORM = "Anthropic")
 #LLM_AI_MODEL = "claude-opus-5"
 
+# --- GPU deployment (LeoMed or any box with >=24 GB VRAM) ------------------
+# Start here. Upstream developed every prompt in utils/ai_helper.py against a
+# 27B Gemma on Ollama (doc/local_llm_deployment_guide.md), so it is the model
+# most likely to work with them unmodified - which means a poor result can be
+# read as a model problem rather than a prompt problem. It also has no
+# thinking mode, and reasoning tokens are pure cost for structured extraction:
+# qwen3:14b once emitted 30,251 of them on a single call and hung for 3.5h.
+# ~16 GB at Q4, so it fits a 24 GB card with room for real context.
+# Raise OLLAMA_NUM_CTX to 32768 and drop the timeout to ~300 when using this.
+#LLM_AI_MODEL = "hf.co/unsloth/gemma-3-27b-it-GGUF:Q4_K_M"
+#
+# Runner-up for 40 GB+. Likely sharper, but thinking MUST be disabled or it
+# reproduces the hang above on better hardware.
+#LLM_AI_MODEL = "qwen3:32b"
+
 # Local model via Ollama (free, runs on this machine, no data leaves it).
 # 14B at Q4 is about 9 GB and fits 16 GB of unified memory; the 32B models
-# commented out above do not.
+# commented out above do not. Benchmarked at dx F1 far below curation grade -
+# see bench/ - so this is a plumbing model, not a production one.
 LLM_AI_MODEL = "qwen3:14b"
 
 # gemma library
@@ -70,5 +86,9 @@ LLM_REQUEST_TIMEOUT_SECONDS = 1200
 # Ollama defaults num_ctx to 4096, too small for the genomic prompts.
 # Prompts peak around 12k chars (~3k tokens), so 8192 is ample; 16384 only adds
 # KV cache pressure on a machine already swapping under the 9.3 GB model.
+# On a GPU this constraint disappears: raise to 32768. The longest criteria
+# text in the corpus is 19,676 chars (~4,900 tokens) before the prompt
+# wrapper, gene list and oncotree terms are added, and Ollama truncates an
+# over-long prompt silently rather than erroring.
 OLLAMA_NUM_CTX = 8192
 OLLAMA_NUM_PREDICT = 2048
