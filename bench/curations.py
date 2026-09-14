@@ -311,10 +311,20 @@ CURATIONS["NCT05504291"] = dict(
 )
 
 CURATIONS["NCT05985161"] = dict(
-    # Selinexor. "XPO1 Gene Mutation" is listed as a trial condition but no
-    # cohort requires it: A is any Wilms tumour, B any rhabdoid tumour, C
-    # MPNST, D any solid tumour. A condition label is not an eligibility
-    # criterion.
+    # Selinexor, five cohorts. Two of them do carry a genomic requirement:
+    # cohort D admits a tumour with an XPO1 E571K gain-of-function mutation
+    # (alongside non-genomic routes - Darwin OncoTarget/OncoTreat and
+    # preclinical testing), and cohort E requires "an activating genomic
+    # alteration ... involving BCOR".
+    #
+    # The key still carries none, because cohorts A, B and C - any Wilms
+    # tumour, any rhabdoid tumour, MPNST - enrol on histology alone. Nothing
+    # genomic is required of every patient, which is the alternative-cohorts
+    # rule at the top of this file.
+    #
+    # Cohort E is also where ZC3H7B came from: it is named as a BCOR fusion
+    # partner (ZC3H7B-BCOR), is a real gene, and is not on Kispi's panel, so
+    # the validator drops it and BCOR carries the criterion.
     age="All",
     match=[all_of(
         dx("Wilms' Tumor", "Rhabdoid Cancer", "Atypical Teratoid/Rhabdoid Tumor",

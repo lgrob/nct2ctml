@@ -16,6 +16,10 @@ from utils.reference_validation import (
 logger.remove()  # the filters log every drop; tests assert on return values
 
 
+def _ref(name):
+    return os.path.join(os.path.dirname(__file__), '..', 'ref', name)
+
+
 def _genomic(symbol, category="Mutation"):
     return {"genomic": {"hugo_symbol": symbol, "variant_category": category}}
 
@@ -66,6 +70,49 @@ class TestCanonicalGene(unittest.TestCase):
     def test_real_histone_genes_survive(self):
         for symbol in ("H3-3A", "H3-3B", "H3C2"):
             self.assertEqual(canonical_gene(symbol), symbol)
+
+
+class TestRetiredGeneSymbols(unittest.TestCase):
+    """
+    ref/genes.txt is current HGNC; ref/genes_kispi.txt is the raw list. The
+    difference is a set of renames, and those are the only rewrites allowed.
+    """
+
+    def test_retired_symbols_are_brought_up_to_date(self):
+        for retired, current in (("H3F3A", "H3-3A"), ("H3F3B", "H3-3B"),
+                                 ("HIST1H3B", "H3C2"), ("WHSC1", "NSD2"),
+                                 ("SEPT9", "SEPTIN9"), ("MKL1", "MRTFA"),
+                                 ("CARS", "CARS1"), ("ACPP", "ACP3")):
+            self.assertEqual(canonical_gene(retired), current, retired)
+
+    def test_every_legacy_symbol_resolves(self):
+        """No symbol Kispi listed should be lost to a rename."""
+        genes = {l.strip() for l in open(_ref("genes.txt")) if l.strip()}
+        legacy = {l.strip() for l in open(_ref("genes_kispi.txt")) if l.strip()}
+        unresolved = [s for s in legacy - genes if canonical_gene(s) is None]
+        self.assertEqual(unresolved, [])
+
+    def test_short_aliases_are_not_rewritten(self):
+        """
+        The guard that matters. The full synonym table maps ALL to BCR, AT to
+        BTK, ARF to CDKN2A and H3 to H3C14. In a paediatric pipeline "ALL"
+        means acute lymphoblastic leukaemia in nearly every trial, so a rewrite
+        would invent a BCR criterion where the model said a disease name. A
+        drop is visible in the log; a wrong rewrite is not.
+        """
+        for alias in ("ALL", "AT", "ARF", "AGO", "H3", "AA", "ABL", "AKT"):
+            self.assertIsNone(canonical_gene(alias), alias)
+
+    def test_multi_gene_aliases_are_not_rewritten(self):
+        # "RAS" -> KRAS,NRAS,HRAS: no single symbol to rewrite to.
+        for alias in ("RAS", "KRAS/NRAS/HRAS", "RAS-mutated"):
+            self.assertIsNone(canonical_gene(alias), alias)
+
+    def test_the_rewrite_set_stays_small(self):
+        from utils.reference_validation import _gene_aliases
+        self.assertLess(len(_gene_aliases()), 40,
+                        "the rewrite set grew; it should only hold renames "
+                        "between genes.txt and genes_kispi.txt")
 
 
 class TestFilterDiagnoses(unittest.TestCase):

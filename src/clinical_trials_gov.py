@@ -97,7 +97,7 @@ def map_nct_to_clinical_and_genomic_criteria(trial_data: dict,
     mapped_global_clinical_critera.update(biomarker_status_dict)
 
     logger.debug(f"global clinical criteria: {mapped_global_clinical_critera}")
-    global_clinical_ctml = mcm.convert_to_ctml_clinical_schema(mapped_global_clinical_critera)
+    global_clinical_ctml = mcm.convert_to_ctml_clinical_schema(mapped_global_clinical_critera, nct_id)
 
     # map global genomic criteria
 
@@ -181,7 +181,7 @@ def _map_arm_level_matches(
         )
 
         logger.debug(f"arm level clinical criteria: {mapped_arm_clinical_critera}")
-        arm_clinical_ctml = mcm.convert_to_ctml_clinical_schema(mapped_arm_clinical_critera)
+        arm_clinical_ctml = mcm.convert_to_ctml_clinical_schema(mapped_arm_clinical_critera, nct_id)
         logger.debug(f"arm level clinical criteria as CTML: {arm_clinical_ctml}")
 
         logger.info(f"NCTID: {nct_id} | Mapping arm level genomic criteria for arm {level_code}")
@@ -425,7 +425,7 @@ def map_ctml_match_genomic_criteria(trial_id: str, gene_synonym_mapping:Dict[str
             print(f'exclusion_genomic_criteria after enrichment: {exclusion_genomic_criteria}')
 
         genomic_ctml = mcm.convert_to_ctml_genomic_schema(
-            inlcusion_genomic_criteria, exclusion_genomic_criteria, inclusion_text)
+            inlcusion_genomic_criteria, exclusion_genomic_criteria, inclusion_text, nct_id)
         logger.debug(f"genomic criteria as CTML: {genomic_ctml}")
         return genomic_ctml
     else:

@@ -115,7 +115,7 @@ def _clean_protein_change_fields(genomic_criteria: list) -> list:
     return genomic_criteria
 
 
-def _postprocess_genomic_criteria(genomic_criteria: list) -> list:
+def _postprocess_genomic_criteria(genomic_criteria: list, trial_id: str = "") -> list:
     """
     Post-process genomic criteria:
 
@@ -128,10 +128,11 @@ def _postprocess_genomic_criteria(genomic_criteria: list) -> list:
 
     # Normalize HUGO symbols as part of post-processing
     genomic_criteria = tdh.update_hugo_symbol(genomic_criteria)
-    # Synonyms are resolved above, so a symbol still unrecognised here is not a
-    # gene. Dropping it beats keeping it: an invented symbol matches no patient,
-    # so it silently narrows the arm rather than failing visibly.
-    genomic_criteria = filter_genomic_criteria(genomic_criteria)
+    # update_hugo_symbol only rewrites HER2 to ERBB2, so this is where retired
+    # symbols are brought up to date and unrecognised ones are dropped. Dropping
+    # beats keeping: an invented symbol matches no patient, so it silently
+    # narrows the arm rather than failing visibly.
+    genomic_criteria = filter_genomic_criteria(genomic_criteria, trial_id)
     genomic_criteria = _clean_protein_change_fields(genomic_criteria)
 
     return genomic_criteria
@@ -145,7 +146,7 @@ def get_keywords_from_conditions(conditions_list):
                 all_keywords.add(cond_keyword)
     return all_keywords
 
-def convert_to_ctml_clinical_schema(clinical_critera) -> dict:
+def convert_to_ctml_clinical_schema(clinical_critera, trial_id: str = "") -> dict:
     clinical_critera = dict(clinical_critera or {})
 
     # Extract the diagnosis list
@@ -158,7 +159,7 @@ def convert_to_ctml_clinical_schema(clinical_critera) -> dict:
         # tree. If that empties the list, fall through to the no-diagnosis path
         # below rather than emitting a clinical block keyed on a string that can
         # never match a patient.
-        diagnoses = filter_diagnoses(raw_diagnoses)
+        diagnoses = filter_diagnoses(raw_diagnoses, trial_id)
 
     if diagnoses:
         if len(diagnoses) > 1:  # incase of multiple diagnoses, put the result under 'or' operator
@@ -381,14 +382,14 @@ def find_unsatisfiable_genes(match_node) -> list:
 
 
 def convert_to_ctml_genomic_schema(inclusion_genomic_criteria: list, exclusion_genomic_criteria: list,
-                                   inclusion_text: str = "") -> dict: 
+                                   inclusion_text: str = "", trial_id: str = "") -> dict: 
     inclusions = []
     exclusions = []
     print(tdh.get_all_keys(inclusion_genomic_criteria))
     print(tdh.get_all_keys(exclusion_genomic_criteria))
     if inclusion_genomic_criteria and all(key in tdh.get_all_keys(inclusion_genomic_criteria) for key in ["hugo_symbol", "variant_category"]):
         # post processing
-        inclusion_genomic_criteria = _postprocess_genomic_criteria(inclusion_genomic_criteria)
+        inclusion_genomic_criteria = _postprocess_genomic_criteria(inclusion_genomic_criteria, trial_id)
         for alteration in inclusion_genomic_criteria:
             variant_category = alteration["genomic"]["variant_category"]
             # if variant_category begins with !, add alteration to exclusions, without removing !
@@ -401,7 +402,7 @@ def convert_to_ctml_genomic_schema(inclusion_genomic_criteria: list, exclusion_g
     
     if exclusion_genomic_criteria and all(key in tdh.get_all_keys(exclusion_genomic_criteria) for key in ["hugo_symbol", "variant_category"]):
         # post processing
-        exclusion_genomic_criteria = _postprocess_genomic_criteria(exclusion_genomic_criteria)
+        exclusion_genomic_criteria = _postprocess_genomic_criteria(exclusion_genomic_criteria, trial_id)
         for alteration in exclusion_genomic_criteria:
             if alteration not in exclusions:
                 exclusions.append(alteration)
