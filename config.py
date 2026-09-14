@@ -96,10 +96,12 @@ MAPPING_CUTOFF_DAYS = 1
 # generation loop blocks the pipeline indefinitely.
 # 2048 tokens at the ~2.4 tok/s a 14B manages on a 16 GB M3 needs ~850s, so the
 # timeout must exceed that or it fires before num_predict can cap a runaway.
-# 2048 tokens at the ~40 tok/s a 27B manages on a datacentre GPU needs ~50s.
+# Must exceed the time OLLAMA_NUM_PREDICT tokens take to generate, or it
+# fires before the cap can do its job. 8192 tokens at ~30-40 tok/s is
+# ~205-273s on a datacentre GPU.
 # On a 16 GB laptop at 2.4 tok/s the same cap needs ~850s - raise this to 1200
 # if you go back to CPU inference.
-LLM_REQUEST_TIMEOUT_SECONDS = 300
+LLM_REQUEST_TIMEOUT_SECONDS = 600
 # Ollama defaults num_ctx to 4096, too small for the genomic prompts, and it
 # truncates an over-long prompt SILENTLY rather than erroring - a truncated
 # prompt scores badly with nothing to indicate why. The longest criteria text
@@ -107,4 +109,10 @@ LLM_REQUEST_TIMEOUT_SECONDS = 300
 # gene list and oncotree terms are added, so leave real headroom.
 # Drop to 8192 only if running on a machine short of memory.
 OLLAMA_NUM_CTX = 32768
-OLLAMA_NUM_PREDICT = 2048
+# Caps output tokens so a runaway generation loop cannot block the pipeline.
+# 2048 is too low for real work: on the first GPU run it severed valid JSON
+# mid-string at ~1,900 tokens (char 7795, 7089, 8291 across three trials),
+# which surfaces as a JSONDecodeError rather than as a truncation. The genomic
+# criteria block for a multi-arm trial legitimately runs longer than that.
+# 8192 at ~40 tok/s is ~205s, inside LLM_REQUEST_TIMEOUT_SECONDS below.
+OLLAMA_NUM_PREDICT = 8192

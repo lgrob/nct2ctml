@@ -119,13 +119,17 @@ fi
 # The whole point of the cluster. 'ollama ps' reports the split; anything
 # showing CPU means --nv or the driver is not working, and the run would take
 # days instead of hours.
-apptainer exec --nv "$SIF" ollama run "$MODEL" "reply with OK" >/dev/null 2>&1 || true
-PROCESSOR=$(apptainer exec --nv "$SIF" ollama ps 2>/dev/null | tail -n +2 | head -1)
-echo "[$(date +%T)] ollama ps: $PROCESSOR"
-case "$PROCESSOR" in
-  *GPU*) echo "  -> running on GPU" ;;
-  *CPU*) echo "  -> WARNING: running on CPU. Check --nv and the driver before continuing." ;;
-  *)     echo "  -> could not determine placement; check manually with 'ollama ps'" ;;
+# Load the model, then ask the API rather than parsing CLI output - 'ollama ps'
+# prints nothing if the model has not finished loading, which reads as "cannot
+# determine placement" when everything is in fact fine.
+curl -s -m 600 http://127.0.0.1:11434/api/generate \
+  -d "{\"model\":\"$MODEL\",\"prompt\":\"hi\",\"stream\":false}" >/dev/null 2>&1 || true
+PS_JSON=$(curl -s -m 15 http://127.0.0.1:11434/api/ps 2>/dev/null)
+echo "[$(date +%T)] loaded: $(echo "$PS_JSON" | tr ',' '\n' | grep -iE 'size_vram|"name"' | tr '\n' ' ')"
+case "$PS_JSON" in
+  *size_vram*0,*|*'"size_vram":0'*) echo "  -> WARNING: size_vram is 0, the model is on CPU. Check --nv." ;;
+  *size_vram*)                      echo "  -> model resident in VRAM" ;;
+  *)                                echo "  -> could not read /api/ps; check nvidia-smi below" ;;
 esac
 nvidia-smi --query-gpu=name,memory.used,memory.total --format=csv,noheader 2>/dev/null || true
 
