@@ -11,6 +11,7 @@ import os
 # Add the src directory to the path so we can import the module
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
+import match_criteria_mapper as mcm
 from match_criteria_mapper import (
     convert_to_ctml_genomic_schema,
     convert_to_ctml_clinical_schema,
@@ -534,6 +535,61 @@ class TestFindUnsatisfiableGenes(unittest.TestCase):
             {"genomic": {"hugo_symbol": "MYCN", "variant_category": "!Any Variation"}},
         ]}
         self.assertEqual(find_unsatisfiable_genes(tree), [])
+
+
+class TestFabricatedInclusion(unittest.TestCase):
+    """
+    A gene excluded by the protocol but 'required' by the model.
+
+    NCT03643276 is a front-line paediatric ALL protocol whose only mention of
+    the gene is the exclusion "Ph+ (BCR-ABL1 or t(9;22)-positive) ALL". When
+    the model also emitted an ABL1 inclusion, the resolver kept the
+    hallucination and dropped the real exclusion, so a Ph+ patient would have
+    matched a trial that explicitly excludes them.
+    """
+
+    ALL_INCLUSION = (
+        "newly diagnosed acute lymphoblastic leukemia or newly diagnosed mixed "
+        "phenotype acute leukemia (MPAL); age < 18 years at the day of diagnosis"
+    )
+
+    @staticmethod
+    def _gene(symbol, category="Mutation"):
+        return {"genomic": {"hugo_symbol": symbol, "variant_category": category}}
+
+    def test_inclusion_dropped_when_gene_absent_from_inclusion_text(self):
+        inc, exc, notes = mcm.resolve_contradictory_genes(
+            [self._gene("ABL1")],
+            [self._gene("ABL1", "!Any Variation")],
+            self.ALL_INCLUSION)
+        self.assertEqual(inc, [], "hallucinated inclusion should be dropped")
+        self.assertEqual(len(exc), 1, "the real exclusion must survive")
+        self.assertIn("fabricated", notes[0])
+
+    def test_fusion_partner_counts_as_a_mention(self):
+        # ABL1 inside "BCR-ABL1" is a genuine mention, so this is not case 3.
+        inc, exc, _ = mcm.resolve_contradictory_genes(
+            [self._gene("ABL1")],
+            [self._gene("ABL1", "!Any Variation")],
+            "patients with BCR-ABL1 positive disease are eligible")
+        self.assertEqual(len(inc), 1, "inclusion is supported by the text")
+        self.assertEqual(exc, [])
+
+    def test_short_symbol_does_not_match_inside_a_word(self):
+        # 'AR' must not be considered mentioned by "are" or "target".
+        inc, exc, notes = mcm.resolve_contradictory_genes(
+            [self._gene("AR")],
+            [self._gene("AR", "!Any Variation")],
+            "patients are eligible if the target lesion is measurable")
+        self.assertEqual(inc, [], "AR is not actually mentioned")
+        self.assertEqual(len(exc), 1)
+        self.assertIn("fabricated", notes[0])
+
+    def test_no_inclusion_text_keeps_the_safe_default(self):
+        inc, exc, _ = mcm.resolve_contradictory_genes(
+            [self._gene("BRAF")], [self._gene("BRAF", "!Any Variation")], "")
+        self.assertEqual(len(inc), 1, "without text, keep the requirement")
+        self.assertEqual(exc, [])
 
 
 if __name__ == '__main__':

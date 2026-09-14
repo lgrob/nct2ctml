@@ -5,6 +5,8 @@
 
 from typing import Dict, TypedDict
 
+import re
+
 from loguru import logger
 
 import config
@@ -192,6 +194,20 @@ _COHORT_NEGATION_CUES = (
 )
 
 
+def _text_mentions_gene(text: str, gene: str) -> bool:
+    """
+    Is the symbol actually written in this text?
+
+    Boundaries are non-alphanumeric rather than \b so that a symbol inside a
+    fusion name still counts - ABL1 in "BCR-ABL1" is a mention - while short
+    symbols do not match inside ordinary words (AR in "are", MET in "metastatic").
+    """
+    if not text or not gene:
+        return False
+    return re.search(rf"(?<![A-Za-z0-9]){re.escape(gene)}(?![A-Za-z0-9])",
+                     text, re.IGNORECASE) is not None
+
+
 def resolve_contradictory_genes(inclusions: list, exclusions: list,
                                 inclusion_text: str = "") -> tuple[list, list, list]:
     """
@@ -220,9 +236,19 @@ def resolve_contradictory_genes(inclusions: list, exclusions: list,
        loses the cohort distinction either way; dropping both at least keeps
        the trial matchable rather than matching nobody.
 
-    `inclusion_text` distinguishes them. Without it, case 1 is assumed, since
-    it is both more common and the safer error: keeping a real requirement is
-    better than discarding it on the strength of a fabricated exclusion.
+    3. A fabricated inclusion. The gene is nowhere in the inclusion text, so
+       nothing there can have required it - the model invented the inclusion
+       and the exclusion is the real criterion. Observed on NCT03643276, a
+       front-line ALL protocol whose only mention of the gene is the exclusion
+       "Ph+ (BCR-ABL1 or t(9;22)-positive) ALL". Treating that as case 1 kept
+       a hallucinated ABL1 requirement and discarded a genuine exclusion, so a
+       Ph+ patient would have matched a trial that explicitly excludes them.
+       Here the inclusion is dropped and the exclusion kept.
+
+    `inclusion_text` distinguishes all three, and case 3 is checked first: if
+    the symbol is not in the text, no reading of that text can support a
+    requirement on it. Without any text, case 1 is assumed, since it is both
+    more common and the safer error when nothing can be verified.
 
     Returns (inclusions, exclusions, notes) where notes describes what was
     dropped and why, for the manual review step.
@@ -251,9 +277,14 @@ def resolve_contradictory_genes(inclusions: list, exclusions: list,
         return inclusions, exclusions, []
 
     text = (inclusion_text or "").lower()
-    cohort_genes, artefact_genes = set(), set()
+    cohort_genes, artefact_genes, fabricated_genes = set(), set(), set()
     for gene in sorted(set(contradictory)):
-        if any(cue in text for cue in _COHORT_NEGATION_CUES):
+        if inclusion_text and not _text_mentions_gene(inclusion_text, gene):
+            # The symbol is nowhere in the inclusion text, so nothing there can
+            # have required it: the inclusion is the fabrication and the
+            # exclusion is the real criterion.
+            fabricated_genes.add(gene)
+        elif any(cue in text for cue in _COHORT_NEGATION_CUES):
             cohort_genes.add(gene)
         else:
             artefact_genes.add(gene)
@@ -277,9 +308,19 @@ def resolve_contradictory_genes(inclusions: list, exclusions: list,
         )
         notes.append(f"{gene}: dropped both (alternative cohorts)")
 
-    keep_inc = [a for a in inclusions if gene_of(a) not in cohort_genes]
-    keep_exc = [a for a in exclusions
-                if gene_of(a) not in cohort_genes and gene_of(a) not in artefact_genes]
+    for gene in sorted(fabricated_genes):
+        logger.warning(
+            f"Contradictory genomic criteria for {gene}: required and excluded in the "
+            f"same match tree, but {gene} does not appear in the inclusion text at all. "
+            f"The inclusion is fabricated and the exclusion is the real criterion. "
+            f"Dropping the inclusion and keeping the exclusion."
+        )
+        notes.append(f"{gene}: dropped fabricated inclusion")
+
+    drop_inc = cohort_genes | fabricated_genes
+    drop_exc = cohort_genes | artefact_genes
+    keep_inc = [a for a in inclusions if gene_of(a) not in drop_inc]
+    keep_exc = [a for a in exclusions if gene_of(a) not in drop_exc]
     return keep_inc, keep_exc, notes
 
 
