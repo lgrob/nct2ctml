@@ -1,0 +1,101 @@
+nct_id: NCT03838042
+age: Children
+phase: PHASE1
+short_title: INFORM2 Study Uses Nivolumab and Entinostat in Children and Adolescents With High-risk Refractory
+  Malignancies
+long_title: INFORM2 Exploratory Multinational Phase I/II Combination Study of Nivolumab and Entinostat
+  in Children and Adolescents With Refractory High-risk Malignancies (INFORM2-NivEnt)
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-12'
+data_table4: Interventional
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_type: INTERVENTIONAL
+protocol_target_accrual: 91
+principal_investigator: NA
+principal_investigator_institution: University Hospital Heidelberg
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+site_list:
+  site: []
+staff_list:
+  protocol_staff: []
+status: open to accrual
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: University Hospital Heidelberg
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+drug_list:
+  drug:
+  - drug_name: Nivolumab and Entinostat
+study_start_date: '2020-05-26'
+study_completion_date: '2027-06-30'
+last_updated: '2024-02-07'
+summary: The aim of this trial is to determine preliminary activity of the combination treatment with
+  nivolumab and entinostat in children and adolescents with high risk refractory/relapsed/progressive
+  tumors harboring a high mutational load, focal MYC(N) amplification or ATRT-MYC subgroup as well as
+  tumors with high tumor infiltrating lymphocytes (TILs) or a tertiary lymphoid structure (TLS).
+treatment_list:
+  step:
+  - step_internal_id: 1
+    step_code: '1'
+    step_type: Registration
+    match:
+    - and:
+      - or:
+        - clinical:
+            oncotree_primary_diagnosis: Medulloblastoma
+        - clinical:
+            oncotree_primary_diagnosis: Ependymoma
+        - clinical:
+            oncotree_primary_diagnosis: Atypical Teratoid/Rhabdoid Tumor
+        - clinical:
+            oncotree_primary_diagnosis: High-Grade Glioma, NOS
+        - clinical:
+            oncotree_primary_diagnosis: Diffuse Midline Glioma, H3 K27-Altered
+        - clinical:
+            oncotree_primary_diagnosis: Neuroblastoma
+        - clinical:
+            oncotree_primary_diagnosis: Wilms' Tumor
+        - clinical:
+            oncotree_primary_diagnosis: Embryonal Rhabdomyosarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Alveolar Rhabdomyosarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Ewing Sarcoma
+      - clinical:
+          age_numerical: '>=2'
+      - clinical:
+          age_numerical: <=21
+      - clinical:
+          disease_status:
+          - Recurrent
+          - Refractory
+      - or:
+        - genomic:
+            hugo_symbol: MYC
+            variant_category: Copy Number Variation
+            cnv_call: High Amplification
+        - genomic:
+            hugo_symbol: MYCN
+            variant_category: Copy Number Variation
+            cnv_call: High Amplification
+    arm:
+    - arm_code: Nivolumab and Entinostat
+      arm_internal_id: 0
+      arm_description: Combination Study of Nivolumab and Entinostat
+      arm_suspended: N
+      dose_level: []

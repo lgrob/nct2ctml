@@ -1,0 +1,127 @@
+nct_id: NCT05009992
+age: Children
+phase: PHASE2
+short_title: Combination Therapy for the Treatment of Diffuse Midline Gliomas
+long_title: A Combination Therapy Trial Using an Adaptive Platform Design for Children and Young Adults
+  With Diffuse Midline Gliomas (DMGs) Including Diffuse Intrinsic Pontine Gliomas (DIPGs) at Initial Diagnosis,
+  Post-Radiation Therapy and at Time of Progression
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-12'
+data_table4: Interventional
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_type: INTERVENTIONAL
+protocol_target_accrual: 360
+principal_investigator: NA
+principal_investigator_institution: University of California, San Francisco
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+site_list:
+  site: []
+staff_list:
+  protocol_staff: []
+status: open to accrual
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: University of California, San Francisco
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+drug_list:
+  drug:
+  - drug_name: ONC201
+  - drug_name: Radiation Therapy
+  - drug_name: Paxalisib
+  - drug_name: DNX-2401
+study_start_date: '2021-10-20'
+study_completion_date: '2029-06-30'
+last_updated: '2026-06-26'
+summary: 'This phase II trial determines if the combination of ONC201 with different drugs is effective
+  for treating participants with diffuse midline gliomas (DMGs). Despite years of research, little to
+  no progress has been made to improve outcomes for participants with DMGs, and there are few treatment
+  options. This trial will utilize an adaptive platform design in that the different treatment arms for
+  each cohort will be opened and closed based on ongoing preclinical investigation as well as evolving
+  outcome data from the trial.
+
+
+  Novel agents will be continuously added to this study as pre-clinical data emerge to suggest additive
+  or synergistic activity when combined ONC201. Should a novel agent not have an RP2D at the time of incorporation
+  into this study, a phase 1 lead-in will be performed prior to initiation of combination therapy (via
+  study amendment).'
+treatment_list:
+  step:
+  - step_internal_id: 1
+    step_code: '1'
+    step_type: Registration
+    match:
+    - and:
+      - clinical:
+          oncotree_primary_diagnosis: Diffuse Midline Glioma, H3 K27-Altered
+      - clinical:
+          age_numerical: '>=2'
+      - clinical:
+          age_numerical: <=39
+    arm:
+    - arm_code: 'NOT CURRENTLY ENROLLING - ARM 2: ONC201 (Day -1), Radiation+ONC201, Paxalisib+ONC201'
+      arm_internal_id: 0
+      arm_description: Participants may receive a safety lead in of ONC201. During the trial validation
+        phase, participants without prior biopsy receive ONC201 PO on day -1 prior to standard of care
+        biopsy. During the radiation/re-irradiation phase, participants without prior radiation therapy
+        or have disease progression after radiation therapy undergo weekly radiation therapy and receive
+        ONC201 PO weekly during radiati
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'NOT CURRENTLY ENROLLING - ARM 4: ONC201 (Day -1,-2), Radiation+ONC201, Paxalisib+ONC201'
+      arm_internal_id: 1
+      arm_description: Participants may receive a safety lead in of ONC201. During the trial validation
+        phase, participants without prior biopsy receive ONC201 PO on days -2 and -1 prior to standard
+        of care biopsy. During the radiation/re-irradiation phase, participants may receive ONC201 PO
+        weekly during radiation therapy. During the maintenance phase, participants receive ONC201 PO
+        weekly and paxalisib PO QD. Cycles r
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'NOT CURRENTLY ENROLLING - ARM 6: Paxalisib (Day -1), Radiation+Paxalisib , Paxalisib+ONC201'
+      arm_internal_id: 2
+      arm_description: Participants may receive a safety lead in of ONC201. During trial validation phase,
+        participants without prior biopsy receive paxalisib PO on day -1 prior to standard of care biopsy.
+        During the radiation/re-irradiation phase, participants without prior radiation therapy or have
+        disease progression after radiation therapy undergo weekly radiation therapy and receive paxalisib
+        PO daily during radiat
+      arm_suspended: N
+      dose_level: []
+    - arm_code: NOT CURRENTLY ENROLLING - Cohort 4 - Dose Escalation, Starting Dose 2 (625mg ONC201)
+      arm_internal_id: 3
+      arm_description: Participants will receive a safety lead in of 625mg (or weight-adjusted adult equivalent
+        RP2D for pediatrics) of ONC201 on Day 1 and 2 of each week. During the target validation phase,
+        participants without prior biopsy receive ONC201 PO on days -2 and -1 prior to standard of care
+        biopsy. For participants receiving non-interventional radiation/re-irradiation per standard of
+        care treatment, particip
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Cohort 5 - ONC201 + Targeted therapies
+      arm_internal_id: 4
+      arm_description: Participants will receive a starting dose of 625mg (or weight-adjusted adult equivalent
+        RP2D for pediatrics) of ONC201 on Day 1 and 2 of each week in combination with targeted agents
+        to be selected from approved/available agents based on a rational therapy approach guided by molecular
+        data from the tumor tissue or cerebral spinal fluid (CSF). For participants receiving non-interventional
+        radiation
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Cohort 6 - DNX-2401 Repeated Intratumoral Administration
+      arm_internal_id: 5
+      arm_description: Participants will receive repeated DNX-2401 intratumoral infusions every 30 days,
+        for a maximum of six injections. During Infusion 1 and Infusion 3, participants will have a biopsy
+        for tumor tissue collection.
+      arm_suspended: N
+      dose_level: []

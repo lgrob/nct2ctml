@@ -1,0 +1,162 @@
+nct_id: NCT06239272
+age: Children
+phase: PHASE1
+short_title: NRSTS2021, A Risk Adapted Study Evaluating Maintenance Pazopanib, Limited Margin, Dose-Escalated
+  Radiation Therapy and Selinexor in Non-Rhabdomyosarcoma Soft Tissue Sarcoma (NRSTS)
+long_title: NRSTS2021, A Risk Adapted Study Evaluating Maintenance Pazopanib, Limited Margin, Dose-Escalated
+  Radiation Therapy and Selinexor in Non-Rhabdomyosarcoma Soft Tissue Sarcoma (NRSTS)
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-12'
+data_table4: Interventional
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_type: INTERVENTIONAL
+protocol_target_accrual: 139
+principal_investigator: NA
+principal_investigator_institution: St. Jude Children's Research Hospital
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+site_list:
+  site: []
+staff_list:
+  protocol_staff: []
+status: open to accrual
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: St. Jude Children's Research Hospital
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+drug_list:
+  drug:
+  - drug_name: Surgical resection
+  - drug_name: Proton beam radiation therapy
+  - drug_name: Pazopanib
+  - drug_name: Ifosfamide
+  - drug_name: Doxorubicin
+  - drug_name: Selinexor
+study_start_date: '2024-03-27'
+study_completion_date: 2037-06
+last_updated: '2026-08-03'
+summary: 'The study participant has been diagnosed with non-rhabdomyosarcoma (NRSTS).
+
+
+  Primary Objectives
+
+
+  Intermediate-Risk
+
+
+  * To estimate the 3-year event-free survival for intermediate-risk patients treated with ifosfamide,
+  doxorubicin, pazopanib, surgery, and maintenance pazopanib, with or without RT.
+
+  * To characterize the pharmacokinetics of pazopanib and doxorubicin in combination with ifosfamide in
+  intermediate-risk participants, to assess potential covariates to explain the inter- and intra-individual
+  pharmacokinetic variability, and to explore associations between clinical effects and pazopanib and
+  doxorubicin pharmacokinetics.
+
+
+  High-Risk
+
+
+  * To estimate the maximum tolerated dose (MTD) and/or the recommended phase 2 dosage (RP2D) of selinexor
+  in combination with ifosfamide, doxorubicin, pazopanib, and maintenance pazopanib in high-risk participants.
+
+  * To characterize the pharmacokinetics '
+treatment_list:
+  step:
+  - step_internal_id: 1
+    step_code: '1'
+    step_type: Registration
+    match:
+    - and:
+      - or:
+        - clinical:
+            oncotree_primary_diagnosis: Synovial Sarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Malignant Peripheral Nerve Sheath Tumor
+        - clinical:
+            oncotree_primary_diagnosis: Epithelioid Sarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Liposarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Round Cell Sarcoma, NOS
+        - clinical:
+            oncotree_primary_diagnosis: Undifferentiated Pleomorphic Sarcoma/Malignant Fibrous Histiocytoma/High-Grade
+              Spindle Cell Sarcoma
+      - clinical:
+          age_numerical: '>=1'
+      - clinical:
+          age_numerical: <=30
+    arm:
+    - arm_code: Low-Risk Subset A
+      arm_internal_id: 0
+      arm_description: Participants with low grade tumors of any size, or high-grade tumors \< 5 cm that
+        have been (or are expected to be) completely removed by surgery. When the pathologist reviews
+        the tumor specimen, the tissue around the tumor (margins) must be negative for cancer cells, meaning
+        all of the cancer has been removed. These participants will have surgery to remove the tumor,
+        followed by close observation
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Low-Risk Subset B
+      arm_internal_id: 1
+      arm_description: Participants with high-grade tumors that are \< 5 cm with positive margins. This
+        means that the pathologist finds cancer cells at the edge of the tissue, suggesting that all of
+        the cancer has not been removed. These participants will have surgery followed by radiation therapy
+        for about 5-6 weeks.
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'Intermediate-Risk Subset A (participants with low grade tumors):'
+      arm_internal_id: 2
+      arm_description: '* If your tumor is completely removed at surgery \[meaning the tissue around the
+        tumor (margins) is negative for tumor cells\], you will receive no further therapy and you will
+        be closely observed for any signs of tumor recurrence.
+
+        * If your tumor cannot be completely removed at surgery \[meaning the tissue around the tumor
+        (margins) is positive for tumor cells\] and the tumor is low-grade, you wi'
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Intermediate-Risk Subset B (participants with high-grade tumors between 5 and 10 cm in
+        size
+      arm_internal_id: 3
+      arm_description: '* If your tumor is completely removed at surgery \[meaning the tissue around the
+        tumor (margins) is negative for tumor cells\] you will continue with consolidation chemotherapy
+        with additional chemotherapy without radiation therapy, followed by 6 months of maintenance therapy
+        with pazopanib.
+
+        * If your tumor cannot be completely removed at surgery \[meaning the tissue around the tumor
+        (margins) is '
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'Intermediate-Risk Subset C (participants with high-grade tumors > 10 cm):'
+      arm_internal_id: 4
+      arm_description: '* After 3 cycles of induction chemotherapy, your doctor may decide to give an
+        additional 4th cycle if he/she thinks it would be beneficial before surgery.
+
+        * You will get consolidation therapy with additional chemotherapy and radiation therapy, followed
+        by 6 months of maintenance therapy with pazopanib. The dose of radiation that you receive will
+        be higher if your tumor cannot be completely removed'
+      arm_suspended: N
+      dose_level: []
+    - arm_code: High-Risk - 2 groups
+      arm_internal_id: 5
+      arm_description: '* If you have a low-grade tumor that has spread to other parts of the body AND
+        the surgeon was able to completely remove all tumors from all parts of your body, you will have
+        no further therapy after surgery. You will be closely followed to monitor you for any signs of
+        tumor recurrence.
+
+        * If you have a high-grade tumor OR a tumor that cannot be completely removed by surgery OR you
+        have the CIC-DUX'
+      arm_suspended: N
+      dose_level: []

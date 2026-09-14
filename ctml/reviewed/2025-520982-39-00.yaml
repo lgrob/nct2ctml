@@ -1,0 +1,118 @@
+nct_id: 2025-520982-39-00
+age: Children
+phase: NA
+short_title: Study on chemotherapy and experimental drugs in patients with Philadelphia Chromosome positive
+  and ABL-class Philadelphia Chromosome-Like B-cell Acute Lymphoblastic Leukemia
+long_title: AALL2131/EsPhALL2022, An International Pilot Study of Chemotherapy and Tyrosine Kinase Inhibitor
+  with Blinatumomab in Patients with Newly Diagnosed Philadelphia Chromosome Positive or ABL-class Philadelphia
+  Chromosome-Like B-cell Acute Lymphoblastic Leukemia
+nct_link: https://euclinicaltrials.eu/ctis-public/view/2025-520982-39-00
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-12'
+data_table4: Interventional
+protocol_id: 0
+protocol_ids:
+- 2025-520982-39-00
+protocol_no: ''
+protocol_type: INTERVENTIONAL
+protocol_target_accrual: 10
+principal_investigator: NA
+principal_investigator_institution: Universita Degli Studi Di Milano Bicocca
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+site_list:
+  site: []
+staff_list:
+  protocol_staff: []
+status: open to accrual
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Universita Degli Studi Di Milano Bicocca
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+drug_list:
+  drug:
+  - drug_name: BLINCYTO 38.5 micrograms powder for concentrate and solution for solution for infusion.
+study_start_date: '2025-12-09'
+study_completion_date: null
+last_updated: '2026-08-12'
+summary: "1.\tTo estimate the 3-year event free survival (EFS) of children, adolescents, and young adults\
+  \ with newly-diagnosed Ph+ (BCR::ABL1-rearranged) B-ALL who are treated with a modified Berlin-Frankfurt-Münster\
+  \ (mBFM) chemotherapy backbone that incorporates three cycles of blinatumomab without traditional consolidation\
+  \ chemotherapy in combination with continuous dasatinib.\n2.\tTo estimate the 3-year EFS of children,\
+  \ adolescents, and young adults with newly-diagnosed ABL-class Ph-like B-ALL who are treated with a\
+  \ modified BFM chemotherapy backbone that incorporates three cycles of blinatumomab without traditional\
+  \ consolidation chemotherapy in combination with continuous imatinib for those with PDGFRB gene fusions\
+  \ or dasatinib for those without PDGFRB gene fusions\n3.\tTo describe the safety and toxicity profile\
+  \ (infections, mucositis, neurotoxicity, cytokine release syndrome, hypogammaglobulinemi"
+prior_treatment_requirements:
+- Patients must be >365 days and <18 years (for AIEOP-BFM), >365 days and <22 years (for COG) and >365
+  days and <46 years (for ALLTogether sites) at the time of enrollment.
+- Adequate liver function
+- Adequate cardiac function
+- 'Newly-diagnosed Ph+ or ABL-class Ph-like B-ALL. Leukemic blasts must express CD19. ABL-class fusions
+  are defined as rearrangements involving the following genes predicted to be sensitive to imatinib and/or
+  dasatinib: ABL1, ABL2, CSF1R, and PDGFRB.'
+- Evidence of BCR::ABL1 should be documented by a clinically-validated assay prior to study entry on Day
+  15 from the first dose of vincristine during Induction therapy.
+- Patients with Ph+ B-ALL must have previously started Induction therapy, which includes vincristine,
+  a corticosteroid, pegaspargase or calaspargase pegol, with or without anthracycline, and/or other standard
+  cytotoxic chemotherapy.
+- Patients with Ph+ B-ALL have not received more than 14 days of systemic Induction therapy beginning
+  with the first Induction dose of vincristine.
+- Patients with ABL-class Ph-like B-ALL must have previously completed 4 or 5 weeks of multiagent Induction
+  chemotherapy
+- Patients may have started either imatinib or dasatinib prior to study entry but should have received
+  no more than 14 days of TKI for Ph+ B-ALL or no more than 35 days of TKI for ABL-class Ph-like B-ALL.
+- Patients must have a performance status corresponding to ECOG scores of ≤2 or Karnofsky and Lansky performance
+  scores ≥50%. Use Karnofsky for patients >16 years of age and Lansky for patients ≤ 16 years of age.
+- Adequate renal function
+treatment_list:
+  step:
+  - step_internal_id: 1
+    step_code: '1'
+    step_type: Registration
+    match:
+    - and:
+      - or:
+        - clinical:
+            oncotree_primary_diagnosis: B-Lymphoblastic Leukemia/Lymphoma with t(9;22)(q34.1;q11.2);BCR-ABL1
+        - clinical:
+            oncotree_primary_diagnosis: B-Lymphoblastic Leukemia/Lymphoma, BCR-ABL1 Like
+        - clinical:
+            oncotree_primary_diagnosis: B-Lymphoblastic Leukemia/Lymphoma
+      - or:
+        - genomic:
+            hugo_symbol: ABL1
+            variant_category: Structural Variation
+        - genomic:
+            hugo_symbol: BCR
+            variant_category: Structural Variation
+        - genomic:
+            hugo_symbol: ABL2
+            variant_category: Structural Variation
+        - genomic:
+            hugo_symbol: PDGFRB
+            variant_category: Structural Variation
+        - genomic:
+            hugo_symbol: CSF1R
+            variant_category: Structural Variation
+      - clinical:
+          age_numerical: <22
+    arm:
+    - arm_code: Registration
+      arm_internal_id: 0
+      arm_description: Trial registration arm (CTIS record carries no arm breakdown).
+      arm_suspended: N
+      dose_level: []

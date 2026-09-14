@@ -1,0 +1,113 @@
+nct_id: 2023-505575-69-01
+age: All
+phase: NA
+short_title: Fight Osteosarcoma Through European Research evolving study platform from diagnosis to relapse
+  (FOSTER evolving study platform)
+long_title: Fight Osteosarcoma Through European Research evolving study platform from diagnosis to relapse
+  (FOSTER evolving study platform)
+nct_link: https://euclinicaltrials.eu/ctis-public/view/2023-505575-69-01
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-12'
+data_table4: Interventional
+protocol_id: 0
+protocol_ids:
+- 2023-505575-69-01
+protocol_no: ''
+protocol_type: INTERVENTIONAL
+protocol_target_accrual: 0
+principal_investigator: NA
+principal_investigator_institution: Institut Gustave Roussy
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+site_list:
+  site: []
+staff_list:
+  protocol_staff: []
+status: open to accrual
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Institut Gustave Roussy
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+drug_list:
+  drug:
+  - drug_name: CABOMETYX 60 mg film-coated tablets
+  - drug_name: CABOMETYX 20 mg film-coated tablets
+  - drug_name: CABOMETYX 40 mg film-coated tablets
+study_start_date: '2026-07-31'
+study_completion_date: null
+last_updated: '2026-08-05'
+summary: "For FOSTER evolving study platform: To assess the 3-year event-free survival (EFS) rate of the\
+  \ cohort overalldifferent treatment sequences.\nFor FOSTER-CabOS (first randomization) : To assess efficacy\
+  \ in terms of EFS of cabozantinib compared to best supportive care (BSC) as maintenance therapy after\
+  \ first-line chemotherapy considering EFS improvement in one or both of the following datasets : \n\
+  - patients in complete remission (CR) at the end of first-line therapy (stratum-1), \n-  the whole randomised\
+  \ dataset, including patients with residual persistent stable disease after first-line treatment (non-resectable\
+  \ primary tumour, or metastatic disease not be completely resected), i.e. strata 1 and 2."
+prior_treatment_requirements:
+- For FOSTER evolving study platform - 1. Newly diagnosed, biopsy-proven, high-grade osteosarcoma
+- For FOSTER-CabOS (first randomization) - 5. Performance status < 2 for patient adult, or >70 using Karnofsky
+  or Lansky performance scores.
+- For FOSTER-CabOS (first randomization) - 6. Interval between the last treatment either chemotherapy
+  administration or surgical procedures or radiotherapy or thermoablation, (whichever occurred last) and
+  the date of randomisation should be at least 4 weeks but no longer than 2 months
+- For FOSTER-CabOS (first randomization) - 7. Disease in complete remission or with residual persistent
+  stable disease according to RECIST criteria before randomisation (please refer 7.3.4 for the definition
+  of the residual persistent stable disease)
+- For FOSTER-CabOS (first randomization) - 8. Patient fit to undergo protocol treatment and follow-up
+- 'For FOSTER-CabOS (first randomization) -9. Adequate cardiac function: Left Ventricular Ejection Fraction
+  (LVEF) ≥50% and/or fractional shortening (FS) >28% at baseline as determined by echocardiography or
+  multigated acquisition (MUGA) scan (performed only if echocardiography is not feasible)'
+- 'For FOSTER-CabOS (first randomization) - 10. Adequately controlled blood pressure (BP) with or without
+  antihypertensive medications: BP 95th percentile for sex, age and height/length at screening (as per
+  NHLBI (National Heart, Lung and Blood Institute) guidelines) and no change in antihypertensive m'
+- For FOSTER-CabOS (first randomization) - 11. Screening laboratory values must meet the following criteria
+  (according to CTCAE v5) and should be obtained within 7 days prior to randomisation - Absolute neutrophil
+  count ≥ 1 x 109/L - Platelets ≥ 100 x 109/L  - Haemoglobin ≥ 8.0 g/dL (a hemoglobin of l
+- For FOSTER-CabOS (first randomization) - 12. Patients who are therapeutically treated with an agent
+  such as warfarin or heparin/ Low-molecular-weight heparin (LMWH) will be allowed to participate provided
+  that no prior evidence of underlying abnormality in coagulation parameters exists.
+- For FOSTER-CabOS (first randomization) - 13. Women of childbearing potential or young women of chilbearing
+  potential and who started their puberty (menarche) must have a negative serum or urine pregnancy test
+  (minimum sensitivity 25 IU/L or equivalent units of Human Chorionic Gonadotropin (HCG)) don
+- For FOSTER-CabOS (first randomization) - 14.Effective methods of contraception should be used by male
+  and female patients and their partners during therapy, and for at least 4 months after completing therapy.
+  Because oral contraceptives might not be considered as “effective methods of contraception”
+- For FOSTER evolving study platform - 2. Patient considered medically fit to receive systemic treatment
+treatment_list:
+  step:
+  - step_internal_id: 1
+    step_code: '1'
+    step_type: Registration
+    match:
+    - and:
+      - or:
+        - clinical:
+            oncotree_primary_diagnosis: Osteosarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Osteoblastic Osteosarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Chondroblastic Osteosarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Fibroblastic Osteosarcoma
+        - clinical:
+            oncotree_primary_diagnosis: High-Grade Surface Osteosarcoma
+      - clinical:
+          age_numerical: '>=4'
+    arm:
+    - arm_code: Registration
+      arm_internal_id: 0
+      arm_description: Trial registration arm (CTIS record carries no arm breakdown).
+      arm_suspended: N
+      dose_level: []

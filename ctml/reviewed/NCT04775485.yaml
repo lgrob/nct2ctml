@@ -1,0 +1,107 @@
+nct_id: NCT04775485
+age: Children
+phase: PHASE2
+short_title: A Study to Evaluate Tovorafenib in Pediatric and Young Adult Participants With Relapsed or
+  Progressive Low-Grade Glioma and Advance Solid Tumors
+long_title: 'FIREFLY-1: A Phase 2, Open-Label, Multicenter Study to Evaluate the Safety and Efficacy of
+  the Oral Pan-RAF Inhibitor DAY101 in Pediatric Patients With RAF-Altered, Recurrent or Progressive Low-Grade
+  Glioma and Advanced Solid Tumors'
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-12'
+data_table4: Interventional
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_type: INTERVENTIONAL
+protocol_target_accrual: 141
+principal_investigator: NA
+principal_investigator_institution: Day One Biopharmaceuticals, Inc.
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+site_list:
+  site: []
+staff_list:
+  protocol_staff: []
+status: open to accrual
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Day One Biopharmaceuticals, Inc.
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+drug_list:
+  drug:
+  - drug_name: Tovorafenib
+study_start_date: '2021-04-22'
+study_completion_date: '2027-05-31'
+last_updated: '2025-04-10'
+summary: This is a Phase 2, multi center, open-label study to evaluate the safety and efficacy of Type
+  II RAF (tovorafenib) in pediatric participants with low-grade glioma or advanced solid tumors. Qualifying
+  genomic alterations will be identified through molecular assays as routinely performed at Clinical Laboratory
+  Improvement Amendments (CLIA) of 1988 or other similarly certified laboratories prior to enrollment
+  into any of the arms. The study will consist of a screening period, a treatment period, a long-term
+  extension phase, end of treatment (EOT) visit(s), a safety follow-up visit, and long-term follow-up
+  assessments.
+treatment_list:
+  step:
+  - step_internal_id: 1
+    step_code: '1'
+    step_type: Registration
+    match:
+    - and:
+      - or:
+        - clinical:
+            oncotree_primary_diagnosis: Low-Grade Glioma, NOS
+        - clinical:
+            oncotree_primary_diagnosis: Pilocytic Astrocytoma
+        - clinical:
+            oncotree_primary_diagnosis: Ganglioglioma
+        - clinical:
+            oncotree_primary_diagnosis: Pleomorphic Xanthoastrocytoma
+      - or:
+        - genomic:
+            hugo_symbol: BRAF
+            variant_category: Mutation
+        - genomic:
+            hugo_symbol: BRAF
+            variant_category: Structural Variation
+        - genomic:
+            hugo_symbol: RAF1
+            variant_category: Structural Variation
+      - clinical:
+          age_numerical: '>=0.5'
+      - clinical:
+          age_numerical: <=25
+      - genomic:
+          hugo_symbol: NF1
+          variant_category: '!Mutation'
+    arm:
+    - arm_code: 'Arm 1: Low-Grade Glioma'
+      arm_internal_id: 0
+      arm_description: Participants with recurrent or progressive low-grade glioma will receive 420 milligrams/meters
+        square (mg/m\^2) of tovorafenib weekly according to dose rounding guidelines and according to
+        their baseline body surface area (BSA).
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'Arm 2: Low-Grade Glioma Expanded Access'
+      arm_internal_id: 1
+      arm_description: Participants with recurrent or progressive low-grade glioma will receive 420 mg/m\^2
+        of tovorafenib weekly according to dose rounding guidelines and according to their baseline BSA.
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'Arm 3: Advanced Solid Tumor'
+      arm_internal_id: 2
+      arm_description: Participants with advanced solid tumors will receive 420 mg/m\^2) of tovorafenib
+        weekly according to dose rounding guidelines and according to their baseline BSA.
+      arm_suspended: N
+      dose_level: []

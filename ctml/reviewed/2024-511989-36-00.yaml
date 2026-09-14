@@ -1,0 +1,125 @@
+nct_id: 2024-511989-36-00
+age: Children
+phase: NA
+short_title: 'INTER-EWING-1: International Clinical Research Programme to Improve Outcomes in Newly Diagnosed
+  Ewing Sarcoma – Trial 1'
+long_title: 'INTER-EWING-1: International Clinical Research Programme to Improve Outcomes in Newly Diagnosed
+  Ewing Sarcoma – Trial 1'
+nct_link: https://euclinicaltrials.eu/ctis-public/view/2024-511989-36-00
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-12'
+data_table4: Interventional
+protocol_id: 0
+protocol_ids:
+- 2024-511989-36-00
+protocol_no: ''
+protocol_type: INTERVENTIONAL
+protocol_target_accrual: 402
+principal_investigator: NA
+principal_investigator_institution: The University Of Birmingham
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+site_list:
+  site: []
+staff_list:
+  protocol_staff: []
+status: open to accrual
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: The University Of Birmingham
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+drug_list:
+  drug:
+  - drug_name: VINORELBINE
+  - drug_name: VINORELBINE
+  - drug_name: VINORELBINE
+  - drug_name: CYCLOPHOSPHAMIDE
+  - drug_name: VINORELBINE
+  - drug_name: CYCLOPHOSPHAMIDE
+study_start_date: '2025-09-24'
+study_completion_date: null
+last_updated: '2026-07-25'
+summary: 'The primary objectives for this trial are related to each of the trial questions.
+
+
+  For the chemotherapy questions, the objectives are to determine:
+
+  • Whether outcome in newly diagnosed metastatic ES patients can be improved with the addition of regorafenib
+  to the standard backbone chemotherapy VDC/IE when compared with VDC/IE alone (Randomisation A)
+
+  • Whether the addition of 6 cycles of maintenance chemotherapy of vinorelbine and cyclophosphamide improves
+  the outcome for patients. (Randomisation C)
+
+
+  For the radiotherapy questions, the objectives are to determine:
+
+  • Whether dose escalation of radiotherapy improves the outcome in patients with inoperable disease (Randomisation
+  B1)
+
+  • Which of the two post-operative radiotherapy doses following surgical resection of the primary tumour
+  site will result in achieving optimal outcome (Randomisation B2)'
+prior_treatment_requirements:
+- 'Study Entry: 1. Any histologically and genetically confirmed Ewing sarcoma of bone or soft tissue,
+  or round cell sarcomas which are ‘Ewing’s-like’ but negative for EWSR1-Fli gene rearrangement'
+- 'Randomisation B1 & B2: 5. Patient agrees to use contraception during therapy and for 12 months after
+  last trial treatment (females) or 6 months after last trial treatment (males), where patient is sexually
+  active'
+- 'Randomisation B1 & B2: 6. Written informed consent from the patient and/or the parent/legal guardian'
+- 'Randomisation A: To be further defined on completion of the externally sponsored phase 1b study. substantial
+  modification will be submitted to the relevant competent authority and ethics committee(s) to include
+  these details prior to the opening of Randomisation A.'
+- 'Randomisation C: 1. Entered into the INTER-EWING-1 study'
+- 'Randomisation C: 2. Received induction/ consolidation chemotherapy with a VDC/IE/VC/VAI/BuMel based
+  regimen'
+- 'Randomisation C: 3. Have responded to induction treatment and not progressed'
+- 'Randomisation C: 4. Medically fit to receive treatment'
+- 'Randomisation C: 5. Absence of severe vincristine neuropathy – i.e. requiring discontinuation of vincristine
+  treatment'
+- 'Randomisation C: 6. Adequate liver function: bilirubin <3 x ULN and ALT or AST < 5 x ULN'
+- 'Randomisation C: 7. Documented negative pregnancy test for female patients of childbearing potential'
+- 'Randomisation B1: 1. Patients requiring definitive radical radiotherapy to primary tumour site as sole
+  local therapy following discussion by local multidisciplinary team (see INTER-EWING-1 QUARTET RTQA guidelines
+  on factors to be considered for definitive radiotherapy). This includes patients who ha'
+treatment_list:
+  step:
+  - step_internal_id: 1
+    step_code: '1'
+    step_type: Registration
+    match:
+    - and:
+      - or:
+        - and:
+          - or:
+            - clinical:
+                oncotree_primary_diagnosis: Ewing Sarcoma
+            - clinical:
+                oncotree_primary_diagnosis: Ewing Sarcoma of Soft Tissue
+          - genomic:
+              hugo_symbol: EWSR1
+              variant_category: Structural Variation
+        - and:
+          - clinical:
+              oncotree_primary_diagnosis: Round Cell Sarcoma, NOS
+          - genomic:
+              hugo_symbol: EWSR1
+              variant_category: '!Structural Variation'
+      - clinical:
+          age_numerical: '>=2'
+    arm:
+    - arm_code: Registration
+      arm_internal_id: 0
+      arm_description: Trial registration arm (CTIS record carries no arm breakdown).
+      arm_suspended: N
+      dose_level: []

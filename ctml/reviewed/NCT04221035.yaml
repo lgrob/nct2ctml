@@ -1,0 +1,100 @@
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-12'
+data_table4: Interventional
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_type: INTERVENTIONAL
+principal_investigator: NA
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+site_list:
+  site: []
+staff_list:
+  protocol_staff: []
+status: open to accrual
+nct_id: NCT04221035
+age: Children
+phase: PHASE3
+short_title: High-Risk Neuroblastoma Study 2 of SIOP-Europa-Neuroblastoma (SIOPEN)
+long_title: High-Risk Neuroblastoma Study 2 of SIOP-Europa-Neuroblastoma (SIOPEN)
+principal_investigator_institution: Gustave Roussy, Cancer Campus, Grand Paris
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Gustave Roussy, Cancer Campus, Grand Paris
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+drug_list:
+  drug:
+  - drug_name: Vincristine
+  - drug_name: Carboplatin
+  - drug_name: Etoposide
+  - drug_name: Vindesine
+  - drug_name: Dacarbazine
+  - drug_name: Ifosfamide
+protocol_target_accrual: 800
+study_start_date: '2019-11-05'
+study_completion_date: 2032-11
+last_updated: '2025-06-26'
+summary: International multicenter, open-label, randomized phase III trial with three sequential randomizations
+  assessing induction, high-dose consolidation and radiotherapy in high-risk neuroblastoma.
+prior_treatment_requirements:
+- No previous chemotherapy, or up to 21 days after one cycle of Carboplatin-Etoposide.
+- High-risk neuroblastoma per SIOPEN-modified INRG criteria.
+treatment_list:
+  step:
+  - step_internal_id: 1
+    step_code: '1'
+    step_type: Registration
+    match:
+    - and:
+      - or:
+        - clinical:
+            oncotree_primary_diagnosis: Neuroblastoma
+            age_numerical: '>=1'
+        - and:
+          - clinical:
+              oncotree_primary_diagnosis: Neuroblastoma
+              age_numerical: '>=0'
+          - or:
+            - genomic:
+                hugo_symbol: MYCN
+                variant_category: Copy Number Variation
+                cnv_call: High Amplification
+            - genomic:
+                hugo_symbol: MYC
+                variant_category: Copy Number Variation
+                cnv_call: High Amplification
+            - genomic:
+                hugo_symbol: MYCL
+                variant_category: Copy Number Variation
+                cnv_call: High Amplification
+      - clinical:
+          age_numerical: <21
+    arm:
+    - arm_code: phase induction-R-I
+      arm_internal_id: 0
+      arm_description: 'R-I: induction regimens RAPID COJEC vs GPOH.'
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Phase high dose chemotherapy consolidation
+      arm_internal_id: 1
+      arm_description: 'R-HDC: Bu-Mel vs Thiotepa + Bu-Mel.'
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Phase of radiotherapy
+      arm_internal_id: 2
+      arm_description: 'R-RTx: 21.6 Gy vs 21.6 Gy + 14.4 Gy boost.'
+      arm_suspended: N
+      dose_level: []

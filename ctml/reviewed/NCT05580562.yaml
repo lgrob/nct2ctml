@@ -1,0 +1,96 @@
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-12'
+data_table4: Interventional
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_type: INTERVENTIONAL
+principal_investigator: NA
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+site_list:
+  site: []
+staff_list:
+  protocol_staff: []
+status: open to accrual
+nct_id: NCT05580562
+age: All
+phase: PHASE3
+short_title: ONC201 in H3 K27M-mutant Diffuse Glioma Following Radiotherapy (the ACTION Study)
+long_title: ONC201 for the Treatment of Newly Diagnosed H3 K27M-mutant Diffuse Glioma Following Completion
+  of Radiotherapy
+principal_investigator_institution: Jazz Pharmaceuticals
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Jazz Pharmaceuticals
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+drug_list:
+  drug:
+  - drug_name: Dordaviprone (ONC201)
+  - drug_name: Placebo
+protocol_target_accrual: 510
+study_start_date: '2023-01-23'
+study_completion_date: 2028-06
+last_updated: '2026-04-16'
+summary: Randomized, double-blind, placebo-controlled Phase 3 study of dordaviprone (ONC201) in patients
+  with newly diagnosed H3 K27M-mutant diffuse glioma following radiotherapy.
+prior_treatment_requirements:
+- Completed frontline radiotherapy 2 to 6 weeks prior to randomization.
+- Radiotherapy initiated within 12 weeks of initial diagnosis.
+- No prior dordaviprone (ONC201) or ONC206 at any time.
+- No systemic bevacizumab since initial diagnosis.
+- Body weight >= 10 kg. Karnofsky or Lansky performance status >= 70.
+treatment_list:
+  step:
+  - step_internal_id: 1
+    step_code: '1'
+    step_type: Registration
+    match:
+    - and:
+      - clinical:
+          oncotree_primary_diagnosis: Diffuse Midline Glioma, H3 K27-Altered
+          age_numerical: '>=0'
+      - or:
+        - genomic:
+            hugo_symbol: H3-3A
+            variant_category: Mutation
+            protein_change: p.K27M
+            variant_classification: Missense_Mutation
+        - genomic:
+            hugo_symbol: H3-3B
+            variant_category: Mutation
+            protein_change: p.K27M
+            variant_classification: Missense_Mutation
+        - genomic:
+            hugo_symbol: H3C2
+            variant_category: Mutation
+            protein_change: p.K27M
+            variant_classification: Missense_Mutation
+    arm:
+    - arm_code: Dordaviprone Twice Weekly Group
+      arm_internal_id: 0
+      arm_description: Dordaviprone (ONC201) administered twice weekly.
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Dordaviprone Once Weekly Group
+      arm_internal_id: 1
+      arm_description: Dordaviprone (ONC201) administered once weekly.
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Placebo Group
+      arm_internal_id: 2
+      arm_description: Matching placebo.
+      arm_suspended: N
+      dose_level: []

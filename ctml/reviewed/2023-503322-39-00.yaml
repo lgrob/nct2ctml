@@ -1,0 +1,108 @@
+nct_id: 2023-503322-39-00
+age: Children
+phase: NA
+short_title: Phase Ib study of the combination of regorafenib with conventional chemotherapy for the treatment
+  of newly diagnosed patients with multimetastatic Ewing sarcoma - REGO-INTER-EWING1
+long_title: Phase Ib study of the combination of regorafenib with conventional chemotherapy for the treatment
+  of newly diagnosed patients with multimetastatic Ewing sarcoma - REGO-INTER-EWING1
+nct_link: https://euclinicaltrials.eu/ctis-public/view/2023-503322-39-00
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-12'
+data_table4: Interventional
+protocol_id: 0
+protocol_ids:
+- 2023-503322-39-00
+protocol_no: ''
+protocol_type: INTERVENTIONAL
+protocol_target_accrual: 2
+principal_investigator: NA
+principal_investigator_institution: Institut Gustave Roussy
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+site_list:
+  site: []
+staff_list:
+  protocol_staff: []
+status: open to accrual
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Institut Gustave Roussy
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+drug_list:
+  drug:
+  - drug_name: BAY 73-4506
+  - drug_name: Regorafenib_PIP
+  - drug_name: Regorafenib_PIP
+study_start_date: '2023-06-16'
+study_completion_date: null
+last_updated: '2026-08-26'
+summary: To determine the recommended Phase 2 dose (RP2D) of regorafenib in combination with standard
+  backbone chemotherapy of VDC/IE in patients with newly diagnosed metastatic (other than lungs and/or
+  pleura only) Ewing sarcoma.
+prior_treatment_requirements:
+- Any histologically and genetically confirmed Ewing sarcoma of bone or soft tissue, or round cell sarcomas
+  which are ‘Ewing’s-like’ but negative for EWSR1 gene rearrangement
+- Subject must be able to swallow and retain oral medication.
+- Written informed consent from the patient and/or the parent/legal guardian, according to local, regional
+  or national regulation prior to any study specific procedures.
+- Patients must be affiliated to a social security system or beneficiary of the same, as per local regulatory
+  requirements (France only)
+- Metastatic disease
+- Age ≥2 years and <50 years (from second birthday to 49 years 364 days)
+- "Patient assessed as medically fit to receive the Ewing sarcoma standard multimodal treatment and regorafenib,\
+  \ including: -\tAbsolute Neutrophil Count (ANC) ≥ 0.75x109/L, platelets ≥ 75x109/L. -\tAlanine aminotransferase\
+  \ (ALT), and aspartate aminotransferase (AST) ≤ 5×ULN  -\tBilirubin ≤ 2×ULN -\tCreatin"
+- Adequate cardiac function as evidenced by left ventricular ejection fraction (LVEF) ≥50%) at baseline,
+  as determined by echocardiography
+- 'Adequately controlled blood pressure (BP) with or without antihypertensive medications, defined as:
+  a BP <95th percentile for sex, age, and height at screening (as per National Heart Lung and Blood Institute
+  [NHLBI] guidelines) and no change in antihypertensive medications within 1 week prior to Cyc'
+- No prior treatment for Ewing sarcoma other than surgery
+- Negative pregnancy test for female patients of childbearing potential within 7 days prior to study registration
+- Patient agrees to use highly effective contraception during therapy and for 12 months after last trial
+  treatment (females) or 6 months after last trial treatment (males), where applicable
+treatment_list:
+  step:
+  - step_internal_id: 1
+    step_code: '1'
+    step_type: Registration
+    match:
+    - and:
+      - or:
+        - and:
+          - or:
+            - clinical:
+                oncotree_primary_diagnosis: Ewing Sarcoma
+            - clinical:
+                oncotree_primary_diagnosis: Ewing Sarcoma of Soft Tissue
+          - genomic:
+              hugo_symbol: EWSR1
+              variant_category: Structural Variation
+        - and:
+          - clinical:
+              oncotree_primary_diagnosis: Round Cell Sarcoma, NOS
+          - genomic:
+              hugo_symbol: EWSR1
+              variant_category: '!Structural Variation'
+      - clinical:
+          age_numerical: '>=2'
+      - clinical:
+          age_numerical: <50
+    arm:
+    - arm_code: Registration
+      arm_internal_id: 0
+      arm_description: Trial registration arm (CTIS record carries no arm breakdown).
+      arm_suspended: N
+      dose_level: []

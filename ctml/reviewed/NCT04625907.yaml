@@ -1,0 +1,212 @@
+nct_id: NCT04625907
+age: Children
+phase: PHASE1
+short_title: 'FaR-RMS: An Overarching Study for Children and Adults With Frontline and Relapsed RhabdoMyoSarcoma'
+long_title: 'FaR-RMS: An Overarching Study for Children and Adults With Frontline and Relapsed RhabdoMyoSarcoma'
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-12'
+data_table4: Interventional
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_type: INTERVENTIONAL
+protocol_target_accrual: 1672
+principal_investigator: NA
+principal_investigator_institution: University of Birmingham
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+site_list:
+  site: []
+staff_list:
+  protocol_staff: []
+status: open to accrual
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: University of Birmingham
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+drug_list:
+  drug:
+  - drug_name: Irinotecan
+  - drug_name: Actinomycin D
+  - drug_name: Doxorubicin
+  - drug_name: Ifosfamide
+  - drug_name: Vincristine
+  - drug_name: Vinorelbine
+  - drug_name: Cyclophosphamide
+  - drug_name: Temozolomide
+  - drug_name: radiotherapy
+  - drug_name: Regorafenib
+study_start_date: '2020-09-17'
+study_completion_date: 2030-06
+last_updated: '2024-05-23'
+summary: FaR-RMS is an over-arching study for children and adults with newly diagnosed and relapsed rhabdomyosarcoma
+  (RMS)
+treatment_list:
+  step:
+  - step_internal_id: 1
+    step_code: '1'
+    step_type: Registration
+    match:
+    - and:
+      - or:
+        - clinical:
+            oncotree_primary_diagnosis: Rhabdomyosarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Embryonal Rhabdomyosarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Alveolar Rhabdomyosarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Spindle Cell/Sclerosing Rhabdomyosarcoma
+      - clinical:
+          age_numerical: '>=1'
+      - clinical:
+          age_numerical: <=25
+    arm:
+    - arm_code: 'Phase 1b Dose finding: VHR induction - IRIVA'
+      arm_internal_id: 0
+      arm_description: 'Irinotecan: an i.v. infusion over 1 hour on days 8,9,10,11 and 12 . For the phase
+        1b registration, starting dose of 20 mg/m2.
+
+
+        Ifosfamide: 3g/m2 as an i.v. infusion over 3 hours on days 1 and 2 Vincristine: 1.5 mg/m2 as an
+        As per local practice: recommended as a short infusion (maximum dose 2mg). Administered days 1,8,15
+        on cycles 1-2 and on days 1 and 8 on cycles 3-9.
+
+
+        Actinomycin: 1.5 mg/m2 as a'
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'CT1A: VHR induction - IVADO'
+      arm_internal_id: 1
+      arm_description: 'Ifosfamide: 3g/m2 as an i.v. infusion over 3 hours on days 1 and 2 Vincristine:
+        1.5 mg/m2 As per local practice: recommended as a short infusion (maximum dose 2mg). Administered
+        days 1,8,15 on cycles 1-2 and on day 1 on cycles 3-9.
+
+
+        Actinomycin: 1.5 mg/m2 as an i.v. bolus injection (maximum dose 2mg) on day 1. Doxorubicin: 30
+        mg/m2 as an i.v infusion over 1 hour on days 1 and 2 on cycles 1-4'
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'CT1A: VHR Induction IRIVA'
+      arm_internal_id: 2
+      arm_description: 'Irinotecan: an i.v. infusion over 1 hour on days 8,9,10,11 and 12 . Phase 2 recommended
+        dose as determined by IRIVA dose finding arm Ifosfamide: 3g/m2 as an i.v. infusion over 3 hours
+        on days 1 and 2 Vincristine: 1.5 mg/m2 As per local practice: recommended as a short infusion
+        (maximum dose 2mg). Administered days 1,8,15 on cycles 1-2 and on days 1 and 8 on cycles 3-9.
+
+
+        Actinomycin: 1.5 mg/m2 as a'
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'CT1B: HR Induction IVA'
+      arm_internal_id: 3
+      arm_description: 'Ifosfamide: 3g/m2 as an i.v. infusion over 3 hours on days 1 and 2 Vincristine:
+        1.5 mg/m2 As per local practice: recommended as a short infusion (maximum dose 2mg). Administered
+        days 1,8,15 on cycles 1-2 and on day 1 on cycles 3-9.
+
+
+        Actinomycin: 1.5 mg/m2 as an i.v. bolus injection (maximum dose 2mg) on day 1.'
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'CT1B: HR Induction IRIVA'
+      arm_internal_id: 4
+      arm_description: 'Irinotecan: an i.v. infusion over 1 hour on days 8,9,10,11 and 12 . Phase 2 recommended
+        dose as determined by IRIVA dose finding arm Ifosfamide: 3g/m2 as an i.v. infusion over 3 hours
+        on days 1 and 2 Vincristine: 1.5 mg/m2 As per local practice: recommended as a short infusion
+        (maximum dose 2mg). Administered days 1,8,15 on cycles 1-2 and on days 1 and 8 on cycles 3-9.
+
+
+        Actinomycin: 1.5 mg/m2 as a'
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'RT1A: Preoperative Radiotherapy'
+      arm_internal_id: 5
+      arm_description: To be given either 41.4 Gy or 50.4 Gy prior to surgery
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'RT1A: Post operative radiotherapy'
+      arm_internal_id: 6
+      arm_description: To be given either 41.4 Gy or 50.4 Gy following surgery
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'RT1B: Radiotherapy for resectable disease: dose escalated'
+      arm_internal_id: 7
+      arm_description: To receive 50.4 Gy
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'RT1B: Radiotherapy for resectable disease: standard dose'
+      arm_internal_id: 8
+      arm_description: To receive 41.4 Gy
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'RT1C: Radiotherapy for unresectable disease: dose escalated'
+      arm_internal_id: 9
+      arm_description: To receive 59.4 Gy
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'RT1C: Radiotherapy for unresectable disease: standard dose'
+      arm_internal_id: 10
+      arm_description: To receive 50.4 Gy
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'RT2: Radiotherapy to primary tumour and involved lymph nodes'
+      arm_internal_id: 11
+      arm_description: Radiotherapy to the primary tumour and involved regional lymph nodes only
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'RT2: Radiotherapy to all metastatic sites'
+      arm_internal_id: 12
+      arm_description: Radiotherapy given to all metastatic sites
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'CT2A: VHR Maintenance - VC'
+      arm_internal_id: 13
+      arm_description: 'Vinorelbine: 25 mg/m2 i.v. or 60 mg/m2 orally on days 1,8 and 15 Cyclophosphamide
+        25 mg/m2 orally daily for 28 days'
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'CT2A: Maintenance -Stop treatment'
+      arm_internal_id: 14
+      arm_description: To stop treatment at the point of randomisation
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'CT2B: HR Maintenance - VC'
+      arm_internal_id: 15
+      arm_description: 'Vinorelbine: 25 mg/m2 i.v. on days 1,8 and 15 Cyclophosphamide 25 mg/m2 orally
+        daily for 28 days'
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'CT2B: HR Maintenance - Stop Treatment'
+      arm_internal_id: 16
+      arm_description: To stop treatment at the point of randomisation
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'CT3: Relpased Chemotherapy - VIRT'
+      arm_internal_id: 17
+      arm_description: 'Vincristine: 1.5 mg/m2 As per local practice: recommended as a short infusion
+        (maximum dose 2mg) on days 1 and 8 Irinotecan: 50 mg/m2 as an i.v. infusion over 1 hour on days
+        1-5 Temozolomide: 125 mg/m2 (Escalate to 150mg/m2/day in Cycle 2 if no toxicity \> grade 3) as
+        an oral tablets prior to vincristine and irinotecan on days 1-5'
+      arm_suspended: N
+      dose_level: []
+    - arm_code: 'CT3: Relapsed Chemotherapy - VIRR'
+      arm_internal_id: 18
+      arm_description: 'Vincristine: 1.5 mg/m2 As per local practice: recommended as a short infusion
+        (maximum dose 2mg) on days 1 and 8 Irinotecan: 50 mg/m2 as an i.v. infusion over 1 hour on days
+        1-5 Regorafenib: Children between 6 and 24 months = 65 mg/m2, children less than 12 and/or less
+        than 40kg dose = 82 mg/m2 Maximum 120 mg, Fixed dose of 120 mg for patients over 12 years of age
+        AND ≥ 40 kg, as an oral tablets o'
+      arm_suspended: N
+      dose_level: []

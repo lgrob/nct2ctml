@@ -1,0 +1,108 @@
+nct_id: 2023-509392-17-00
+age: Children
+phase: NA
+short_title: IntReALL BCP 2020 – International Study for Treatment of Childhood Relapsed Precursor B-cell
+  ALL 2020
+long_title: International Study for Treatment of Childhood Relapsed Precursor B-Cell ALL 2020 - A Randomized
+  Phase III Study Conducted by the Resistant Disease Committee of the International BFM Study Group -
+  IntReALL BCP 2020
+nct_link: https://euclinicaltrials.eu/ctis-public/view/2023-509392-17-00
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-12'
+data_table4: Interventional
+protocol_id: 0
+protocol_ids:
+- 2023-509392-17-00
+protocol_no: ''
+protocol_type: INTERVENTIONAL
+protocol_target_accrual: 30
+principal_investigator: NA
+principal_investigator_institution: Charite Universitaetsmedizin Berlin KöR
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+site_list:
+  site: []
+staff_list:
+  protocol_staff: []
+status: open to accrual
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Charite Universitaetsmedizin Berlin KöR
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+drug_list:
+  drug:
+  - drug_name: Etoposide 20 mg/ml Concentrate for Solution for Infusion
+  - drug_name: Vincristine Sulfate 1 mg/ml solution for injection
+  - drug_name: ELDISINE® 5 mg Pulver zur Herstellung einer Injektionslösung Vindesinsulfat
+  - drug_name: HOLOXAN 1000 mg Pulver zur Herstellung einer Injektionslösung
+  - drug_name: Cytarabin Accord 100 mg/ml Injektions-/Infusionslösung
+  - drug_name: Mercaptopurine 50mg tablets
+  - drug_name: BLINCYTO 38.5 micrograms powder for concentrate and solution for solution for infusion.
+  - drug_name: INOTUZUMAB OZOGAMICIN
+  - drug_name: Cytarabine Accord Healthcare 20 mg/ml injektio-/infuusioneste, liuos
+  - drug_name: METHOTREXATE
+  - drug_name: METHOTREXATE
+  - drug_name: Metex 50 mg/ml injekcinis tirpalas užpildytame švirkšte
+study_start_date: null
+study_completion_date: null
+last_updated: '2026-04-14'
+summary: 'SR Arm induction:Improvement of EFS probability with InO versus ALLR3-Mitox
+
+  SR-MRD good response consolidation: Improvement of 4 years DFS with 3 courses of blinatumomab
+
+  HR Arm with CR2 consolidation: DFS non-inferiority with one consolidation chemotherapy course HC1 before
+  blinatumomab compared to historical controls with 2 consolidation courses HC1 and 2
+
+  Isolated extramedullary relapses: EFS improvement with blinatumomab in late consolidation compared to
+  historical controls'
+prior_treatment_requirements:
+- 'All study questions: Confirmed diagnosis of 1st relapsed B-cell precursor ALL'
+- 'All study questions: Start of treatment falling into the study period'
+- 'Meeting SR criteria: No previous history of veno-occlusive disease (VOD)/ sinusoidal obstruction syndrome
+  (SOS)'
+- 'All study questions: No participation in other clinical trials 30 day prior to study enrolment that
+  interfere with this protocol, except trials for primary ALL'
+- 'Specific for SR induction randomization: Meeting SR criteria'
+- 'Meeting SR criteria: BM involvement (≥ 1% leukemic blasts)'
+- 'Meeting SR criteria: CD22 positive ALL (>80% confirmed by flow-cytometry)'
+- 'Specific for SR MRD poor response consolidation: Meeting SR criteria with bone marrow involvement at
+  relapse diagnosis'
+- 'Specific for SR MRD poor response consolidation: M1/CR2 and MRD ≥ 10-4 after induction'
+- 'Specific for SR MRD poor response consolidation: CD19 positive ALL at relapse (>10%)'
+- 'Specific for SR MRD good response consolidation: Meeting SR criteria with bone marrow involvement at
+  relapse diagnosis'
+- 'Specific for HR consolidation arm: M1/CR2 after induction therapy'
+treatment_list:
+  step:
+  - step_internal_id: 1
+    step_code: '1'
+    step_type: Registration
+    match:
+    - and:
+      - clinical:
+          oncotree_primary_diagnosis: B-Lymphoblastic Leukemia/Lymphoma
+      - clinical:
+          age_numerical: '>=1'
+      - clinical:
+          age_numerical: <21
+      - clinical:
+          disease_status:
+          - Recurrent
+    arm:
+    - arm_code: Registration
+      arm_internal_id: 0
+      arm_description: Trial registration arm (CTIS record carries no arm breakdown).
+      arm_suspended: N
+      dose_level: []

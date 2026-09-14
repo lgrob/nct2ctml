@@ -1,0 +1,226 @@
+nct_id: NCT02813135
+age: Children
+phase: PHASE1
+short_title: European Proof-of-Concept Therapeutic Stratification Trial of Molecular Anomalies in Relapsed
+  or Refractory Tumors
+long_title: European Proof-of-Concept Therapeutic Stratification Trial of Molecular Anomalies in Relapsed
+  or Refractory Tumors
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-12'
+data_table4: Interventional
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_type: INTERVENTIONAL
+protocol_target_accrual: 472
+principal_investigator: NA
+principal_investigator_institution: Gustave Roussy, Cancer Campus, Grand Paris
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+site_list:
+  site: []
+staff_list:
+  protocol_staff: []
+status: open to accrual
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Gustave Roussy, Cancer Campus, Grand Paris
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+drug_list:
+  drug:
+  - drug_name: Ribociclib
+  - drug_name: Topotecan
+  - drug_name: Temozolomide
+  - drug_name: Everolimus
+  - drug_name: Adavosertib
+  - drug_name: Carboplatin
+  - drug_name: Olaparib
+  - drug_name: Irinotecan
+  - drug_name: Vistusertib
+  - drug_name: Nivolumab
+  - drug_name: Cyclophosphamide
+  - drug_name: Selumetinib
+study_start_date: '2016-08-03'
+study_completion_date: 2031-02
+last_updated: '2026-07-10'
+summary: 'This proof-of-concept platform trial is designed to cover the targeting of several survival
+  pathways in oncogenesis that are currently not adequately employed for pediatric patients in Europe
+  (Geoerger 2017; Geoerger 2019).
+
+
+  The aims of the trial are:
+
+
+  1. To determine the recommended phase II dose (RP2D) of a specific anticancer agent and/or a relevant
+  combination in a pediatric population, to document its tolerability and
+
+  2. To explore first signals of activity in a molecularly enriched study population.'
+treatment_list:
+  step:
+  - step_internal_id: 1
+    step_code: '1'
+    step_type: Registration
+    match:
+    - and:
+      - or:
+        - clinical:
+            oncotree_primary_diagnosis: Neuroblastoma
+        - clinical:
+            oncotree_primary_diagnosis: Medulloblastoma
+        - clinical:
+            oncotree_primary_diagnosis: Ependymoma
+        - clinical:
+            oncotree_primary_diagnosis: High-Grade Glioma, NOS
+        - clinical:
+            oncotree_primary_diagnosis: Ewing Sarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Embryonal Rhabdomyosarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Alveolar Rhabdomyosarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Osteosarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Wilms' Tumor
+        - clinical:
+            oncotree_primary_diagnosis: B-Lymphoblastic Leukemia/Lymphoma, NOS
+        - clinical:
+            oncotree_primary_diagnosis: T-Lymphoblastic Leukemia/Lymphoma
+        - clinical:
+            oncotree_primary_diagnosis: Acute Myeloid Leukemia
+      - clinical:
+          age_numerical: <18
+      - clinical:
+          disease_status:
+          - Recurrent
+          - Refractory
+    arm:
+    - arm_code: Arm A. Ribociclib + Topotecan and Temozolomide
+      arm_internal_id: 0
+      arm_description: Topotecan iv QD and temozolomide capsules orally QD Days 1 to 5; Ribociclib capsules
+        or oral solution orally QD from Day 6 to 20 of a 28 day cycle.
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Arm B. Ribociclib + Everolimus
+      arm_internal_id: 1
+      arm_description: Ribociclib capsules or oral solution orally QD for 21 days of each 28 day cycle;
+        Everolimus orodispersible tablets orally QD for 28 days.
+      arm_suspended: N
+      dose_level: []
+    - arm_code: ARM C. Adavosertib + Carboplatin
+      arm_internal_id: 2
+      arm_description: Adavosertib capsules orally BID 3 days on / 4 days off in week 1; Carboplatin iv
+        QD AUC 5 on Day 1 of a 21 day cycle.
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Arm D. Olaparib + Irinotecan
+      arm_internal_id: 3
+      arm_description: Olaparib tablets orally BID on Day 1-10 of a 21 day cycle Irinotecan iv QD on Day
+        4-8 of a 21 day cycle.
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Arm E. Vistusertib single agent
+      arm_internal_id: 4
+      arm_description: Vistusertib tablets orally BID 2 days on/5 days off per week of a 28 day cycle.
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Arm F. Vistusertib + Topotecan and Temozolomide
+      arm_internal_id: 5
+      arm_description: Topotecan iv QD and temozolomide capsules orally QD Days 1 to 5; Vistusertib tablets
+        orally BID 3 days on/4 days off per week of a 28 day cycle.
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Arm G. Nivolumab + Cyclophosphamide +/- Radiotherapy
+      arm_internal_id: 6
+      arm_description: Nivolumab iv QD every 2 weeks of a 28 day cycle (Days 1 and 15); Cyclophosphamide
+        tablets or oral solution orally BID, 1 week on/1 week off; Palliative irradiation/radiofrequency/cryotherapy
+        starting 2 weeks after the first nivolumab injection.
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Arm H. Selumetinib + Vistusertib
+      arm_internal_id: 7
+      arm_description: 'Selumetinib capsules twice daily on a continous administration. Vistusertib orally
+        twice daily on an intermittent schedule : 2 days on / 5 days off per week of a 28 day cycle.'
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Arm I. Enasidenib
+      arm_internal_id: 8
+      arm_description: Enasidenib tablets or sprinkle solution orally on a continuous dosing once daily
+        (QD) per 28 day cycle.
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Arm J. Lirilumab + Nivolumab
+      arm_internal_id: 9
+      arm_description: Nivolumab iv QD on Day 1 and 15 of a 28 day cycle; Lirilumab iv QD on Day 1 of
+        a 28 day cycle
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Arm K. Fadraciclib (CYC065) + Temozolomide
+      arm_internal_id: 10
+      arm_description: Fadraciclib iv QD on Day 1 (+/- 15) of a 28 day cycle Temozolomide capsules orally
+        QD on Day 1-5 of a 28 day cycle
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Arm L. Fadraciclib (CYC065) + Cytarabine
+      arm_internal_id: 11
+      arm_description: Fadraciclib iv QD on Day 1 (+/- 15) of a 28 day cycle Cytarabine iv or sc on Day
+        2-5 and Day 8-11 of a 28 day cycle
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Arm M. Ribociclib + Everolimus +/- Dexamethasone
+      arm_internal_id: 12
+      arm_description: 'Ribociclib capsules or tablets orally QD on Day 1-21 of a 28 day cycle. Everolimus
+        dispersible tablets orally QD on a continuous dosing per 28 day cycle.
+
+
+        For patients with leukemia and lymphoma:
+
+
+        Dexamethasone orally or iv on Day 1-7 of each 28 day cycle. For patients with ALL, AML and Non-Hodgkin
+        Lymphoma (NHL), Intrathecal chemotherapy will be administered additionally as per standard practice '
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Arm N. Ceralasertib (AZD6738) + Olaparib
+      arm_internal_id: 13
+      arm_description: Olaparib tablets orally BID per 28 days Ceralasertib tablets QD or BID per 28 day
+        cycle
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Arm O. Futibatinib (TAS-120)
+      arm_internal_id: 14
+      arm_description: Futibatinib tablets orally on a continuous dosing QD per 28 day cycle
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Arm P. Capmatinib (INC280) + Everolimus
+      arm_internal_id: 15
+      arm_description: Capmatinib tablets orally on a continuous dosing BID per 28 day cycle. Everolimus
+        dispersible tablets orally QD on a continuous dosing per 28 day cycle.
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Arm Q. Peposertib + Avelumab and Metronomic Temozolomide
+      arm_internal_id: 16
+      arm_description: Peposertib tablets orally on a continuous dosing BID per 28 day cycle Avelumab
+        IV QD on Day 1 and Day 15 of a 28 day cycle Temozolomide capsules orally QD 5 days/week of a 28
+        day cycle
+      arm_suspended: N
+      dose_level: []
+    - arm_code: Arm R. Capivasertib + metronomic Vinorelbine
+      arm_internal_id: 17
+      arm_description: 'Capivasertib tablets orally BID on Day 1-4/week (4 days on/3 days off, every week)
+        of a 28 day cycle.
+
+
+        Vinorelbine soft capsules orally once daily on Day 1, 3 and 5/week of a 28 day cycle.'
+      arm_suspended: N
+      dose_level: []
