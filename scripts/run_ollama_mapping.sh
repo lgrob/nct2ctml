@@ -29,6 +29,17 @@ MODEL="${MODEL:-hf.co/unsloth/gemma-3-27b-it-GGUF:Q4_K_M}"
 mkdir -p "$OLLAMA_MODELS" "$REPO/logs"
 cd "$REPO"
 
+# Fail here with something readable rather than letting Apptainer report a
+# missing path as an encryption check failure.
+if [ ! -f "$SIF" ]; then
+  echo "FATAL: no Apptainer image at $SIF"
+  echo "Set OLLAMA_SIF to wherever yours is, e.g.:"
+  echo "  sbatch --export=ALL,OLLAMA_SIF=/path/to/ollama.sif scripts/run_ollama_mapping.sh $MODE"
+  echo "Candidates found under \$HOME and \$SCRATCH:"
+  find "$HOME" "${SCRATCH:-/dev/null}" -maxdepth 4 -name '*.sif' 2>/dev/null | head -10 | sed 's/^/  /'
+  exit 1
+fi
+
 # --- 1. start the server ---------------------------------------------------
 # --nv exposes the NVIDIA stack. Without it Ollama starts happily and runs on
 # CPU at roughly 1/20th the speed, with no error - the failure this script
