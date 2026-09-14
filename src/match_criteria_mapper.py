@@ -13,6 +13,7 @@ import config
 import utils.aho_corasick as ac
 import src.trial_data_helper as tdh
 from utils.genomic_patterns import _ACCEPTABLE_PROTEIN_CHANGE_PATTERNS
+from utils.reference_validation import filter_diagnoses, filter_genomic_criteria
 
 
 class ArmCriteriaText(TypedDict, total=False):
@@ -119,6 +120,7 @@ def _postprocess_genomic_criteria(genomic_criteria: list) -> list:
     Post-process genomic criteria:
 
     - Normalize HUGO symbols.
+    - Drop criteria naming a gene that does not exist.
     - Clean protein_change /  fields.
     """
     if not genomic_criteria:
@@ -126,6 +128,10 @@ def _postprocess_genomic_criteria(genomic_criteria: list) -> list:
 
     # Normalize HUGO symbols as part of post-processing
     genomic_criteria = tdh.update_hugo_symbol(genomic_criteria)
+    # Synonyms are resolved above, so a symbol still unrecognised here is not a
+    # gene. Dropping it beats keeping it: an invented symbol matches no patient,
+    # so it silently narrows the arm rather than failing visibly.
+    genomic_criteria = filter_genomic_criteria(genomic_criteria)
     genomic_criteria = _clean_protein_change_fields(genomic_criteria)
 
     return genomic_criteria
@@ -143,11 +149,18 @@ def convert_to_ctml_clinical_schema(clinical_critera) -> dict:
     clinical_critera = dict(clinical_critera or {})
 
     # Extract the diagnosis list
+    diagnoses = []
     if "oncotree_primary_diagnosis" in clinical_critera and clinical_critera["oncotree_primary_diagnosis"]:
-        diagnoses = clinical_critera.pop("oncotree_primary_diagnosis")
-        if not isinstance(diagnoses, list):
-            diagnoses = [diagnoses]
+        raw_diagnoses = clinical_critera.pop("oncotree_primary_diagnosis")
+        if not isinstance(raw_diagnoses, list):
+            raw_diagnoses = [raw_diagnoses]
+        # Rewrite Oncotree codes to display names and drop terms absent from the
+        # tree. If that empties the list, fall through to the no-diagnosis path
+        # below rather than emitting a clinical block keyed on a string that can
+        # never match a patient.
+        diagnoses = filter_diagnoses(raw_diagnoses)
 
+    if diagnoses:
         if len(diagnoses) > 1:  # incase of multiple diagnoses, put the result under 'or' operator
             diagnosis_result = {"or": []}
             for diagnosis in diagnoses:

@@ -325,21 +325,24 @@ class TestConvertToCtmlClinicalSchema(unittest.TestCase):
     
     def test_single_diagnosis(self):
         """Test with single diagnosis"""
+        # Diagnoses are validated against Oncotree, so fixtures have to be real
+        # nodes: "Lung Cancer" is not one ("Lung" and "Non-Small Cell Lung
+        # Cancer" are), and would be dropped exactly as _SOLID_ is.
         clinical_criteria = {
-            "oncotree_primary_diagnosis": ["Lung Cancer"],
+            "oncotree_primary_diagnosis": ["Neuroblastoma"],
             "age_range": "18-65"
         }
         
         result = convert_to_ctml_clinical_schema(clinical_criteria)
         
         self.assertIn("clinical", result)
-        self.assertEqual(result["clinical"]["oncotree_primary_diagnosis"], "Lung Cancer")
+        self.assertEqual(result["clinical"]["oncotree_primary_diagnosis"], "Neuroblastoma")
         self.assertEqual(result["clinical"]["age_range"], "18-65")
     
     def test_multiple_diagnoses_with_or(self):
         """Test with multiple diagnoses - should use 'or' operator"""
         clinical_criteria = {
-            "oncotree_primary_diagnosis": ["Lung Cancer", "Breast Cancer"],
+            "oncotree_primary_diagnosis": ["Neuroblastoma", "Ewing Sarcoma"],
             "age_range": "18-65"
         }
         
