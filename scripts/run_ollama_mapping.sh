@@ -27,7 +27,11 @@ REPO="${REPO:-${SLURM_SUBMIT_DIR:-$PWD}}"
 # Model weights are large (~16 GB for a 27B at Q4). Keep them off $HOME,
 # which is usually quota'd small, and out of the container, which is read-only.
 export OLLAMA_MODELS="${OLLAMA_MODELS:-$SCRATCH/ollama-models}"
-MODEL="${MODEL:-gemma3:27b}"
+# Deliberately NOT a literal. The pipeline requests whatever config.py names,
+# so a separate default here can drift out of step with it - pulling one model
+# and then asking the server for another, which surfaces as a 404 well into
+# the run.
+PY="${PYTHON:-./.venv/bin/python}"
 
 # Verify before creating. mkdir -p on a wrong REPO happily invents the
 # directory, the job then runs from an empty tree, and the only symptom is a
@@ -48,7 +52,26 @@ export no_proxy="$NO_PROXY"
 
 mkdir -p "$OLLAMA_MODELS" "$REPO/logs"
 cd "$REPO"
-echo "[$(date +%T)] repo=$REPO  models=$OLLAMA_MODELS  sif=$SIF"
+
+if [ ! -x "$PY" ]; then
+  echo "FATAL: no interpreter at $PY. Create the venv first:"
+  echo "  python -m venv .venv && ./.venv/bin/pip install -r requirements.txt"
+  exit 1
+fi
+MODEL="${MODEL:-$($PY -c 'import config; print(config.LLM_AI_MODEL)')}"
+NUM_CTX=$($PY -c 'import config; print(getattr(config,"OLLAMA_NUM_CTX",0))')
+
+echo "[$(date +%T)] repo=$REPO"
+echo "[$(date +%T)] models=$OLLAMA_MODELS"
+echo "[$(date +%T)] sif=$SIF"
+echo "[$(date +%T)] model=$MODEL  num_ctx=$NUM_CTX  (both from config.py)"
+
+# A prompt longer than num_ctx is truncated silently, so a too-small window
+# shows up as poor scores rather than as an error.
+if [ "$NUM_CTX" -lt 16384 ]; then
+  echo "WARNING: OLLAMA_NUM_CTX=$NUM_CTX. The longest trial needs ~5k tokens of"
+  echo "         criteria before the prompt wrapper; 32768 is the GPU setting."
+fi
 
 # Fail here with something readable rather than letting Apptainer report a
 # missing path as an encryption check failure.
@@ -107,7 +130,6 @@ esac
 nvidia-smi --query-gpu=name,memory.used,memory.total --format=csv,noheader 2>/dev/null || true
 
 # --- 4. run the work -------------------------------------------------------
-PY="${PYTHON:-./.venv/bin/python}"
 case "$MODE" in
   benchmark)
     echo "[$(date +%T)] benchmarking against the 12 curated trials"

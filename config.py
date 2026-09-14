@@ -6,7 +6,10 @@
 
 #GPU_SERVER_HOSTNAME = "http://gpu02.sbms.hku.hk"
 #GPU_SERVER_HOSTNAME = "http://127.0.0.1"
-GPU_SERVER_HOSTNAME = "http://localhost"
+# 127.0.0.1 rather than localhost or 0.0.0.0: proxied sites list
+# 127.0.0.1 in NO_PROXY, and a client aimed at 0.0.0.0 gets routed to the
+# proxy, which cannot reach a port on the compute node.
+GPU_SERVER_HOSTNAME = "http://127.0.0.1"
 
 # Options: Local_ai, vllm, SGLang, Ollama, Anthropic
 #LLM_PLATFORM = "Anthropic"
@@ -35,7 +38,7 @@ ANTHROPIC_MAX_TOKENS = 16000
 # qwen3:14b once emitted 30,251 of them on a single call and hung for 3.5h.
 # ~16 GB at Q4, so it fits a 24 GB card with room for real context.
 # Raise OLLAMA_NUM_CTX to 32768 and drop the timeout to ~300 when using this.
-#LLM_AI_MODEL = "gemma3:27b"
+LLM_AI_MODEL = "gemma3:27b"
 #
 # The same weights are also reachable through Ollama's HuggingFace
 # passthrough, which is the form upstream's guide uses. Prefer the tag above:
@@ -48,11 +51,10 @@ ANTHROPIC_MAX_TOKENS = 16000
 # reproduces the hang above on better hardware.
 #LLM_AI_MODEL = "qwen3:32b"
 
-# Local model via Ollama (free, runs on this machine, no data leaves it).
-# 14B at Q4 is about 9 GB and fits 16 GB of unified memory; the 32B models
-# commented out above do not. Benchmarked at dx F1 far below curation grade -
-# see bench/ - so this is a plumbing model, not a production one.
-LLM_AI_MODEL = "qwen3:14b"
+# Laptop fallback. 14B at Q4 is about 9 GB and fits 16 GB of unified memory.
+# Only for exercising the plumbing: it produced 46 oncotree diagnoses where
+# the curated answer was 4, with no overlap. Not a production model.
+#LLM_AI_MODEL = "qwen3:14b"
 
 # gemma library
 #LLM_AI_MODEL = "hf.co/unsloth/gemma-4-31B-it-GGUF:UD-Q4_K_XL"
@@ -94,13 +96,15 @@ MAPPING_CUTOFF_DAYS = 1
 # generation loop blocks the pipeline indefinitely.
 # 2048 tokens at the ~2.4 tok/s a 14B manages on a 16 GB M3 needs ~850s, so the
 # timeout must exceed that or it fires before num_predict can cap a runaway.
-LLM_REQUEST_TIMEOUT_SECONDS = 1200
-# Ollama defaults num_ctx to 4096, too small for the genomic prompts.
-# Prompts peak around 12k chars (~3k tokens), so 8192 is ample; 16384 only adds
-# KV cache pressure on a machine already swapping under the 9.3 GB model.
-# On a GPU this constraint disappears: raise to 32768. The longest criteria
-# text in the corpus is 19,676 chars (~4,900 tokens) before the prompt
-# wrapper, gene list and oncotree terms are added, and Ollama truncates an
-# over-long prompt silently rather than erroring.
-OLLAMA_NUM_CTX = 8192
+# 2048 tokens at the ~40 tok/s a 27B manages on a datacentre GPU needs ~50s.
+# On a 16 GB laptop at 2.4 tok/s the same cap needs ~850s - raise this to 1200
+# if you go back to CPU inference.
+LLM_REQUEST_TIMEOUT_SECONDS = 300
+# Ollama defaults num_ctx to 4096, too small for the genomic prompts, and it
+# truncates an over-long prompt SILENTLY rather than erroring - a truncated
+# prompt scores badly with nothing to indicate why. The longest criteria text
+# in the corpus is 19,676 chars (~4,900 tokens) before the prompt wrapper,
+# gene list and oncotree terms are added, so leave real headroom.
+# Drop to 8192 only if running on a machine short of memory.
+OLLAMA_NUM_CTX = 32768
 OLLAMA_NUM_PREDICT = 2048
