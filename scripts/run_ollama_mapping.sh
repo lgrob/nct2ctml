@@ -37,6 +37,15 @@ if [ ! -f "$REPO/main.py" ]; then
   echo "Submit from the repo, or pass: sbatch --export=ALL,REPO=/path/to/nct2ctml ..."
   exit 1
 fi
+# Talk to the local server over 127.0.0.1, not 0.0.0.0. Sites that set a
+# proxy typically list localhost and 127.0.0.1 in NO_PROXY but not 0.0.0.0,
+# so an ollama client defaulting to 0.0.0.0 sends its API calls to the
+# corporate proxy, which cannot reach a port on this node. The server still
+# only needs loopback: the client runs in the same job on the same host.
+export OLLAMA_HOST="${OLLAMA_HOST:-http://127.0.0.1:11434}"
+export NO_PROXY="${NO_PROXY:+$NO_PROXY,}0.0.0.0"
+export no_proxy="$NO_PROXY"
+
 mkdir -p "$OLLAMA_MODELS" "$REPO/logs"
 cd "$REPO"
 echo "[$(date +%T)] repo=$REPO  models=$OLLAMA_MODELS  sif=$SIF"
@@ -58,7 +67,7 @@ fi
 # exists to catch.
 echo "[$(date +%T)] starting ollama from $SIF"
 apptainer exec --nv \
-  --bind "$OLLAMA_MODELS:/root/.ollama/models" \
+  --bind "$OLLAMA_MODELS:$OLLAMA_MODELS" \
   "$SIF" ollama serve > logs/ollama_server.log 2>&1 &
 SERVER_PID=$!
 trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
@@ -76,7 +85,7 @@ echo "[$(date +%T)] ollama responding"
 # which surfaces much later as an opaque mapping failure.
 if ! curl -s http://localhost:11434/api/tags | grep -q "${MODEL%%:*}"; then
   echo "[$(date +%T)] pulling $MODEL (needs outbound network)"
-  apptainer exec --nv --bind "$OLLAMA_MODELS:/root/.ollama/models" \
+  apptainer exec --nv --bind "$OLLAMA_MODELS:$OLLAMA_MODELS" \
     "$SIF" ollama pull "$MODEL" || {
       echo "FAILED: could not pull $MODEL."
       echo "If this cluster blocks egress, stage the GGUF into $OLLAMA_MODELS instead."
