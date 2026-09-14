@@ -20,14 +20,26 @@ MODE="${1:-benchmark}"
 
 # --- paths you must set for your site -------------------------------------
 SIF="${OLLAMA_SIF:-$HOME/containers/ollama.sif}"
-REPO="${REPO:-$HOME/nct2ctml}"
+# Default to wherever sbatch was run from, not a guessed path: Slurm writes
+# --output relative to the submit directory, so anything else splits the job
+# log and the server log across two trees.
+REPO="${REPO:-${SLURM_SUBMIT_DIR:-$PWD}}"
 # Model weights are large (~16 GB for a 27B at Q4). Keep them off $HOME,
 # which is usually quota'd small, and out of the container, which is read-only.
 export OLLAMA_MODELS="${OLLAMA_MODELS:-$SCRATCH/ollama-models}"
 MODEL="${MODEL:-gemma3:27b}"
 
+# Verify before creating. mkdir -p on a wrong REPO happily invents the
+# directory, the job then runs from an empty tree, and the only symptom is a
+# server log that is not where you looked for it.
+if [ ! -f "$REPO/main.py" ]; then
+  echo "FATAL: \$REPO=$REPO does not look like the nct2ctml checkout (no main.py)."
+  echo "Submit from the repo, or pass: sbatch --export=ALL,REPO=/path/to/nct2ctml ..."
+  exit 1
+fi
 mkdir -p "$OLLAMA_MODELS" "$REPO/logs"
 cd "$REPO"
+echo "[$(date +%T)] repo=$REPO  models=$OLLAMA_MODELS  sif=$SIF"
 
 # Fail here with something readable rather than letting Apptainer report a
 # missing path as an encryption check failure.
