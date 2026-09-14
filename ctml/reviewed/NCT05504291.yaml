@@ -1,0 +1,203 @@
+nct_id: NCT05504291
+age: Children
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: '2022-11-04'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Drug: Carboplatin'
+  - drug_name: 'Drug: Etoposide'
+  - drug_name: 'Drug: Melphalan'
+  - drug_name: 'Procedure: Biospecimen Collection'
+  - drug_name: 'Procedure: Examination Under Anesthesia'
+  - drug_name: 'Drug: Vincristine'
+  - drug_name: 'Procedure: Ultrasound Biomicroscopy'
+  - drug_name: 'Procedure: Magnetic Resonance Imaging'
+long_title: Intravitreal Melphalan for Intraocular Retinoblastoma
+last_updated: '2026-08-25'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: PHASE2
+principal_investigator: Rachana Shah
+principal_investigator_institution: Children's Oncology Group
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 26
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 'Inclusion Criteria:'
+- '* Patient must be \< 18 years of age at enrollment'
+- '* Patient must have newly diagnosed intraocular (localized) retinoblastoma and
+  meet one of the following criteria:'
+- '* Unilateral Group D retinoblastoma with vitreous seeding; OR'
+- '* Bilateral retinoblastoma with worst eye Group D, with vitreous seeding present
+  and the contralateral eye is Group A-C; OR'
+- '* Bilateral Group D retinoblastoma with at least one eye with vitreous seeding;
+  OR'
+- '* Bilateral retinoblastoma with one Group D eye with vitreous seeding and one Group
+  E eye where the Group E eye has been enucleated prior to any therapy. Note exclusion
+  for high-risk features'
+- '* Bilateral retinoblastoma with one Group D eye with vitreous seeding and one Group
+  E eye where the Group E eye has not been enucleated prior to any therapy at the
+  discretion of the treating physician. Note exclusion for patients with evidence
+  of metastatic or extra orbital spread'
+- '* Patients must have a performance status corresponding to Eastern Cooperative
+  Oncology Group (ECOG) scores of 0, 1 or 2. Use Karnofsky for patients \> 16 years
+  of age and Lansky for patients =\<16 years of age'
+- '* Peripheral absolute neutrophil count (ANC) \>= 750/uL (must be performed within
+  7 days prior to enrollment unless otherwise indicated)'
+- '* Platelet count \>= 75,000/uL (transfusion independent) (must be performed within
+  7 days prior to enrollment)'
+- '* A serum creatinine based on age/sex as follows (must be performed within 7 days
+  prior to enrollment; must be repeated prior to the start of protocol therapy if
+  \> 7 days have elapsed from their most recent prior assessment):'
+- '* 1 month to \< 6 months = 0.4 (male and female)'
+- '* 6 months to \< 1 year = 0.5 (male and female)'
+- '* 1 to \< 2 years = 0.6 (male and female)'
+- '* 2 to \< 6 years = 0.8 (male and female)'
+- '* 6 to \< 10 years = 1.0 (male and female)'
+- '* 10 to \< 13 years = 1.2 (male and female)'
+- '* 13 to \< 16 years = 1.5 (male) and 1.4 (female)'
+- '* \>= 16 years = 1.7 (male) and 1.4 (female) OR - a 24-hour urine Creatinine clearance
+  \>= 70 mL/min/1.73 m\^2 OR - a glomerular filtration rate (GFR) \>= 70 mL/min/1.73
+  m\^2. GFR must be performed using direct measurement with a nuclear blood sampling
+  method OR direct small molecule clearance method (iothalamate or other molecule
+  per institutional standard)'
+- '* Note: Estimated GFR (eGFR) from serum creatinine, cystatin C or other estimates
+  are not acceptable for determining eligibility'
+- '* For patients \< 1 month of age, serum creatinine levels must be \< 1.5 x the
+  treating institution''s creatinine upper limit of normal (ULN) for patients \< 1
+  month of age or the creatinine clearance or radioisotope GFR must be \>= 70 mL/min/1.73
+  m\^2'
+- '* The threshold creatinine values were derived from the Schwartz formula for estimating
+  GFR utilizing child length and stature data published by the Center for Disease
+  Control (CDC)'
+- '* Total bilirubin =\< 1.5 x upper limit of normal (ULN) for age (must be performed
+  within 7 days prior to enrollment; must be repeated prior to the start of protocol
+  therapy if \> 7 days have elapsed from their most recent prior assessment)'
+- '* Serum glutamate pyruvate transaminase (SGPT) (alanine aminotransferase \[ALT\])
+  =\< 135 U/L (must be performed within 7 days prior to enrollment; must be repeated
+  prior to the start of protocol therapy if \> 7 days have elapsed from their most
+  recent prior assessment)'
+- '* Note: For the purpose of this study, the ULN for SGPT (ALT) has been set to the
+  value of 45 U/L'
+- 'Exclude - Exclusion Criteria:'
+- Exclude - * Patients with evidence of metastatic or extra-orbital spread
+- Exclude - * Patients must not have an invasive infection at time of protocol entry
+- Exclude - * Patients must not have had any prior anti-cancer therapy other than
+  cryotherapy and/or laser therapy (green or infrared) to the study eye(s) and non-study
+  eye, including systemic chemotherapy, intra-arterial chemotherapy, radioactive plaque,
+  brachytherapy, or radiation therapy.
+- 'Exclude - * Note: A study eye is defined as being Group D with vitreous seeding.
+  Patients may have had enucleation of one eye as long as the remaining eye is Group
+  D with vitreous seeds'
+- Exclude - * Patients with bilateral disease who undergo enucleation of a Group E
+  eye prior to initiation of therapy and show evidence of high-risk histopathology
+  features in the enucleated eye. High-risk histopathology includes choroid involvement
+  \>= 3 mm, post lamina optic nerve involvement, full thickness scleral invasion or
+  optic nerve invasion to the cut end
+- Exclude - * Female patients who are pregnant since fetal toxicities and teratogenic
+  effects have been noted for several of the study drugs. A pregnancy test is required
+  for female patients of childbearing potential
+- Exclude - * Lactating females who plan to breastfeed their infants
+- Exclude - * Sexually active patients of reproductive potential who have not agreed
+  to use an effective contraceptive method for the duration of their study participation
+- Exclude - * All patients and/or their parents or legal guardians must sign a written
+  informed consent
+- Exclude - * All institutional, Food and Drug Administration (FDA), and National
+  Cancer Institute (NCI) requirements for human studies must be met
+short_title: A Study to Give Treatment Inside the Eye to Treat Retinoblastoma
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Children's Oncology Group
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: This phase II trial tests the safety and side effects of adding melphalan
+  (by injecting it into the eye) to standard chemotherapy in early treatment of patients
+  with retinoblastoma (RB). RB is a type of cancer that forms in the tissues of the
+  retina (the light-sensitive layers of nerve tissue at the back of the eye). It may
+  be hereditary or nonhereditary (sporadic). RB is considered harder to treat (higher
+  risk) when there are vitreous seeds present. Vitreous seeds are RB tumors in the
+  jelly-like fluid of the eye (called the vitreous humor). The term, risk, refers
+  to the chance of the cancer not responding to treatment or coming back after treatment.
+  Melphalan is in a class of medications called alkylating agents. It may kill cancer
+  cells by damaging their deoxyribonucleic acid (DNA) and stopping them from dividing.
+  Other chemotherapy drugs given during this trial include carboplatin, vincristine,
+  and etoposide. Carboplatin is in a class of medications known as platinum-containing
+  compounds. It works in a way similar to the anticancer drug cisplatin, but may be
+  better tolerated than cisplatin. Carboplatin works by killing, stopping or slowing
+  the growth of cancer cells. Vincristine is in a class of medications called vinca
+  alkaloids. It works by stopping cancer cells from growing and dividing and may kill
+  them. Etoposide is in a class of medications known as podophyllotoxin derivatives.
+  It blocks a certain enzyme needed for cell division and DNA repair and may kill
+  cancer cells. Adding melphalan to standard chemotherapy early in treatment may improve
+  the ability to treat vitreous seeds and may be better than standard chemotherapy
+  alone in treating retinoblastoma.
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: Treatment (CVE, melphalan)
+      arm_internal_id: 0
+      arm_description: See Detailed Description
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Procedure: Biospecimen Collection'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: Carboplatin'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Drug: Etoposide'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Procedure: Examination Under Anesthesia'
+        level_internal_id: 3
+        level_suspended: N
+      - level_code: '4'
+        level_description: 'Procedure: Magnetic Resonance Imaging'
+        level_internal_id: 4
+        level_suspended: N
+      - level_code: '5'
+        level_description: 'Drug: Melphalan'
+        level_internal_id: 5
+        level_suspended: N
+      - level_code: '6'
+        level_description: 'Procedure: Ultrasound Biomicroscopy'
+        level_internal_id: 6
+        level_suspended: N
+      - level_code: '7'
+        level_description: 'Drug: Vincristine'
+        level_internal_id: 7
+        level_suspended: N
+    match:
+    - and:
+      - clinical:
+          oncotree_primary_diagnosis: Retinoblastoma
+      - clinical:
+          age_numerical: <18

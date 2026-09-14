@@ -1,0 +1,183 @@
+nct_id: NCT07297979
+age: All
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: '2026-04-08'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Drug: Xaluritamig'
+long_title: A Phase 1b Study to Evaluate the Safety, Tolerability, Pharmacokinetics,
+  and Efficacy of Xaluritamig in Adult, Adolescent and Pediatric Participants With
+  Relapsed or Refractory Ewing Sarcoma
+last_updated: '2026-08-21'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: PHASE1
+principal_investigator: NA
+principal_investigator_institution: Amgen
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 50
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 'Inclusion Criteria:'
+- '1. Part 1: evaluable disease as defined by RECIST v1.1, as determined by the site
+  investigator.'
+- 'Part 2: measurable disease as defined by RECIST v1.1, as determined by the site
+  investigator.'
+- 2. Histologically or cytologically confirmed EWS with molecular evidence of an EWSR1
+  translocation with an E26 transformation-specific (ETS) family gene, eg, FLI1, ETS-related
+  gene \[ERG\]) via next generation sequencing (based on local testing).
+- 3. Relapsed or refractory EWS following at least 1 line of chemotherapy (including
+  treatment with an anthracycline and at least 1 alkylating agent).
+- '4. Performance status:'
+- "1. Karnofsky \u2265 70% for participants \u2265 16 years of age."
+- "2. Lansky \u2265 70% for participants \\< 16 years of age."
+- '5. Adequate organ function, defined as follows:'
+- "a. Hematological function: i. Absolute neutrophil count \u2265 1.0 x 109/L, provided\
+  \ that:"
+- '* the participant has not received short-acting growth factor support within 7
+  days before screening assessment, and'
+- '* the participant has not received long-acting growth factor support within 14
+  days before screening assessment.'
+- "ii. Platelet count \u2265 75 x 109/L, provided that:"
+- '* the participant has not received a platelet transfusion within 7 days before
+  screening assessment, and'
+- '* the participant has not received a platelet stimulating agent within 14 days
+  before screening assessment.'
+- "b. Renal function: i. Estimated glomerular filtration rate based on Modification\
+  \ of Diet in Renal Disease (MDRD) calculation \u2265 30 mL/min/1.73 m\\^2 for participants\
+  \ \u2265 18 years of age."
+- "ii. estimated glomerular filtration rate based on Schwartz (2009) calculation \u2265\
+  \ 30 mL/min/1.73 m\\^2 for participants \\< 18 years of age."
+- "c. Hepatic function: i. Aspartate aminotransferase (AST) and alanine aminotransferase\
+  \ (ALT) \u2264 3 x upper limit of normal (ULN) (or \u2264 5 x ULN for participants\
+  \ with liver metastases)."
+- "ii. Total bilirubin (TBL) \u2264 1.5 x ULN (unless related to Gilbert's or Meulengracht\
+  \ disease)."
+- 'd. Pulmonary function: i. Baseline oxygen saturation \> 92% in room air at rest
+  and no oxygen supplementation.'
+- "e. Cardiac function: i. Left ventricular ejection fraction \u2265 50%. If left\
+  \ ventricular ejection fraction cannot be measured, then left ventricular fractional\
+  \ shortening \u2265 28%."
+- 6. Participants of childbearing potential must use protocol-specified contraception
+  to prevent pregnancy during treatment and for an additional 6 months after the last
+  dose of xaluritamig.
+- 'Exclude - Exclusion Criteria:'
+- Exclude - 1. Untreated central nervous system (CNS) metastases or leptomeningeal
+  disease. Participants with a history of treated CNS metastases are eligible if there
+  is radiographic evidence of improvement upon the completion of CNS-directed therapy
+  and no evidence of interim progression between the completion of CNS-directed therapy
+  and the screening radiographic study.
+- Exclude - 2. History of other malignancy within the past 2 years, except for malignancy
+  treated with curative intent with low risk for recurrence (approximately \< 10%)
+  and with no known active disease present for \>1 year before enrollment.
+- Exclude - 3. Active autoimmune disease that has required systemic treatment (except
+  physiologic adrenal hormone replacement therapy) within the past 2 years or any
+  other diseases requiring immunosuppressive therapy while on study. Participants
+  with Type 1 diabetes, vitiligo, psoriasis, hypo- or hyper-thyroid disease not requiring
+  immunosuppressive treatment are permitted.
+- 'Exclude - 4. Participants who received anti-cancer therapy administered within
+  the following minimum washout periods prior to first dose of xaluritamig:'
+- 'Exclude - 1. Cytotoxic chemotherapy: 21 days.'
+- 'Exclude - 2. Small molecules including tyrosine kinase inhibitors: 7 days or 5
+  half-lives, whichever is shorter.'
+- 'Exclude - 3. Monoclonal antibodies, immune checkpoint inhibitors, bispecific antibodies
+  and other biologic agents: 28 days or 5 half-lives, whichever is shorter.'
+- 'Exclude - 4. Cellular therapies including Chimeric Antigen Receptor T-cell therapy
+  (CAR-T), adoptive T-cell therapy: 56 days.'
+- 'Exclude - 5. Radiotherapy: 14 days for focal therapy, 28 days for large field therapy
+  or involving \> 30% of the bone marrow.'
+- 'Exclude - 6. Stem cell transplant: 12 weeks for autologous, 6 months for allogeneic,
+  with no active graft-versus-host disease.'
+- 'Exclude - 7. Any other therapy or investigational agent: 28 days or 5 half-lives,
+  whichever is longer.'
+- "Exclude - 5. Requirement for chronic systemic corticosteroid therapy (prednisone\
+  \ dose \\> 10 mg/day \\[\\> 0.25 mg/kg/day if \\< 40 kg\\] or equivalent) or any\
+  \ other immunosuppressive therapies (including anti-tumour necrosis factor \u03B1\
+  \ (TNF\u03B1) therapies) unless stopped (with adequate tapering) within 28 days\
+  \ before first dose of xaluritamig."
+- Exclude - 6. Currently pregnant (confirmed with positive pregnancy test) or breastfeeding
+  or planning to become pregnant, donate eggs, or breastfeed while on trial until
+  an additional 6 months after the last dose of trial intervention.
+- Exclude - 7. Unwilling to abstain from donating sperm during treatment and for an
+  additional 6 months after the last dose of xaluritamig.
+short_title: Evaluation of Xaluritamig in Adults, Adolescents and Children With Relapsed
+  or Refractory Ewing Sarcoma (EWS)
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Amgen
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: The main objectives of this trial are to determine the recommended dose for
+  expansion of xaluritamig (dose confirmation part only) and to determine the safety
+  and tolerability of xaluritamig in adult, adolescent and pediatric participants
+  with relapsed or refractory EWS.
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: Part 1 (Dose Confirmation)
+      arm_internal_id: 0
+      arm_description: Part 1 will begin with a pre-specified xaluritamig target dose
+        and frequency. Multiple dose levels and/or alternative dose regimens may be
+        explored in parallel to determine 1 or more recommended doses for expansion,
+        which is/are considered safe, based on emerging data.
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Xaluritamig'
+        level_internal_id: 0
+        level_suspended: N
+    - arm_code: Part 2 (Dose Expansion)
+      arm_internal_id: 1
+      arm_description: Participants will be treated in Part 2 after the recommended
+        doses for expansion for xaluritamig are determined in Part 1 to further characterize
+        preliminary antitumor activity and safety.
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Xaluritamig'
+        level_internal_id: 0
+        level_suspended: N
+    match:
+    - and:
+      - clinical:
+          oncotree_primary_diagnosis: Ewing Sarcoma
+      - genomic:
+          hugo_symbol: EWSR1
+          variant_category: Structural Variation
+      - or:
+        - genomic:
+            hugo_symbol: FLI1
+            variant_category: Structural Variation
+        - genomic:
+            hugo_symbol: ERG
+            variant_category: Structural Variation
+      - clinical:
+          age_numerical: '>=2'
+      - clinical:
+          disease_status:
+          - Recurrent
+          - Refractory

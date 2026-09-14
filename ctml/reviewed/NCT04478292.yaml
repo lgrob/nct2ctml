@@ -1,0 +1,237 @@
+nct_id: NCT04478292
+age: Children
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: '2021-03-01'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Procedure: Resection or transplant'
+  - drug_name: 'Drug: Consolidation (Carboplatin, Doxorubicin) -Group D1'
+  - drug_name: 'Drug: Consolidation (Carboplatin +Doxorubicin/Vincristine + Irinotecan)-Group
+      D2'
+  - drug_name: 'Procedure: Primary surgery resection'
+  - drug_name: 'Drug: Sodium Thiosulfate Injection'
+  - drug_name: 'Drug: mono CDDP-Group A2'
+  - drug_name: 'Procedure: Resection of pulmonary nodules'
+  - drug_name: 'Drug: Block 1 to 3 (Cisplatin, Doxorubicin) Group D'
+  - drug_name: 'Procedure: Biopsy'
+  - drug_name: 'Drug: Cisplatin, 5-Fluorouracil, Vincristine, Doxorubicin-Group C'
+  - drug_name: 'Drug: mono CDDP- Group B'
+long_title: A Phase 3 Multi-institutional Study for Treatment of Children With Newly
+  Diagnosed Hepatoblastoma Using a Modified PHITT Strategy Incorporating a Randomized
+  Assessment of Sodium Thiosulfate as Otoprotection for Children With Localized Disease,
+  and Response Adapted Therapy for Patients With Metastatic Disease
+last_updated: '2026-05-04'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: PHASE3
+principal_investigator: Yi-Jin Gao, MD
+principal_investigator_institution: Shanghai Children's Medical Center
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 330
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 'Inclusion Criteria:'
+- "* Performance Level Patients must have a performance status corresponding to ECOG\
+  \ scores 0, 1, or 2. Use Karnofsky for patients \\>16 years of age and Lansky for\
+  \ patients \u226416 years of age."
+- '* Diagnosis Patients must be newly diagnosed with histologically-proven primary
+  pediatric HB'
+- '* Emergent Treatment for HB In emergency situation when a patient meets all other
+  eligibility criteria and has had baseline required observations, but is too ill
+  to undergo a biopsy safely, the patient may be enrolled without a biopsy.'
+- '* Prior Therapy Patients may have had surgical resection of the hepatic malignancy
+  prior to enrollment. All other anti-cancer therapy for the current liver lesion
+  is prohibited.'
+- '* Organ Function Requirements'
+- 'I) Adequate renal function defined as:'
+- "Creatinine clearance or radioisotope Glomerular Filtration Rate (GFR) \u2265 70\
+  \ mL/min/1.73 m2"
+- 'II) Adequate liver function defined as:'
+- "Total bilirubin \u2264 5 x upper limit of normal (ULN) for age, and Aspartate aminotransferase\
+  \ (AST) or Alanine transaminase (ALT) \\< 10 x upper limit of normal (ULN) for age."
+- 'III) Adequate pulmonary function defined as:'
+- Normal pulmonary function tests (including DLCO) if there is clinical indication
+  for determination (e.g. dyspnea at rest, known requirement for supplemental oxygen)
+- 'Exclude - Exclusion Criteria:'
+- Exclude - * Prior chemotherapy or tumor directed therapy expect for surgical resection
+  of the hepatic malignancy (i.e. radiation therapy, biologic agents, local therapy
+  (embolization, radiofrequency ablation, and laser)). Therefore, patients with a
+  pre-disposition syndrome who have a prior malignancy are not eligible.
+- Exclude - * Patients who are currently receiving another investigational drug.
+- Exclude - * Patients who are currently receiving other anticancer agents.
+- Exclude - * Patients with uncontrolled infection.
+- Exclude - * Patients who previously received a solid organ transplant.
+short_title: A Multi-institutional Study for Treatment of Children With Newly Diagnosed
+  Hepatoblastoma Using a Modified PHITT Strategy
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Shanghai Children's Medical Center
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: A Phase 3 multi-institutional study for treatment of children with newly
+  diagnosed hepatoblastoma using a modified Paediatric Hepatic International Tumour
+  Trial (PHITT) strategy incorporating a randomized assessment of sodium thiosulfate
+  as auditory protection for children with localized disease, and response adapted
+  therapy for patients with metastatic disease
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: Group A
+      arm_internal_id: 0
+      arm_description: "* Group A1\uFF1A tumor is completely resected at diagnosis\
+        \ and receives no adjuvant chemotherapy\uFF08well differentiated fetal \\\
+        [WDF\\] histology HB) \uFF1B\n* Group A2\uFF1Atumor is completely resected\
+        \ followed by 2 cycles of standard dose cisplatin monotherapy \uFF08non-well\
+        \ differentiated fetal histology HB)"
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Procedure: Primary surgery resection'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: mono CDDP-Group A2'
+        level_internal_id: 1
+        level_suspended: N
+    - arm_code: Group B
+      arm_internal_id: 1
+      arm_description: '* Patients will be randomized to one of 2 arms: Arm CDDP or
+        Arm CDDP plus STS. In each arm, patients will be stratified by resectablity
+        after completion of 2 cycles of protocol therapy (6 cycles of standard dose
+        cisplatin monotherapy with or without STS). All the patients in 2 arms will
+        receive 6 cycles chemotherapy in total.
+
+        * Resection of the primary tumor will be performed after completing the 2nd
+        cycle of chemotherapy.
+
+        * Those patients whose tumors after 2 cycles do not meet criteria for definitive
+        surgical, 2nd resectablity evaluation will be scheduled after 4 cycles of
+        chemotherapy.'
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Sodium Thiosulfate Injection'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Procedure: Biopsy'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Procedure: Resection or transplant'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Drug: mono CDDP- Group B'
+        level_internal_id: 3
+        level_suspended: N
+    - arm_code: Group C
+      arm_internal_id: 2
+      arm_description: '* Patients in Group C will have locally advanced tumors including
+        PRETEXT I-III tumors with a positive VPEFR annotation factor and all PRETEXT
+        IV tumors.
+
+        * Patients will be randomized to one of 2 arms: Arm C5VD or Arm C5VD plus
+        STS. In each arm, patients will be stratified by resectablity after completion
+        of 2 cycles of protocol therapy. All the patients in 2 arms will receive 6
+        cycles chemotherapy in total.
+
+        * Resection of the primary tumor will be performed after completing the 2nd
+        cycle of chemotherapy.
+
+        * Those patients whose tumors after 2 cycles do not meet criteria for definitive
+        surgical, 2nd resectablity evaluation will be scheduled after 4 cycles of
+        chemotherapy.'
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Sodium Thiosulfate Injection'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: Cisplatin, 5-Fluorouracil, Vincristine, Doxorubicin-Group
+          C'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Procedure: Biopsy'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Procedure: Resection or transplant'
+        level_internal_id: 3
+        level_suspended: N
+    - arm_code: Group D
+      arm_internal_id: 3
+      arm_description: "* These patients have metastatic disease, suspected HB patients\
+        \ \u2265 8 years of age, or have an AFP \u2264 100 at diagnosis.\n* Patients\
+        \ will receive initial chemotherapy according to the cisplatin-intensive SIOPEL-4\
+        \ induction regimen. Resection (including transplant) of the primary tumor\
+        \ should be completed after induction Block 3, but primary tumor resection\
+        \ can be planned any time after completing induction therapy.\n* Following\
+        \ 3 blocks of induction chemotherapy, patients will be stratified into 2 risk\
+        \ groups: Group D1 includes patients who either have a chemotherapy-induced\
+        \ lung CR or are rendered a lung CR by surgical metastasectomy. These patients\
+        \ will have chemotherapy consolidation with carboplatin/doxorubicin. In Group\
+        \ D2, patients will have not yet achieved a lung CR at the end of induction\
+        \ Block 3. These patients will get intensified consolidation therapy of carboplatin/doxorubicin\
+        \ with vincristine/irinotecan.\n* Resection of pulmonary nodules should be\
+        \ considered in Group D2."
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Procedure: Biopsy'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Procedure: Resection or transplant'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Procedure: Resection of pulmonary nodules'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Drug: Block 1 to 3 (Cisplatin, Doxorubicin) Group D'
+        level_internal_id: 3
+        level_suspended: N
+      - level_code: '4'
+        level_description: 'Drug: Consolidation (Carboplatin, Doxorubicin) -Group
+          D1'
+        level_internal_id: 4
+        level_suspended: N
+      - level_code: '5'
+        level_description: 'Drug: Consolidation (Carboplatin +Doxorubicin/Vincristine
+          + Irinotecan)-Group D2'
+        level_internal_id: 5
+        level_suspended: N
+    match:
+    - and:
+      - clinical:
+          oncotree_primary_diagnosis: Hepatoblastoma
+      - clinical:
+          age_numerical: <=18

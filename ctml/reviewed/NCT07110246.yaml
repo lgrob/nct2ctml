@@ -1,0 +1,330 @@
+nct_id: NCT07110246
+age: Children
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: '2025-11-07'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Drug: Dabrafenib'
+  - drug_name: 'Procedure: Specimen Collection'
+  - drug_name: 'Procedure: Magnetic Resonance Imaging (MRI)'
+  - drug_name: 'Drug: Trametinib'
+  - drug_name: 'Procedure: Optional Lumbar puncture'
+long_title: A Phase 2 De-escalation Study of Dabrafenib and Trametinib for Patients
+  With BRAF V600 Mutant Low-Grade Gliomas
+last_updated: '2026-09-03'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: PHASE2
+principal_investigator: Sabine Mueller, MD, PHD
+principal_investigator_institution: University of California, San Francisco
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 96
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 'Inclusion Criteria:'
+- '* Participants must have histologically confirmed LGG World Health Organization
+  (WHO) Grade I or II with BRAF V600 mutation confirmed by immunohistochemistry or
+  sequencing'
+- '* Participants must have measurable tumor.'
+- \* For participants with measurable disease, this will be defined as lesions that
+  can be accurately measured in two dimensions (longest diameter to be recorded) with
+  a minimum size of no less than double the slice thickness. Previously irradiated
+  lesions are considered non-measurable except in cases of documented progression
+  of the lesion since the completion of radiation therapy. Participants without measurable
+  disease may be considered for enrollment and followed for survival and progression
+  purposes but will not be included as part of a measurable disease cohort.
+- '* Cohort 1:'
+- '* Participants must have no prior therapy, except for surgical intervention (i.e.
+  biopsy or resection)'
+- '* Participants may currently be taking dabrafenib and trametinib as frontline therapy,
+  with a maximum duration of 21 months and participants must not yet have met criteria
+  for confirmed best response as defined in this protocol. For participants entering
+  the trial currently taking dabrafenib and trametinib, they must be taking a dose
+  that is within 20% of the standard dosing for both drugs based on age and weight.
+  Participants who are already on dabrafenib and trametinib when enrolling on trial
+  and whose dosing deviates more than 20% from the protocol nomogram need to be discussed
+  with the study chairs. Eligibility for these participants will be based on ability
+  to wean within the parameters of the protocol'
+- '* Cohort 2:'
+- \* Participants must have a history of recurrent or progressive disease following
+  prior therapy (e.g., carboplatin and vincristine, vinblastine, bevacizumab, mitogen-activated
+  extracellular signal-regulated kinase (MEK) inhibitor, radiation therapy etc). Participants
+  who previously completed a course of therapy with dabrafenib and trametinib, who
+  did not progress on this therapy, and who are beyond 6 months from completion of
+  therapy are eligible for retreatment.
+- \*\* Participants may currently be taking dabrafenib and trametinib as therapy for
+  disease recurrence, for a maximum duration of 21 months and participants must not
+  yet have met criteria for confirmed best response as defined in this protocol. For
+  participants entering the trial currently taking dabrafenib and trametinib, they
+  must be taking dose that is within 20% of the standard dosing for both drugs based
+  on age and weight. Participants who are already on dabrafenib and trametinib when
+  enrolling on trial and whose dosing deviates more than 20% from the protocol nomogram
+  need to be discussed with the study chairs. Eligibility for these participants will
+  be based on ability to wean within the parameters of the protocol
+- '* Participants must have received their last dose of chemotherapy 3 weeks prior
+  to enrollment (6 weeks for nitrosoureas) and recovered from acute adverse events
+  due to agents administered'
+- '* Participants must be at least 7 days since the completion of therapy with a biologic
+  or small molecule agent except dabrafenib and trametinib. For any agent with known
+  adverse events that can occur beyond 7 days after administration, the period prior
+  to enrollment must be beyond the time during which adverse events are known to occur.
+  Such participants must be discussed with study chairs'
+- '* Radiation:'
+- '* No prior radiation is allowed for participants in Cohort 1'
+- '* Participants in Cohort 2 must have:'
+- "* Had their last fraction of local irradiation to primary tumor \u2265 12 weeks\
+  \ prior to registration"
+- "* Had their last fraction of craniospinal irradiation \u2265 12 weeks prior to\
+  \ registration"
+- '* At least 14 days after local palliative radiation (small-port)'
+- "* Age: \u2265 12 months and \\< 25 years old"
+- "* Performance Score: Karnofsky \u2265 50 for participants \\> 16 years of age and\
+  \ Lansky \u2265 50 for participants \u2264 16 years of age. Participants who are\
+  \ unable to walk because of paralysis, but who are up in a wheelchair, will be considered\
+  \ ambulatory for the purpose of assessing the performance score"
+- "* Peripheral absolute neutrophil count (ANC) \u2265 1000/mm\\^3"
+- "* Platelet count \u2265 100,000/mm\\^3 (transfusion independent, defined as not\
+  \ receiving platelet transfusions for at least 7 days prior to enrollment)"
+- "* A serum creatinine \u2264 1.5 upper limit of normal (ULN) based on age and gender"
+- "* Total bilirubin \u2264 1.5 x ULN for age; in presence of Gilbert's syndrome,\
+  \ total bilirubin \u2264 3 x ULN or direct bilirubin \u2264 1.5 x ULN"
+- "* Alanine aminotransferase (ALT) \u2264 3 x ULN"
+- "* Aspartate aminotransferase (AST) \u2264 3 x ULN"
+- '* Participants with seizure disorder may be enrolled if well controlled'
+- '* Left ventricular ejection fraction (LVEF) greater than or equal to institutional
+  lower limit of normal (LLN) by echocardiogram (ECHO) (while not receiving medications
+  for cardiac function)'
+- '* Correct QT (QTc) interval \< 480 msecs'
+- '* Patient must agree to adequate contraception. (The effects of dabrafenib and
+  trametinib on the developing human fetus are unknown. For this reason and because
+  agents as well as other therapeutic agents used on this trial are known to be teratogenic,
+  women of child-bearing potential and men must agree to use adequate contraception
+  (hormonal or barrier method birth control, or abstinence) prior to study entry,
+  for the duration of study participation, and 4 months after completion of the study
+  medication administration. Should a women become pregnant or suspect she is pregnant
+  while she or her partner is participating in this study, she should inform her treating
+  physician immediately)'
+- '* A legal parent/guardian or patient must be able to understand, and willing to
+  sign, a written informed consent and assent document, as appropriate'
+- '* Participants must enroll on Pediatric Neuro-Oncology Consortium (PNOC) comprehensive
+  follow up protocol (PNOC COMP) if PNOC COMP is open to accrual at the enrolling
+  institution'
+- '* Pathology reports, next generation sequencing reports, or both, confirming BRAF
+  V600E mutation status must be submitted at the time of enrollment'
+- 'Exclude - Exclusion Criteria:'
+- 'Exclude - * Participant''s tumor has any of the following additional previously
+  known or expected activating molecular alterations:'
+- Exclude - * Isocitrate dehydrogenase 1 and 2 (IDH1 and IDH2) mutation
+- Exclude - * Histone H3 mutation (p.K28M, p.G35R, p.G35V)
+- Exclude - * Neurofibromatosis Type 1 (NF-1) loss of function alteration
+- Exclude - * Participants who are receiving any other investigational agents
+- Exclude - * History of allergic reactions attributed to compounds of similar chemical
+  or biologic composition to dabrafenib and trametinib
+- Exclude - * Medications that are affected by the induction of CYP3A4 and CYP2C9
+  should be avoided or used cautiously. Dabrafenib has been shown to induce CYP3A4
+  and CYP2C9. In addition, dabrafenib is an in vitro inducer of CYP2B6, CYP2C8, CYP2C19,
+  Uridine 5'-diphospho (UDP)-glucuronosyltransferase. Co-administration of dabrafenib
+  and medications which are affected by the induction of these enzymes (including
+  warfarin) and transporters may result in loss of efficacy. Because the lists of
+  these agents are constantly changing, it is important to regularly consult a frequently-updated
+  list such as http://medicine.iupui.edu/clinpharm/ddis/table.aspx; medical reference
+  texts such as the Physicians' Desk Reference may also provide this information.
+  As part of the enrollment/informed consent procedures, the participant and/or legal
+  parent or guardian will be counseled on the risk of interactions with other agents,
+  and what to do if new medications need to be prescribed or if the participant is
+  considering a new over-the-counter medicine or herbal product
+- Exclude - * Uncontrolled intercurrent illness including, but not limited to, ongoing
+  or active infection
+- Exclude - * Women of childbearing potential must not be pregnant or breast-feeding
+- Exclude - * Human immunodeficiency virus (HIV) positive participants will be ineligible
+  if HIV therapy regimen has not been stable for at least 4 weeks or there is intent
+  to change the regimen within 8 weeks following enrollment, or if they are severely
+  immunocompromised
+short_title: Dabrafenib and Trametinib for BRAF V600 Mutant Low-Grade Gliomas
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: University of California, San Francisco
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: 'This phase II trial studies how well de-escalating the drugs dabrafenib
+  and trametinib works in treating patients with low-grade gliomas that have a BRAF
+  V600 gene mutation. Dabrafenib and trametinib are in a class of medications called
+  kinase inhibitors. They work by blocking the action of abnormal proteins that signals
+  tumor cells to multiply. This helps stop the spread of tumor cells. This trial may
+  help doctors determine the best dosing strategy for patients who have received dabrafenib
+  and trametinib for 12-24 months: Either stopping dabrafenib and trametinib completely
+  or slowly reducing the dose for an additional 6 months.'
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: 'Cohort 1: Arm A (Newly diagnosed, Dabrafenib, Trametinib followed
+        by treatment stop)'
+      arm_internal_id: 0
+      arm_description: Participants with newly diagnosed BRAF V600 mutant LGGs receive
+        dabrafenib PO twice per day (BID) and trametinib PO once daily (QD) on days
+        1-28 of each cycle. Cycles repeat every 28 days for a minimum of 12 cycles
+        and continues until confirmed best response or for up to a maximum of 24 cycles
+        in the absence of disease progression or unacceptable toxicity. Participants
+        then stop treatment with dabrafenib and trametinib. Participants also undergo
+        ECHO, MRI, and blood sample collection throughout the study and may optionally
+        undergo lumbar puncture for collection of CSF.
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Dabrafenib'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: Trametinib'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Procedure: Magnetic Resonance Imaging (MRI)'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Procedure: Specimen Collection'
+        level_internal_id: 3
+        level_suspended: N
+      - level_code: '4'
+        level_description: 'Procedure: Optional Lumbar puncture'
+        level_internal_id: 4
+        level_suspended: N
+    - arm_code: 'Cohort 1: Arm B (Newly diagnosed, Dabrafenib, Trametinib followed
+        by weaning)'
+      arm_internal_id: 1
+      arm_description: Participants with newly diagnosed BRAF V600 mutant LGGs receive
+        dabrafenib PO twice per day (BID) and trametinib PO once daily (QD) on days
+        1-28 of each cycle. Cycles repeat every 28 days for a minimum of 12 cycles
+        and continues until confirmed best response or for up to a maximum of 24 cycles
+        in the absence of disease progression or unacceptable toxicity. Participants
+        then receive dabrafenib PO BID and trametinib PO QD on days 1-28 of each cycle.
+        Cycles repeat every 28 days for 6 cycles in the absence of disease progression
+        or unacceptable toxicity. Participants also undergo ECHO, MRI, and blood sample
+        collection throughout the study and may optionally undergo lumbar puncture
+        for collection of CSF.
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Dabrafenib'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: Trametinib'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Procedure: Magnetic Resonance Imaging (MRI)'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Procedure: Specimen Collection'
+        level_internal_id: 3
+        level_suspended: N
+      - level_code: '4'
+        level_description: 'Procedure: Optional Lumbar puncture'
+        level_internal_id: 4
+        level_suspended: N
+    - arm_code: 'Cohort 2: Arm A (Recurrent LGG, Dabrafenib, Trametinib followed by
+        treatment stop)'
+      arm_internal_id: 2
+      arm_description: Participants with recurrent/progressive BRAF V600 mutant LGGs
+        receive dabrafenib PO twice per day (BID) and trametinib PO once daily (QD)
+        on days 1-28 of each cycle. Cycles repeat every 28 days for a minimum of 12
+        cycles and continues until confirmed best response or for up to a maximum
+        of 24 cycles in the absence of disease progression or unacceptable toxicity.
+        Participants then stop treatment with dabrafenib and trametinib. Participants
+        also undergo ECHO, MRI, and blood sample collection throughout the study and
+        may optionally undergo lumbar puncture for collection of CSF.
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Dabrafenib'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: Trametinib'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Procedure: Magnetic Resonance Imaging (MRI)'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Procedure: Specimen Collection'
+        level_internal_id: 3
+        level_suspended: N
+      - level_code: '4'
+        level_description: 'Procedure: Optional Lumbar puncture'
+        level_internal_id: 4
+        level_suspended: N
+    - arm_code: 'Cohort 2: Arm B (Recurrent LGG, Dabrafenib, Trametinib followed by
+        weaning)'
+      arm_internal_id: 3
+      arm_description: Participants with recurrent/progressive BRAF V600 mutant LGGs
+        receive dabrafenib PO twice per day (BID) and trametinib PO once daily (QD)
+        on days 1-28 of each cycle. Cycles repeat every 28 days for a minimum of 12
+        cycles and continues until confirmed best response or for up to a maximum
+        of 24 cycles in the absence of disease progression or unacceptable toxicity.
+        Participants then receive dabrafenib PO BID and trametinib PO QD on days 1-28
+        of each cycle. Cycles repeat every 28 days for 6 cycles in the absence of
+        disease progression or unacceptable toxicity. Participants also undergo ECHO,
+        MRI, and blood sample collection throughout the study and may optionally undergo
+        lumbar puncture for collection of CSF.
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Dabrafenib'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: Trametinib'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Procedure: Magnetic Resonance Imaging (MRI)'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Procedure: Specimen Collection'
+        level_internal_id: 3
+        level_suspended: N
+      - level_code: '4'
+        level_description: 'Procedure: Optional Lumbar puncture'
+        level_internal_id: 4
+        level_suspended: N
+    match:
+    - and:
+      - clinical:
+          oncotree_primary_diagnosis: Low-Grade Glioma, NOS
+      - genomic:
+          hugo_symbol: BRAF
+          variant_category: Mutation
+      - clinical:
+          age_numerical: '>=1'
+      - clinical:
+          age_numerical: <=25

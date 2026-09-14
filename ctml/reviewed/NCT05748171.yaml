@@ -1,0 +1,144 @@
+nct_id: NCT05748171
+age: Children
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: '2023-05-17'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Drug: Inotuzumab ozogamicin'
+  - drug_name: 'Drug: ALLR3'
+long_title: A PROSPECTIVE, RANDOMIZED, OPEN-LABEL PHASE 2 STUDY TO EVALUATE THE SUPERIORITY
+  OF INOTUZUMAB OZOGAMICIN MONOTHERAPY VERSUS ALLR3 FOR INDUCTION TREATMENT OF CHILDHOOD
+  HIGH-RISK OR VERY HIGH-RISK FIRST RELAPSE B-CELL PRECURSOR ACUTE LYMPHOBLASTIC LEUKAEMIA
+last_updated: '2026-08-14'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: PHASE2
+principal_investigator: NA
+principal_investigator_institution: Pfizer
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 100
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 'Inclusion Criteria:'
+- 1. Male or female participants between 1 and \<18 years of age.
+- 2. Morphologically confirmed diagnosis of first relapse HR or VHR BCP ALL; HR first
+  relapse is defined as relapse occurring within 18 to 30 months of original diagnosis
+  of ALL or within 6 months of completion of primary therapy, and lacking any identified
+  very high-risk genetic abnormalities (Groeneveld-Krentz et al, 2019) (ie, KMT2A::AFF1
+  fusion \[t(4;11)(q21;q23)\], TCF3-HLF fusion \[t(17;19)(q22;p13)\], TCF3-PBX1 fusion
+  \[t(1;19)(q23;p13.3)\], hypodiploidy \[\<40 chromosomes\] or masked low hypodiploidy
+  (Molina et al, 2021), TP53 alteration). VHR first relapse is defined as relapse
+  within 18 months of original diagnosis of ALL and/or with any of the following genetic
+  abnormalities at original diagnosis or at relapse (Groeneveld-Krentz et al, 2019)
+  (ie, KMT2A::AFF1 fusion \[t(4;11)(q21;q23)\], TCF3-HLF fusion \[t(17;19)(q22;p13)\],
+  TCF3-PBX1 fusion \[t(1;19)(q23;p13.3)\], hypodiploidy \[\<40 chromosomes\] or masked
+  low hypodiploidy (Molina et al, 2021), TP53 alteration).
+- '* CD22-positive ALL as defined by local institution;'
+- "* Bone marrow involvement of \u2265 5% leukemic blasts (\u2265 M2 status)."
+- '3. Adequate serum chemistry parameters:'
+- "* An eGFR in participants 1 to \\<2 years of age, or eCrCl in those 2 to \\<18\
+  \ years of age, \u226530 mL/min using the recommended formula in Section 10.10.2."
+- "* AST and ALT \u22645 \xD7 institutional ULN at the time of randomization or pre-cytoreduction/general\
+  \ anesthesia; (Refer to Appendix 9 for France-specific requirement on the ALT/AST\
+  \ threshold);"
+- "* Total bilirubin \u22641.5 \xD7 institutional ULN unless the participant has documented\
+  \ Gilbert's syndrome;"
+- 4. Prior history of thrombosis during corticosteroid use and/or asparaginase are
+  eligible provided the patient receives anti-coagulant prophylaxis per institutional
+  guidelines.
+- "5. Cardiac shortening fraction \u2265 30% by echocardiogram or ejection fraction\
+  \ \\>50% by MUGA."
+- 6 Participants with combined bone marrow and testicular relapse are eligible assuming
+  orchiectomy is performed prior to randomization or is planned at the end of induction
+  therapy.
+- Exclude - 5.2. Exclusion Criteria
+- "Exclude - 1. Any history of prior or ongoing hepatic SOS or prior liver failure\
+  \ \\[defined as severe acute liver injury with encephalopathy and impaired synthetic\
+  \ function (INR of \u22651.5)\\]."
+- Exclude - 2. Prior allo-HSCT or CAR T-cell therapy.
+- Exclude - 3. Isolated extramedullary leukemia.
+- Exclude - 4. Philadelphia-chromosome positive ALL, ie. BCR-ABL/t(9;22) present.
+- Exclude - 5. Prior therapy with a calicheamicin-conjugated antibody (eg, InO or
+  gemtuzumab ozogamicin).
+- Exclude - 6. Participants with active, uncontrolled bacterial, fungal, or viral
+  infection.
+- Exclude - 7. Hypersensitivity/allergy to both PEG-ASP and Erwinia-ASP
+short_title: A Study to Learn More About the Study Medicine Called Inotuzumab Ozogamicin
+  (InO) in Children (1 to <18 Years) With First Relapse ALL
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Pfizer
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: This prospective, randomized, multicenter, open-label Phase 2 study is designed
+  to evaluate the superiority of InO monotherapy vs ALLR3 after 1 cycle of induction
+  treatment in paediatric participants (between 1 and \<18 years) with High Risk (HR)
+  or very high risk (VHR) first bone marrow relapse CD22-positive BCP ALL, and to
+  evaluate the safety and tolerability, PK and long-term efficacy. Treatment with
+  study intervention will end after induction therapy; follow-up will continue for
+  up to 5 years from randomization.
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: Inotuzumab ozogamicin
+      arm_internal_id: 0
+      arm_description: "Each participant in the InO arm will receive 1 course (3 doses)\
+        \ of InO, as follows:\n\n* Day 1: 0.8 mg/m2\n* Days 8 (\xB11 day) and Day\
+        \ 15 (\xB11 day): 0.5 mg/m2/dose"
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Inotuzumab ozogamicin'
+        level_internal_id: 0
+        level_suspended: N
+    - arm_code: ALLR3
+      arm_internal_id: 1
+      arm_description: "Mitoxantrone 10 mg/m2 on Days 1 and 2 Vincristine 1.5 mg/m2\
+        \ (max single dose 2 mg) administered on Days 3, 10, 17 and 24 Dexamethasone\
+        \ 20 mg/m2/day administered orally (or IV) divided into two daily doses (maximum\
+        \ 40 mg/day) as two 5-day blocks on Days 1-5 and Days 15-19.\n\nPEG-asparaginase\
+        \ 1000 units/m2 IV administered on Days 3 and 17. In case of hypersensitivity/allergic\
+        \ reaction to PEG-asparaginase, each dose of PEG-asparaginase will be replaced\
+        \ by Erwinia-asparaginase at a dose of 20,000 units/m\xB2 IV or IM every other\
+        \ day for a total of 6 doses"
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: ALLR3'
+        level_internal_id: 0
+        level_suspended: N
+    match:
+    - and:
+      - clinical:
+          oncotree_primary_diagnosis: B-Lymphoblastic Leukemia/Lymphoma, NOS
+      - clinical:
+          age_numerical: '>=1'
+      - clinical:
+          age_numerical: <18
+      - clinical:
+          disease_status:
+          - Recurrent

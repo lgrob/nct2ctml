@@ -1,0 +1,188 @@
+nct_id: NCT02393157
+age: Children
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: '2015-08-21'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Drug: Carboplatin'
+  - drug_name: 'Drug: Etoposide'
+  - drug_name: 'Drug: Liposomal ARA-C'
+  - drug_name: 'Drug: Obinutuzumab'
+  - drug_name: 'Drug: Ifosfamide'
+long_title: Chemoimmunotherapy With Obinutuzumab, Ifosfamide, Carboplatin and Etoposide
+  (O-ICE) in Children, Adolescents and Young Adults With Recurrent Refractory CD20+
+  Mature B-NHL
+last_updated: '2025-08-08'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: PHASE2
+principal_investigator: NA
+principal_investigator_institution: New York Medical College
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 25
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 'Inclusion Criteria:'
+- '* Patients in first relapse or primary induction failure CD20 positive B-cell leukemia/lymphoma
+  including:'
+- '* Diffuse Large B-Cell Lymphoma'
+- '* Burkitt Lymphoma'
+- '* High Grade B-cell Lymphoma: Not Otherwise Specified (NOS)'
+- '* Primary mediastinal B-cell lymphoma (PMBL)'
+- '* CD20+ B-lymphoblastic lymphoma'
+- '* Follicular lymphoma, Grade III'
+- "* Karnofsky \u2265 60% for patients \\> 16 years of age and"
+- "* Lansky \u2265 60 for patients \u2264 16 years of age."
+- '* Myelosuppressive chemotherapy: Must not have received within 2 weeks of entry
+  onto this study.'
+- '* Patients may not have received prior therapy with obinutuzumab (GA101)'
+- '* Radiation Therapy (XRT): Date of receiving prior XRT must be \> 2 weeks for local
+  palliative XRT (small port); \> 6 months must have elapsed if prior craniospinal
+  XRT or if \> 50% radiation of pelvis; \> 6 weeks must have elapsed if other substantial
+  bone marrow radiation.'
+- '* Steroids: Patients may have received prior steroid treatment, but not started
+  greater than 7 days prior to initiation of protocol therapy.'
+- '* Adequate organ function.'
+- 'Exclude - Exclusion Criteria:'
+- Exclude - * Patients with newly diagnosed, previously untreated B-NHL.
+- Exclude - * Known congenital or acquired immune deficiency.
+- Exclude - * Prior solid organ transplantation.
+- Exclude - * Prior allogeneic stem cell transplant within 60 days or active acute
+  Graft-vs-Host-Disease (GVHD) grade 3 or higher.
+- Exclude - * History of grade 4 anaphylactic reactions to humanized or murine monoclonal
+  antibodies
+- Exclude - * Uncontrolled hepatitis B and/or C infection
+short_title: Obinutuzumab and ICE Chemotherapy in Refractory/Recurrent CD20+ Mature
+  NHL
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: New York Medical College
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: The purpose of this study is to determine the safety of administering obinutuzumab
+  as a single agent alone and in combination with ifosfamide, carboplatin, and etoposide
+  (ICE) chemotherapy and determine the response rate of this treatment for children,
+  adolescents and young adults (CAYA) with relapsed CD20 positive B-cell Non-Hodgkin
+  Lymphoma (B-NHL).
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: Central Nervous System (CNS) Negative
+      arm_internal_id: 0
+      arm_description: All patients will receive 4 doses of obinutuzumab on days -14,
+        -10, -6 and -2. Patients without CNS involvement will receive one dose of
+        Liposomal cytarabine for CNS prophylaxis on day -13. Dexamethasone will be
+        given for 5 days with each Liposomal cytarabine dose starting one day prior
+        to the Liposomal cytarabine. Dexamethasone 0.15 mg/kg/dose (max 4mg) IV BID
+        will be given days -14 to -10. Following completion of the Prephase (or at
+        the first sign of progressive disease), all patients will proceed to cycle
+        1 of O-ICE. O-ICE chemotherapy is given in 21-day (3-week) cycles. Three weekly
+        doses of obinutuzumab will be given days -2 (during the prephase), +6 and
+        +13. Patients will receive ICE chemotherapy (ifosfamide-carboplatin-etoposide)
+        administered on Days 0-2 of Cycle 1.
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Obinutuzumab'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: Liposomal ARA-C'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Drug: Ifosfamide'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Drug: Carboplatin'
+        level_internal_id: 3
+        level_suspended: N
+      - level_code: '4'
+        level_description: 'Drug: Etoposide'
+        level_internal_id: 4
+        level_suspended: N
+    - arm_code: CNS Positive
+      arm_internal_id: 1
+      arm_description: All patients will receive 4 doses of obinutuzumab on days -14,
+        -10, -6 and -2. Patients with positive CSF prior to enrollment will receive
+        treatment with two doses of Liposomal cytarabine during the prephase portion
+        of therapy. Liposomal cytarabine will be given intrathecally on days -13 and
+        -5. Dexamethasone will be given for 5 days with each Liposomal cytarabine
+        dose starting the day prior to the Liposomal cytarabine. Dexamethasone will
+        be given days -14 to -10 and days -6 through -2. Following completion of the
+        Prephase (or at the first sign of progressive disease), all patients will
+        proceed to cycle 1 of O-ICE. O-ICE chemotherapy is given in 21-day (3-week)
+        cycles. Three weekly doses of obinutuzumab will be given days -2 (during the
+        prephase), +6 and +13. Patients will receive ICE chemotherapy (ifosfamide-carboplatin-etoposide)
+        administered on Days 0-2 of Cycle 1.
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Obinutuzumab'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: Liposomal ARA-C'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Drug: Ifosfamide'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Drug: Carboplatin'
+        level_internal_id: 3
+        level_suspended: N
+      - level_code: '4'
+        level_description: 'Drug: Etoposide'
+        level_internal_id: 4
+        level_suspended: N
+    match:
+    - and:
+      - or:
+        - clinical:
+            oncotree_primary_diagnosis: Diffuse Large B-Cell Lymphoma, NOS
+        - clinical:
+            oncotree_primary_diagnosis: Burkitt Lymphoma
+        - clinical:
+            oncotree_primary_diagnosis: High-Grade B-Cell Lymphoma, NOS
+        - clinical:
+            oncotree_primary_diagnosis: Primary Mediastinal (Thymic) Large B-Cell
+              Lymphoma
+        - clinical:
+            oncotree_primary_diagnosis: B-Lymphoblastic Leukemia/Lymphoma, NOS
+        - clinical:
+            oncotree_primary_diagnosis: Follicular Lymphoma
+      - clinical:
+          age_numerical: '>=3'
+      - clinical:
+          age_numerical: <=31
+      - clinical:
+          disease_status:
+          - Recurrent
+          - Refractory

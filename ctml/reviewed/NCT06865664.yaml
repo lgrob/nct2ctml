@@ -1,0 +1,276 @@
+nct_id: NCT06865664
+age: Children
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: '2025-09-22'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Biological: FGFR4-CAR T Cells'
+  - drug_name: 'Drug: cetuximab'
+  - drug_name: 'Drug: cyclophosphamide'
+  - drug_name: 'Drug: fludarabine'
+long_title: Phase I Dose Escalation Study of FGFR4 Chimeric Antigen Receptor (CAR)
+  T Cells in Children and Young Adults With Recurrent or Refractory Rhabdomyosarcoma
+last_updated: '2026-07-21'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: PHASE1
+principal_investigator: Srivandana Akshintala, M.D.
+principal_investigator_institution: National Cancer Institute (NCI)
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 50
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- '* INCLUSION CRITERIA'
+- '* Histologically confirmed rhabdomyosarcoma by the NCI Department of Pathology.'
+- 'Note: Since FGFR4 expression is universal in rhabdomyosarcoma, confirmation of
+  FGFR4 expression is not required.'
+- '* Relapsed or refractory rhabdomyosarcoma after at least two (2) cancer treatment
+  regimens i.e., participants should have relapsed or progressed after upfront therapy
+  (that includes any systemic chemotherapy with or without local control) as well
+  as at least one salvage therapy (which can be systemic therapy, radiation, or surgery).'
+- '* No available alternative curative therapies per standard of care.'
+- '* Participants must have measurable disease per RECIST 1.1 or non-measurable disease
+  on imaging.'
+- '* Age \>= 3 and \<= 39 years old.'
+- '* Weight \>=15 kg.'
+- '* Performance status: Karnofsky \>= 50% (\>= 16 years) or Lansky \>= 50% (\< 16
+  years).'
+- 'Note: Participants who are unable to walk because of paralysis, but who are upright
+  in a wheelchair will be considered ambulatory for calculating the performance score.'
+- '* Participants must be willing to accept blood transfusions.'
+- '* Adequate organ and marrow function as defined below:'
+- '* Organ: Bone Marrow Function\*'
+- '* Laboratory Element: Absolute neutrophil count; Minimum Requirement \>= 500/mcL'
+- '* Laboratory Element: Platelets; Minimum Requirement \>= 50,000/mcL'
+- \*Transfusion independent (defined as no transfusion in the prior 7 days) for participants
+  without bone marrow involvement. Participants who have bone marrow involvement with
+  tumor are exempt from the platelet requirement and will not be evaluable for hematological
+  toxicities. Participants must not be refractory to transfusions.
+- '* Organ: Liver Function'
+- '* Laboratory Element: Aspartate aminotransferase (AST); Minimum Requirement \<=
+  5 x upper limit of normal (ULN)'
+- '* Laboratory Element: Alanine aminotransferase (ALT); Minimum Requirement \<= 5
+  x ULN'
+- '* Laboratory Element: Total bilirubin; Minimum Requirement \<= 2 x ULN (Note: Participants
+  with Gilbert''s syndrome and/or bilirubin elevation due to tumor involvement are
+  allowed to have \<= 5 x ULN)'
+- 'Note: Adult values will be used for calculating hepatic toxicity and determining
+  eligibility'
+- '--Organ: Renal Function'
+- '* Age: 3 to \< 6 years; Maximum serum creatinine (mg/dL): Male - 0.8, Female -
+  0.8'
+- '* Age: 6 to \< 10 years; Maximum serum creatinine (mg/dL): Male - 1, Female - 1'
+- '* Age: 10 to \< 13 years; Maximum serum creatinine (mg/dL): Male - 1.2, Female
+  - 1.2'
+- '* Age: 13 to \< 16 years; Maximum serum creatinine (mg/dL): Male - 1.5, Female
+  - 1.2'
+- '* Age: \>= 16 years; Maximum serum creatinine (mg/dL): Male - 1.7, Female - 1.4'
+- OR
+- '* Measured or calculated creatinine clearance or glomerular filtration rate (GFR);
+  Minimum Requirement: \>= 60mL/min/1.73 m\^2'
+- '--Organ: Cardiac Function'
+- '* Laboratory Element: Cardiac status; Minimum Requirement: Cardiac ejection fraction
+  \>= 45% or shortening fraction \>= 28%, pericardial effusion \<= grade 2 as determined
+  by an echocardiogram (ECHO)'
+- '* Organ: Pulmonary Function'
+- '* Laboratory Element: Pulmonary status; Minimum Requirement: Pleural effusion \<=
+  grade 1; Oxygen (O2) saturation \>=92% on room air at rest'
+- '--Organ: Neurological Function'
+- '* Laboratory Element: Neurologic status; Minimum Requirement: No acute neurotoxicity
+  greater than grade 2 per CTCAE v.5.0 with the exception of decreased tendon reflex
+  (DTR). Any grade of DTR is eligible.'
+- '* Individuals of child-bearing potential (IOCBP) must agree to use highly effective
+  contraception (hormonal, intrauterine device \[IUD\], abstinence, surgical sterilization)
+  at the study entry and up to 12 months after the last dose of combined chemotherapy
+  or 6 months after FGFR4-CAR T cells infusion, whichever is later. Individuals who
+  can father children must agree to use an effective method of contraception (barrier,
+  surgical sterilization, abstinence) at the study entry and up to 4 months after
+  the last dose of combined chemotherapy or 6 months after FGFR4-CAR T cells infusion,
+  whichever comes later. We also will recommend individuals who can'
+- father children with IOBCP partners ask their partners to be on highly effective
+  birth control (hormonal, IUD, surgical sterilization). Individuals who can father
+  children must not freeze or donate sperm within the same period.
+- '* Nursing participants must be willing to discontinue nursing from study treatment
+  initiation through 4 months after completion of chemotherapy preparative administration
+  or 6 months after FGFR4-CAR T cells infusion, whichever is later.'
+- '* Participants with previous central nervous system (CNS) tumor involvement that
+  has been treated and is stable for at least 6 weeks following completion of therapy
+  as evidenced by no requirements for corticosteroids, no evolving neurologic deficits,
+  and no progression'
+- of residual brain abnormalities without specific therapy, are permitted. Participants
+  with asymptomatic subcentemeric CNS lesions are permitted if no immediate radiation
+  or surgery is indicated.
+- '* Participants must be willing to be enrolled into protocol 15C0028 "Follow-Up
+  Evaluation for Gene-Therapy Related Delayed Adverse Events after Participation in
+  Pediatric Oncology Branch Clinical Trials" after 5 years on this trial.'
+- '* The ability of participant or parent/guardian to understand and the willingness
+  to sign a written informed consent document.'
+- EXCLUSION CRITERIA
+- '* Prior therapy with the following prior to apheresis:'
+- '* tyrosine kinase inhibitor, targeted agent, or metronomic non-myelosuppressive
+  regimen within \<= 1 week'
+- '* systemic chemotherapy within \<= 2 weeks'
+- '* antineoplastic antibody therapy, checkpoint inhibitors, or vaccine therapy, within
+  \<= 3 weeks or 5 half-lives (whichever is shorter)'
+- '* radiation within \<= 3 weeks (\<= 6 weeks if CNS or lung fields have been radiated
+  or in case of craniospinal irradiation of radiation of \>=50% of bony pelvis and
+  \<=12 weeks in case of total body irradiation). Note: There is no time restriction
+  if the volume of bone marrow treated is less than 10% and the participant has measurable/evaluable
+  disease outside the radiation port'
+- '* any investigational agents within \<= 4 weeks'
+- '* autologous stem cell infusion following myeloablative therapy within \<= 6 weeks'
+- '* genetically modified T cell, NK cell, or dendritic cell therapy within \<= 6
+  weeks'
+- '* allogeneic stem cell transplant/infusion within \<=12 weeks or evidence of active
+  graft versus host disease (GVHD)'
+- '* Participants receiving more than physiologic dosing of systemic steroids (3 mg/m\^2/day
+  of prednisone equivalent).'
+- '* History of severe, immediate hypersensitivity reaction attributed to any agents
+  used in the study or in the manufacturing of the cells.'
+- '* Second malignancy at any time.'
+- '* Primary immunodeficiency.'
+- '* Seropositive for human immunodeficiency virus (HIV) antibody.'
+- '* Seropositive for hepatitis C (HCV) or positive for Hepatitis B (HBV) surface
+  antigen (HbsAg).'
+- '* Pregnancy confirmed with beta-HCG serum or urine pregnancy test performed in
+  IOCBP at screening.'
+- '* Uncontrolled intercurrent illness or social situations that would limit compliance
+  with study requirements.'
+short_title: FGFR4 Chimeric Antigen Receptor (CAR) T Cells in Children and Young Adults
+  With Recurrent or Refractory Rhabdomyosarcoma
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: National Cancer Institute (NCI)
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: 'Background:
+
+
+  Rhabdomyosarcoma (RMS) is a cancer of soft tissues. It is the most common soft tissue
+  sarcoma seen in children. RMS cancer cells have a protein called FGFR4 on their
+  surface. Researchers want to try a new kind of treatment for RMS: They will collect
+  a person s own T cells, a type of immune cell; then they will change the T cells
+  so they are better able to target the FGFR4 protein and attack RMS tumor cells.
+  The modified T cells are chimeric antigen receptor (CAR) T cells. The treatment
+  in this study is called FGFR4-CAR T cells.
+
+
+  Objective:
+
+
+  To test FGFR4-CAR T cells in children and young adults with RMS.
+
+
+  Eligibility:
+
+
+  People aged 3 to 39 years with RMS. The RMS must have failed to respond or returned
+  after at least 2 rounds of standard treatment.
+
+
+  Design:
+
+
+  Participants will be screened. They will have physical exam, imaging scans, blood
+  tests, and tests of their heart. They may have a tissue sample taken from their
+  tumor.
+
+
+  They will undergo apheresis: Blood will be taken from the body through a catheter.
+  The blood will pass through a machine that separates out the T cells, and the remaining
+  blood will be returned to the body. The collected T cells will be taken to a lab
+  to create FGFR4-CAR T cells.
+
+
+  Once the FGFR4-CART cells are ready, participants can receive these T cells. For
+  4 days they will receive drugs to prepare their body for the FGFR4-CAR T cells.
+  After this, the modified T cells will be infused into a vein.
+
+
+  Participants will be then monitored closely to watch for any side effects from the
+  CART cells and be followed to see what effect the CART cells have on their tumors.
+  They will have follow-up visits for up to 5 years. Long-term follow-up will be another
+  10 years.'
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: Arm 1
+      arm_internal_id: 0
+      arm_description: Lymphodepleting preparative regimen (fludarabine and cyclophosphamide)
+        followed by infusion of FGFR4-CAR T cells escalation/de-escalation dose levels
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: fludarabine'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: cyclophosphamide'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Drug: cetuximab'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Biological: FGFR4-CAR T Cells'
+        level_internal_id: 3
+        level_suspended: N
+    - arm_code: Arm 2
+      arm_internal_id: 1
+      arm_description: Lymphodepleting preparative regimen (fludarabine and cyclophosphamide)
+        followed by infusion of FGFR4-CAR T cells at the MTD
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: fludarabine'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: cyclophosphamide'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Drug: cetuximab'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Biological: FGFR4-CAR T Cells'
+        level_internal_id: 3
+        level_suspended: N
+    match:
+    - and:
+      - clinical:
+          oncotree_primary_diagnosis: Rhabdomyosarcoma
+      - clinical:
+          age_numerical: '>=3'
+      - clinical:
+          age_numerical: <=39
+      - clinical:
+          disease_status:
+          - Recurrent
+          - Refractory

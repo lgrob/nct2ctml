@@ -1,0 +1,227 @@
+nct_id: NCT05180825
+age: Children
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: '2022-05-05'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Drug: Trametinib'
+  - drug_name: 'Drug: Vinblastine'
+long_title: A Randomized and Controlled Phase II Protocol in Non NF1 Pediatric and
+  AYA (Adolescent and Young Adults) Patients Bearing a Newly Diagnosed Low Grade Glioma
+  With Wild Type BRAF Gene Comparing a Daily Oral MEK Inhibitor (Trametinib) Versus
+  Weekly Vinblastine for 18 Months
+last_updated: '2026-08-20'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: PHASE2
+principal_investigator: Natacha ENTZ-WERLE
+principal_investigator_institution: "H\xF4pitaux Universitaires de Strasbourg"
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 134
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 'Inclusion Criteria:'
+- "* Age: \u2265 1 month to \u2264 25 years"
+- '* Signed written informed consent prior to study participation of the legal representatives
+  and the patient if the patient can understand the impact of clinical trial and to
+  give consent. For patients above 18 years, their written informed consent will be
+  obtained.'
+- '* Patient may be under guardianship or curatorship (for patient under legal guardianship,
+  authorization is given by the legal representative of the patient under guardianship.
+  For patient under curatorship, consent will be obtained from the adult assisted
+  by his or her legal curator'
+- '* Histologically proven grade 1 glioma/mixed glio-neuronal tumors or pleomorphic
+  xanthoastrocytoma (PXA) confirmed by local referee and the centrally pathology reviewing'
+- '* Determination of a negative BRAFv600 mutation by immunohistochemistry and/or
+  molecular methods'
+- '* Systematic determination 7q34 duplication status or KIAA1549-BRAF fusion'
+- '* Midline tumors without proven histone H3 mutations'
+- '* Diffuse glioma without IDH1 mutation'
+- '* Collection of fresh frozen tumor tissues and/or paraffin-embedded samples for
+  further molecular biomarker testing'
+- '* Sus-tentorial, optic pathway, midline and spine locations allowed'
+- "* Karnofsky or Lansky \u2265 50%"
+- '* Criteria for post-surgical treatment: severe visual or neurological symptoms
+  at diagnosis, clinical deterioration of visual or neurological symptoms or radiological
+  progression. The radiological progression is defined as an increase of solid part
+  of the tumor of more than 25% compared to the pre-baseline MRI-imaging over a time
+  period of at least 3 months or the occurrence of new metastatic lesions.'
+- '* Infants below one year of age with chiasmatic and/or hypothalamic tumor will
+  be treated immediately after surgery, independently from neurological and/or visual
+  evolution'
+- '* Females of child-bearing potential must be willing to practice highly effective
+  contraception during all treatment and until 6 months after the last dose of study
+  drugs'' administration. Additionally, females of child-bearing potential must have
+  a negative serum pregnancy test within 7 days prior to start of study drugs. Boys
+  with reproductive potential must be willing to use condom and consider contraception
+  for partner women of childbearing potential during treatment and until 4 months
+  after the last study drugs'' administration.'
+- "* Patients must have adequate bone marrow function defined as: absolute neutrophil\
+  \ count (ANC) \u2265 1500/\xB5L; platelets \u2265 100,000/\xB5L and hemoglobin \u2265\
+  \ 9.0 g/dl"
+- "* Patients must have adequate liver function within 7 days prior to screening:\
+  \ bilirubin (sum of unconjugated and conjugated) \u2264 1.5 ULN for age, ALT and\
+  \ AST \u2264 2.5 x upper limit of normal, alkaline phosphatase \u2264 4 x upper\
+  \ limit of normal, INR/PTT \\< 1.5 x upper limit of normal,"
+- '* Patients must have adequate renal function within 7 days prior to screening:
+  serum creatinine \< 1.5 x upper limit of normal for age and a creatinine clearance
+  \> 60 ml/min for 1.73 m2'
+- "* Cardiac function defined as a corrected QT (QTcF) interval \\< 480 msec, LVEF\
+  \ \u2265 lower limit of normal (LLN) by echocardiogram (ECHO)"
+- '* Adequate blood pressure control (smaller or equal to the 95th percentile for
+  patient''s age, height and gender)'
+- '* Patients are willing and able to comply with scheduled visits, treatment plan,
+  laboratory tests and study procedures'
+- '* Guardians (in case of patients under 18 years) or patient if above 18 years must
+  be affiliated to or a beneficiary of health insurance system.'
+- Non-inclusion criteria
+- '* Patients presenting a neurofibromatosis type 1 (NF1) congenital disease'
+- '* Pure optic nerve glioma, limited to one nerve and without optic chiasma infiltration.'
+- '* Completely resected tumors'
+- '* Previous treatment except tumor surgery'
+- '* Pregnancy and lactation'
+- '* Participation in other clinical trials'
+- '* Prior non-surgical therapy for this tumor'
+- '* Diffuse intrinsic pontine glioma (DIPG), even if histologically diagnosed as
+  WHO grade II'
+- '* Subependymal giant astrocytoma (SEGA) in patients with TSC'
+- '* Patient having a known diagnosis of human immunodeficiency virus (HIV) infection,
+  hepatitis B or C'
+- '* Known hypersensitivity to drugs or excipients'
+- '* History of another malignancy'
+- '* History of current uncontrolled infection'
+short_title: Pediatric Low Grade Glioma - MEKinhibitor TRIal vs Chemotherapy
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: University Hospital, Strasbourg, France
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: "Pediatric low-grade glioma (PLGG) is a heterogeneous group of WHO grade\
+  \ I and II brain tumors, associated with a 10-year overall survival of 90%. It is\
+  \ the most common form of primary central nervous system (CNS) tumor arising during\
+  \ childhood, adolescence and young adulthood, accounting for over 30% of CNS tumors\
+  \ in this age group. A large group of PLGG patients will benefit from a complete\
+  \ resection of their tumor. Nevertheless, PLGG can occur anywhere and can be in\
+  \ some locations associated with neurological symptoms, unresectable or radiological\
+  \ progressive tumors that need medical treatments rapidly to avoid long-term sequelae.\
+  \ The current problem during this first line therapy is to improve tumor response,\
+  \ overall survival rate, as well as progression free survival. In our study, we\
+  \ will focus on a specific group of PLGGs without any congenital NF1 mutation and\
+  \ with a wild-type BRAF gene in the tumor. In this subgroup, for instance, the PFS\
+  \ is not increasing anymore above 50% at 3 years independently from the chemotherapeutic\
+  \ scheme. The two current standard therapies are carboplatin plus vincristine during\
+  \ 81 weeks or a weekly IV administration of vinblastine during 70 weeks. The most\
+  \ recent Canadian approach with vinblastine seems to have the same PFS rate, but\
+  \ with a better daily tolerance and less toxicities than the carboplatin/vincristine\
+  \ combination. Therefore, it is becoming the new standard approach in those patients.\
+  \ Nevertheless, we need to improve more their outcome with less recurs and a better\
+  \ first-line tumor response. The recent molecular discoveries involving the Ras/mitogen-activated\
+  \ protein kinase pathway in those PLGG is opening a new era with specific targeted\
+  \ therapies that might be the key to improve their survivals and giving hope to\
+  \ less treatment lines and a better tumor response. Therefore, we designed a prospective\
+  \ open randomized phase II study, named PLGG-MEKTRIC, comparing the experimental\
+  \ arm (a daily MEK inhibitor, Trametinib, Mekinist\xA9) to a standard arm comprising\
+  \ weekly vinblastine during 18 courses of 4 weeks each. The study will enroll 134\
+  \ patients with a PLGG during childhood, adolescence or young adulthood with no\
+  \ NF1-related disease and without any BRAFv600 mutation located in brain or spine.\
+  \ 67 patients, in each treatment arm, are planned to be enrolled to answer our primary\
+  \ objective. This primary objective will be to determine in the experimental arm\
+  \ a 20% superiority of the 3-year PFS rate in comparison with the standard treatment\
+  \ administered during 18 courses (e.g. 72 weeks). A stratification of the patients\
+  \ will be done in both arms based on molecular tumor results and brain/spine locations\
+  \ to obtain two equivalent arms to be analyzed.\n\nThe recruitment time will be\
+  \ 36 months and the complete follow-up of each patient will last 3 years. The secondary\
+  \ objectives will be in both arms: the tumor response rate at 24 and 72 weeks of\
+  \ treatment, the 3-year PFS and OS rates and the frequency of AE/SAE/SUSAR (Adverse\
+  \ Event/Serious Adverse Event) based on CTCAE criteria during the 3 years after\
+  \ the first administration. A Quality of Life (QoL) assessment, based on PEDsQL\
+  \ questionnaires, at 24 weeks, at the end of treatment and 3 years after 1st treatment\
+  \ administration in both arms will be part of this study. Finally, 3-year PFS and\
+  \ OS will be analyzed according to molecular biomarkers and visual assessment (LogMar\
+  \ scale) in each arm. An economic analysis is also planned as an ancillary study\
+  \ to determine a cost effectiveness of the best arm and complementary ancillary\
+  \ molecular studies are already organized. In the future, we hope to push forward\
+  \ this new-targeted therapy as a referenced first line treatment of pediatric PLGG\
+  \ to obtain the best tolerance and positive long-term impact and to extend our knowledge\
+  \ of MEK inhibitor impact in molecular subgroups and in optical pathway locations.\
+  \ We also plan to do a \"switch\" strategy in patients relapsing in standard arm\
+  \ and we will propose systematically to those patients the experimental treatment\
+  \ (MEK inhibitor )."
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: Trametinib experimental arm
+      arm_internal_id: 0
+      arm_description: "the experimental arm will be Mekinist\xA9 (Trametinib) taken\
+        \ orally each day with a 18-course schedule of 4 weeks each."
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Trametinib'
+        level_internal_id: 0
+        level_suspended: N
+    - arm_code: Vinblastine control arm
+      arm_internal_id: 1
+      arm_description: "the control arm will be the weekly intra-venous Vinblastine\
+        \ (Velbe\xA9) during 18 courses of 4 weeks each"
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Vinblastine'
+        level_internal_id: 0
+        level_suspended: N
+    match:
+    - and:
+      - or:
+        - clinical:
+            oncotree_primary_diagnosis: Low-Grade Glioma, NOS
+        - clinical:
+            oncotree_primary_diagnosis: Pleomorphic Xanthoastrocytoma
+        - clinical:
+            oncotree_primary_diagnosis: Ganglioglioma
+        - clinical:
+            oncotree_primary_diagnosis: Papillary Glioneuronal Tumor
+        - clinical:
+            oncotree_primary_diagnosis: Rosette-forming Glioneuronal Tumor of the
+              Fourth Ventricle
+      - clinical:
+          age_numerical: <=25
+      - genomic:
+          hugo_symbol: BRAF
+          variant_category: '!Mutation'
+      - genomic:
+          hugo_symbol: IDH1
+          variant_category: '!Mutation'
+      - genomic:
+          hugo_symbol: H3-3A
+          variant_category: '!Mutation'
+      - genomic:
+          hugo_symbol: H3-3B
+          variant_category: '!Mutation'
+      - genomic:
+          hugo_symbol: H3C2
+          variant_category: '!Mutation'

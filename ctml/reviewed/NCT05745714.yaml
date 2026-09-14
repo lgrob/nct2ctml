@@ -1,0 +1,310 @@
+nct_id: NCT05745714
+age: Children
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: null
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Drug: Cyclophosphamide'
+  - drug_name: 'Drug: Cytarabine'
+  - drug_name: 'Drug: intrathecal chemotherapy'
+  - drug_name: 'Drug: Dexamethasone'
+  - drug_name: 'Drug: Venetoclax'
+  - drug_name: 'Drug: Ruxolitinib'
+long_title: International Proof of Concept Therapeutic Stratification Trial of Molecular
+  Anomalies in Relapsed or Refractory HEMatological Malignancies in Children, Subprotocol
+  C Ruxolitinib + Venetoclax + Dexamethasone + Cyclophosphamide and Cytarabine in
+  Pediatric Patients With Relapsed or Refractory Hematological Malignancies
+last_updated: '2025-09-16'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: PHASE1
+principal_investigator: Paco Bautista, MD PhD
+principal_investigator_institution: "Princess M\xE1xima Center"
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 26
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 'Inclusion Criteria:'
+- "1. Children between 1 year (\u2265 12 months) and 18 years of age at the time of\
+  \ first diagnosis and less than 21 years at the time of inclusion"
+- "2. Performance status: Karnofsky performance status (for patients \\>12 years of\
+  \ age) or Lansky Play score (for patients \u226412 years of age) \u2265 50% (Appendix\
+  \ I)."
+- 3. Written informed consent from parents/legal representative, patient, and age-appropriate
+  assent before any study specific screening procedures are conducted, according to
+  local, regional or national guidelines.
+- 4. Patients must have had advanced molecular profiling and flow-cytometric analysis
+  of their recurrent or refractory disease at a time-point before the first inclusion
+  into this trial (see section 9.1 for detailed description of the molecular diagnostics
+  required). Drug response profiling and methylation is highly recommended but not
+  mandatory. Patients with molecular profiling at first diagnosis lacking molecular
+  diagnostics at relapse or refractory disease may be allowed to be included after
+  discussion with the sponsor.
+- '5. Patients whose tumor presents alterations in the IL-7R and/or JAK-STAT signaling
+  pathways including but not limited to the following are eligible: CRLF2: Rearrangements
+  and mutations leading to CRLF2 overexpression (P2RY8-CRLF2, IGH-CRLF2, and CRLF2
+  F232C), CRFL2 overexpression; EPOR: Truncating rearrangements or mutations in exon
+  8, EPOR fusions; JAK1/2/3: Recurrent or novel missense and in-frame indel mutations
+  in or flanking the pseudokinase and kinase domains, JAK fusion; IL7R: Recurrent
+  or novel missense or in-frame indel mutations in the transmembrane domain; SH2B3:
+  Copy number deletions, or mutations that result in frameshifts or premature termination;
+  JAK2: In frame fusions retaining the tyrosine kinase domain; USP9X truncating mutation
+  or USP9X-DDX3X fusion; STAT5B and DNM2 mutations; PTPN2 deletion described as involved
+  in IL7R/JAK/STAT pathway activation; IL7R mutations'
+- '6. Adequate organ function:'
+- '* RENAL AND HEPATIC FUNCTION (Assessed within 48 hours prior to C1D1) :'
+- "* Serum creatinine \u2264 1.5 x upper limit of normal (ULN) for age or calculated\
+  \ creatinine clearance as per the Schwartz formula or radioisotope glomerular filtration\
+  \ rate \u2265 60 mL/min/1.73 m2."
+- "* Direct bilirubin \u2264 2 x ULN (\u2264 3.0 \xD7 ULN for patients with Gilbert's\
+  \ syndrome)."
+- "* Alanine aminotransferase (ALT)/serum glutamic pyruvic transaminase (SGPT) \u2264\
+  \ 5 x ULN; aspartate aminotransferase (AST)/serum glutamic oxaloacetic transaminase/SGOT\
+  \ \u2264 5 x ULN. Note: Patients with hepatic disfunction related to the underling\
+  \ disease can be eligible even if they do not fulfill the aforementioned values\
+  \ for hepatic transaminases. In these cases, patients need to be discussed with\
+  \ the sponsor to confirm the eligibility."
+- '* CARDIAC FUNCTION:'
+- "* Shortening fraction (SF) \\>29% (\\>35% for children \\< 3 years) and/or left\
+  \ ventricular ejection fraction (LVEF) \u226550% at baseline, as determined by echocardiography\
+  \ or MUGA."
+- '* Absence of QTcF prolongation (QTc prolongation is defined as \>450 msec on baseline
+  ECG, using the Friedericia correction), or other clinically significant ventricular
+  or atrial arrhythmia.'
+- 'Exclude - Exclusion Criteria:'
+- Exclude - 7. Pregnancy or positive pregnancy test (urine or serum) in females of
+  childbearing potential. Pregnancy test must be performed within 7 days prior to
+  C1D1.
+- Exclude - 8. Sexually active participants not willing to use highly effective contraceptive
+  method (pearl index \<1) as defined in CTFG HMA 2020 (Appendix II) during trial
+  participation and until 6 months after end of antileukemic therapy.
+- Exclude - 9. Breast feeding.
+- Exclude - 10. Impairment of gastrointestinal (GI) function or GI disease that may
+  significantly alter drug absorption of oral drugs (e.g., ulcerative diseases, uncontrolled
+  nausea, vomiting, diarrhea, or malabsorption syndrome) in case of oral IMPs.
+- 'Exclude - 11. Patients whose tumor present known mutationts confering resistance
+  to JAK inhibitors: JAK1 Phe958 and Pro960 mutations and JAK2 Y931C mutations.'
+- Exclude - 12. Patients whose tumor present known mutationts confering resistance
+  to venetoclax (e.g. BCL2 mutations of venetoclax binding-site (Gly101Val mutation,
+  Phe104Leu/Cys mutations).
+- Exclude - 13. Have a known immediate or delayed hypersensitivity reaction or idiosyncrasy
+  to the study drugs, or drugs chemically related to study treatment or excipients
+  that contraindicate their participation, including conventional chemotherapeutics
+  (i.e. cytarabine and cyclophosphamide when applicable, intrathecal agents) and corticoids.
+- Exclude - 14. Known active viral hepatitis or known human immunodeficiency virus
+  (HIV) infection or any other uncontrolled infection.
+- Exclude - 15. Severe concomitant disease that does not allow treatment according
+  to the protocol at the investigator's discretion.
+- Exclude - 16. Subjects unwilling or unable to comply with the study procedures.
+- Exclude - 17. Previous treatment with ruxolitinib and venetoclax in combination
+  (Patients who have previously received any of these two drugs separately can be
+  eligible for this sub-protocol).
+- Exclude - 18. Current use of a prohibited medication or herbal preparation or requires
+  any of these medications during the study. See Section 7, Appendix III and IV for
+  details. In general, CYP3A4 inhibitors/Pgp inhibitors, moderate or strong inducers
+  of CYP3A4 or drugs inducing QTc changes (prolongation of the QT interval or inducing
+  Torsade de Points) are not permitted. Among others and not exclusively that relates
+  to antiviral, antifungal, antibiotic, antimalarial, antipsychotic and antidepressive
+  drugs.
+- Exclude - 19. Patients who have consumed grapefruit, grapefruit products, Seville
+  oranges (Including marmalade containing Seville oranges) or starfruit within 72
+  hours prior to the first dose of study drug.
+- "Exclude - 20. Unresolved toxicity greater than NCI CTCAE v 5.0 \u2265 grade 2 from\
+  \ previous anti-cancer therapy, including major surgery, except those that in the\
+  \ opinion of the investigator are not clinically relevant given the known safety/toxicity\
+  \ profile of the study treatment (e.g., alopecia and/or peripheral neuropathy related\
+  \ to platinum or vinca alkaloid based chemotherapy) (Common Terminology Criteria\
+  \ for Adverse Events (CTCAE) (cancer.gov)."
+- Exclude - 21. Active acute graft versus host disease (GvHD) of any grade or chronic
+  GvHD of grade 2 or higher. Patients receiving any agent to treat or prevent GvHD
+  post bone marrow transplant are not eligible for this trial.
+- Exclude - 22. Received immunosuppression post allogenic HSCT within one moth of
+  study entry.
+- Exclude - 23. History of bone disorders such as osteogenesis imperfecta, rickets,
+  renal osteodystrophy, osteomyelitis, osteopenia, fibrous dysplasia, osteomalacia
+  etc. prior to the underlying diagnosis.
+- Exclude - 24. History of progressive multifocal leuko-encephalopathy (PML).
+- Exclude - 25. History of endocrine or kidney related growth retardation prior to
+  the underlying diagnosis.
+- Exclude - 26. Evidence of clinically active tuberculosis (clinical diagnosis per
+  local practice).
+- 'Exclude - 27. Wash-out periods of prior medication:'
+- 'Exclude - 1. CHEMOTHERAPY: At least 7 days must have elapsed since the completion
+  of cytotoxic therapy, with the exception of hydroxyurea, 6-mercaptopurine, oral
+  methotrexate and steroids which are permitted up until 48 hours prior to initiating
+  protocol therapy. Patients may have received intrathecal therapy (IT) at any time
+  prior to study entry.'
+- 'Exclude - 2. RADIOTHERAPY: Radiotherapy (non-palliative) within 21 days prior to
+  the first dose of drug. Palliative radiation in past 21 days is allowed.'
+- 'Exclude - 3. HEMATOPOIETIC STEM CELL TRANSPLANTATION (HSCT):'
+- Exclude - * Autologous HSCT within 2 months prior to the first study drug dose.
+- Exclude - * Allogeneic HSCT within 3 months prior to the first study drug dose.
+- 'Exclude - 4. IMMUNOTHERAPY: At least 42 days must have elapsed after the completion
+  of any type of immunotherapy other than monoclonal antibodies (e.g. CAR-T therapy)'
+- 'Exclude - 5. MONOCLONAL ANTIBODIES AND INVESTIGATIONAL DRUGS: At least 21 days
+  or 5 times the half-life (whichever is shorter) from prior treatment with monoclonal
+  antibodies or any investigational drug under investigation must have elapsed before
+  the first study drug.'
+- 'Exclude - 6. SURGERY: Major surgery within 21 days of the first dose. Gastrostomy,
+  ventriculo-peritoneal shunt, endoscopic ventriculostomy, tumor biopsy and insertion
+  of central venous access devices are not considered major surgery.'
+short_title: 'HEM-iSMART-C: Ruxolitinib + Venetoclax + Dexamethasone + Cyclophosphamide
+  and Cytarabine in Pediatric Patients With Relapsed or Refractory Hematological Malignancies'
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Princess Maxima Center for Pediatric Oncology
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: HEM-iSMART is a master protocol which investigates multiple investigational
+  medicinal products in children, adolescents and young adults (AYA) with relapsed/refractory
+  (R/R) ALL and LBL. Sub-protocol C is a phase I/II trial evaluating the safety and
+  efficacy of ruxolitinib and venetoclax in combination with dexamethasone, cyclophosphamide
+  and cytarabine in children and AYA with R/R ped ALL/LBL whose tumor present with
+  alterations in the IL7R/JAK-STAT pathway.
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: Ruxolitinib + venetoclax + dexamethasone + cyclophosphamide + cytarabine
+      arm_internal_id: 0
+      arm_description: 'Each cycle has 28 days
+
+
+        Cycle 1: All patients will receive 14 days of of ruxolitinib (days 1-14),
+        28 days of venetoclax (days 1-28), one block of five days of dexamethasone
+        (days 1-5), one dose of cyclophosphamide (day 3) and two blocks of four consecutive
+        days of cytarabine (days 5 to 8 and days 12 to 15). A 1-day venetoclax ramp-up
+        is proposed in this study.
+
+
+        Cycle 2 and subsequent cycles:
+
+
+        All patients will receive 14 days of of ruxolitinib (days 1-14), 28 days of
+        venetoclax (days 1-28), one block of five days of dexamethasone (days 1-5),
+        one dose of cyclophosphamide (day 1) and two blocks of four consecutive days
+        of cytarabine (days 3 to 6 and days 10 to 13).
+
+
+        Patients in dose level -1, will receive a lower dose of venetoclax compared
+        to dose level 1.
+
+
+        Patients in dose level 2, will receive a higher dose of venetoclax compared
+        to dose level 1.
+
+
+        All patients receive age adapted intrathecal chemotherapy.'
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Ruxolitinib'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: Venetoclax'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Drug: Dexamethasone'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Drug: Cyclophosphamide'
+        level_internal_id: 3
+        level_suspended: N
+      - level_code: '4'
+        level_description: 'Drug: Cytarabine'
+        level_internal_id: 4
+        level_suspended: N
+      - level_code: '5'
+        level_description: 'Drug: intrathecal chemotherapy'
+        level_internal_id: 5
+        level_suspended: N
+    match:
+    - and:
+      - or:
+        - clinical:
+            oncotree_primary_diagnosis: B-Lymphoblastic Leukemia/Lymphoma, NOS
+        - clinical:
+            oncotree_primary_diagnosis: T-Lymphoblastic Leukemia/Lymphoma
+      - or:
+        - genomic:
+            hugo_symbol: CRLF2
+            variant_category: Mutation
+        - genomic:
+            hugo_symbol: EPOR
+            variant_category: Mutation
+        - genomic:
+            hugo_symbol: JAK1
+            variant_category: Mutation
+        - genomic:
+            hugo_symbol: JAK2
+            variant_category: Mutation
+        - genomic:
+            hugo_symbol: JAK3
+            variant_category: Mutation
+        - genomic:
+            hugo_symbol: IL7R
+            variant_category: Mutation
+        - genomic:
+            hugo_symbol: SH2B3
+            variant_category: Mutation
+        - genomic:
+            hugo_symbol: DDX3X
+            variant_category: Mutation
+        - genomic:
+            hugo_symbol: STAT5B
+            variant_category: Mutation
+        - genomic:
+            hugo_symbol: DNM2
+            variant_category: Mutation
+        - genomic:
+            hugo_symbol: PTPN2
+            variant_category: Mutation
+        - genomic:
+            hugo_symbol: CRLF2
+            variant_category: Structural Variation
+        - genomic:
+            hugo_symbol: EPOR
+            variant_category: Structural Variation
+        - genomic:
+            hugo_symbol: JAK2
+            variant_category: Structural Variation
+        - genomic:
+            hugo_symbol: DDX3X
+            variant_category: Structural Variation
+        - genomic:
+            hugo_symbol: P2RY8
+            variant_category: Structural Variation
+      - clinical:
+          age_numerical: '>=1'
+      - clinical:
+          age_numerical: <21
+      - clinical:
+          disease_status:
+          - Recurrent
+          - Refractory

@@ -1,0 +1,194 @@
+nct_id: NCT07012447
+age: All
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: '2025-04-01'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Drug: Azacitidine'
+  - drug_name: 'Drug: Cytarabine'
+  - drug_name: 'Drug: Venetoclax'
+long_title: Evaluating the Efficacy of Venetoclax Combined With Azacitidine Induction
+  Therapy of Early T-cell Precursor-like Acute Lymphoblastic Leukemia and T-ALL With
+  Myeloid Mutations
+last_updated: '2025-06-10'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: PHASE2
+principal_investigator: Yue-jun Liu
+principal_investigator_institution: The First Affiliated Hospital of Soochow University
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 32
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 'Inclusion Criteria:'
+- 1. No gender restrictions
+- "2. Age \u2265 14 years"
+- '3. Confirmed diagnosis of one of the following:'
+- "ETP-like leukemia (CD7\u207A, CD1a-, CD8-, with CD5 expression stratified as ETP-ALL\
+  \ \u226475% or Near-ETP-ALL \\>75%) T-cell acute lymphoblastic leukemia (T-ALL)\
+  \ with myeloid mutations (including FLT3, DNMT3A, STAG2, IDH1/2, RUNX1, EZH2, WT1,\
+  \ ASXL1/2, SF3B1, TET2, BCOR, BCORL1, and MLL-PTD) T/myeloid mixed phenotype acute\
+  \ leukemia (T/My-MPAL) (with concurrent T-lineage and myeloid markers, e.g., cCD3\u207A\
+  /mCD3\u207A, CD7\u207A, MPO\u207A)"
+- '4. Newly diagnosed patients without prior induction therapy Limited prior therapy
+  allowed: hydroxyurea, dexamethasone, or low-dose cytarabine/venetoclax (cumulative
+  dose \<0.5g), and leukocytapheresis'
+- "5. Expected survival time \u2265 3 months"
+- "6. Liver function: total bilirubin \u2264 2\xD7 ULN; ALT/AST \u2264 3\xD7 ULN (or\
+  \ \u2264 5\xD7 ULN if liver infiltration by leukemia is present) ; Renal function:\
+  \ endogenous creatinine clearance \u2265 30 ml/min; Cardiac function: left ventricular\
+  \ ejection fraction \\> 45%"
+- 7. Demonstrated capacity to understand the study and willingness to provide informed
+  consent
+- 'Exclude - Exclusion Criteria:'
+- Exclude - 1. Presence of recurrent genetic abnormalities such as t(8;21), t(15;17),
+  inv(16)/t(16;16) leukemia
+- Exclude - 2. Prior hypersensitivity to study drugs or compounds of similar chemical
+  structure
+- Exclude - 3. Active uncontrolled infections as determined by the investigator
+- Exclude - 4. Active bleeding
+- Exclude - 5. Recent history (within 1 year) of thrombosis, embolism, or cerebral
+  hemorrhage
+- Exclude - 6. Pregnancy, breastfeeding, or unwillingness to use contraception in
+  women of childbearing potential
+- Exclude - 7. Drug addiction or chronic alcoholism that could interfere with trial
+  evaluation
+- Exclude - 8. Psychiatric disorders or other conditions that would prevent obtaining
+  informed consent or compliance with trial requirements
+- Exclude - 9. Any condition deemed unsuitable for trial participation by the investigator
+short_title: Venetoclax + Azacytidine for Newly Diagnosed ETP-like ALL and T-ALL With
+  Myeloid Mutations
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: yuejun Liu
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: "The goal of this clinical trial is to evaluate the efficacy and safety of\
+  \ venetoclax combined with azacitidine in treating newly diagnosed early T-cell\
+  \ precursor (ETP)-like acute lymphoblastic leukemia (ALL), T-ALL with myeloid mutations,\
+  \ or T/myeloid mixed-phenotype acute leukemia (T/My-MPAL).\n\nParticipant population:\
+  \ Patients aged \u226514 years diagnosed with ETP-like leukemia, T-ALL with myeloid\
+  \ mutations, or T/My-MPAL, regardless of sex/gender.\n\nThe main question it aims\
+  \ to answer: Does venetoclax plus azacitidine achieve a significantly higher overall\
+  \ response rate (ORR: CR + CRi) compared to historical controls (54% vs. 90%) after\
+  \ two induction cycles?\n\nComparison group: Researchers will compare ORR outcomes\
+  \ to historical data from conventional chemotherapy regimens to assess treatment\
+  \ superiority.\n\nParticipants will:\n\n* Receive two 28-day cycles of venetoclax\
+  \ (oral, 100 mg D1, 200 mg D2, 400 mg D3-28) and azacitidine (75 mg/m\xB2/day SC,\
+  \ D1-7).\n* Undergo serial bone marrow biopsies, blood tests, and imaging (e.g.,\
+  \ PET-CT) for response assessment.\n* Follow dose adjustment protocols for toxicity\
+  \ management (e.g., neutropenia, thrombocytopenia)."
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: Investigational ( venetoclax, azacytidine)
+      arm_internal_id: 0
+      arm_description: "Two cycles induction as venetoclax (oral, 100 mg D1, 200 mg\
+        \ D2, 400 mg D3-28) and azacitidine (75 mg/m\xB2 SC D1-7); Consolidation:\
+        \ For fit patients, if those with MRD (Minimal Residual Disease) are negative\
+        \ or refuse to undergo allo-HSCT (Hematopoietic stem-cell transplantation),\
+        \ intermediate-dose (2g/m\xB2 q12h, days 1-3) cytarabine-based therapy is\
+        \ administered for 3-4 cycles; if patients are MRD-positive, they undergo\
+        \ allo-HSCT.\n\nFor unfit patients, each venetoclax combined with azacitidine\
+        \ treatment cycle is anticipated to be 28 days in length until progression\
+        \ of disease, although cycle delays may occur due to delayed blood count recovery."
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Venetoclax'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: Azacitidine'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Drug: Cytarabine'
+        level_internal_id: 2
+        level_suspended: N
+    match:
+    - and:
+      - or:
+        - clinical:
+            oncotree_primary_diagnosis: Early T-Cell Precursor Lymphoblastic Leukemia
+        - and:
+          - clinical:
+              oncotree_primary_diagnosis: T-Lymphoblastic Leukemia/Lymphoma
+          - or:
+            - genomic:
+                hugo_symbol: FLT3
+                variant_category: Mutation
+            - genomic:
+                hugo_symbol: DNMT3A
+                variant_category: Mutation
+            - genomic:
+                hugo_symbol: STAG2
+                variant_category: Mutation
+            - genomic:
+                hugo_symbol: IDH1
+                variant_category: Mutation
+            - genomic:
+                hugo_symbol: IDH2
+                variant_category: Mutation
+            - genomic:
+                hugo_symbol: RUNX1
+                variant_category: Mutation
+            - genomic:
+                hugo_symbol: EZH2
+                variant_category: Mutation
+            - genomic:
+                hugo_symbol: WT1
+                variant_category: Mutation
+            - genomic:
+                hugo_symbol: ASXL1
+                variant_category: Mutation
+            - genomic:
+                hugo_symbol: ASXL2
+                variant_category: Mutation
+            - genomic:
+                hugo_symbol: SF3B1
+                variant_category: Mutation
+            - genomic:
+                hugo_symbol: TET2
+                variant_category: Mutation
+            - genomic:
+                hugo_symbol: BCOR
+                variant_category: Mutation
+            - genomic:
+                hugo_symbol: BCORL1
+                variant_category: Mutation
+        - clinical:
+            oncotree_primary_diagnosis: Mixed Phenotype Acute Leukemia, T/Myeloid,
+              NOS
+      - clinical:
+          age_numerical: '>=14'
+      - genomic:
+          hugo_symbol: PML
+          variant_category: '!Structural Variation'
+      - genomic:
+          hugo_symbol: CBFB
+          variant_category: '!Structural Variation'

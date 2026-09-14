@@ -1,0 +1,139 @@
+nct_id: NCT04696029
+age: Children
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: '2021-03-29'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Drug: Difluoromethylornithine'
+long_title: Phase II Trial of Eflornithine/DFMO as Maintenance Therapy for Molecular
+  High Risk/Very High Risk and Relapsed/Refractory Medulloblastoma
+last_updated: '2026-08-12'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: PHASE2
+principal_investigator: NA
+principal_investigator_institution: Milton S. Hershey Medical Center
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 118
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 'Inclusion Criteria:'
+- '1. Age: 0-21 years of age at diagnosis'
+- 2. Pathology All patients must either have a pathologically confirmed diagnosis
+  of medulloblastoma with molecular grouping identified by either Nanostring or methylation
+  profiling.
+- 'Cohort 1- Molecular High Risk:'
+- '* Metastatic non-MYC amplified Group 3'
+- '* Metastatic Group 4'
+- '* Metastatic non-WNT/non-SHH (Must be non-MYC amplified)'
+- Cohort 2- Molecular Very High Risk
+- '* Metastatic OR MYCN amplified OR TP53 mutant non-infant (\>3 yrs) SHH'
+- '* MYC amplified Group 3'
+- '* Non-WNT, non-SHH infant (\< 3 yrs)'
+- 'Cohort 3: Relapsed/Refractory Medulloblastoma'
+- '3. Pre-enrollment tumor survey:'
+- 'Prior to enrollment on this study, a determination of mandatory disease staging
+  must be performed:'
+- '* Tumor imaging studies including: Brain and spine MRI'
+- '* Lumbar Puncture only if previously positive'
+- '* Bone Marrow aspiration/biopsy only if previously positive'
+- '* This disease assessment is required for eligibility and preferably should be
+  done within 2 weeks prior to first dose of study drug, but must be done within a
+  maximum of 4 weeks before first dose of study drug.'
+- '4. Disease Status: Subjects must have no evidence of disease, or stable\* residual
+  nonbulky\*\* disease.'
+- \*Stable residual disease defined as non-progression over 2 separate imaging studies
+  at least 6 weeks apart
+- \*\*Non-bulky disease defined as maximal cross-sectional area \< 3cm\^2 at enrollment.
+  Patients with leptomeningeal disease are allowed to participate on study.
+- '5. Timing from prior therapy:'
+- Enrollment (first dose of DFMO) no later than 60 days after last dose of conventional
+  chemotherapy. Patients who have undergone high dose chemotherapy (HDCT) with autologous
+  stem cell transplantation (SCT) are eligible if more than 45 days have elapsed since
+  date of last SCT.
+- "6. Patients must have a Lansky or Karnofsky Performance Scale score of \u2265 50%\
+  \ (see Appendix II) and patients must have a life expectancy of \u2265 2 months."
+- 7. All clinical and laboratory studies for organ functions to determine eligibility
+  must be performed within 7 days prior to first dose of study drug unless otherwise
+  indicated below.
+- '8. Patients must have adequate organ functions at the time of registration:'
+- "* Hematological: Hematological recovery as defined by ANC \u2265750/\u03BCL, platelets\
+  \ \u226530 (non-transfused x 7 days)"
+- '* Liver: Adequate liver function as defined by AST and ALT \<10x upper limit of
+  normal'
+- "* Renal: Adequate renal function defined as (perform one of the following): Creatinine\
+  \ clearance or radioisotope GFR \u2265 70 mL/min/1.73 m2 or a serum creatinine based\
+  \ on age/gender"
+- 9. Females of childbearing potential must have a negative pregnancy test. Patients
+  of childbearing potential must agree to use an effective birth control method. Female
+  patients who are lactating must agree to stop breast-feeding.
+- 10. Written informed consent in accordance with institutional and FDA guidelines
+  must be obtained from all subjects (or patients' legal representative).
+- 'Exclude - Exclusion Criteria:'
+- Exclude - 1. BSA of \<0.25 m2
+- Exclude - 2. Metastatic disease outside of CNS
+- "Exclude - 3. Relapsed/refractory patients who are radiation-na\xEFve and age 5\
+  \ years or older at time of enrollment"
+- 'Exclude - 4. Investigational Drugs: Subjects who are currently receiving another
+  investigational drug are excluded from participation.'
+- 'Exclude - 5. Anti-cancer Agents: Subjects who are currently receiving other anticancer
+  agents are not eligible. Subjects must have fully recovered from the hematological
+  and bone marrow suppression effects of prior chemotherapy.'
+- 'Exclude - 6. Infection: Subjects who have an uncontrolled infection are not eligible
+  until the infection is judged to be well controlled in the opinion of the investigator.'
+- Exclude - 7. Subjects who, in the opinion of the investigator, may not be able to
+  comply with the safety monitoring requirements of the study, or in whom compliance
+  is likely to be suboptimal, should be excluded.
+short_title: DFMO as Maintenance Therapy for Molecular High/Very High Risk and Relapsed
+  Medulloblastoma
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Giselle Sholler
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: Difluoromethylornithine (DFMO) will be used in an open label, multicenter,
+  study as Maintenance Therapy for Molecular High Risk/Very High Risk and Relapsed/Refractory
+  Medulloblastoma.
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: Difluoromethylornithine (DFMO)
+      arm_internal_id: 0
+      arm_description: study subjects will receive 730 Days of oral difluoromethylornithine
+        (DFMO) at a dose of 2500 mg/m2 BID on each day of study.
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Difluoromethylornithine'
+        level_internal_id: 0
+        level_suspended: N
+    match:
+    - and:
+      - clinical:
+          oncotree_primary_diagnosis: Medulloblastoma
+      - clinical:
+          age_numerical: <=21

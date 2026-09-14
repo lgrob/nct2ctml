@@ -1,0 +1,231 @@
+nct_id: NCT06083883
+age: All
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: '2024-03-27'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Drug: NY-ESO-1 TCR/IL-15 NK'
+  - drug_name: 'Drug: Cyclophosphamide'
+  - drug_name: 'Drug: Fludarabine phosphate'
+long_title: Phase I/Ib Study of Adoptive NK Expressing an Affinity-enhanced T-cell
+  Receptor (TCR) Reactive Against the NY-ESO-1-specific Cord Blood-derived NK Cells
+  (NY-ESO-1 TCR/IL-15 NK) in Conjunction With Lymphodepleting Chemotherapy for the
+  Management of Advanced Synovial Sarcoma and Myxoid/Round Cell Liposarcoma
+last_updated: '2026-07-29'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: PHASE1
+principal_investigator: John Livingston, MD
+principal_investigator_institution: M.D. Anderson Cancer Center
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 44
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 'Inclusion Criteria:'
+- 1. Patients with all cancer histology, with an HLA-A\*02:01, HLA-A\*02:05 or HLA-A\*02:06
+  positive and a positive expression of NY-ESO-1 (\>/= 50% tumor cells 2+ or 3+ by
+  IHC) in the preenrollment tumor sample, for the dose escalation cohort. NY-ESO expression
+  must be confirmed at MDACC prior to study entry.
+- 2. Patients with histologically confirmed synovial sarcoma (cohort 1) or myxoid/round
+  cell liposarcoma (cohort 2), with an HLA-A\*02:01, HLA-A\*02:05 or HLA-A\*02:06
+  positive and a positive expression of NY-ESO-1 (\>/= 50% tumor cells 2+ or 3+ by
+  IHC) in the pre-enrollment tumor sample, for the expansion cohorts. Archival samples
+  will be permitted for screening. NY-ESO expression must be confirmed at MDACC prior
+  to study entry.
+- 3. Patients must meet disease-specific eligibility criteria (see below).
+- 4. Patients must have relapsed or become refractory to standard of care treatment
+  and must have received at least one prior line of systemic therapy including either
+  doxorubicin and/or ifosfamide (synovial sarcoma and MRCLS) or trabectedin (MRCLS).
+- 5. Patients must have measurable disease per the RECIST v1.1 at enrollment.
+- 6. Patients must be at least 2 weeks from last cytotoxic chemotherapy at the time
+  of first administration of lymphodepleting chemotherapy. Patients may continue tyrosine
+  kinase inhibitors or other targeted therapies until at least 3 days prior to administration
+  of lymphodepleting chemotherapy.
+- 7. Patients must be at least 3 months from any cell therapy for malignancy.
+- 8. Eastern Cooperative Oncology Group performance status 0-1 (Appendix A).
+- '9. Adequate organ function at screening, as defined by the following:'
+- "1. Renal: Serum creatinine \u2264 1.5 mg/dL or estimated glomerular filtration\
+  \ rate (Chronic Kidney Disease Epidemiology Collaboration equation) \u226545 ml/min/1.73\
+  \ m2"
+- "2. Hepatic: alanine transaminase (ALT)/aspartate transaminase (AST) \u2264 2.5\
+  \ x upper limit of normal (ULN) or \u2264 5 x ULN if documented liver metastases,\
+  \ total bilirubin \u2264 1.5 mg/dL or \u2264 3.0 mg/dL for patients with Gilbert's\
+  \ Syndrome. No history of liver cirrhosis and no ascites."
+- "3. Cardiac: Cardiac ejection fraction \u2265 50%, no clinically significant pericardial\
+  \ effusion as determined by echocardiogram (ECHO) or multigated acquisition (MUGA)\
+  \ scan, and no symptomatic cardiac disease or history of serious ventricular arrhythmia\
+  \ (ie, ventricular tachycardia or ventricular fibrillation), high-grade atrioventricular\
+  \ block, or other cardiac arrhythmias requiring anti-arrhythmic medications (except\
+  \ for atrial fibrillation that is well controlled with anti-arrhythmic medication)"
+- "4. Pulmonary: No clinically significant pleural effusion (per principal investigator\
+  \ \\[PI\\] judgement), and baseline oxygen saturation \u2265 92% on room air,"
+- "5. Hematological: absolute neutrophil count (ANC) \u2265 1000/mm3, platelet count\
+  \ \u2265 75,000/mm3, and hemoglobin \u2265 8 g/dL"
+- "6. Coagulation: International normalized ratio (INR) \u2264 1.5 ULN and activated\
+  \ partial thromboplastin time (aPTT) \u2264 1.5 ULN. Patients on therapeutic doses\
+  \ of anticoagulation medication must have INR and/or aPTT \u2264 the upper limit\
+  \ of the therapeutic range for intended use."
+- 10. Able to provide written informed consent.
+- 11. Aged 16-80 years.
+- "12. Weight \u226540 kg."
+- '13. All male and female patients who are able to have children must practice effective
+  birth control while on study therapy and for up to 3 months post completion of study
+  therapy. Acceptable forms of birth control for female patients include: hormonal
+  birth control, intrauterine device, diaphragm with spermicide, condom with spermicide,
+  or abstinence. Female patients who become pregnant or suspect pregnancy must immediately
+  notify their doctor. Females patients who become pregnant will be taken off study.
+  Men who are able to have children must use effective birth control while on the
+  study therapy.'
+- 'Acceptable forms of birth control for male patients include: condom with spermicide
+  or abstinence. If the male patient fathers a child or suspects that he has fathered
+  a child while on the study, he must immediately notify his doctor.'
+- 14. Negative serum or urine beta human chorionic gonadotropin pregnancy test for
+  females of childbearing potential (defined as not postmenopausal for 24 months or
+  no previous surgical sterilization or lactating females) at screening.
+- 15. Signed consent to long-term follow-up on protocol PA17-0483.
+- 16. Disease-specific inclusion criteria
+- 17. Advanced solid tumors a. Patients with locally advanced and/or metastatic solid
+  tumors may be enrolled in the dose escalation phase. Patients must have received
+  at least one prior line of standard therapy.
+- 18 Synovial Sarcoma (SS)
+- a. Patients must have a histologically confirmed diagnosis of synovial sarcoma with
+  a confirmation by the presence of a translocation between SYT on the X chromosome
+  and SSX1, SSX2 or, SSX4 on chromosome 18 (may be presented in the pathology report
+  as t (X; 18)).
+- 19\. Myxoid/round cell liposarcoma (MRCLS)
+- a. Patients must have histologically confirmed myxoid/round cell liposarcoma with
+  a confirmation by the presence of the reciprocal chromosomal translocation t(12;16)(q13;p11)
+  or t(12; 22) (q13;q12).
+- 'Exclude - Exclusion Criteria:'
+- "Exclude - 1. Presence of clinically significant \u2265 Grade 2 toxicity from previous\
+  \ anticancer treatment, as determined by the PI."
+- 'Exclude - 2. Presence of fungal, bacterial, viral, or other infection requiring
+  IV antimicrobials for management or not responding to appropriate therapy. Note:
+  Patients with simple urinary tract infection and uncomplicated bacterial pharyngitis
+  are permitted if responding to active treatment.'
+- Exclude - 3. Known Active hepatitis B or C.
+- Exclude - 4. Known human immunodeficiency virus with detectable viral load.
+- Exclude - 5. Presence of active neurological disorder(s).
+- Exclude - 6. Active autoimmune disease within 12 months of enrollment (excluding
+  low-grade psoriasis or well-controlled autoimmune thyroid disease).
+- Exclude - 7. Amyloidosis or POEMS syndrome.
+- Exclude - 8. Symptomatic or uncontrolled central nervous system involvement or signs
+  of cord compression.
+- Exclude - In the case radiation therapy is indicated, the washout must be at least
+  14 days.
+- Exclude - Patients with previously treated brain metastases may participate provided
+  they are stable (without evidence of progression by imaging for at least 4 weeks
+  prior to the first dose of trial treatment and any neurologic symptoms have returned
+  to baseline), have no evidence of new or enlarging brain metastases, and are not
+  using corticosteroids for at least 7 days prior to trial treatment.
+- 'Exclude - 9. Patients must not have any other malignancies within the past 2 years
+  except for in situ carcinoma of any site, adequately treated (without recurrence
+  post resection or post radiotherapy) carcinoma of the cervix or basal or squamous
+  cell carcinomas of the skin, or active non-lifethreatening second malignancy that
+  would not, in the investigator''s opinion, potentially interfere with the patient''s
+  ability to participate and/or complete this trial. Examples include but are not
+  limited to: urothelial cancer Grade Ta or T1 and adenocarcinoma of the prostate
+  treated by active surveillance.'
+- 'Exclude - 10. Presence of any other serious medical condition that may endanger
+  the patient at investigator''s discretion, including but not limited to:'
+- Exclude - * New York Heart Association Class III or IV heart failure
+- "Exclude - * Myocardial infarction or stroke \u2264 26 weeks prior to NY-ESO-1 TCR/IL-15\
+  \ NK cell infusion"
+- "Exclude - * Unstable angina within \u2264 13 weeks prior to NY-ESO-1 TCR/IL-15\
+  \ NK cell infusion unless the underlying disease has been corrected by procedural\
+  \ intervention (e.g., stent, bypass)"
+- Exclude - * Severe aortic stenosis.
+- Exclude - * Uncontrolled arrhythmia, considered per PI evaluation.
+- Exclude - * Congenital long QT syndrome.
+- Exclude - * Documentation, during the screening process, of a QTc \> 470 milliseconds
+  by Fredericia criteria (QTcF) based on the average of 3 electrocardiograms (ECGs)
+  taken approximately 1 minute apart and all within 10 minutes of each other. The
+  patient should be reclining for 5 minutes prior to ECGs. Local readings may be used
+  for this exclusion criterion.
+- Exclude - 11. Major surgery \< 4 weeks prior to first dose of lymphodepleting chemotherapy.
+- Exclude - 12. Concomitant use of other investigational agents.
+- Exclude - 13. Concomitant use of other anticancer agents.
+- Exclude - 14. Previously received any anti-NY-ESO-1 therapy.
+- "Exclude - 15. Patients receiving systemic steroid therapy at time of enrollment,\
+  \ with an exception for topical, ocular, intranasal, and inhaled corticosteroids,\
+  \ or systemic corticosteroids at an equivalent dose \u2264 10 mg of prednisone daily\
+  \ (physiological substitutive doses are allowed)."
+- Exclude - 16. Received antithymocyte globulin within 14 days or Campath within 28
+  days of enrollment.
+- Exclude - 17. Patients receiving immunosuppressive therapy.
+- Exclude - 18. Patients who received live vaccines within 30 days prior enrollment.
+- Exclude - 19. Pregnant or breastfeeding.
+short_title: Phase I/Ib Study of NK Expressing an Affinity-enhanced T-cell Receptor
+  (TCR) Against the NY-ESO-1
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: M.D. Anderson Cancer Center
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: The goal of this clinical research study is to find a recommended dose of
+  donated NK cells that can be given along with chemotherapy to patients with advanced
+  cancers. The safety and effects of this therapy will also be studied.
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: Dose escalation - Inpatient and Outpatient
+      arm_internal_id: 0
+      arm_description: Participants will be assigned to receive a dose level of NK
+        cells based on when the participants joins the study. Up to 6 participants
+        will be enrolled at each dose level. If no intolerable side effects are seen
+        after the first 3-6, the next group of participants will get at higher dose.
+        Up to 4 dose levels of NK cells will be tested. If the first dosing group
+        shows intolerable side effects, a lower dose will be tested.
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Fludarabine phosphate'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: NY-ESO-1 TCR/IL-15 NK'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Drug: Cyclophosphamide'
+        level_internal_id: 2
+        level_suspended: N
+    match:
+    - and:
+      - or:
+        - clinical:
+            oncotree_primary_diagnosis: Synovial Sarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Myxoid/Round-Cell Liposarcoma
+      - clinical:
+          age_numerical: '>=16'
+      - clinical:
+          age_numerical: <=80
+      - clinical:
+          disease_status:
+          - Recurrent
+          - Refractory

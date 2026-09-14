@@ -1,0 +1,265 @@
+nct_id: NCT07059975
+age: Children
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: '2025-10-22'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Drug: Etoposide'
+  - drug_name: 'Other: SOC'
+  - drug_name: 'Drug: Idarubicin Hydrochloride'
+  - drug_name: 'Drug: Fludarabine'
+  - drug_name: 'Drug: Cytarabine (Ara-C)'
+  - drug_name: 'Drug: Asparaginase Erwinia Chrysanthemi (recombinant)'
+  - drug_name: 'Drug: Intrathecal triple'
+  - drug_name: 'Drug: Venetoclax'
+long_title: 'UPdated Disease Monitoring And Treatment for Enhanced Outcomes for Pediatric
+  AML: A Pilot Trial'
+last_updated: '2026-08-24'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: EARLY_PHASE1
+principal_investigator: NA
+principal_investigator_institution: Baylor College of Medicine
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 36
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 'Inclusion Criteria:'
+- "* Age Patients \u2265 1 months old to \u2264 30 years old are eligible"
+- 'Patients must be diagnosed with AML or myeloid sarcoma according to the 2022 WHO
+  classification with or without extramedullary disease. Patients with AML must have
+  1 of the following at initial diagnosis:'
+- \- Diagnosis
+- "1. \u2265 20% bone marrow blasts"
+- "\u2022 In cases where extensive fibrosis may result in a dry tap, blast count can\
+  \ be obtained from touch imprints or estimated from an adequate bone marrow core\
+  \ biopsy."
+- '2. \< 20% bone marrow blasts with one or more of the genetic abnormalities below:'
+- '* t(8;21)(q22;q22.1) RUNX1::RUNX1T1'
+- '* inv(16)(p13.1q22) or t(16;16)(p13.1;q22) CBFB::MYH11'
+- '* Translocation involving 11q23.3 KMT2A rearrangement'
+- '* t(6;9)(p23;q34.1) DEK::NUP214'
+- '* inv(3)(q21.3q26.2) or t(3;3)(q21.3;q26.2) MECOM rearrangement'
+- '* Megakaryoblastic with t(1;22)(p13.3;q13.3) RBM15::MRTFA'
+- '* Mutated NPM1'
+- '* CEBPA bZIP mutation'
+- '* t(1;22)(p13.3;q13.1) RBM15(OTT) fusion'
+- '* t(7;12)(q36.3;p13.2) MNX1::ETV6'
+- '* t(8;16)(p11.2;p13.3) KAT6A::CREBBP - t(5;11)(q35.3;p15.5) NUP98::NSD1'
+- '* inv(16)(p13.3q24.3) CBFA2T3::GLIS2'
+- '* t(11;12)(p15.5;p13.5) NUP98::KDM5A'
+- '* 11q23.3 partial tandem duplication (PTD) KMT2A PTD'
+- "3. A complete blood count (CBC) documenting the presence of at least 1,000/\xB5\
+  L circulating leukemic cells (blasts) if a bone marrow aspirate or biopsy cannot\
+  \ be performed (i.e., a WBC count \u2265 10,000/\u03BCL with \u2265 10% blasts or\
+  \ a WBC count of \u2265 5,000/\u03BCL with \u2265 20% blasts)."
+- 4. Biopsy-proven myeloid sarcoma with or without bone marrow involvement.
+- 'Note: patients with newly diagnosed AML, myelodysplasia-related (that are not from
+  conditions listed in protocol section 4.2.1) ARE eligible while patients with therapy-related
+  AML are excluded.'
+- \- Prior Therapy Patients must receive DA10+GO (Cytarabine days 1-10 + Daunorubicin
+  days 1,3,5 \[DA10\] + Gemtuzumab ozogamcin \[GO\]) as prescribed in AAML1831 or
+  the TXCH practice standard for Induction 1. Patients may have received any number
+  of intrathecal treatments and have any CNS status at the time of enrollment.
+- "* Performance Status Patients must have a performance status corresponding to Karnofsky/Lansky\
+  \ score \\>/=40. (Use Karnofsky for patients \u226516 years of age and Lanksy for\
+  \ patients \\<16 years of age.)"
+- '* Organ Function Requirements All laboratory studies to determine eligibility must
+  be performed within seven (7) days prior to enrollment unless otherwise indicated.
+  Laboratory values used to assess eligibility must be no older than 7 days at the
+  start of Induction 2 therapy and need not be repeated if therapy starts within 7
+  days of the eligibility labs. If a post-enrollment lab value is outside the limits
+  of eligibility, or laboratory values are \>7 days old, then the following laboratory
+  evaluations must be re-checked within 48 hours prior to initiating therapy: bilirubin,
+  ALT (SGPT) and serum creatinine. If the recheck is outside the limits of eligibility,
+  the patient should be followed with periodic labs but may not receive protocol therapy
+  until the bilirubin, ALT, and/or serum creatinine meet eligibility criteria. If
+  \>14 days have passed from the planned start of protocol therapy and the bilirubin,
+  ALT, and/or serum creatinine are still outside the limits of eligibility, the patient
+  may not receive protocol therapy and rather will be considered a screen failure.'
+- 'Adequate renal function defined as:'
+- "\u2022 An estimated creatinine clearance or GFR \u2265 60 ml/min/1.73m2. Any calculation\
+  \ method is acceptable, including the automatic creatinine clearance provided within\
+  \ the Epic EMR."
+- 'Adequate liver function defined as:'
+- '* A direct bilirubin \< 2 mg/dL'
+- '* ALT \<5x ULN or 225 U/L, with the ULN being 45 U/L for the purpose of this study.'
+- 'Adequate coagulation defined as:'
+- "\u2022 INR \u2264 1.5"
+- 'Adequate cardiac function defined as:'
+- "* Ejection fraction (EF) \u2265 50% (preferred method Biplane Simpson's EF) or\
+  \ if EF unavailable, shortening fraction (SF) \u2265 24%, within 14 days prior to\
+  \ planned start of Induction 2 therapy."
+- "* For patients with cardiac dysfunction (EF \\< 50% or SF \\<24% if EF is unavailable)\
+  \ prior to enrollment, if clinically safe and feasible, repeat echocardiogram is\
+  \ strongly advised in order to confirm cardiac dysfunction following clinical stabilization,\
+  \ particularly if occurring in the setting of sepsis or other transient physiologic\
+  \ stressor. If the repeat echocardiogram demonstrates an EF \u2265 50%, the patient\
+  \ is eligible to enroll."
+- '* Informed Consent All patients and/or their parents or legally authorized representatives
+  must sign a written informed consent. Assent, when appropriate, will be obtained
+  according to institutional guidelines.'
+- 'Exclude - Exclusion Criteria:'
+- 'Exclude - * Patients with the following constitutional conditions are not eligible:'
+- "Exclude - \u2022 Fanconi anemia"
+- "Exclude - \u2022 Schwachman Diamond Syndrome"
+- "Exclude - \u2022 Telomere Disorders"
+- Exclude - * Patients with constitutional trisomy 21 or with constitutional mosaicism
+  of trisomy 21
+- Exclude - * Germline predispositions known, or suspected by the treating physician,
+  to increase risk of toxicity with AML therapy
+- Exclude - * Therapy-related AML
+- 'Exclude - * Patients with any of the following oncologic diagnoses are not eligible:'
+- "Exclude - \u2022 Any concurrent malignancy"
+- "Exclude - \u2022 Juvenile myelomonocytic leukemia"
+- "Exclude - \u2022 Philadelphia chromosome positive AML"
+- "Exclude - \u2022 Mixed phenotype acute leukemia"
+- "Exclude - \u2022 Acute promyelocytic leukemia"
+- "Exclude - \u2022 AML with FLT3 internal tandem duplication (FLT3-ITD) allelic ratio\
+  \ \\>0.1"
+- "Exclude - * Pregnancy and Breastfeeding \u2022 Female patients who are pregnant\
+  \ may not participate. A pregnancy test is required for female patients of childbearing\
+  \ potential."
+- Exclude - * Lactating females who plan to breastfeed their infants are not eligible.
+- Exclude - * Sexually active patients of reproductive potential who have not agreed
+  to use an effective contraceptive method for the duration of their study participation
+  are not eligible.
+short_title: 'UPDATE AML: UPdated Disease Monitoring And Treatment for Enhanced Outcomes
+  for Pediatric AML'
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Baylor College of Medicine
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: 'This research study investigates the tolerability of substituting two cycles
+  of chemotherapy into the standard pediatric acute myeloid leukemia (AML) chemotherapy
+  treatment regimen for patients with newly diagnosed AML at intermediate-risk (IR)
+  and high-risk (HR) of relapse. The goal is to achieve similar or better survival
+  with chemotherapy cycles that are intensive but less likely to cause long-term complications.
+  Patients will enroll on this trial at the end of their first induction cycle.
+
+
+  The two cycles to be substituted are:
+
+
+  * "Ida-FLA" (idarubicin+fludarabine/cytarabine) as Induction 2
+
+  * "VIA" (venetoclax+idarubicin+cytarabine) as Intensification 1 of the HR treatment
+  regimen, and Intensification 2 of the IR treatment backbone.
+
+
+  Researchers will evaluate side effects and outcomes for up to three years after
+  enrollment.
+
+
+  Participants will also have the opportunity to participate in optional research
+  studies including patient surveys and blood and bone marrow sample testing.'
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: Intermediate Risk (IR) AML
+      arm_internal_id: 0
+      arm_description: Patients will receive Ida-FLA as Induction 2, cytarabine/etoposide
+        ("AE") as Intensification 1, VIA as Intensification 2, and Capizzi AraC as
+        intensification 3.
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Idarubicin Hydrochloride'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: Fludarabine'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Drug: Cytarabine (Ara-C)'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Drug: Venetoclax'
+        level_internal_id: 3
+        level_suspended: N
+      - level_code: '4'
+        level_description: 'Drug: Etoposide'
+        level_internal_id: 4
+        level_suspended: N
+      - level_code: '5'
+        level_description: 'Drug: Asparaginase Erwinia Chrysanthemi (recombinant)'
+        level_internal_id: 5
+        level_suspended: N
+      - level_code: '6'
+        level_description: 'Drug: Intrathecal triple'
+        level_internal_id: 6
+        level_suspended: N
+    - arm_code: High risk (HR) AML
+      arm_internal_id: 1
+      arm_description: Patients will receive Ida-FLA as Induction 2 and VIA as Intensification
+        1. These patients will then proceed on to a hematopoietic stem cell transplantation
+        if an appropriate donor is found, otherwise will receive 2 more cycles of
+        chemotherapy following the IR regimen.
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Idarubicin Hydrochloride'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: Fludarabine'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Drug: Cytarabine (Ara-C)'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Drug: Venetoclax'
+        level_internal_id: 3
+        level_suspended: N
+      - level_code: '4'
+        level_description: 'Drug: Intrathecal triple'
+        level_internal_id: 4
+        level_suspended: N
+    - arm_code: Low risk (LR)
+      arm_internal_id: 2
+      arm_description: Low risk pediatric AML patients will receive standard of care
+        chemotherapy but have the option to participate in correlative studies
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Other: SOC'
+        level_internal_id: 0
+        level_suspended: N
+    match:
+    - and:
+      - or:
+        - clinical:
+            oncotree_primary_diagnosis: Acute Myeloid Leukemia
+        - clinical:
+            oncotree_primary_diagnosis: Myeloid Sarcoma
+      - clinical:
+          age_numerical: <=30

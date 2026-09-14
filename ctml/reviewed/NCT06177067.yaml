@@ -1,0 +1,207 @@
+nct_id: NCT06177067
+age: Children
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: '2024-04-19'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Drug: intrathecal (IT) chemotherapy'
+  - drug_name: 'Drug: Cytarabine'
+  - drug_name: 'Drug: Azacitidine'
+  - drug_name: 'Drug: Revumenib'
+  - drug_name: 'Drug: Venetoclax'
+  - drug_name: 'Drug: Methotrexate'
+long_title: A Phase 1 Study of Revumenib, Azacitidine, and Venetoclax in Pediatric
+  and Young Adult Patients With Refractory or Relapsed Acute Myeloid Leukemia
+last_updated: '2026-08-03'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: PHASE1
+principal_investigator: Hiroto Inaba, MD, PhD
+principal_investigator_institution: St. Jude Children's Research Hospital
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 24
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 'Inclusion Criteria: Participants must have a diagnosis of AML or ALAL and meet
+  the criteria below:'
+- "* Refractory leukemia, defined as persistent leukemia after at least two courses\
+  \ of induction chemotherapy (one course for secondary AML), or relapsed leukemia,\
+  \ defined as the re-appearance of leukemia after the achievement of remission. Patients\
+  \ must have \u22655% blasts in the bone marrow as assessed by morphology or \u2265\
+  1% blasts flow cytometry."
+- "However, if an adequate bone marrow sample cannot be obtained (e.g., in a patient\
+  \ with acute megakaryoblastic leukemia with marrow fibrosis), patients may be enrolled\
+  \ if there is unequivocal evidence of leukemia with \u22655% blasts by morphology\
+  \ or \u22651% blasts flow cytometry in the blood."
+- '* Presence of KMT2A rearrangement (KMT2Ar), NUP98 rearrangement (NUP98r), NPM1
+  mutation or fusion, PICALM::MLLT10, DEK::NUP214, UBTF-TD, KAT6A rearrangement (KAT6Ar),
+  or SET::NUP214'
+- "* Adequate organ function, defined as total bilirubin \\< 1.5 \xD7 institutional\
+  \ upper limit of normal for age or normal conjugated bilirubin (for patients with\
+  \ known Gilbert's syndrome, total bilirubin \\<3 \xD7 the ULN) unless attributed\
+  \ to leukemia, calculated creatinine clearance \u226560 mL/min/1.73 m\\^2, and left\
+  \ ventricular ejection fraction \u2265 40%"
+- '* QTcF \< 480 msec (average of triplicate)'
+- "* Age \u2265 1 year and \u2264 30 years. The upper age limit may be defined by\
+  \ each institution, but may not exceed 30 years."
+- "* Lansky \u2265 60 for patients who are \\< 16 years old and Karnofsky \u2265 60%\
+  \ for patients who are \\> 16 years old."
+- '* At least 14 days or 5 half-lives (whichever is longer) must have elapsed since
+  the completion of myelosuppressive therapy, with the exception of low-dose therapy
+  used for cytoreduction according to institutional standards, such as hydroxyurea
+  or low-dose cytarabine (up to 200 mg/m\^2/day). In addition, all toxicities must
+  have resolved to grade 1 or less.'
+- '* Patients must have a leukocyte count \<25,000 cells/uL. Low-dose therapy, such
+  as hydroxyurea or cytarabine as described above, to achieve this limit is acceptable.'
+- '* For patients who have received prior HCT, there can be no evidence of GVHD and
+  greater than 60 days must have elapsed since the HCT, and patients should be off
+  calcineurin inhibitors for at least 28 days prior to the start of protocol therapy.
+  Physiologic prednisone for the treatment of adrenal insufficiency is acceptable..'
+- '* Patients must be taking posaconazole or voriconazole, which must be started at
+  least 24 hours prior to the start of therapy.'
+- '* Patients of reproductive potential must agree to use effective contraception
+  for the duration of study participation.'
+- Patients who meet the criteria listed above are eligible for enrollment and treatment
+  on the trial. However, patients in first relapse who are suitable for and willing
+  to receive intensive remission induction therapy should be offered such therapy
+  if deemed appropriate by the treating physician.
+- 'Exclude - Exclusion Criteria:'
+- Exclude - * Patients who are pregnant or breastfeeding are not eligible.
+- Exclude - * Patients with Down syndrome, acute promyelocytic leukemia, juvenile
+  myelomonocytic leukemia, or bone marrow failure syndromes are not eligible.
+- Exclude - * Patients with uncontrolled infection are not eligible. Patients with
+  infections that are controlled on concurrent anti-microbial agents are eligible.
+short_title: Study of Revumenib, Azacitidine, and Venetoclax in Pediatric and Young
+  Adult Patients With Refractory or Relapsed Acute Myeloid Leukemia
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: St. Jude Children's Research Hospital
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: 'This is a research study to find out if adding a new study drug called revumenib
+  to commonly used chemotherapy drugs is safe and if they have beneficial effects
+  in treating patients with acute myeloid leukemia (AML) or acute leukemia of ambiguous
+  lineage (ALAL) that did not go into remission after treatment (refractory) or has
+  come back after treatment (relapsed), and to determine the total dose of the 3-drug
+  combination of revumenib, azacitidine and venetoclax that can be given safely in
+  participants also taking an anti-fungal drug.
+
+
+  Primary Objective
+
+
+  * To determine the safety and tolerability of revumenib + azacitidine + venetoclax
+  in pediatric patients with relapsed or refractory AML or ALAL.
+
+
+  Secondary Objectives
+
+
+  * Describe the rates of complete remission (CR), complete remission with incomplete
+  count recovery (CRi), and overall survival for patients treated with revumenib +
+  azacitidine + venetoclax at the recommended phase 2 dose (RP2D).'
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: All Eligible Participants
+      arm_internal_id: 0
+      arm_description: 'All eligible patients receive the following intervention:
+
+
+        Revumenib, Venetoclax, Azacitidine, Intrathecal chemotherapy'
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Revumenib'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: Venetoclax'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Drug: Azacitidine'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Drug: intrathecal (IT) chemotherapy'
+        level_internal_id: 3
+        level_suspended: N
+      - level_code: '4'
+        level_description: 'Drug: Cytarabine'
+        level_internal_id: 4
+        level_suspended: N
+      - level_code: '5'
+        level_description: 'Drug: Methotrexate'
+        level_internal_id: 5
+        level_suspended: N
+    match:
+    - and:
+      - or:
+        - clinical:
+            oncotree_primary_diagnosis: Acute Myeloid Leukemia
+        - clinical:
+            oncotree_primary_diagnosis: Acute Leukemias of Ambiguous Lineage
+      - or:
+        - genomic:
+            hugo_symbol: KMT2A
+            variant_category: Structural Variation
+        - genomic:
+            hugo_symbol: NUP98
+            variant_category: Structural Variation
+        - genomic:
+            hugo_symbol: NPM1
+            variant_category: Mutation
+        - genomic:
+            hugo_symbol: NPM1
+            variant_category: Structural Variation
+        - genomic:
+            hugo_symbol: PICALM
+            variant_category: Structural Variation
+        - genomic:
+            hugo_symbol: MLLT10
+            variant_category: Structural Variation
+        - genomic:
+            hugo_symbol: DEK
+            variant_category: Structural Variation
+        - genomic:
+            hugo_symbol: NUP214
+            variant_category: Structural Variation
+        - genomic:
+            hugo_symbol: UBTF
+            variant_category: Mutation
+        - genomic:
+            hugo_symbol: KAT6A
+            variant_category: Structural Variation
+      - clinical:
+          age_numerical: '>=1'
+      - clinical:
+          age_numerical: <=30
+      - clinical:
+          disease_status:
+          - Recurrent
+          - Refractory

@@ -1,0 +1,187 @@
+nct_id: NCT04655404
+age: Children
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: '2021-04-08'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Procedure: Larotrectinib surgical'
+  - drug_name: 'Drug: Larotrectinib'
+long_title: A Pilot and Surgical Study of Larotrectinib for Treatment of Children
+  With Newly-Diagnosed High-Grade Glioma With NTRK Fusion
+last_updated: '2026-03-18'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: EARLY_PHASE1
+principal_investigator: NA
+principal_investigator_institution: Nationwide Children's Hospital
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 15
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 'Inclusion Criteria:'
+- "* Age: Patients \u2264 21 years of age (birth to 21 years of age) at the time of\
+  \ study enrollment will be eligible."
+- '* Diagnosis: Patients with newly-diagnosed high-grade (HGG), including diffuse
+  intrinsic pontine gliomas (DIPG), whose tumors are documented in a CLIA/CAP certified
+  lab (or clinically equivalent method considered standard in non-US sites) to harbor
+  an NTRK fusion alteration by FISH, PCR, or next generation sequencing are eligible.
+  Patients must have had histologically verified high-grade glioma such as anaplastic
+  astrocytoma, glioblastoma, or H3 K27-mutant diffuse midline glioma verified at a
+  CONNECT site.'
+- For sites that do not have CLIA-certified equivalent (certified laboratory) to assess
+  NTRK fusion, testing will be conducted centrally at NCH. NTRK testing will be performed
+  by NGS using targeted RNA-sequencing (Archer Solid Tumor analysis) Please submit
+  10 unstained sections on charged slides at 10uM thickness, or 10 scrolls cut at
+  10uM thickness, along with submission of an H\&E slide. Formalin-fixed paraffin
+  embedded (FFPE) tissue block and FFPE tissue scroll specimens must contain minimum
+  of 25% tumor Snap-frozen tissue specimens are also acceptable and they must contain
+  a minimum of 10% tumor. Please note that turn-around time for this test is up to
+  21 days.
+- '* Disease Status: Patients with disseminated DIPG or HGG are eligible only if the
+  patient is to receive chemotherapy only, i.e. no craniospinal RT is intended to
+  be given. MRI of spine must be performed if disseminated disease is suspected clinically
+  by the treating physicians. Patients with primary spinal tumors are eligible only
+  if the patient is to receive either chemotherapy or focal radiation therapy, i.e.
+  no craniospinal RT is intended to be given. Patients with leptomeningeal disease
+  only, with no definitive identifiable primary tumor, and documented NTRK fusion,
+  must be discussed with the Study Chair on a case-by-case basis.'
+- '* Surgical Cohort ONLY: Patients with newly-diagnosed HGG with NTRK fusions who
+  have undergone prior biopsy and for whom further resection is indicated for a more
+  definitive surgery at an enrolling site will be eligible to enroll onto the surgical
+  study. DIPG patients are not eligible for the surgical cohort.'
+- "* Performance Level: Karnofsky \u2265 50% for patients \\> 16 years of age and\
+  \ Lansky \u2265 50 for patients \u2264 16 years of age (See Appendix I). Patients\
+  \ who are unable to walk because of paralysis, but who are up in a wheelchair, will\
+  \ be considered ambulatory for the purpose of assessing the performance score."
+- 'Exclude - * Prior Therapy: Patients must not have received any prior anti-cancer
+  chemotherapy. Prior use of corticosteroids are allowed (see below Exclusion Criteria)'
+- 'Exclude - * Organ Function Requirements: Adequate Bone Marrow Function Defined
+  as:'
+- "Exclude - Peripheral absolute neutrophil count (ANC) \u2265 1000/mm3 Platelet count\
+  \ \u2265 100,000/mm3 (transfusion independent, defined as not receiving platelet\
+  \ transfusions for at least 7 days prior to enrollment) Hemoglobin \\>8 g/dL (may\
+  \ receive transfusions)"
+- "Exclude - \\- Adequate Renal Function Defined as: Serum creatinine within normal\
+  \ institutional limits, or Creatinine clearance or radioisotope GFR \u2265 70ml/min/1.73\
+  \ m2"
+- "Exclude - \\- Adequate Liver Function Defined as: Total bilirubin \u2264 2.5 \xD7\
+  \ institutional upper limit of normal AST(SGOT)/ALT(SGPT) \u2264 2.5 \xD7 institutional\
+  \ upper limit of normal"
+- 'Exclude - \- Adequate Pulmonary Function Defined as: Pulse oximetry \> 94% on room
+  air if there is clinical indication for determination (e.g. dyspnea at rest).'
+- 'Exclude - \- Adequate Neurologic Function Defined as: Patients with seizure disorder
+  may be enrolled if on anticonvulsants and well controlled. See Section 5.5.2 and
+  Appendix III for EIAED guidelines.'
+- 'Exclude - \- Informed Consent: All patients and/or their parents or legally authorized
+  representatives must sign a written informed consent. Assent, when appropriate,
+  will be obtained according to institutional guidelines.'
+- 'Exclude - Exclusion Criteria:'
+- 'Exclude - * Pregnancy or Breast-Feeding: Pregnant or breast-feeding women will
+  not be entered on this study due to unknown risks of fetal and teratogenic adverse
+  events as seen in animal/human studies. Pregnancy tests must be obtained in girls
+  who are post-menarchal. Males or females of reproductive potential may not participate
+  unless they have agreed to use an effective contraceptive method.'
+- 'Exclude - * Concomitant Medications Investigational Drugs: Patients who have previously
+  received or are currently receiving another investigational drug are not eligible.'
+- 'Exclude - Anti-cancer Agents: Patients who have previously received or are currently
+  receiving other anti-cancer agents, including chemotherapy, immunotherapy, monoclonal
+  antibodies, biologic or targeted therapy, are not eligible'
+- 'Exclude - * Infection: Patients must not have any active, uncontrolled systemic
+  bacterial, viral or fungal infection.'
+- Exclude - * Patients who have received prior solid organ transplantation are not
+  eligible.
+- Exclude - * Patients must not have malabsorption syndrome or other condition affecting
+  oral absorption.
+- Exclude - * Patients must not be receiving any treatment with a strong cytochrome
+  P450 3A4 (CYP3A4) inhibitor or inducer. (See Appendix III.) Strong inducers or inhibitors
+  of CYP3A4 should be avoided from 7 days prior to enrollment to the end of the study.
+- Exclude - * Patients who in the opinion of the investigator may not be able to comply
+  with the safety monitoring requirements of the study are not eligible.
+short_title: A Pilot Study of Larotrectinib for Newly-Diagnosed High-Grade Glioma
+  With NTRK Fusion
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Nationwide Children's Hospital
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: 'This is a pilot study that will evaluate disease status in children that
+  have been newly diagnosed high-grade glioma with TRK fusion. The evaluation will
+  occur after 2 cycles of the medication (Larotrectinib) have been given.
+
+
+  The study will also evaluate the safety of larotrectinib when given with chemotherapy
+  in your children; as well as the safety larotrectinib when given post-focal radiation
+  therapy.'
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: Feasibility Cohort
+      arm_internal_id: 0
+      arm_description: Larotrectinib administered PO, BID @100 mg/m2 on a 28-day cycle
+        schedule.
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Larotrectinib'
+        level_internal_id: 0
+        level_suspended: N
+    - arm_code: Surgical Cohort
+      arm_internal_id: 1
+      arm_description: Larotrectinib administered PO, BID @100 mg/m2 3-5 days prior
+        to definitive surgery, followed by Larotrectinib administered PO, BID @100
+        mg/m2 on a 28-day cycle schedule.
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Larotrectinib'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Procedure: Larotrectinib surgical'
+        level_internal_id: 1
+        level_suspended: N
+    match:
+    - and:
+      - or:
+        - clinical:
+            oncotree_primary_diagnosis: High-Grade Glioma, NOS
+        - clinical:
+            oncotree_primary_diagnosis: Glioblastoma, IDH-Wildtype
+        - clinical:
+            oncotree_primary_diagnosis: Diffuse Midline Glioma, H3 K27-Altered
+      - or:
+        - genomic:
+            hugo_symbol: NTRK1
+            variant_category: Structural Variation
+        - genomic:
+            hugo_symbol: NTRK2
+            variant_category: Structural Variation
+        - genomic:
+            hugo_symbol: NTRK3
+            variant_category: Structural Variation
+      - clinical:
+          age_numerical: <=21

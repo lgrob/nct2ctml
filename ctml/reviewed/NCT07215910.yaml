@@ -1,0 +1,290 @@
+nct_id: NCT07215910
+age: All
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: '2026-06-24'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Drug: Vorasidenib'
+  - drug_name: 'Drug: Placebo Administration'
+  - drug_name: 'Procedure: Biospecimen Collection'
+  - drug_name: 'Other: Questionnaire Administration'
+  - drug_name: 'Drug: Temozolomide'
+  - drug_name: 'Radiation: Intensity-Modulated Radiation Therapy'
+  - drug_name: 'Procedure: Magnetic Resonance Imaging'
+  - drug_name: 'Radiation: Pencil Beam Scanning'
+  - drug_name: 'Procedure: Intensity-Modulated Proton Therapy'
+  - drug_name: 'Radiation: Volume Modulated Arc Therapy'
+long_title: Phase III Trial of Radiotherapy Followed by Adjuvant Temozolomide in Combination
+  With the IDH Inhibitor Vorasidenib vs Placebo in IDH-Mutated Newly-Diagnosed Grade
+  3 Astrocytomas
+last_updated: '2026-09-02'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: PHASE3
+principal_investigator: NA
+principal_investigator_institution: Alliance for Clinical Trials in Oncology
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 408
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 'Inclusion Criteria:'
+- '* STEP 0: Histologic diagnosis of astrocytoma, IDH-mutant (central nervous system
+  \[CNS\] WHO grade 3)'
+- '* STEP 0: Available diagnostic slides (hematoxylin and eosin staining method \[H\&E\]
+  and immunohistochemical stains for central review)'
+- '* STEP 0: Tissue available for central biomarker testing (CDKN2A/B and1p/19q co-deletion
+  \[all patients\], and IDH1/IDH2 \[if needed\])'
+- '* STEP 1: Centrally-confirmed diagnosis of astrocytoma, IDH-mutant (CNS WHO grade
+  3)'
+- '* STEP 1: Presence of IDH1 p.R132 or IDH2 p.172 mutation, confirmed by central
+  review of immunohistochemical stain or molecular testing results, with central confirmation
+  of equivocal results'
+- '* STEP 1: Absence of CDKN2A/B homozygous deletion by central testing'
+- '* STEP 1: Absence of whole arm 1p/19q co-deletion (i.e. intact 1p/19q) by central
+  testing'
+- '* STEP 1: No evidence of spinal or leptomeningeal disease'
+- '* STEP 1: No prior chemotherapy, cranial irradiation, IDH-inhibitor therapy, radiotherapy,
+  vaccine therapy, small-molecule therapy, or laser ablation'
+- "* STEP 1: Prior diagnostic surgery/resection/biopsy \u2264 6 months of registration"
+- '* STEP 1: Planned radiotherapy and adjuvant chemotherapy'
+- "* STEP 1: Age \u2265 12 years"
+- "* STEP 1: Eastern Cooperative Oncology Group (ECOG) performance status \u2264 2\
+  \ (or Karnofsky performance status \\[KPS\\] \u2265 60%)"
+- "* STEP 1: Absolute neutrophil count (ANC) \u2265 1,500/mm\\^3"
+- "* STEP 1: Hemoglobin \u2265 9 g/dL"
+- "* STEP 1: Platelet count \u2265 100,000/mm\\^3"
+- "* STEP 1: Total bilirubin \u2264 1.5 x upper limit of normal (ULN)"
+- "\\* For patients with Gilbert syndrome, total bilirubin \u2264 1.0 x ULN"
+- "* STEP 1: Aspartate aminotransferase (AST)(serum glutamic oxaloacetic transaminase\
+  \ \\[SGOT\\])/alanine aminotransferase (ALT)(serum glutamic pyruvic transaminase\
+  \ \\[SGPT\\]) \u2264 2.5 x ULN"
+- "* STEP 1: Alkaline phosphatase \u2264 2.5 x ULN"
+- "* STEP 1: Creatinine \u2264 2.0 x ULN or calculated (calc.) creatinine clearance\
+  \ \\> 40 mL/min"
+- "\\* For patients \u2265 18 years of age, calculated using the Cockcroft-Gault equation.\
+  \ For patients \\< 18 years of age, calculated using the Bedside Schwartz method:"
+- '* Age: 10 to \< 13 years; Maximum Serum Creatinine (mg/dL): 1.2 (male) 1.2 (female)'
+- '* Age: 13 to \< 16 years; Maximum Serum Creatinine (mg/dL): 1.5 (male) 1.4 (female)'
+- "* Age: \u2265 16 years; Maximum Serum Creatinine (mg/dL): 1.7(male) 1.4 (female)"
+- '* STEP 1: Not pregnant and not nursing, because this study involves agents whose
+  genotoxic, mutagenic, and teratogenic effects on the developing fetus and newborn
+  are unknown'
+- "\\* Therefore, for women of childbearing potential only, a negative pregnancy test\
+  \ done \u2264 14 days prior to registration is required"
+- '* STEP 1: Women and men of reproductive potential should agree to abstain from
+  sexual intercourse or use two highly effective methods of birth control, at least
+  one of which must be a barrier method, throughout their participation in this study
+  and for at least 90 days after the last dose of vorasidenib. Reproductive status
+  and discussions about birth control measures should be documented in the patient''s
+  record. Abstinence is acceptable only as true abstinence when this is in line with
+  the preferred and usual lifestyle of the patient; periodic abstinence (e.g. calendar,
+  ovulation, symptothermal, post-ovulation methods) and withdrawal are not acceptable
+  methods of birth control. Highly effective forms of birth control are defined as
+  hormonal oral contraceptives, injectables, patches, intrauterine devices, intrauterine
+  hormone release systems, bilateral tubal ligation, condoms with spermicide, or male
+  partner sterilization'
+- "* STEP 1: No severe or intercurrent illness, no active infection that requires\
+  \ systemic anti-infective therapy, and no active infection with an unexplained fever\
+  \ \\> 38.5\xB0C within 7 days prior to registration"
+- '* STEP 1: Patients with a prior or concurrent malignancy whose natural history
+  or treatment does not have the potential to interfere with the safety or efficacy
+  assessment of the investigational regimen are eligible for this trial'
+- '* STEP 1: Patients must be able to tolerate or undergo an MRI'
+- '* STEP 1: Patients with known HIV infection on effective anti-retroviral therapy
+  with undetectable viral load within 6 months prior to registration are eligible
+  for this trial'
+- '* STEP 1: For patients with evidence of chronic hepatitis B virus (HBV) infection,
+  the HBV viral load must be undetectable on suppressive therapy, if indicated'
+- '* STEP 1: Patients with a history of hepatitis C virus (HCV) infection must have
+  been treated and cured. For patients with HCV infection who are currently on treatment,
+  they are eligible if they have an undetectable HCV viral load'
+- '* STEP 1: No significant active cardiac disease within 6 months prior to registration,
+  including New York Heart Association Functional Classification class III or IV congestive
+  heart failure, myocardial infarction, unstable angina, and/or stroke. To be eligible
+  for this trial, patients should be class 2B or better'
+- "* STEP 1: No history of significant (grade \u2265 2) intratumoral or peri-tumoral\
+  \ hemorrhage"
+- '* STEP 1: No known active inflammatory gastrointestinal disease, chronic diarrhea,
+  prior gastric resection or lap band dysphagia, short-gut syndrome, gastroparesis,
+  or other condition causing an inability to swallow oral formulations of agents.
+  Gastroesophageal reflux disease under medical treatment is allowed (assuming no
+  drug interaction potential)'
+- '* STEP 1: No known hypersensitivity to any of the components of vorasidenib or
+  temozolomide'
+- '* STEP 1: No other acute or chronic medical condition or laboratory abnormality
+  that may increase the risk associated with study participation or protocol therapy
+  administration or may interfere with the interpretation of study results and, in
+  the judgment of the Investigator, would make the patient inappropriate for entry
+  into this study'
+- '* STEP 1: No concurrent use of other investigational agents'
+- '* STEP 1: No concurrent use of alternating tumor treating field (TTField) therapy'
+- "* STEP 1: No concurrent use of therapeutic doses of steroids for glioma. Concurrent\
+  \ use of physiologic doses of steroids (defined as equivalent of \u2264 10 mg prednisone\
+  \ daily) for medical conditions unrelated to glioma is allowed. Corticosteroids\
+  \ administered for reasons related to glioma should be used in the smallest dose\
+  \ possible to control symptoms of cerebral edema and mass effect and discontinued\
+  \ whenever possible."
+- '* STEP 1: No concurrent use of warfarin sodium or any other Coumadin-derivative
+  anticoagulant. Patients must be off Coumadin-derivative anticoagulants for at least
+  7 days prior to registration. Low molecular weight heparin (LMWH) and factor Xa
+  inhibitors are allowed'
+- '* STEP 1: No concurrent use of strong and moderate CYP1A2 inhibitors, moderate
+  CYP1A2 inducers, or CYP3A substrates where a minimal concentration change can reduce
+  efficacy. Patients should be transferred to other medications prior to registration'
+- 'Exclude - Exclusion Criteria:'
+- Exclude - \-
+short_title: Testing Addition of an Anti-cancer Drug, Vorasidenib to Temozolomide,
+  After Radiation for Advanced Brain Cancer
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Alliance for Clinical Trials in Oncology
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: This phase III trial compares the effect of vorasidenib to placebo in combination
+  with usual treatment, temozolomide, in treating patients with newly diagnosed grade
+  3 astrocytoma after radiation. Temozolomide is in a class of medications called
+  alkylating agents. It works by damaging the cell's deoxyribonucleic acid and may
+  kill tumor cells and slow down or stop tumor growth. Vorasidenib citrate blocks
+  the proteins made by the mutated IDH1 and IDH2 genes, which may help keep tumor
+  cells from growing. It is a type of enzyme inhibitor and a type of targeted therapy.
+  Adding vorasidenib to the usual treatment, temozolomide, may be more effective than
+  temozolomide alone in treating patients with newly diagnosed grade 3 astrocytoma
+  after radiation therapy.
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: Arm I (temozolomide, placebo)
+      arm_internal_id: 0
+      arm_description: Patients receive IMRT/VMAT or PBS or IMPT QD on Monday-Friday
+        for 33 fractions. Starting 4 weeks after radiotherapy, patients receive temozolomide
+        PO QD on days 1-5 and placebo PO QD on days 1-28 of each cycle. Cycles of
+        combination treatment repeat every 28 days for up to 12 months and placebo
+        alone repeats every 28 days in the absence of disease progression or unacceptable
+        toxicity. Additionally, patients undergo blood sample collection and MRI throughout
+        the study.
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Radiation: Intensity-Modulated Radiation Therapy'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Radiation: Volume Modulated Arc Therapy'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Radiation: Pencil Beam Scanning'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Procedure: Intensity-Modulated Proton Therapy'
+        level_internal_id: 3
+        level_suspended: N
+      - level_code: '4'
+        level_description: 'Drug: Temozolomide'
+        level_internal_id: 4
+        level_suspended: N
+      - level_code: '5'
+        level_description: 'Drug: Placebo Administration'
+        level_internal_id: 5
+        level_suspended: N
+      - level_code: '6'
+        level_description: 'Procedure: Biospecimen Collection'
+        level_internal_id: 6
+        level_suspended: N
+      - level_code: '7'
+        level_description: 'Procedure: Magnetic Resonance Imaging'
+        level_internal_id: 7
+        level_suspended: N
+      - level_code: '8'
+        level_description: 'Other: Questionnaire Administration'
+        level_internal_id: 8
+        level_suspended: N
+    - arm_code: Arm II (temozolomide, vorasidenib)
+      arm_internal_id: 1
+      arm_description: Patients receive IMRT/VMAT or PBS or IMPT QD on Monday-Friday
+        for 33 fractions. Starting 4 weeks after radiotherapy, patients receive temozolomide
+        PO QD on days 1-5 and vorasidenib PO QD on days 1-28 of each cycle. Cycles
+        of combination treatment repeat every 28 days for up to 12 months and vorasidenib
+        alone repeats every 28 days in the absence of disease progression or unacceptable
+        toxicity. Additionally, patients undergo blood sample collection and MRI throughout
+        the study.
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Radiation: Intensity-Modulated Radiation Therapy'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Radiation: Volume Modulated Arc Therapy'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Radiation: Pencil Beam Scanning'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Procedure: Intensity-Modulated Proton Therapy'
+        level_internal_id: 3
+        level_suspended: N
+      - level_code: '4'
+        level_description: 'Drug: Temozolomide'
+        level_internal_id: 4
+        level_suspended: N
+      - level_code: '5'
+        level_description: 'Drug: Vorasidenib'
+        level_internal_id: 5
+        level_suspended: N
+      - level_code: '6'
+        level_description: 'Procedure: Biospecimen Collection'
+        level_internal_id: 6
+        level_suspended: N
+      - level_code: '7'
+        level_description: 'Procedure: Magnetic Resonance Imaging'
+        level_internal_id: 7
+        level_suspended: N
+      - level_code: '8'
+        level_description: 'Other: Questionnaire Administration'
+        level_internal_id: 8
+        level_suspended: N
+    match:
+    - and:
+      - clinical:
+          oncotree_primary_diagnosis: Astrocytoma, IDH-Mutant, Grade 3
+      - or:
+        - genomic:
+            hugo_symbol: IDH1
+            variant_category: Mutation
+        - genomic:
+            hugo_symbol: IDH2
+            variant_category: Mutation
+      - genomic:
+          hugo_symbol: CDKN2A
+          variant_category: Copy Number Variation
+          cnv_call: '!Homozygous Deletion'
+      - clinical:
+          age_numerical: '>=12'

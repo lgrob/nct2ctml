@@ -1,0 +1,337 @@
+nct_id: NCT06023641
+age: Children
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: '2024-03-13'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Drug: Vinorelbine'
+  - drug_name: 'Drug: Cyclophosphamide'
+  - drug_name: 'Procedure: Surgical Resection'
+  - drug_name: 'Drug: Filgrastim, peg-filgrastim'
+  - drug_name: 'Drug: Vincristine'
+  - drug_name: 'Drug: Temozolomide'
+  - drug_name: 'Drug: Liposomal irinotecan'
+  - drug_name: 'Drug: Dactinomycin'
+  - drug_name: 'Procedure: Proton beam radiation or external beam radiation or brachytherapy'
+long_title: A Protocol for the Treatment of Newly Diagnosed Rhabdomyosarcoma Using
+  Molecular Risk Stratification and Liposomal Irinotecan Based Therapy in Children
+  With Intermediate and High Risk Disease
+last_updated: '2026-06-15'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: PHASE2
+principal_investigator: Alberto Pappo, MD
+principal_investigator_institution: St. Jude Children's Research Hospital
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 135
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 'Inclusion Criteria:'
+- "\u2022 Newly diagnosed participants with the diagnosis of rhabdomyosarcoma (RMS)\
+  \ of any subtype. This includes embryonal rhabdomyosarcoma (fusion negative), alveolar\
+  \ rhabdomyosarcoma (fusion positive), as well as spindle cell and sclerosing"
+- "\u2022 Must have either low-, intermediate-risk or high-risk disease, defined as:"
+- '1. Low-risk: TP53 and MYOD1 negative AND'
+- "\u2022 Embryonal, congenital/infantile spindle cell, or spindle cell/sclerosing\
+  \ FOXO1 fusion negative histology"
+- '* Stage 1 Group I, Group II'
+- '* Stage 1 Group III orbital only'
+- '* Stage 2 Group I, Group II'
+- '2. Intermediate-risk: MYOD1 and TP53 negative AND'
+- "\u2022 Embryonal, congenital/infantile spindle cell, or spindle cell/sclerosing\
+  \ FOXO1 fusion negative histology o Stage 1 Group III non orbit o Stage 3 Group\
+  \ I/II"
+- o Stage 2/3 Group III
+- '* Stage 4 Group IV and Oberlin 0-1'
+- "\u2022 Alveolar, spindle cell/sclerosing FOXO1 fusion positive histology"
+- '* Stage 1-3, Group I-III N0'
+- '3. High-risk: All MYOD1 and TP53 mutant tumors regardless of stage and Group AND/OR'
+- "* Embryonal, congenital/infantile spindle cell or spindle cell/sclerosing FOXO1\
+  \ fusion negative o Group IV \u2265 10 year of age and Oberlin \u2265 2"
+- '* Alveolar, spindle cell/sclerosing FOXO1 fusion positive'
+- '* N1'
+- '* Stage 4 Group IV'
+- See Appendices I and II for Staging and Clinical Grouping.
+- Age \< 22 years (eligible for enrollment until 22nd birthday)
+- "\u2022 Performance level corresponding to ECOG score of 0, 1, or 2. The Lansky\
+  \ performance score should be used for participants \\< 16 years (see Appendix VII)."
+- '* Participant has received no prior radiotherapy or chemotherapy for rhabdomyosarcoma
+  (excluding steroids) unless an emergency situation requires local tumor treatment
+  (discuss with PI).'
+- '* Initiation of chemotherapy is planned within 6 weeks (42 days) of the definitive
+  biopsy or surgical resection.'
+- '* Adequate bone marrow function defined as:'
+- "* Peripheral absolute neutrophil count (ANC) \u2265 750/\u03BCL"
+- "* Platelet count \u2265 75,000/\u03BCL (transfusion independent)"
+- '* Adequate liver function defined as total bilirubin \< 1.5 x upper limit of normal
+  (ULN) for age. Participants with biliary or hepatic primaries with bilirubin values
+  greater than 1.5 x ULN may be enrolled on study if all other eligibility criteria
+  are met.'
+- 'Adequate renal function defined as:'
+- 'Creatinine clearance or radioisotope GFR \> 70 mL/min/1.732 or serum creatinine
+  based on age as follows:'
+- Age Maximum serum creatinine (mg/dL) Male Female
+- 1 month to \< 6 months 0.4 0.4 6 months to \< 1 year 0.5 0.5 Age Maximum serum creatinine
+  (mg/dL)
+- 1. to \< 2 years 0.6 0.6
+- 2. to \< 6 years 0.8 0.8
+- 6 to \< 10 years 1 1 10 to \< 13 years 1.2 1.2 13 to \< 16 years 1.5 1.4 \> 16 years
+  1.7 1.4
+- The threshold creatinine values in this table were derived from the Schwartz formula
+  for estimating GFR25 utilizing child length and stature. Data published by the CDC.
+- Participants with urinary tract obstruction by tumor must meet the renal function
+  criteria listed above AND must have unimpeded urinary flow established via decompression
+  of the obstructed portion of the urinary tract.
+- "\u2022 Adequate pulmonary function defined as: no evidence of dyspnea at rest and\
+  \ a pulse oximetry \\> 94% if there is a clinical indication for determination.\
+  \ Pulmonary function tests are not required."
+- "\u2022 Patients requiring emergency radiation therapy are eligible for enrollment\
+  \ on this trial. See Section 4.11 for radiation therapy guidelines."
+- "\u2022 No evidence of active, uncontrolled infection."
+- All participants and/or their parents or legal guardians must sign a written informed
+  consent.
+- 'Exclude - Exclusion Criteria:'
+- "Exclude - \u2022 Patients who have received any chemotherapy (excluding steroids)."
+- "Exclude - \u2022 Patients who have received prior full course RT at the primary\
+  \ site of disease. This does not exclude patients that received emergent radiation."
+- Exclude - * Ongoing or history of non-infectious interstitial lung disease requiring
+  significant medical intervention.
+- Exclude - * Sexually active patients of reproductive potential who have not agreed
+  to use an effective contraceptive method for the duration of their study participation
+  and for at least 3 months after treatment is completed.
+- Exclude - * Female patients who are pregnant are not eligible since fetal toxicities
+  or teratogenic effects have been noted for several of the study drugs. Female participants
+  \> 10 years of age or post-menarchal must have a negative serum or urine pregnancy
+  test within 24 hours prior to beginning treatment.
+- Exclude - * Lactating females who are or plan to breastfeed their infants are not
+  eligible.
+short_title: Treatment of Newly Diagnosed Rhabdomyosarcoma Using Molecular Risk Stratification
+  and Liposomal Irinotecan Based Therapy in Children With Intermediate and High Risk
+  Disease
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: St. Jude Children's Research Hospital
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: 'This is a phase II study to determine safety and efficacy of combining liposomal
+  irinotecan with vincristine alternating with VAC in intermediate-risk patients,
+  liposomal irinotecan with temozolomide and vincristine alternating with VAC in high-risk
+  patients and the chemotherapy combinations when given with concomitant radiation
+  therapy in intermediate and high risk patients.
+
+
+  Primary Objective
+
+
+  * Estimate event-free survival for intermediate-risk participants treated with VAC
+  and vincristine and liposomal irinotecan (VLI) with the addition of maintenance
+  therapy with vinorelbine and cyclophosphamide.
+
+  * Estimate the event-free survival for high-risk patients treated with VAC and vincristine,
+  liposomal irinotecan, and temozolomide with the addition of maintenance therapy
+  with vinorelbine and cyclophosphamide.
+
+
+  Secondary Objectives
+
+
+  * To assess the relation between pharmacogenetic variation in CEP72 genotype and
+  vinca alkaloid (vincristine; vinorelbine) disposition in children with rhabdomyosarcoma.
+
+  * To assess the relation between the pharmacogenetic variation in drug metabolizing
+  enzymes and drug transporters, and the pharmacokinetics of vinca alkaloids, liposomal
+  irinotecan, and cyclophosphamide in children with rhabdomyosarcoma.
+
+  * To assess the extent of inter-patient variability in the pharmacokinetics of vinca
+  alkaloids, liposomal irinotecan, and cyclophosphamide in children with rhabdomyosarcoma,
+  and explore possible associations between drug disposition and patient specific
+  covariates (e.g., age, sex, race, weight).
+
+  * Estimate the cumulative incidence of local recurrence and overall 3-year event-free
+  survival in patients with low-risk disease, intermediate-risk disease or high-risk
+  disease treated with either no adjuvant radiation or minimal volume radiation and
+  compare these outcomes with the outcomes achieved on RMS13.'
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: Low -risk
+      arm_internal_id: 0
+      arm_description: 'The participant will receive 12 weeks (4 cycles) of VAC chemotherapy
+        (vincristine, dactinomycin and cyclophosphamide) followed by 12 weeks (4 cycles)
+        of VA chemotherapy (vincristine, dactinomycin).
+
+
+        Each cycle of VAC/VA chemotherapy will last for 3 weeks, for a total of 12
+        weeks (VAC or VA will be given in Week 1 of each cycle and vincristine will
+        be given Weeks 2 and 3). At week 12, the participant will have scans and tests
+        to reevaluate your tumor''s response to the treatment. After surgery and radiation,
+        the participant will receive an additional 12 weeks (4 cycles) of the same
+        chemotherapy without cyclophosphamide. Vincristine and dactinomycin, also
+        called "VA". After 4 cycles of VA, The investigator will re-evaluate the tumor
+        again at week 24 and the patient will not get any more chemotherapy, but will
+        be closely watched for any signs of tumor recurrence.'
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Vincristine'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: Dactinomycin'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Drug: Cyclophosphamide'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Procedure: Surgical Resection'
+        level_internal_id: 3
+        level_suspended: N
+      - level_code: '4'
+        level_description: 'Procedure: Proton beam radiation or external beam radiation
+          or brachytherapy'
+        level_internal_id: 4
+        level_suspended: N
+    - arm_code: Intermediate-risk
+      arm_internal_id: 1
+      arm_description: 'The purpose of this part of the study is to find out if adding
+        a drug called liposomal irinotecan (also called Onivyde) to standard chemotherapy/radiation/surgery
+        will result in better treatment outcomes for patients with intermediate and
+        high risk rhabdomyosarcoma. The investigators also want to find the best radiation
+        dose to give for intermediate and high risk patients who have large tumors
+        (\> 5 cm).
+
+
+        The patient will receive 42 weeks of VAC chemotherapy (vincristine, actinomycin
+        D/dactinomycin and cyclophosphamide) alternating with VLI chemotherapy (vincristine/liposomal
+        irinotecan). The participant will also have surgery to remove the tumor and
+        radiation therapy during this time. After this therapy is completed you will
+        get an additional 6 months of maintenance chemotherapy with vinorelbine and
+        oral (by mouth) cyclophosphamide.'
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Vincristine'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: Dactinomycin'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Drug: Cyclophosphamide'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Procedure: Surgical Resection'
+        level_internal_id: 3
+        level_suspended: N
+      - level_code: '4'
+        level_description: 'Procedure: Proton beam radiation or external beam radiation
+          or brachytherapy'
+        level_internal_id: 4
+        level_suspended: N
+      - level_code: '5'
+        level_description: 'Drug: Liposomal irinotecan'
+        level_internal_id: 5
+        level_suspended: N
+      - level_code: '6'
+        level_description: 'Drug: Vinorelbine'
+        level_internal_id: 6
+        level_suspended: N
+      - level_code: '7'
+        level_description: 'Drug: Filgrastim, peg-filgrastim'
+        level_internal_id: 7
+        level_suspended: N
+    - arm_code: High-risk
+      arm_internal_id: 2
+      arm_description: 'The purpose of this part of the study is to find out if adding
+        a drug called liposomal irinotecan (also called Onivyde) to standard chemotherapy/radiation/surgery
+        will result in better treatment outcomes for patients with high risk rhabdomyosarcoma.
+        The investigator also want to find the best radiation dose to give for high
+        risk patients who have large tumors (\> 5 cm).
+
+
+        The patient will receive 42 weeks of VAC chemotherapy (vincristine, actinomycin
+        D/dactinomycin and cyclophosphamide) alternating with VLIT chemotherapy (vincristine/liposomal
+        irinotecan/temozolomide). Also having surgery to remove the participants tumor
+        and radiation therapy during this time. After this therapy is completed the
+        patient will get an additional 6 months of maintenance chemotherapy with vinorelbine
+        and oral (by mouth) cyclophosphamide.'
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Vincristine'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: Dactinomycin'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Drug: Cyclophosphamide'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Procedure: Surgical Resection'
+        level_internal_id: 3
+        level_suspended: N
+      - level_code: '4'
+        level_description: 'Procedure: Proton beam radiation or external beam radiation
+          or brachytherapy'
+        level_internal_id: 4
+        level_suspended: N
+      - level_code: '5'
+        level_description: 'Drug: Liposomal irinotecan'
+        level_internal_id: 5
+        level_suspended: N
+      - level_code: '6'
+        level_description: 'Drug: Vinorelbine'
+        level_internal_id: 6
+        level_suspended: N
+      - level_code: '7'
+        level_description: 'Drug: Temozolomide'
+        level_internal_id: 7
+        level_suspended: N
+      - level_code: '8'
+        level_description: 'Drug: Filgrastim, peg-filgrastim'
+        level_internal_id: 8
+        level_suspended: N
+    match:
+    - and:
+      - or:
+        - clinical:
+            oncotree_primary_diagnosis: Rhabdomyosarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Embryonal Rhabdomyosarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Alveolar Rhabdomyosarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Spindle Cell/Sclerosing Rhabdomyosarcoma
+      - clinical:
+          age_numerical: <22

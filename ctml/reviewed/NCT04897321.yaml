@@ -1,0 +1,185 @@
+nct_id: NCT04897321
+age: Children
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: '2022-07-06'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Drug: MESNA'
+  - drug_name: 'Drug: Fludarabine'
+  - drug_name: 'Drug: Cyclophosphamide'
+  - drug_name: 'Drug: B7-H3 CAR T cells'
+long_title: B7-H3-Specific Chimeric Antigen Receptor Autologous T-Cell Therapy for
+  Pediatric Patients With Solid Tumors (3CAR)
+last_updated: '2026-05-19'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: PHASE1
+principal_investigator: Chris DeRenzo, MD
+principal_investigator_institution: St. Jude Children's Research Hospital
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 48
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 'Inclusion Criteria:'
+- Procurement and T-cell production eligibility\*
+- \*a previously collected, autologous leukapheresis product can be used for T-cell
+  production
+- "* Age \u226421 years old"
+- "* B7-H3+ solid tumor with measurable disease; B7-H3 expression will be evaluated\
+  \ by standard immunohistochemistry (IHC) using a previously obtained biopsy; a tumor\
+  \ is considered B7-H3 positive with an H-score \u2265100"
+- '* Estimated life expectancy of \>12 weeks'
+- "* Karnofsky or Lansky (age-dependent) performance score \u226550"
+- '* For females of child bearing age:'
+- '* Not pregnant with negative serum pregnancy test within 7 days prior to enrollment'
+- '* Not lactating with intent to breastfeed'
+- '* Meets eligibility criteria to undergo autologous apheresis, or have previously
+  undergone autologous apheresis'
+- 'Exclude - Exclusion Criteria:'
+- Exclude - * Known primary immunodeficiency
+- Exclude - * Known HIV positivity
+- Exclude - * Severe intercurrent bacterial, viral or fungal infection (e.g. active
+  hepatitis B or C infection or adenovirus infection)
+- Exclude - * History of hypersensitivity reactions to murine protein-containing products
+- Exclude - * Rapidly progressive disease (in the opinion of the study PIs)
+- Exclude - Inclusion criteria
+- Exclude - Treatment eligibility
+- "Exclude - * Age \u226421 years old"
+- Exclude - * B7-H3+ solid tumor with measurable disease
+- Exclude - * Evidence of relapsed or refractory disease after standard first-line
+  therapy
+- Exclude - * Estimated life expectancy of \>8 weeks
+- "Exclude - * Karnofsky or Lansky (age-dependent) performance score\u226550"
+- Exclude - * Echocardiogram with a ventricular ejection fraction
+- "Exclude - * \\>40%; or shortening fraction \u226525%"
+- Exclude - * Adequate renal function defined as creatinine clearance or radioisotope
+  GFR 50 ml/min/1.73m2 (GFR 40 ml/min/1.73m2 if \< 2 years of age)
+- "Exclude - * Adequate pulmonary function defined as pulse oximetry \u226592% on\
+  \ room air or forced vital capacity (FVC) \u226550% of predicted value"
+- "Exclude - * Total Bilirubin \u22643 times the upper limit of normal for age, except\
+  \ in subjects with Gilbert's syndrome"
+- "Exclude - * Alanine aminotransferase (ALT) or aspartate aminotransferase (AST)\
+  \ \u22645 times the upper limit of normal for age"
+- "Exclude - * Hemoglobin\u2265 7g/dL (can be transfused)"
+- Exclude - * Platelet count \>50,000/uL (can be transfused)
+- "Exclude - * Absolute neutrophil count (ANC) \u2265 1000/uL"
+- Exclude - * Has recovered from all NCI CTAE grade III-IV, non-hematologic acute
+  toxicities from prior therapy
+- 'Exclude - * For females of child bearing age:'
+- Exclude - * Not pregnant with negative serum pregnancy test within 7 days prior
+  to enrollment
+- Exclude - * Not lactating with intent to breastfeed
+- Exclude - * If sexually active, agreement to use birth control until 3 months after
+  T-cell infusion. Male partners should use a condom.
+- Exclude - * Available autologous transduced T-cell product that has met GMP release
+  criteria
+- Exclude - * Agreement to participate in long-term follow-up protocol for patients,
+  who have received genetically modified cell products
+- Exclude - Exclusion criteria
+- Exclude - * Known primary immunodeficiency
+- Exclude - * History of HIV infection
+- Exclude - * Severe, uncontrolled intercurrent bacterial, viral or fungal infection
+- Exclude - * History of hypersensitivity reactions to murine protein-containing products
+- Exclude - * Receiving systemic steroid therapy exceeding the equivalent of 0.5 mg/kg/day
+  of methylprednisolone, in the 7 days prior to B7-H3-CAR T-cell infusion
+- Exclude - * Receiving systemic therapy in the 14 days prior to CAR T-cell infusion,
+  which will interfere with the activity of the B7-H3-CAR product (in the opinion
+  of the study PIs).
+- Exclude - * Rapidly progressing disease (in the opinion of the study PIs)
+short_title: B7-H3-Specific Chimeric Antigen Receptor Autologous T-Cell Therapy for
+  Pediatric Patients With Solid Tumors (3CAR)
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: St. Jude Children's Research Hospital
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: "3CAR is being done to investigate an immunotherapy for patients with solid\
+  \ tumors. It is a Phase I clinical trial evaluating the use of autologous T cells\
+  \ genetically engineered to express B7-H3-CARs for patients \u2264 21 years old,\
+  \ with relapsed/refractory B7-H3+ solid tumors. This study will evaluate the safety\
+  \ and maximum tolerated dose of B7-H3-CAR T cells.The purpose of this study is to\
+  \ find the maximum (highest) dose of B7-H3-CAR T cells that are safe to give to\
+  \ patients with B7-H3-positive solid tumors.\n\nPrimary objective\n\nTo determine\
+  \ the safety of one intravenous infusion of autologous, B7-H3-CAR T cells in patients\
+  \ (\u2264 21 years) with recurrent/refractory B7-H3+ solid tumors after lymphodepleting\
+  \ chemotherapy\n\nSecondary objective\n\nTo evaluate the antitumor activity of B7-H3-CAR\
+  \ T cells\n\nExploratory objectives\n\n* To evaluate the tumor environment after\
+  \ treatment with B7-H3-CAR T cells\n* To assess the immunophenotype, clonal structure\
+  \ and endogenous repertoire of B7-H3-CAR T cells and unmodified T cells\n* To characterize\
+  \ the cytokine profile in the peripheral blood after treatment with B7-H3-CAR T\
+  \ cells"
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: Treatment Phase
+      arm_internal_id: 0
+      arm_description: During the treatment phase, the participant receives an infusion
+        of the B7-H3-CAR T cells that were made in the Collection and Manufacturing
+        Phase. Chemotherapy is given for several days prior to the cellular infusion.
+        Patients are then monitored for possible side effects, as well as effects
+        of the treatment on their cancer.
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Fludarabine'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: Cyclophosphamide'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Drug: MESNA'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Drug: B7-H3 CAR T cells'
+        level_internal_id: 3
+        level_suspended: N
+    match:
+    - and:
+      - or:
+        - clinical:
+            oncotree_primary_diagnosis: Osteosarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Rhabdomyosarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Neuroblastoma
+        - clinical:
+            oncotree_primary_diagnosis: Ewing Sarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Wilms' Tumor
+        - clinical:
+            oncotree_primary_diagnosis: Adrenocortical Carcinoma
+        - clinical:
+            oncotree_primary_diagnosis: Desmoplastic Small-Round-Cell Tumor
+      - clinical:
+          age_numerical: <=21
+      - clinical:
+          disease_status:
+          - Recurrent
+          - Refractory

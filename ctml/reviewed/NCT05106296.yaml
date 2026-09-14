@@ -1,0 +1,227 @@
+nct_id: NCT05106296
+age: Children
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: '2022-02-08'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Drug: Indoximod'
+  - drug_name: 'Drug: Cyclophosphamide'
+  - drug_name: 'Drug: Etoposide'
+  - drug_name: 'Drug: Ibrutinib'
+  - drug_name: 'Drug: Temozolomide'
+long_title: Repurposing Ibrutinib for Chemo-Immunotherapy in a Phase 1b Study of Ibrutinib
+  With Indoximod Plus Metronomic Cyclophosphamide and Etoposide for Pediatric Patients
+  With Brain Cancer
+last_updated: '2026-01-09'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: PHASE1
+principal_investigator: Theodore S. Johnson, MD, PhD
+principal_investigator_institution: Augusta University
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 37
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 'Inclusion Criteria:'
+- 'Diagnosis:'
+- '* Patients must have prior documented progressive or refractory disease with histologically
+  proven initial diagnosis of ependymoma, medulloblastoma, glioblastoma, or another
+  type of primary cancer of the central nervous system with no curative conventional
+  therapy options available.'
+- '* Metastatic disease is acceptable.'
+- '* Patients must have MRI confirmation (with and without gadolinium contrast) of
+  current active disease.'
+- Patients must be able to swallow pills.
+- "Lansky or Karnofsky performance status score must be \u2265 50%."
+- 'Adequate renal function:'
+- "* Creatinine clearance (CLcr) \\> 25 mL/min (by calculated methods) AND Creatinine\
+  \ \u2264 1.5-times upper limit of age-adjusted normal for age of patient."
+- 'Adequate liver function:'
+- "* Alanine aminotransferase (ALT) \u2264 3-times upper limit of normal."
+- "* Aspartate aminotransferase (AST) \u2264 3-times upper limit of normal."
+- "* Total bilirubin \u2264 1.5-times upper limit of normal unless bilirubin rise\
+  \ is due to Gilbert's syndrome or of non-hepatic origin."
+- 'Adequate bone marrow function:'
+- "* Absolute neutrophil count (ANC) \u2265 1000/mm3 (independent of growth factor\
+  \ support)."
+- "* Platelets \u2265 100,000/mm3 (independent of transfusion support)."
+- "* Hemoglobin \u2265 8 g/dL (independent of transfusion support)."
+- Seizure disorders must be well controlled on antiepileptic medication.
+- 'Prior therapy:'
+- '* Patients previously treated with chemotherapy drugs included in this protocol
+  are eligible for enrollment.'
+- '* At the time of Screening, patients must be at least 21 days from the administration
+  of any investigational agent (other than indoximod) or prior cytotoxic therapy (including
+  chemotherapy).'
+- '* At the time of Screening, patients must be at least 28 days from administration
+  of antibody-based therapies (e.g., bevacizumab), tumor-directed vaccines, or cellular
+  immune therapies (e.g., T cells, NK cells, etc.).'
+- '* At the time of Screening, patients must be at least 56 days from administration
+  of tumor-directed therapies using infectious agents (e.g., viruses, bacteria, etc.).'
+- '* At the time of Screening, patients must be at least 90 days from any radiation
+  or proton therapy (all modalities, including radiosurgery) that targeted all sites
+  of known disease.'
+- '* There is no lock-out window for patients who were treated with focal radiation
+  or focal proton therapy (all modalities, including radiosurgery) that did not target
+  all disease sites, if at least one site of active tumor is expected to persist and/or
+  grow.'
+- 'Concurrent anti-neoplastic therapy:'
+- '* No investigational or commercial agents, including intrathecal drugs, other than
+  that described by this clinical study protocol (GCC2020) may be administered with
+  the intent to treat the patient''s malignancy while they remain enrolled on this
+  study.'
+- 'Contraception, pregnancy, and breastfeeding:'
+- '* Women of childbearing potential and men who are sexually active must be practicing
+  a highly effective method of birth control during and after the study. Men must
+  agree to not donate sperm during and for 3 months after the study.'
+- '* Women who are pregnant or breastfeeding are ineligible for this study.'
+- '* Patients who become pregnant while participating in this study will have to stop
+  Study Therapy.'
+- Patients, or their parent for patients less than 18 years of age, must sign an Informed
+  Consent Document indicating that they understand the purpose of and procedures required
+  for the study, including biomarkers, and are willing to participate in the study.
+- .
+- 'Exclude - Exclusion Criteria:'
+- Exclude - Patients who are unable to swallow pills.
+- Exclude - Patients with known hypersensitivity to any drugs in the treatment plan.
+- Exclude - Patients with active autoimmune disease that requires systemic therapy.
+- Exclude - * Allergies, allergic conditions, and reactive inflammatory conditions
+  that are not autoimmune in nature would not exclude patients (e.g., eczema, asthma,
+  etc.).
+- Exclude - Pregnant or breastfeeding women.
+- Exclude - Major surgery or a wound that has not fully healed within 4 weeks of Screening.
+- Exclude - Known central nervous system lymphoma.
+- Exclude - Patients with active bleeding or history of thrombotic or hemorrhagic
+  stroke, or intracranial hemorrhage, within 6 months prior to Screening; with the
+  exception of retained blood products from recent prior uncomplicated surgery (e.g.,
+  tumor biopsy, debulking, or resection; VP shunt placement, etc.).
+- Exclude - Requires anticoagulation with warfarin or equivalent vitamin K antagonists
+  (e.g., phenprocoumon).
+- Exclude - Requires chronic treatment with strong CYP3A inhibitor drugs.
+- Exclude - Clinically significant cardiovascular disease such as uncontrolled or
+  symptomatic arrhythmias, congestive heart failure, or myocardial infarction within
+  6 months of Screening, or any Class 3 (moderate) or Class 4 (severe) cardiac disease
+  as defined by the New York Heart Association Functional Classification.
+- Exclude - Patients with baseline QTc interval of more than 470 msec at the time
+  of Screening, and patients with congenital long QT syndrome.
+- Exclude - Vaccinated with live, attenuated vaccines within 4 weeks of Screening.
+- Exclude - Known history of human immunodeficiency virus (HIV) or active Hepatitis
+  C Virus or active Hepatitis B Virus infection or any uncontrolled active systemic
+  infection.
+- Exclude - Any life-threatening illness, medical condition, or organ system dysfunction
+  which, in the investigator's opinion, could compromise the patient's safety, interfere
+  with the absorption or metabolism of ibrutinib, indoximod, or chemotherapy, or put
+  the study outcomes at undue risk.
+short_title: Chemo-immunotherapy Using Ibrutinib Plus Indoximod for Patients With
+  Pediatric Brain Cancer
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Theodore S. Johnson
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: 'Recent lab-based discoveries suggest that IDO (indoleamine 2,3-dioxygenase)
+  and BTK (Bruton''s tyrosine Kinase) form a closely linked metabolic checkpoint in
+  tumor-associated antigen-presenting cells. The central clinical hypothesis for the
+  GCC2020 study is that combining ibrutinib (BTK-inhibitor) with indoximod (IDO-inhibitor)
+  during chemotherapy will synergistically enhance anti-tumor immune responses, leading
+  to improvement in clinical response with manageable overlapping toxicity.
+
+
+  The GCC2020 trial is a prospective open-label phase 1 trial to determine the best
+  safe dose of the BTK-inhibitor ibrutinib to use in combination with previously studied
+  chemo-immunotherapy regimens comprised of the investigational IDO-inhibitor indoximod
+  plus oral palliative chemotherapy for participants, age 6 to 25 years, with relapsed
+  or refractory primary brain cancer. Those previously treated with indoximod-based
+  therapy may be eligible, including prior treatment via the phase 2 indoximod study
+  (GCC1949, NCT04049669), the now closed phase 1 study (NLG2105, NCT02502708), or
+  any expanded access (compassionate use) protocols. Ibrutinib will be combined with
+  either indoximod plus oral cyclophosphamide and etoposide (Regimen A) or indoximod
+  plus oral temozolomide (Regimen B). No cross-over between these two regimens will
+  be allowed. Dose-escalation cohorts will determine the best safe dose of ibrutinib
+  for each of these regimens. This will be followed by expansion cohorts, using ibrutinib
+  at the best safe dose for each regimen, to allow assessment of preliminary evidence
+  of efficacy.'
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: Regimen A
+      arm_internal_id: 0
+      arm_description: Patients will be treated with ibrutinib plus indoximod, cyclophosphamide,
+        and etoposide. Cycles are a minimum of 28 days.
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Indoximod'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: Ibrutinib'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Drug: Cyclophosphamide'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Drug: Etoposide'
+        level_internal_id: 3
+        level_suspended: N
+    - arm_code: Regimen B
+      arm_internal_id: 1
+      arm_description: Patients will be treated with ibrutinib plus indoximod and
+        temozolomide. Cycles are a minimum of 28 days.
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Drug: Indoximod'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Drug: Ibrutinib'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Drug: Temozolomide'
+        level_internal_id: 2
+        level_suspended: N
+    match:
+    - and:
+      - or:
+        - clinical:
+            oncotree_primary_diagnosis: Ependymoma
+        - clinical:
+            oncotree_primary_diagnosis: Medulloblastoma
+        - clinical:
+            oncotree_primary_diagnosis: Glioblastoma, IDH-Wildtype
+      - clinical:
+          age_numerical: '>=3'
+      - clinical:
+          age_numerical: <=25
+      - clinical:
+          disease_status:
+          - Recurrent
+          - Refractory

@@ -1,9 +1,45 @@
 # Benchmarking the automated mapping
 
-`ctml/reviewed/NCT*.yaml` are hand-curated and verified end-to-end in
-MatchMiner. They are the answer key. This harness runs the pipeline over the
-same trials and scores the result, so the question "can the LLM curate CTML?"
-is settled with numbers rather than impressions.
+`ctml/reviewed/NCT*.yaml` are hand-curated. They are the answer key. This
+harness runs the pipeline over the same trials and scores the result, so the
+question "can the LLM curate CTML?" is settled with numbers rather than
+impressions.
+
+50 trials, spanning paediatric leukaemia, lymphoma, CNS tumours,
+neuroblastoma, bone and soft-tissue sarcoma, renal, liver, germ cell,
+retinoblastoma, histiocytosis and tumour-agnostic baskets. 24 of the 50 carry
+a genomic criterion; the other 26 deliberately do not, because the commonest
+way to get a trial wrong is to invent one.
+
+## Where the answers come from
+
+Each answer is written by hand in `bench/curations.py` after reading that
+trial's own eligibility text, and `bench/build_reviewed.py` combines it with
+the pipeline's deterministic, non-LLM mapping of the cached record (titles,
+arms, drugs - none of which is scored):
+
+    ./.venv/bin/python -m bench.build_reviewed --check   # validate terms only
+    ./.venv/bin/python -m bench.build_reviewed           # rewrite the key
+
+Every curated Oncotree term and HUGO symbol is checked against
+`ref/oncotree_file.txt` and `ref/genes.txt` before a file is written. A typo in
+the answer key is worse than a typo in the output: it marks a correct answer
+wrong forever, silently.
+
+Two rules decide most of the hard cases:
+
+- **Alternative cohorts are not requirements.** If a trial enrols patients both
+  with and without an alteration, the net genomic requirement is none. Writing
+  it as a requirement produces a trial that matches nobody.
+- **Stratification is not eligibility.** A biomarker that only assigns a risk
+  group or an arm, while every group enrols, is not a match criterion. The
+  clearest example in the set is NCT06865664, which states outright that
+  "confirmation of FGFR4 expression is not required".
+
+A criterion the pipeline structurally cannot produce does not belong in the
+key either: `ref/genes.txt` is the vocabulary the prompt offers the model, so a
+key requiring SET or USP9X would mark it wrong for something it was never
+given the means to say.
 
 ## Running it
 
@@ -11,7 +47,7 @@ is settled with numbers rather than impressions.
     # in config.py: LLM_PLATFORM = "Anthropic", LLM_AI_MODEL = "claude-haiku-4-5-20251001"
     ./.venv/bin/python -m bench.benchmark_map
 
-Roughly $2 and a few minutes for the 12 trials on Haiku. Re-score an existing
+Roughly $8 and some minutes for the 50 trials on Haiku. Re-score an existing
 run without spending anything:
 
     ./.venv/bin/python -m bench.benchmark_map --score-only
@@ -40,9 +76,11 @@ no patient at all, whatever the F1 says.
 
 The scorer was validated three ways:
 
-    answer key vs itself      dx F1 1.00   (identity)
-    answers shuffled by one   dx F1 0.05   (wrong but well-formed)
+    answer key vs itself      dx F1 1.00   gene F1 1.00   (identity)
+    answers shuffled by one   dx F1 0.05   gene F1 0.26   (wrong but well-formed)
     flattened MYCN AND        flagged      (and the correct OR is not)
 
-So 1.00 means agreement and ~0.05 means chance. Anything in between is a real
-signal about the model.
+So 1.00 means agreement and ~0.05 means chance on diagnoses. The gene floor is
+higher because 26 trials have no genomic criterion, and empty-versus-empty
+scores 1.0; read the gene mean alongside the count of trials that actually
+carry genes, not on its own.

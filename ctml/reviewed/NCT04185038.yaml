@@ -1,0 +1,210 @@
+nct_id: NCT04185038
+age: Children
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: '2019-12-11'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Biological: SCRI-CARB7H3(s); B7H3-specific chimeric antigen receptor
+      (CAR) T cel'
+long_title: Phase 1 Study of B7-H3-Specific CAR T Cell Locoregional Immunotherapy
+  for Diffuse Intrinsic Pontine Glioma/Diffuse Midline Glioma and Recurrent or Refractory
+  Pediatric Central Nervous System Tumors
+last_updated: '2026-04-13'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: PHASE1
+principal_investigator: NA
+principal_investigator_institution: Seattle Children's Hospital
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 90
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 'Inclusion Criteria:'
+- "1. Age \u2265 1 and \u2264 26 years"
+- 2. Diagnosis of refractory or recurrent CNS disease for which there is no standard
+  therapy, or diagnosis of DIPG or DMG at any time point following completion of standard
+  therapy
+- 3. Able to tolerate apheresis, or has apheresis product available for use in manufacturing
+- 4. CNS reservoir catheter, such as an Ommaya or Rickham catheter
+- "5. Life expectancy \u2265 8 weeks"
+- "6. Lansky or Karnofsky score \u2265 60"
+- '7. If patient does not have previously obtained apheresis product, patient must
+  have discontinued, and recovered from acute toxic effects of, all prior chemotherapy,
+  immunotherapy, and radiotherapy and discontinue the following prior to enrollment:'
+- "1. \u2265 7 days post last chemotherapy/biologic therapy administration"
+- 2. 3 half lives or 30 days, whichever is shorter post last dose of anti-tumor antibody
+  therapy
+- 3. Must be at least 30 days from most recent cellular infusion
+- 4. All systemically administered corticosteroid treatment therapy must be stable
+  or decreasing within 1 week prior to enrollment with maximum dexamethasone dose
+  of 2.5 mg/m2/day. Corticosteroid physiologic replacement therapy is allowed.
+- 8. Adequate organ function
+- 9. Adequate laboratory values
+- 10. Patients of childbearing/fathering potential must agree to use highly effective
+  contraception
+- 'Exclude - Exclusion Criteria:'
+- "Exclude - 1. Presence of Grade \u2265 3 cardiac dysfunction or symptomatic arrhythmia\
+  \ requiring intervention"
+- Exclude - 2. Presence of primary immunodeficiency/bone marrow failure syndrome
+- Exclude - 3. Presence of clinical and/or radiographic evidence of impending herniation
+- Exclude - 4. Presence of \>Grade 3 dysphagia
+- Exclude - 5. Presence of active malignancy other than the primary CNS tumor under
+  study
+- Exclude - 6. Presence of active severe infection
+- Exclude - 7. Receiving any anti-cancer agents or chemotherapy
+- Exclude - 8. Pregnant or breastfeeding
+- Exclude - 9. Subject and/or authorized legal representative unwilling or unable
+  to provide consent/assent for participation in the 15 year follow up period
+- Exclude - 10. Presence of any condition that, in the opinion of the investigator,
+  would prohibit the patient from undergoing treatment under this protocol
+short_title: Study of B7-H3-Specific CAR T Cell Locoregional Immunotherapy for Diffuse
+  Intrinsic Pontine Glioma/Diffuse Midline Glioma and Recurrent or Refractory Pediatric
+  Central Nervous System Tumors
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Seattle Children's Hospital
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: 'This is a Phase 1 study of central nervous system (CNS) locoregional adoptive
+  therapy with autologous CD4+ and CD8+ T cells lentivirally transduced to express
+  a B7H3-specific chimeric antigen receptor (CAR) and EGFRt. CAR T cells are delivered
+  via an indwelling catheter into the tumor resection cavity or ventricular system
+  in children and young adults with diffuse intrinsic pontine glioma (DIPG), diffuse
+  midline glioma (DMG), and recurrent or refractory CNS tumors.
+
+
+  A child or young adult meeting all eligibility criteria, including having a CNS
+  catheter placed into the tumor resection cavity or into their ventricular system,
+  and meeting none of the exclusion criteria, will have their T cells collected. The
+  T cells will then be bioengineered into a second-generation CAR T cell that targets
+  B7H3-expressing tumor cells. Patients will be assigned to one of 3 treatment arms
+  based on location or type of their tumor. Patients with supratentorial tumors will
+  be assigned to Arm A, and will receive their treatment into the tumor cavity. Patients
+  with either infratentorial or metastatic/leptomeningeal tumors will be assigned
+  to Arm B, and will have their treatment delivered into the ventricular system. The
+  first 3 patients enrolled onto the study must be at least 15 years of age and assigned
+  to Arm A or Arm B. Patients with DIPG will be assigned to Arm C and have their treatment
+  delivered into the ventricular system. The patient''s newly engineered T cells will
+  be administered via the indwelling catheter for two courses. In the first course
+  patients in Arms A and B will receive a weekly dose of CAR T cells for three weeks,
+  followed by a week off, an examination period, and then another course of weekly
+  doses for three weeks. Patients in Arm C will receive a dose of CAR T cells every
+  other week for 3 weeks, followed by a week off, an examination period, and then
+  dosing every other week for 3 weeks. Following the two courses, patients in all
+  Arms will undergo a series of studies including MRI to evaluate the effect of the
+  CAR T cells and may have the opportunity to continue receiving additional courses
+  of CAR T cells if the patient has not had adverse effects and if more of their T
+  cells are available.
+
+
+  The hypothesis is that an adequate amount of B7H3-specific CAR T cells can be manufactured
+  to complete two courses of treatment with 3 or 2 doses given on a weekly schedule
+  followed by one week off in each course. The other hypothesis is that B7H3-specific
+  CAR T cells can safely be administered through an indwelling CNS catheter or delivered
+  directly into the brain via indwelling catheter to allow the T cells to directly
+  interact with the tumor cells for each patient enrolled on the study. Secondary
+  aims of the study will include evaluating CAR T cell distribution with the cerebrospinal
+  fluid (CSF), the extent to which CAR T cells egress or traffic into the peripheral
+  circulation or blood stream, and, if tissues samples from multiple timepoints are
+  available, also evaluate disease response to B7-H3 CAR T cell locoregional therapy.'
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: ARM A (Tumor Cavity Infusion) - [CLOSED TO ENROLLMENT]
+      arm_internal_id: 0
+      arm_description: Patients with non-DIPG supratentorial tumors for which CAR
+        T cells will be delivered into the tumor resection cavity
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Biological: SCRI-CARB7H3(s); B7H3-specific chimeric antigen
+          receptor (CAR) T cel'
+        level_internal_id: 0
+        level_suspended: N
+    - arm_code: ARM B (Ventricular System Infusion) - [CLOSED TO ENROLLMENT]
+      arm_internal_id: 1
+      arm_description: Patients with non-DIPG either infratentorial tumors or leptomeningeal
+        tumors for which the CAR T cells will be delivered into the ventricular system
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Biological: SCRI-CARB7H3(s); B7H3-specific chimeric antigen
+          receptor (CAR) T cel'
+        level_internal_id: 0
+        level_suspended: N
+    - arm_code: ARM C (DIPG) - [CLOSED TO ENROLLMENT]
+      arm_internal_id: 2
+      arm_description: Patients with DIPG for whom CAR T cells will be delivered into
+        the ventricular system
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Biological: SCRI-CARB7H3(s); B7H3-specific chimeric antigen
+          receptor (CAR) T cel'
+        level_internal_id: 0
+        level_suspended: N
+    - arm_code: Arm D (Non-pontine DMG)
+      arm_internal_id: 3
+      arm_description: Patients with non-pontine DMG for whom CAR T cells will be
+        delivered into the ventricular system
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Biological: SCRI-CARB7H3(s); B7H3-specific chimeric antigen
+          receptor (CAR) T cel'
+        level_internal_id: 0
+        level_suspended: N
+    - arm_code: Arm E
+      arm_internal_id: 4
+      arm_description: Patients with DIPG who will receive up to 15 doses of CAR T
+        cells delivered into the ventricular system
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Biological: SCRI-CARB7H3(s); B7H3-specific chimeric antigen
+          receptor (CAR) T cel'
+        level_internal_id: 0
+        level_suspended: N
+    match:
+    - and:
+      - or:
+        - clinical:
+            oncotree_primary_diagnosis: Diffuse Midline Glioma, H3 K27-Altered
+        - clinical:
+            oncotree_primary_diagnosis: Ependymoma
+        - clinical:
+            oncotree_primary_diagnosis: Medulloblastoma
+        - clinical:
+            oncotree_primary_diagnosis: Germ Cell Tumor, Brain
+      - clinical:
+          age_numerical: '>=1'
+      - clinical:
+          age_numerical: <=26
+      - clinical:
+          disease_status:
+          - Recurrent
+          - Refractory

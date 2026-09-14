@@ -1,0 +1,365 @@
+nct_id: NCT04322318
+age: Children
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: '2020-10-19'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Drug: Carboplatin'
+  - drug_name: 'Drug: Topotecan'
+  - drug_name: 'Drug: Cyclophosphamide'
+  - drug_name: 'Drug: Etoposide'
+  - drug_name: 'Procedure: Transabdominal Ultrasound'
+  - drug_name: 'Procedure: Biopsy Procedure'
+  - drug_name: 'Radiation: Radiation Therapy'
+  - drug_name: 'Procedure: Positron Emission Tomography'
+  - drug_name: 'Procedure: Surgical Procedure'
+  - drug_name: 'Drug: Irinotecan'
+  - drug_name: 'Procedure: Biospecimen Collection'
+  - drug_name: 'Procedure: Computed Tomography'
+  - drug_name: 'Drug: Doxorubicin'
+  - drug_name: 'Drug: Vincristine'
+  - drug_name: 'Procedure: X-Ray Imaging'
+  - drug_name: 'Procedure: Magnetic Resonance Imaging'
+  - drug_name: 'Procedure: Bone Scan'
+  - drug_name: 'Drug: Ifosfamide'
+long_title: Treatment of Newly Diagnosed Diffuse Anaplastic Wilms Tumors (DAWT) and
+  Relapsed Favorable Histology Wilms Tumors (FHWT)
+last_updated: '2026-08-25'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: PHASE2
+principal_investigator: James I Geller
+principal_investigator_institution: Children's Oncology Group
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 256
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 'Inclusion Criteria:'
+- '* Patients with newly diagnosed stages 2 - 4 diffuse anaplastic Wilms tumor must
+  be enrolled on APEC14B1, consented to Part A - Eligibility Screening, and have received
+  an initial stratum assignment showing DAWT (if anaplasia first identified at diagnostic,
+  pre-treatment nephrectomy or biopsy) or a final stratum assignment showing DAWT
+  (if anaplasia first noted at delayed nephrectomy) prior to enrollment on AREN1921.
+  Prior enrollment on APEC14B1 is not an eligibility requirement for patients with
+  relapsed favorable histology Wilms tumor.'
+- '* Patients must be =\< 30 years old at study enrollment'
+- '* Patients with the following diagnoses are eligible for this study:'
+- '* Newly diagnosed stages 2 - 4 diffuse anaplastic Wilms tumor as confirmed by central
+  review'
+- '* Favorable histology Wilms tumor at first relapse. Relapsed FHWT patients must
+  have previously achieved remission for their initial FHWT diagnosis to be eligible
+  for this study. The relapse risk groups are defined as follows, regardless of radiation
+  therapy:'
+- '* Standard-Risk relapse: Patients who received two chemotherapy agents for frontline
+  therapy; primarily actinomycin D and vincristine'
+- '* High-Risk relapse: Patients who received three chemotherapy agents for frontline
+  therapy; primarily vincristine, actinomycin D and doxorubicin or vincristine, actinomycin
+  D and irinotecan'
+- '* Very High-Risk relapse: Patients who received four or more chemotherapy agents
+  as part of initial therapy; primarily regimen M or its variations'
+- '* Patients with newly diagnosed DAWT must have had histologic verification of the
+  malignancy. For relapsed FHWT patients, biopsy to prove recurrence is encouraged,
+  but not required'
+- '* Note: For relapsed FHWT patients, an institutional pathology report confirming
+  favorable histology Wilms tumor (from relapse, if available, or from original diagnosis)
+  must be available for upload prior to initiation of protocol therapy'
+- '* Patients with newly diagnosed Stages 2 - 4 diffuse anaplastic Wilms tumor must
+  be enrolled on AREN1921 within 2 weeks of the tumor-directed surgery or biopsy procedure
+  that first confirms a diagnosis of DAWT, whether at initial diagnostic procedure
+  or delayed nephrectomy (such surgery/biopsy is day 0). For patients who received
+  prior therapy for presumed favorable histology Wilms tumor, later confirmed to have
+  diffuse anaplastic Wilms tumor at subsequent review of the initial biopsy'
+- '* Patients with newly diagnosed DAWT who undergo upfront nephrectomy must have
+  at least 1 lymph node sampled prior to study enrollment'
+- '* Patients must have a performance status corresponding to Eastern Cooperative
+  Oncology Group (ECOG) scores of 0, 1 or 2. Use Karnofsky for patients \> 16 years
+  of age and Lansky for patients =\< 16 years of age'
+- '* Patients must have a life expectancy of \>= 8 weeks'
+- '* Diffuse Anaplastic Wilms Tumor: Patients with diffuse anaplastic histology must
+  have had no prior systemic therapy, except in the following situations:'
+- '* Patients with diffuse anaplastic Wilms tumor who received no more than 12 weeks
+  of pre nephrectomy chemotherapy for what was originally presumed to be favorable
+  histology Wilms tumor, subsequently confirmed to be diffuse anaplastic Wilms tumor
+  at delayed nephrectomy'
+- '* Patients with diffuse anaplastic Wilms tumor who received no more than 6 weeks
+  of chemotherapy following upfront biopsy, initiated within 14 days of biopsy, for
+  presumed favorable histology Wilms tumor based on institutional review, but subsequently
+  corrected to diffuse anaplastic Wilms tumor based on the initial stratum assignment
+  on APEC14B1-REN'
+- '* Treatment consisting of vincristine/doxorubicin/cyclophosphamide initiated on
+  an emergent basis and within allowed timing as described'
+- '* Note: Patients who received prior therapy for presumed favorable histology Wilms
+  tumor, later identified to have diffuse anaplastic Wilms tumor as per above, must
+  begin study treatment starting at cycle 3 (week 7) of regimen UH 3. Patients who
+  received emergency radiation to preserve organ function are eligible as noted. Patients
+  who received radiation as part of standard of care for presumed newly diagnosed
+  favorable histology Wilms tumor, along with chemotherapy as noted above, prior to
+  identification of diffuse anaplasia, are also eligible'
+- '* Relapsed Favorable Histology Wilms Tumor: Patients must not have received prior
+  chemotherapy for their relapsed favorable histology Wilms tumor diagnosis. In addition,
+  patients must have fully recovered from the acute toxic effects of all prior chemotherapy,
+  immunotherapy, or radiotherapy prior to entering this study'
+- '* Myelosuppressive chemotherapy: Must not have received within 2 weeks of entry
+  onto this study'
+- '* Radiation therapy (RT): \>= 2 weeks (wks) must have elapsed for local palliative
+  RT (small port); \>= 6 months must have elapsed if prior craniospinal RT or if \>=
+  50% radiation of pelvis; \>= 6 wks must have elapsed if other substantial bone marrow
+  (BM) radiation. Patients with relapsed favorable histology Wilms tumor who received
+  emergency radiation to preserve organ function are eligible and do not need to washout
+  with the above criteria'
+- '* Patients may not be receiving any other investigational agents (within 4 weeks
+  prior to study enrollment)'
+- '* Peripheral absolute neutrophil count (ANC) \>= 750/uL (performed within 7 days
+  prior to enrollment)'
+- '* Platelet count \>= 75,000/uL (transfusion independent) (performed within 7 days
+  prior to enrollment)'
+- '* Hemoglobin \>= 8.0 g/dL (may receive red blood cell \[RBC\] transfusions) (performed
+  within 7 days prior to enrollment)'
+- '* Patients with high-risk or very high-risk relapsed FHWT who will be treated with
+  regimen ICE/Cyclo/Topo, must have renal function assessed by creatinine clearance
+  or radioisotope glomerular filtration rate (GFR) and meet the following requirement:'
+- '* Creatinine clearance or radioisotope GFR \>= 60 mL/min/1.73 m\^2 (performed within
+  7 days prior to enrollment)'
+- '* Patients diagnosed with stage 2-4 DAWT or standard risk relapsed FHWT, who will
+  be treated with regimen UH 3, may either obtain a creatinine clearance, radioisotope
+  GFR (meeting the above criteria of GFR \>= 60 mL/min/1.73 m\^2), or an adequate
+  serum creatinine as per the following table:'
+- '* Age: Maximum Serum Creatinine (mg/dL)'
+- '* 1 month to \< 6 months: 0.4 (male and female)'
+- '* 6 months to \< 1 year: 0.5 (male and female)'
+- '* 1 to \< 2 years: 0.6 (male and female)'
+- '* 2 to \< 6 years: 0.8 (male and female)'
+- '* 6 to \< 10 years: 1 (male and female)'
+- '* 10 to \< 13 years: 1.2 (male and female)'
+- '* 13 to \< 16 years: 1.5 (male), 1.4 (female)'
+- '* \>= 16 years: 1.7 (male), 1.4 (female)'
+- '* Total bilirubin =\< 1.5 x upper limit of normal (ULN) for age or direct bilirubin
+  =\< ULN for patients whose total bilirubin \> 1.5 x ULN (performed within 7 days
+  prior to enrollment)'
+- '* Serum glutamic-oxaloacetic transaminase (SGOT) (aspartate aminotransferase \[AST\])
+  or serum glutamate pyruvate transaminase (SGPT) (alanine aminotransferase \[ALT\])
+  \< 2.5 x upper limit of normal (ULN) for age or =\< 5 x ULN for patients with liver
+  metastases (performed within 7 days prior to enrollment)'
+- '* Shortening fraction of \>= 27% by echocardiogram, or ejection fraction of \>=
+  50% by radionuclide angiogram (obtained within 21 days prior to enrollment and start
+  of protocol therapy)'
+- 'Exclude - Exclusion Criteria:'
+- Exclude - * Patients with a history of bilateral Wilms tumor (synchronous or metachronous)
+- Exclude - * Patients with any uncontrolled, intercurrent illness including, but
+  not limited to, ongoing or active infection, or symptomatic congestive heart failure
+  (defined as grade 2 or higher heart failure per Common Terminology Criteria for
+  Adverse Events \[CTCAE\] version 5.0)
+- Exclude - * Relapsed FHWT patients who did not receive frontline chemotherapy (e.g.,
+  very low risk FHWT initially observed without chemotherapy) or received only one
+  chemotherapy agent for frontline therapy
+- 'Exclude - * For patients with high-risk or very high-risk relapsed FHWT:'
+- Exclude - * Patients with renal tubular acidosis (RTA) as evidenced by serum bicarbonate
+  \< 16 mmol/L and serum phosphate =\< 2 mg/dL (or \< 0.8 mmol/L) without supplementation
+- 'Exclude - * For stages 2-4 DAWT and standard-risk relapsed FHWT patients:'
+- Exclude - * Chronic inflammatory bowel disease and/or bowel obstruction
+- Exclude - * Concomitant use of St. John's wort, which cannot be stopped prior to
+  the start of trial treatment
+- Exclude - * Female patients who are pregnant since fetal toxicities and teratogenic
+  effects have been noted for several of the study drugs. A pregnancy test is required
+  for female patients of childbearing potential
+- Exclude - * Lactating females who plan to breastfeed their infants
+- Exclude - * Sexually active patients of reproductive potential who have not agreed
+  to use an effective contraceptive method for the duration of their study participation
+short_title: A Study of Combination Chemotherapy for Patients With Newly Diagnosed
+  DAWT and Relapsed FHWT
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Children's Oncology Group
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: This phase II trial studies how well combination chemotherapy works in treating
+  patients with newly diagnosed stage II-IV diffuse anaplastic Wilms tumors (DAWT)
+  or favorable histology Wilms tumors (FHWT) that have come back (relapsed). Drugs
+  used in chemotherapy regimens such as UH-3 (vincristine, doxorubicin, cyclophosphamide,
+  carboplatin, etoposide, and irinotecan) and ICE/Cyclo/Topo (ifosfamide, carboplatin,
+  etoposide, cyclophosphamide, and topotecan) work in different ways to stop the growth
+  of tumor cells, either by killing the cells, by stopping them from dividing, or
+  by stopping them from spreading. This trial may help doctors find out what effects,
+  good and/or bad, regimen UH-3 has on patients with newly diagnosed DAWT and standard
+  risk relapsed FHWT (those treated with only 2 drugs for the initial WT) and regimen
+  ICE/Cyclo/Topo has on patients with high and very high risk relapsed FHWT (those
+  treated with 3 or more drugs for the initial WT).
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: Arm I (Regimen UH-3)
+      arm_internal_id: 0
+      arm_description: See outline in detailed description section.
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Procedure: Biopsy Procedure'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Procedure: Biospecimen Collection'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Procedure: Bone Scan'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Drug: Carboplatin'
+        level_internal_id: 3
+        level_suspended: N
+      - level_code: '4'
+        level_description: 'Procedure: Computed Tomography'
+        level_internal_id: 4
+        level_suspended: N
+      - level_code: '5'
+        level_description: 'Drug: Cyclophosphamide'
+        level_internal_id: 5
+        level_suspended: N
+      - level_code: '6'
+        level_description: 'Drug: Doxorubicin'
+        level_internal_id: 6
+        level_suspended: N
+      - level_code: '7'
+        level_description: 'Drug: Etoposide'
+        level_internal_id: 7
+        level_suspended: N
+      - level_code: '8'
+        level_description: 'Drug: Irinotecan'
+        level_internal_id: 8
+        level_suspended: N
+      - level_code: '9'
+        level_description: 'Procedure: Magnetic Resonance Imaging'
+        level_internal_id: 9
+        level_suspended: N
+      - level_code: '10'
+        level_description: 'Procedure: Positron Emission Tomography'
+        level_internal_id: 10
+        level_suspended: N
+      - level_code: '11'
+        level_description: 'Radiation: Radiation Therapy'
+        level_internal_id: 11
+        level_suspended: N
+      - level_code: '12'
+        level_description: 'Procedure: Transabdominal Ultrasound'
+        level_internal_id: 12
+        level_suspended: N
+      - level_code: '13'
+        level_description: 'Drug: Vincristine'
+        level_internal_id: 13
+        level_suspended: N
+      - level_code: '14'
+        level_description: 'Procedure: X-Ray Imaging'
+        level_internal_id: 14
+        level_suspended: N
+    - arm_code: Arm II (Regimen ICE/Cyclo/Topo)
+      arm_internal_id: 1
+      arm_description: 'CYCLES 1, 2, 4, 5, 7, AND 9: Patients receive carboplatin
+        IV over 15-60 minutes on day 1. Patients also receive etoposide IV over 1-2
+        hours and ifosfamide IV over 2-4 hours on days 1-3. Treatment repeats every
+        21 days during cycles 1, 2, 4, 5, 7, and 9 in the absence of disease progression
+        or unacceptable toxicity.
+
+
+        CYCLES 3, 6, 8, AND 10: Patients receive cyclophosphamide IV over 15-30 minutes
+        and topotecan IV over 30 minutes on days 1-5. Treatment repeats every 21 days
+        during cycles 3, 6, 8, and 10 in the absence of disease progression or unacceptable
+        toxicity.
+
+
+        Patients undergo surgery and/or RT during cycles 4, 7, and 10 as clinically
+        indicated. Patients undergo a CT scan, a PET scan, a chest x-ray, MRI, an
+        abdominal ultrasound, and/or a bone scan throughout the trial. Patients may
+        also undergo blood specimen collection and biopsy throughout the trial.'
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Procedure: Biopsy Procedure'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Procedure: Biospecimen Collection'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Procedure: Bone Scan'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Drug: Carboplatin'
+        level_internal_id: 3
+        level_suspended: N
+      - level_code: '4'
+        level_description: 'Procedure: Computed Tomography'
+        level_internal_id: 4
+        level_suspended: N
+      - level_code: '5'
+        level_description: 'Drug: Cyclophosphamide'
+        level_internal_id: 5
+        level_suspended: N
+      - level_code: '6'
+        level_description: 'Drug: Etoposide'
+        level_internal_id: 6
+        level_suspended: N
+      - level_code: '7'
+        level_description: 'Drug: Ifosfamide'
+        level_internal_id: 7
+        level_suspended: N
+      - level_code: '8'
+        level_description: 'Procedure: Magnetic Resonance Imaging'
+        level_internal_id: 8
+        level_suspended: N
+      - level_code: '9'
+        level_description: 'Procedure: Positron Emission Tomography'
+        level_internal_id: 9
+        level_suspended: N
+      - level_code: '10'
+        level_description: 'Radiation: Radiation Therapy'
+        level_internal_id: 10
+        level_suspended: N
+      - level_code: '11'
+        level_description: 'Procedure: Surgical Procedure'
+        level_internal_id: 11
+        level_suspended: N
+      - level_code: '12'
+        level_description: 'Drug: Topotecan'
+        level_internal_id: 12
+        level_suspended: N
+      - level_code: '13'
+        level_description: 'Procedure: Transabdominal Ultrasound'
+        level_internal_id: 13
+        level_suspended: N
+      - level_code: '14'
+        level_description: 'Procedure: X-Ray Imaging'
+        level_internal_id: 14
+        level_suspended: N
+    match:
+    - and:
+      - clinical:
+          oncotree_primary_diagnosis: Wilms' Tumor
+      - clinical:
+          age_numerical: <=30

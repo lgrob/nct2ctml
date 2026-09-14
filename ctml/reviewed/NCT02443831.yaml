@@ -1,0 +1,156 @@
+nct_id: NCT02443831
+age: Children
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-14'
+study_start_date: 2016-04
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: 'Procedure: Leukapheresis'
+  - drug_name: 'Drug: Lymphodepletion with Cyclophosphamide'
+  - drug_name: 'Radiation: Total Body Irradiation (TBI)'
+  - drug_name: 'Drug: Lymphodepletion with Fludarabine'
+  - drug_name: 'Biological: CD19+CD22 CAR T-cells'
+long_title: Immunotherapy With CD19+CD22 CAR Redirected T-cells for High Risk/Relapsed
+  Paediatric CD19+ and CD22+ Acute Lymphoblastic Leukaemia
+last_updated: '2026-05-22'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: PHASE1
+principal_investigator: NA
+principal_investigator_institution: University College, London
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids: []
+protocol_no: ''
+protocol_target_accrual: 50
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 'Inclusion Criteria:'
+- '1. Children and young adults (age 24 years or younger) with high risk/relapsed
+  CD19+ and CD22+ acute lymphoblastic leukaemia with:'
+- 1. Resistant disease (\>5% blasts) at end of ALLTogether-1 protocol or equivalent
+  induction
+- 2. ALL with persisting high level MRD at 2nd time point of frontline national protocol
+  (currently MRD \>10-4 at week 9 ALLTogether-1 Protocol or equivalent).
+- 3. High risk infant ALL (age \< 6 months at diagnosis with MLL gene rearrangement
+  and either presenting white cell count \> 300 x 10\^9/L or poor steroid early response
+  (i.e. circulating blast count \>1x10\^9/L following 7 day steroid pre-phase of induction
+  as per national guidelines or equivalent)
+- 4. Any patient with t(17,19) TCF3-HLF rearrangement
+- 5. High risk 1st relapse (defined as very early (relapse within 18 months of diagnosis)
+  and early relapses (any patient relapsing on therapy or within 6 months of completing
+  treatment) and any relapse with high risk genetics, namely (KMT2A (MLL) rearrangements,
+  low hypodiploidy/near haploidy, t(17;19)(q22;p13)/TCF3-HLF, iAMP21 and t(1;19)(q21;p13)/TCF3-
+  PBX1, t(9;22)(34.1 q11.2)/BCR-ABL1
+- 6. Any on therapy relapse in patients age 16-24
+- 7. Any relapse of infant ALL
+- "8. ALL post \u2265 2nd relapse"
+- 9. Any refractory relapse of ALL (defined as \> 1% blasts by flow cytometry after
+  a at least 1 cycle of standard chemotherapy)
+- 10. ALL with MRD \>10-4 prior to planned stem cell transplant
+- 11. Any relapse of ALL eligible for stem cell transplant but no available HLA matched
+  donor or other contraindication to transplant
+- 12. Any relapse of ALL after stem cell transplant as long as planned time of CD19+CD22CAR
+  T cell infusion is \> 4 months post-transplant
+- 13. Early (defined as \< 6 months post-infusion) loss of B cell aplasia or any CD19+CD22+
+  relapse following CD19CAR T cell therapy with Tisagenlecleucel
+- Note patients with isolated CNS relapse meeting one or more of the criteria above
+  are eligible for the study
+- 2. Agreement to have a pregnancy test, use adequate contraception (if applicable)
+- 3. Written informed consent
+- 'Exclude - Exclusion Criteria:'
+- 'Exclude - Exclusion Criteria for registration:'
+- Exclude - 1. Active Hepatitis B, C or HIV infection
+- "Exclude - 2. Oxygen saturation \u2264 90% on air"
+- Exclude - 3. Bilirubin \> 3 x upper limit of normal
+- Exclude - 4. Creatinine \> 3 x upper limit of normal
+- Exclude - 5. Women who are pregnant or breastfeeding
+- "Exclude - 6. Stem Cell Transplant patients only: active significant (overall Grade\
+  \ \u2265 II, Seattle criteria) acute GVHD or moderate/ severe chronic GVHD (NIH\
+  \ consensus criteria) requiring systemic steroids."
+- Exclude - 7. Inability to tolerate leucapheresis
+- "Exclude - 8. Karnofsky (age \u2265 10 years) or Lansky (age \\< 10) score \u2264\
+  \ 50%"
+- Exclude - 9. Pre-existing significant neurological disorder (other than CNS involvement
+  of underlying haematological malignancy)
+- Exclude - 10. CD19 negative or CD22 negative disease
+- 'Exclude - Exclusion criteria for CD19+CD22CAR T-cell infusion:'
+- Exclude - 1. Severe intercurrent infection at the time of scheduled CD19+CD22 CAR
+  T-cell infusion
+- Exclude - 2. Requirement for supplementary oxygen or active pulmonary infiltrates
+  at the time of scheduled CD19+CD22 CAR T-cell infusion
+- "Exclude - 3. Allogeneic transplant recipients with active significant acute GVHD\
+  \ overall grade \u2265II or moderate/severe chronic GVHD requiring systemic steroids\
+  \ at the time of scheduled CD19+CD22 CAR T-cell infusion. Note: Such patients will\
+  \ be excluded until the patient is GVHD free and off steroids"
+short_title: 'CARPALL: Immunotherapy With CD19+CD22 CAR T-cells for CD19+ and CD22+
+  Acute Lymphoblastic Leukaemia'
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: University College, London
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: This study aims to evaluate the safety, efficacy and duration of response
+  of CD19+CD22 Chimeric Antigen Receptor (CAR) redirected autologous T-cells in children
+  with high risk, relapsed CD19+ and CD22+ acute lymphoblastic leukaemia
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: CD19+CD22 CAR T-cells
+      arm_internal_id: 0
+      arm_description: Patients meeting the eligibility criteria will have leukapheresis
+        to isolate the blood immune cells used to manufacture the CD19+CD22CAR T-cells.
+        Patients will receive lymphodepletion with low dose total body irradiation,
+        fludarabine and cyclophosphamide prior to infusion of the CD19+CD22CAR T-cells.
+      arm_suspended: N
+      dose_level:
+      - level_code: '0'
+        level_description: 'Procedure: Leukapheresis'
+        level_internal_id: 0
+        level_suspended: N
+      - level_code: '1'
+        level_description: 'Radiation: Total Body Irradiation (TBI)'
+        level_internal_id: 1
+        level_suspended: N
+      - level_code: '2'
+        level_description: 'Drug: Lymphodepletion with Fludarabine'
+        level_internal_id: 2
+        level_suspended: N
+      - level_code: '3'
+        level_description: 'Drug: Lymphodepletion with Cyclophosphamide'
+        level_internal_id: 3
+        level_suspended: N
+      - level_code: '4'
+        level_description: 'Biological: CD19+CD22 CAR T-cells'
+        level_internal_id: 4
+        level_suspended: N
+    match:
+    - and:
+      - clinical:
+          oncotree_primary_diagnosis: B-Lymphoblastic Leukemia/Lymphoma, NOS
+      - clinical:
+          age_numerical: <=24
+      - clinical:
+          disease_status:
+          - Recurrent
+          - Refractory
