@@ -28,6 +28,45 @@ or transfer it - `tar czf cache.tgz cache/` is ~10-15 MB compressed for the
 Nothing else is missing from a clone. `ref/Census_gene_list.csv` and
 `ref/.ncbi_gene_cache.json` are untracked but neither is read at runtime.
 
+### If `ollama pull` is blocked
+
+Ollama's model directory is a content-addressed blob store with manifests,
+not a folder of GGUF files - copying a `.gguf` into it does nothing. Import
+it instead.
+
+On a machine with internet (your laptop), fetch the weights:
+
+    pip install huggingface_hub
+    huggingface-cli download unsloth/gemma-3-27b-it-GGUF \
+      gemma-3-27b-it-Q4_K_M.gguf --local-dir ./gguf
+
+That file is ~16 GB. Move it to the cluster by whatever route your site
+sanctions for large files, then on the cluster:
+
+    cat > Modelfile <<'EOF'
+    FROM /path/on/cluster/gemma-3-27b-it-Q4_K_M.gguf
+    EOF
+
+    # server must be running; this writes into $OLLAMA_MODELS
+    apptainer exec --bind "$OLLAMA_MODELS:/root/.ollama/models" \
+      "$OLLAMA_SIF" ollama create gemma3-27b -f Modelfile
+
+Then set `LLM_AI_MODEL = "gemma3-27b"` - the name you gave `ollama create`,
+not the HuggingFace path.
+
+Check the import took the chat template with it:
+
+    apptainer exec "$OLLAMA_SIF" ollama show gemma3-27b --template
+
+Modern GGUFs carry the template in their metadata and Ollama picks it up. If
+that comes back empty the model will still answer but formatting will be
+wrong in ways that look like poor model quality rather than a broken import -
+add an explicit `TEMPLATE` block to the Modelfile if so.
+
+The alternative, if any machine can reach the registry: run `ollama pull`
+there and copy the whole `$OLLAMA_MODELS` tree across. Same bytes, no
+Modelfile, but you must copy the manifests as well as the blobs.
+
 ## 3. Config
 
     LLM_PLATFORM = "Ollama"
