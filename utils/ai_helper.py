@@ -533,6 +533,49 @@ def get_arm_criteria_mapping_prompt(arm_groups: list, inclusion_criteria: str, e
     return cleandoc(prompt)
 
 # a lot of trial criteria mention exclusion too in inclusion criteria hence the prompt supplies both inclusion and exclusion instructions
+# Shape that _enrich_genomic_criteria expects. Supplied to Ollama as
+# "format", which constrains decoding rather than merely asking for JSON.
+# Without it a model will happily echo the prompt's own input labels back as
+# keys - gemma3:27b returned {"EligibilityCriteria": ..., "Possible GeneList":
+# [], "Output": []} on 8 of 12 benchmark trials, treating the prompt as a
+# template to fill in.
+GENOMIC_CRITERIA_SCHEMA = {
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "genomic": {
+                "type": "object",
+                "properties": {
+                    "hugo_symbol": {"type": "string"},
+                    "variant_category": {
+                        "type": "string",
+                        "enum": [
+                            "Mutation", "Copy Number Variation",
+                            "Structural Variation", "Any Variation",
+                            "!Mutation", "!Copy Number Variation",
+                            "!Structural Variation", "!Any Variation",
+                        ],
+                    },
+                    "protein_change": {"type": "string"},
+                    "cnv_call": {
+                        "type": "string",
+                        "enum": [
+                            "Low Amplification", "High Amplification",
+                            "Homozygous Deletion", "Heterozygous Deletion",
+                            "!Low Amplification", "!High Amplification",
+                            "!Homozygous Deletion", "!Heterozygous Deletion",
+                        ],
+                    },
+                },
+                "required": ["hugo_symbol", "variant_category"],
+            }
+        },
+        "required": ["genomic"],
+    },
+}
+
+
 def get_inclusion_genomic_criteria_prompt(genes, inclusion_criteria):
     prompt = f"""Task: Evaluate the clinical trial criteria to return a JSON-formatted eligibility criteria involving genetic variants in any genes such as those in the GeneList.
     EligibilityCritieria: {inclusion_criteria}
@@ -595,8 +638,7 @@ def get_inclusion_genomic_criteria_prompt(genes, inclusion_criteria):
         }}
     ]
     """
-    json_schema = None # Define JSON schema if needed. It will be injected in the request body to LLM
-    return json_schema, cleandoc(prompt)
+    return GENOMIC_CRITERIA_SCHEMA, cleandoc(prompt)
 
 def get_exclusion_genomic_criteria_prompt(genes, exclusion_criteria):
     prompt = f"""Task: Evaluate the clinical trial exclusion criteria to return a JSON-formatted eligibility criteria involving genetic 
@@ -643,8 +685,7 @@ def get_exclusion_genomic_criteria_prompt(genes, exclusion_criteria):
     ]
 
     """
-    json_schema = None # Define JSON schema if needed. It will be injected in the request body to LLM
-    return json_schema, cleandoc(prompt)
+    return GENOMIC_CRITERIA_SCHEMA, cleandoc(prompt)
 
 
 def get_mutation_detail_enrichment_prompt(genes_with_mutations: list, criteria_text: str, existing_criteria: list) -> tuple:
