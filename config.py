@@ -1,3 +1,8 @@
+# Modified by Kinderspital Zurich (Kispi) from the original
+# nct2ctml, Copyright 2026 The University of Hong Kong, Apache-2.0.
+# Retargeted from adult oncology in Hong Kong to paediatric oncology.
+# See CHANGES.md for what differs.
+
 
 #GPU_SERVER_HOSTNAME = "http://gpu02.sbms.hku.hk"
 #GPU_SERVER_HOSTNAME = "http://127.0.0.1"

@@ -1,3 +1,8 @@
+# Modified by Kinderspital Zurich (Kispi) from the original
+# nct2ctml, Copyright 2026 The University of Hong Kong, Apache-2.0.
+# Retargeted from adult oncology in Hong Kong to paediatric oncology.
+# See CHANGES.md for what differs.
+
 intervention_types = ['DRUG','BIOLOGICAL','COMBINATION_PRODUCT']
 # Countries whose recruiting sites make a trial eligible.
 # An empty list means worldwide (no location filter).

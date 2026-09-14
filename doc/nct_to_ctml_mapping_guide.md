@@ -1,4 +1,8 @@
 # NCT to CTML mapping guide
+> Modified by Kinderspital Zurich (Kispi) from the original nct2ctml
+> (Copyright 2026 The University of Hong Kong, Apache-2.0).
+> See [CHANGES.md](../CHANGES.md).
+
 
 This guide explains how a trial downloaded from [ClinicalTrials.gov](https://clinicaltrials.gov) is converted into a **CTML** (Clinical Trial Markup Language) file used by MatchMiner. It is written for reviewers who want to check whether an automated conversion is correct, without reading the source code.
 
