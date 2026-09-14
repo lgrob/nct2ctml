@@ -35,6 +35,13 @@ ANTHROPIC_MAX_TOKENS = 16000
 # qwen3:14b once emitted 30,251 of them on a single call and hung for 3.5h.
 # ~16 GB at Q4, so it fits a 24 GB card with room for real context.
 # Raise OLLAMA_NUM_CTX to 32768 and drop the timeout to ~300 when using this.
+#LLM_AI_MODEL = "gemma3:27b"
+#
+# The same weights are also reachable through Ollama's HuggingFace
+# passthrough, which is the form upstream's guide uses. Prefer the tag above:
+# it comes from Ollama's own registry, so it needs only registry.ollama.ai
+# rather than huggingface.co as well - one less host for a locked-down
+# network to refuse.
 #LLM_AI_MODEL = "hf.co/unsloth/gemma-3-27b-it-GGUF:Q4_K_M"
 #
 # Runner-up for 40 GB+. Likely sharper, but thinking MUST be disabled or it

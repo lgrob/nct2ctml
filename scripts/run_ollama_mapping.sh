@@ -24,7 +24,7 @@ REPO="${REPO:-$HOME/nct2ctml}"
 # Model weights are large (~16 GB for a 27B at Q4). Keep them off $HOME,
 # which is usually quota'd small, and out of the container, which is read-only.
 export OLLAMA_MODELS="${OLLAMA_MODELS:-$SCRATCH/ollama-models}"
-MODEL="${MODEL:-hf.co/unsloth/gemma-3-27b-it-GGUF:Q4_K_M}"
+MODEL="${MODEL:-gemma3:27b}"
 
 mkdir -p "$OLLAMA_MODELS" "$REPO/logs"
 cd "$REPO"

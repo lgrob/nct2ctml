@@ -70,7 +70,7 @@ Modelfile, but you must copy the manifests as well as the blobs.
 ## 3. Config
 
     LLM_PLATFORM = "Ollama"
-    LLM_AI_MODEL = "hf.co/unsloth/gemma-3-27b-it-GGUF:Q4_K_M"
+    LLM_AI_MODEL = "gemma3:27b"
     GPU_SERVER_HOSTNAME = "http://localhost"    # server runs in the same job
     OLLAMA_NUM_CTX = 32768                      # 8192 was a 16 GB laptop limit
     LLM_REQUEST_TIMEOUT_SECONDS = 300           # 1200 assumed 2.4 tok/s
