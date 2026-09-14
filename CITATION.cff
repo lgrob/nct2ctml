@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: If you use this software, please cite the paper below.
+title: nct2ctml
+type: software
+repository-code: https://github.com/sumedhasaxena/nct2ctml
+license: Apache-2.0
+authors:
+  - family-names: Saxena
+    given-names: Sumedha  
+  - family-names: Shih
+    given-names: David J H
+preferred-citation:
+  type: article
+  title: "AI-assisted patient matching for personalized cancer medicine"
+  authors:
+    - family-names: Saxena
+      given-names: Sumedha
+    - family-names: Ma
+      given-names: Edmond S K
+    - family-names: El Helali
+      given-names: Aya
+    - family-names: Shih
+      given-names: David J H
+  journal: Briefings in Bioinformatics
+  year: 2025
+  month: 12
+  volume: "26"
+  issue: Supplement_1
+  start: i12
+  end: i14
+  doi: 10.1093/bib/bbaf631.013
+  url: https://academic.oup.com/bib/article/26/Supplement_1/i12/8378037

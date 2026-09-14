@@ -113,7 +113,32 @@ chmod +x sync_trials.sh
   python -m unittest tests.test_ai_helper.TestAITasks.test_get_genomic_criteria -v
   ```
 
----
+## Citation
+
+If you use nct2ctml, please cite:
+
+Sumedha Saxena, Edmond S K Ma, Aya El Helali, David J H Shih. AI-assisted patient matching for
+personalized cancer medicine. Briefings in Bioinformatics.
+2025;26(Supplement_1):i12–i14. https://doi.org/10.1093/bib/bbaf631.013
+
+```bibtex
+@article{saxena2025nct2ctml,
+  title   = {AI-assisted patient matching for personalized cancer medicine},
+  author  = {Saxena, Sumedha and Ma, Edmond S K and El Helali, Aya and Shih, David J H},
+  journal = {Briefings in Bioinformatics},
+  volume  = {26},
+  number  = {Supplement_1},
+  pages   = {i12--i14},
+  year    = {2025},
+  doi     = {10.1093/bib/bbaf631.013},
+  url     = {https://academic.oup.com/bib/article/26/Supplement_1/i12/8378037}
+}
+```
+
+## License
+This project's source code is licensed under the Apache License 2.0.
+See [LICENSE](LICENSE).
+
 
 ## Resources
 - [ClinicalTrials.gov API](https://clinicaltrials.gov/data-api/api#extapi)
