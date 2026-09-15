@@ -39,9 +39,19 @@ class TestCanonicalDiagnosis(unittest.TestCase):
                          "Acute Myeloid Leukemia")
 
     def test_invented_terms_are_rejected(self):
-        # Both observed in benchmark output; neither is an Oncotree node.
-        self.assertIsNone(canonical_diagnosis("_SOLID_"))
+        # Observed in benchmark output; neither is an Oncotree node.
         self.assertIsNone(canonical_diagnosis("Leukemia"))
+        self.assertIsNone(canonical_diagnosis("_GASEOUS_"))
+
+    def test_matchminer_wildcards_are_accepted(self):
+        """
+        _SOLID_ and _LIQUID_ are not Oncotree names, they are how CTML says
+        "any solid tumour" / "any liquid tumour". The pipeline derives them
+        from the trial's conditions, so rejecting them here silently stripped
+        the diagnosis off every basket trial.
+        """
+        self.assertEqual(canonical_diagnosis("_SOLID_"), "_SOLID_")
+        self.assertEqual(canonical_diagnosis("_LIQUID_"), "_LIQUID_")
 
     def test_parent_and_child_are_both_valid(self):
         # BLL is the parent of BLLNOS. Preferring one over the other is a
@@ -119,8 +129,12 @@ class TestRetiredGeneSymbols(unittest.TestCase):
 
 class TestFilterDiagnoses(unittest.TestCase):
     def test_drops_unknown_and_keeps_known(self):
-        self.assertEqual(filter_diagnoses(["_SOLID_", "Neuroblastoma"]),
+        self.assertEqual(filter_diagnoses(["Leukemia", "Neuroblastoma"]),
                          ["Neuroblastoma"])
+
+    def test_wildcards_survive_filtering(self):
+        self.assertEqual(filter_diagnoses(["_SOLID_", "_LIQUID_", "Leukemia"]),
+                         ["_SOLID_", "_LIQUID_"])
 
     def test_deduplicates_after_canonicalisation(self):
         # The code and the name are the same node, so only one survives.
@@ -132,7 +146,7 @@ class TestFilterDiagnoses(unittest.TestCase):
                          ["Ewing Sarcoma", "Neuroblastoma"])
 
     def test_everything_unknown_yields_empty(self):
-        self.assertEqual(filter_diagnoses(["_SOLID_"]), [])
+        self.assertEqual(filter_diagnoses(["Leukemia"]), [])
 
 
 class TestFilterGenomicCriteria(unittest.TestCase):

@@ -232,9 +232,9 @@ treatment_list:
     - and:
       - or:
         - clinical:
-            oncotree_primary_diagnosis: Melanoma
+            oncotree_primary_diagnosis: _SOLID_
         - clinical:
-            oncotree_primary_diagnosis: Classical Hodgkin Lymphoma
+            oncotree_primary_diagnosis: _LIQUID_
       - clinical:
           age_numerical: '>=0.5'
       - clinical:

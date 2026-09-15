@@ -4,9 +4,9 @@ reference files, and drop what does not exist.
 
 Both genomic and diagnosis prompts hand the model the permitted vocabulary,
 so every value it returns should already be drawn from these files. It is not:
-benchmark runs produced `_SOLID_` and `Leukemia` as Oncotree diagnoses, `AML`
-(an Oncotree *code*) where the display name belongs, and `H3` as a gene symbol
-alongside the three real histone genes. None of these match a patient - CTML
+benchmark runs produced `Leukemia` as an Oncotree diagnosis, `AML` (an Oncotree
+*code*) where the display name belongs, and `H3` as a gene symbol alongside the
+three real histone genes. None of these match a patient - CTML
 matching is on exact strings - so they are silent false negatives rather than
 visible errors, which is what makes them worth catching mechanically.
 
@@ -45,6 +45,13 @@ import config
 # "Acute Myeloid Leukemia (AML)" -> name, code. Codes are upper-case with
 # digits and a few separators; anything else is a name containing brackets.
 _LEVEL_VALUE = re.compile(r"^(.*)\s+\(([A-Z0-9_./-]+)\)$")
+
+# MatchMiner's own wildcards for "any solid tumour" and "any liquid tumour".
+# They are valid values of oncotree_primary_diagnosis and are how a basket
+# trial is expressed - see doc/nct_to_ctml_mapping_guide.md - but they are not
+# Oncotree display names, so a plain lookup rejects them. The pipeline derives
+# them deterministically from the trial's conditions, never from the model.
+MATCHMINER_DIAGNOSIS_WILDCARDS = frozenset({"_SOLID_", "_LIQUID_"})
 
 # Same paths TrialMapManager.load_gene_synonym_mapping opens; they are not in
 # config.py, so they are spelled out here rather than silently diverging.
@@ -129,11 +136,14 @@ def canonical_diagnosis(term):
     """
     The Oncotree display name for `term`, or None if there is no such node.
 
-    Accepts the display name, the code, and either in any case.
+    Accepts the display name, the code, either in any case, and MatchMiner's
+    _SOLID_ / _LIQUID_ wildcards.
     """
     if not term:
         return None
     term = str(term).strip()
+    if term in MATCHMINER_DIAGNOSIS_WILDCARDS:
+        return term
     names, codes, lowered = _oncotree()
     if term in names:
         return term

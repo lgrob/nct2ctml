@@ -228,8 +228,8 @@
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
-    "n_dx_truth": 0,
-    "n_dx_got": 0,
+    "n_dx_truth": 2,
+    "n_dx_got": 2,
     "genes_truth": [
       "NTRK1",
       "NTRK2",
@@ -1214,8 +1214,8 @@
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
-    "n_dx_truth": 1,
-    "n_dx_got": 1,
+    "n_dx_truth": 2,
+    "n_dx_got": 2,
     "genes_truth": [
       "BRAF"
     ],

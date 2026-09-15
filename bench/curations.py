@@ -19,7 +19,20 @@ end-to-end in MatchMiner:
   requirement is the error that makes a trial match nobody.
 - Stratification is not eligibility. A biomarker that only assigns a risk
   group or an arm, while every group enrols, is NOT a genomic criterion.
+- A trial whose eligibility is tumour-agnostic gets `_SOLID_` / `_LIQUID_`,
+  not an empty diagnosis block and not a list of example tumour types. An
+  empty block and a wildcard match the same patients, but only the wildcard
+  says so on purpose, and a reviewer can tell it apart from a mapping that
+  simply failed.
 """
+
+
+# MatchMiner's wildcards for a basket trial. Not Oncotree names: they are how
+# CTML says "any solid tumour" / "any liquid tumour" without enumerating 879
+# terms that would go stale on the next Oncotree release. See
+# doc/nct_to_ctml_mapping_guide.md.
+ANY_SOLID = "_SOLID_"
+ANY_LIQUID = "_LIQUID_"
 
 
 def dx(*names):
@@ -430,12 +443,13 @@ CURATIONS["NCT03900793"] = dict(
 
 # ---------------------------------------------------------------- tumour-agnostic
 CURATIONS["NCT04094610"] = dict(
-    # Repotrectinib. Deliberately has no diagnosis criterion: any advanced
-    # solid tumour, lymphoma or primary CNS tumour qualifies, and the
-    # alteration alone decides eligibility. A key with diagnoses here would
-    # reward inventing them.
+    # Repotrectinib. Tumour-agnostic: "Locally Advanced Solid Tumors,
+    # Metastatic Solid Tumors, Lymphoma, Primary CNS Tumors", with the
+    # alteration deciding eligibility. Both wildcards, since lymphoma is on
+    # the liquid side.
     age="Children",
     match=[all_of(
+        dx(ANY_SOLID, ANY_LIQUID),
         any_of(
             gene("ROS1", "Mutation"),
             fusion("ROS1"),
@@ -497,12 +511,13 @@ CURATIONS["NCT04185038"] = dict(
 # -------------------------------------------------------------- pan-tumour (2)
 CURATIONS["NCT02332668"] = dict(
     # KEYNOTE-051. Broad by design - "locally-advanced or metastatic solid
-    # malignancy or lymphoma" - with melanoma and relapsed/refractory classical
-    # Hodgkin lymphoma as the named cohorts. PD-L1 and MSI-high are IHC and a
+    # malignancy or lymphoma". Melanoma and relapsed/refractory classical
+    # Hodgkin lymphoma are named cohorts within that, not a restriction of it,
+    # so the wildcards are the criterion. PD-L1 and MSI-high are IHC and a
     # mutational-signature phenotype, neither a hugo_symbol criterion.
     age="Children",
     match=[all_of(
-        dx("Melanoma", "Classical Hodgkin Lymphoma"),
+        dx(ANY_SOLID, ANY_LIQUID),
         age(">=0.5"), age("<18"),
     )],
 )
@@ -510,10 +525,11 @@ CURATIONS["NCT02332668"] = dict(
 CURATIONS["NCT07440290"] = dict(
     # DETERMINE arm 07. Tumour-agnostic on the alteration: "a malignancy
     # harbouring an oncogenic alteration in BRAF V600, including Langerhans
-    # cell histiocytosis".
+    # cell histiocytosis". "Including" widens, it does not restrict, so the
+    # wildcards carry it and naming LCH alone would wrongly narrow the trial.
     age="All",
     match=[all_of(
-        dx("Langerhans Cell Histiocytosis"),
+        dx(ANY_SOLID, ANY_LIQUID),
         gene("BRAF", "Mutation"),
         age(">=1"),
     )],

@@ -46,7 +46,7 @@ class TestCandidateListsBecomeEnums(unittest.TestCase):
     """
     The diagnosis prompts already say "choose only from the provided
     OncotreeValues". An enum makes that structural rather than advisory:
-    "Lymphoma" and "_SOLID_" become impossible to emit, not merely wrong.
+    "Lymphoma" becomes impossible to emit, not merely wrong.
     """
 
     def test_allowed_values_become_an_enum(self):

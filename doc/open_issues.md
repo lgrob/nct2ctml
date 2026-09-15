@@ -6,15 +6,6 @@ guesses.
 
 ## Correctness
 
-### A trial with no diagnosis kills the whole mapping
-`clinical_trials_gov.map_global_diagnosis_to_oncotree_term` raises when no
-Oncotree diagnosis is found, and `map_single_trial` turns that into a failed
-trial. Two problems: NCT02813135 (its only condition is "Pediatric Cancer")
-crashes rather than degrading, and a genuinely tumour-agnostic trial - the
-repotrectinib and DETERMINE arms in `ctml/reviewed` are exactly this shape -
-can never be produced correctly at all. Degrading to "no diagnosis criterion"
-would fix both, but it changes mapping behaviour for every trial.
-
 ### The wrong-branch problem is only half solved
 Terms named outright in `conditionsModule` now force their Oncotree branch
 into the second stage, but that covers only the 27% of trials whose conditions

@@ -327,7 +327,7 @@ class TestConvertToCtmlClinicalSchema(unittest.TestCase):
         """Test with single diagnosis"""
         # Diagnoses are validated against Oncotree, so fixtures have to be real
         # nodes: "Lung Cancer" is not one ("Lung" and "Non-Small Cell Lung
-        # Cancer" are), and would be dropped exactly as _SOLID_ is.
+        # Cancer" are), and would be dropped exactly as "Lymphoma" is.
         clinical_criteria = {
             "oncotree_primary_diagnosis": ["Neuroblastoma"],
             "age_range": "18-65"

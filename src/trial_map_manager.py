@@ -324,6 +324,31 @@ class TrialMapManager:
             logger.exception(f"ct_number: {ct_number} | Unexpected error while mapping: {ex}")
             return False
 
+    @staticmethod
+    def _destination_for(mapped_ctml: dict, ctml_files_path: str, trial_id: str) -> str:
+        """
+        Where this trial should be written: the normal output, or the review
+        queue when it is not usable as it stands.
+
+        The only such case today is a trial with no oncotree_primary_diagnosis
+        anywhere in its match tree. That trial would match on its remaining
+        criteria alone, which for a basket trial is every patient in the
+        database, so it must not reach MatchMiner unreviewed - but discarding
+        it is worse, because a trial that is not there is a trial nobody can be
+        matched to and nobody can see is missing.
+        """
+        if 'oncotree_primary_diagnosis' in tdh.get_all_keys(mapped_ctml):
+            return ctml_files_path
+        import config  # imported here, as elsewhere in this module
+        review_path = getattr(config, 'CTML_REVIEW_PATH', 'ctml/pending')
+        os.makedirs(review_path, exist_ok=True)
+        logger.warning(
+            f"{trial_id} | No diagnosis criterion in the mapped CTML. Writing to "
+            f"{review_path} instead of {ctml_files_path}: as it stands this trial "
+            f"would match every patient."
+        )
+        return review_path
+
     def map_single_trial(self, nct_id: str, nct_files_path: str, ctml_files_path: str) -> bool:
         """Map a specific NCT ID to CTML format with local trial info integration"""
         logger.info("Using ctml_files_path: {}".format(ctml_files_path))
@@ -347,11 +372,12 @@ class TrialMapManager:
             
             # Add local trial info if available
             self._add_local_trial_info(mapped_ctml, nct_id)
-            
+
             # Save CTML file
-            tdh.save_to_file(mapped_ctml, ctml_files_path, nct_id, 'yaml')
-            
-            logger.info(f"Successfully mapped and saved {nct_id}")
+            destination = self._destination_for(mapped_ctml, ctml_files_path, nct_id)
+            tdh.save_to_file(mapped_ctml, destination, nct_id, 'yaml')
+
+            logger.info(f"Successfully mapped and saved {nct_id} to {destination}")
             return True
             
         except Exception as ex:

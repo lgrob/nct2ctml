@@ -809,7 +809,19 @@ def map_global_diagnosis_to_oncotree_term(trial_data: dict, global_eligibility_c
     logger.debug(f"NCTID: {nct_id} | Stage 4 Oncotree_diagnoses : {all_possible_diagnoses}")
 
     if len(all_possible_diagnoses) == 0:
-        raise Exception(f"NCTID: {nct_id} | No oncotree diagnosis was found")
+        # Deliberately not an exception. Raising loses the whole trial - its
+        # genomic criteria, its age bounds, everything - and a trial absent
+        # from MatchMiner is a trial no patient can be matched to, which is
+        # the one failure a reviewer cannot see. The asymmetry decides it: an
+        # over-broad trial costs a clinician minutes, a missing one can cost a
+        # patient a trial they were eligible for. The trial is produced without
+        # a diagnosis criterion and routed to the review queue instead.
+        logger.error(
+            f"NCTID: {nct_id} | NEEDS REVIEW: no Oncotree diagnosis could be "
+            f"determined from the eligibility criteria, the conditions, the "
+            f"keywords or the title. Mapping continues without a diagnosis "
+            f"criterion; a human must supply one."
+        )
     return list(all_possible_diagnoses)
 
 def map_prior_treatment_requirements(trial_schema, trial_data) -> dict:

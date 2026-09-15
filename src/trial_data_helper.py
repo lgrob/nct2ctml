@@ -7,6 +7,8 @@ import json
 import yaml
 from loguru import logger
 
+from utils.reference_validation import strip_condition_qualifiers
+
 def remove_unused_keys(trial_data: dict):
     """
     Removes keys that will not be used for mapping data to matchminer trial schema
@@ -101,6 +103,26 @@ def safe_get(trial_data, keys):
         trial_data = trial_data.get(key, {})
     return trial_data
 
+def _with_qualifiers_stripped(conditions_list):
+    """
+    Each condition, plus its form with leading qualifiers removed.
+
+    Both forms are tested because stripping can destroy a match as easily as
+    create one: "Malignant Neoplasm" is recognised below by an exact
+    comparison, and stripping leaves "Neoplasm", which is not. A paediatric
+    registry phrases the broad terms with a qualifier more often than not -
+    "Pediatric Cancer", "Childhood Cancer" - and those were falling through to
+    a hard failure.
+    """
+    seen, out = set(), []
+    for condition in conditions_list or []:
+        for form in (condition, strip_condition_qualifiers(condition)):
+            if form and form not in seen:
+                seen.add(form)
+                out.append(form)
+    return out
+
+
 def all_solid_tumours(conditions_list):
     all_solid_tumors = any(
             "solid tumor" in cond.lower() or
@@ -112,7 +134,7 @@ def all_solid_tumours(conditions_list):
             cond.lower() == "malignant neoplasm" or
             
             cond.lower() == "neoplasms" 
-            for cond in conditions_list)
+            for cond in _with_qualifiers_stripped(conditions_list))
         
     return all_solid_tumors
 
@@ -120,7 +142,7 @@ def all_tumours(conditions_list):
     all_tumors = any(
     cond.lower() in ["cancer","oncology","advanced cancer"] or
     "metastatic cancer" in cond.lower()
-    for cond in conditions_list)
+    for cond in _with_qualifiers_stripped(conditions_list))
     
     return all_tumors
 

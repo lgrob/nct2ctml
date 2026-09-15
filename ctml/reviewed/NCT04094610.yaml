@@ -147,6 +147,11 @@ treatment_list:
     match:
     - and:
       - or:
+        - clinical:
+            oncotree_primary_diagnosis: _SOLID_
+        - clinical:
+            oncotree_primary_diagnosis: _LIQUID_
+      - or:
         - genomic:
             hugo_symbol: ROS1
             variant_category: Mutation

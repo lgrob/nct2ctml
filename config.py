@@ -94,6 +94,12 @@ LLM_AI_MODEL = "llama3.3:70b"
 
 
 
+# Where a mapped trial goes when it needs a human before it is usable -
+# currently, when no Oncotree diagnosis could be determined at all. Kept out of
+# the normal output so nobody loads it into MatchMiner by accident, and kept as
+# a directory rather than a log line so the queue is visible without grepping.
+CTML_REVIEW_PATH = "ctml/pending"
+
 ONCOTREE_TXT_FILE_PATH = "ref/oncotree_file.txt"
 GENE_LIST_FILE_PATH = "ref/genes.txt"
 

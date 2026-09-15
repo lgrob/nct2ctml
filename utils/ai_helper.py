@@ -548,8 +548,10 @@ def get_arm_criteria_mapping_prompt(arm_groups: list, inclusion_criteria: str, e
 #
 # Where the prompt already restricts the answer to a list of candidates, the
 # schema restricts it too, which makes an off-list answer impossible to emit
-# rather than merely discouraged. "Lymphoma" and "_SOLID_" are not Oncotree
-# display names and cannot be produced under these schemas at all.
+# rather than merely discouraged. "Lymphoma" is not an Oncotree display name
+# and cannot be produced under these schemas at all. MatchMiner's _SOLID_ and
+# _LIQUID_ wildcards are deliberately absent too: the pipeline derives those
+# from the trial's conditions, and a model should not be invited to guess them.
 
 # Ollama compiles `format` into a generation grammar, and one with several
 # hundred alternatives is slow to build. Above this many candidates the enum is

@@ -6,7 +6,8 @@ import os
 # Add the src directory to the path so we can import the module
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from trial_data_helper import remove_unused_keys, get_all_keys, split_with_find
+from trial_data_helper import (remove_unused_keys, get_all_keys, split_with_find,
+                               all_tumours, all_solid_tumours)
 
 
 class TestTrialDataHelper(unittest.TestCase):
@@ -667,6 +668,42 @@ class TestTrialDataHelper(unittest.TestCase):
         # 5. The keyword should be case-insensitively matched
         # (Test that it works even though we used lowercase "exclusion -")
         self.assertTrue("Exclusion" in input_string)  # Original has capital E
+
+class TestBroadBasketDetection(unittest.TestCase):
+    """
+    A trial whose conditions say "any cancer" gets MatchMiner's _SOLID_ /
+    _LIQUID_ wildcards instead of an enumerated diagnosis list. A paediatric
+    registry usually phrases those broad terms with a qualifier, and the
+    detectors only matched the bare forms, so "Pediatric Cancer" fell through
+    to a hard mapping failure.
+    """
+
+    def test_bare_broad_terms(self):
+        self.assertTrue(all_tumours(["Cancer"]))
+        self.assertTrue(all_solid_tumours(["Solid Tumor"]))
+
+    def test_qualified_broad_terms(self):
+        for condition in ("Pediatric Cancer", "Childhood Cancer", "Advanced Cancer"):
+            self.assertTrue(all_tumours([condition]), condition)
+        for condition in ("Pediatric Solid Tumor", "Recurrent Solid Tumor"):
+            self.assertTrue(all_solid_tumours([condition]), condition)
+
+    def test_stripping_is_additive(self):
+        # "Malignant Neoplasm" is matched by an exact comparison, and stripping
+        # leaves "Neoplasm", which is not. Both forms have to be tested.
+        self.assertTrue(all_solid_tumours(["Malignant Neoplasm"]))
+
+    def test_a_specific_diagnosis_is_not_a_basket(self):
+        for condition in ("Neuroblastoma", "Acute Myeloid Leukemia",
+                          "Ewing Sarcoma", "Hepatoblastoma"):
+            self.assertFalse(all_tumours([condition]), condition)
+            self.assertFalse(all_solid_tumours([condition]), condition)
+
+    def test_empty_and_none(self):
+        for value in ([], None):
+            self.assertFalse(all_tumours(value))
+            self.assertFalse(all_solid_tumours(value))
+
 
 if __name__ == '__main__':
     unittest.main()

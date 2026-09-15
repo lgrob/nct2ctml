@@ -49,7 +49,10 @@ targets paediatric oncology worldwide.
 - `utils/reference_validation.py` — validates Oncotree diagnoses and HUGO
   symbols against the reference files, rewrites Oncotree codes and retired
   gene symbols, and reads diagnoses straight out of `conditionsModule` before
-  any model is asked.
+  any model is asked. MatchMiner's `_SOLID_` and `_LIQUID_` wildcards pass
+  through: they are not Oncotree display names but they are valid CTML, and
+  they are how a basket trial is expressed without enumerating 879 terms that
+  would go stale on the next Oncotree release.
 - `scripts/run_ollama_mapping.sh`, `doc/cluster_setup.md` — running the
   mapping on a Slurm GPU cluster with Ollama under Apptainer.
 - `bench/benchmark_map.py`, `bench/build_reviewed.py`, `bench/curations.py`,
@@ -92,6 +95,21 @@ These are upstream bugs, fixed here and worth reporting back.
   phaeochromocytoma: five of six neuroblastoma trials returned exactly that
   pair, silently. Terms named outright in `conditionsModule` are now read
   first and force their own branch into the second stage.
+- `src/trial_data_helper.py` — `all_tumours` and `all_solid_tumours` matched
+  only the bare broad terms, so "Pediatric Cancer" and "Childhood Cancer" were
+  not recognised as basket trials and fell through to a hard mapping failure.
+  Leading qualifiers are now peeled and both forms tested, additively, because
+  stripping can destroy a match as easily as create one - "Malignant Neoplasm"
+  is matched by an exact comparison that "Neoplasm" fails. 92 trials took the
+  basket path before, 103 after.
+- `src/clinical_trials_gov.py`, `src/trial_map_manager.py` — a trial with no
+  determinable Oncotree diagnosis raised, and the whole trial was lost: its
+  genomic criteria, its age bounds, everything. The failure modes are not
+  symmetric. An over-broad trial costs a clinician minutes; a trial that is
+  absent from MatchMiner is one no patient can be matched to and no reviewer
+  can see is missing. It is now mapped without a diagnosis criterion, logged
+  at ERROR, and written to `config.CTML_REVIEW_PATH` instead of the normal
+  output, so it is visible and queued rather than discarded or published.
 - `utils/ai_helper.py` — nine of eleven prompts asked for JSON in prose with
   no schema. A malformed answer was logged as a `JSONDecodeError` and replaced
   with an empty dict, so the whole response was discarded as though the model
@@ -133,7 +151,8 @@ These are upstream bugs, fixed here and worth reporting back.
   superseded by `utils/build_gene_synonyms.py` and as requiring a COSMIC
   download that is no longer tracked.
 - `config.py` — Anthropic settings, Ollama context and prediction limits, a
-  request timeout, and the model the cluster runs. `scripts/run_ollama_mapping.sh`
+  request timeout, `CTML_REVIEW_PATH` for trials that need a human before they
+  are usable, and the model the cluster runs. `scripts/run_ollama_mapping.sh`
   reads the model from here, so this file is the single source of truth for it.
 - `.gitignore` — untracks pulled trial data, logs, the COSMIC census, the NCBI
   harvest cache, and the transient `ctml/json` hand-off queue.

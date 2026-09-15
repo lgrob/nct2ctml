@@ -195,8 +195,11 @@ treatment_list:
         level_suspended: N
     match:
     - and:
-      - clinical:
-          oncotree_primary_diagnosis: Langerhans Cell Histiocytosis
+      - or:
+        - clinical:
+            oncotree_primary_diagnosis: _SOLID_
+        - clinical:
+            oncotree_primary_diagnosis: _LIQUID_
       - genomic:
           hugo_symbol: BRAF
           variant_category: Mutation
