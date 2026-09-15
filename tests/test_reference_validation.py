@@ -222,6 +222,33 @@ class TestDiagnosesFromConditions(unittest.TestCase):
             strip_condition_qualifiers("Recurrent Metastatic Childhood Melanoma"),
             "Melanoma")
 
+    def test_trailing_qualifiers_are_peeled(self):
+        # ClinicalTrials.gov puts the qualifier after the diagnosis at least as
+        # often as before it.
+        for condition, expected in (
+                ("Medulloblastoma Recurrent", "Medulloblastoma"),
+                ("Ependymoma Recurrent", "Ependymoma"),
+                ("Medulloblastoma, Childhood", "Medulloblastoma"),
+                ("Neuroblastoma, Recurrent, Refractory", "Neuroblastoma"),
+                ("Recurrent Childhood Medulloblastoma, Refractory", "Medulloblastoma")):
+            self.assertEqual(strip_condition_qualifiers(condition), expected, condition)
+
+    def test_trailing_strip_resolves_real_conditions(self):
+        self.assertEqual(diagnoses_from_conditions(["Medulloblastoma Recurrent"]),
+                         ["Medulloblastoma"])
+        # A code survives the peel and still resolves to its display name.
+        self.assertEqual(diagnoses_from_conditions(["ATRT Recurrent"]),
+                         ["Atypical Teratoid/Rhabdoid Tumor"])
+
+    def test_a_node_ending_in_a_qualifier_word_matches_as_itself(self):
+        # Several Oncotree names end in "NOS", which the trailing rule would
+        # strip. The unmodified string is tried first for exactly this reason.
+        for name in ("B-Lymphoblastic Leukemia/Lymphoma, NOS",
+                     "Mixed Phenotype Acute Leukemia, B/Myeloid, NOS",
+                     "High-Grade B-Cell Lymphoma, NOS",
+                     "Astrocytoma, IDH-Mutant, Grade 3"):
+            self.assertEqual(diagnoses_from_conditions([name]), [name], name)
+
 
 class TestAnswerKeyIsNotDamaged(unittest.TestCase):
     """

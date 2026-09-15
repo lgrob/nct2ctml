@@ -98,10 +98,13 @@ These are upstream bugs, fixed here and worth reporting back.
 - `src/trial_data_helper.py` — `all_tumours` and `all_solid_tumours` matched
   only the bare broad terms, so "Pediatric Cancer" and "Childhood Cancer" were
   not recognised as basket trials and fell through to a hard mapping failure.
-  Leading qualifiers are now peeled and both forms tested, additively, because
-  stripping can destroy a match as easily as create one - "Malignant Neoplasm"
-  is matched by an exact comparison that "Neoplasm" fails. 92 trials took the
-  basket path before, 103 after.
+  Leading and trailing qualifiers are now peeled and both forms tested,
+  additively, because stripping can destroy a match as easily as create one -
+  "Malignant Neoplasm" is matched by an exact comparison that "Neoplasm"
+  fails. 92 trials took the basket path before, 103 after. The same peeling
+  serves the diagnosis seed, where ClinicalTrials.gov puts the qualifier after
+  the diagnosis at least as often as before it ("Medulloblastoma Recurrent",
+  "Neuroblastoma, Recurrent, Refractory").
 - `src/clinical_trials_gov.py`, `src/trial_map_manager.py` — a trial with no
   determinable Oncotree diagnosis raised, and the whole trial was lost: its
   genomic criteria, its age bounds, everything. The failure modes are not

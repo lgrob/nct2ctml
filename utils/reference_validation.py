@@ -231,13 +231,33 @@ _CONDITION_QUALIFIER = re.compile(
     re.IGNORECASE)
 
 
+# The same vocabulary appearing after the diagnosis instead of before it, which
+# ClinicalTrials.gov does at least as often: "Medulloblastoma Recurrent",
+# "Neuroblastoma, Recurrent, Refractory", "Medulloblastoma, Childhood". A comma
+# before it is optional, and several can stack.
+_TRAILING_QUALIFIER = re.compile(
+    r"[,\s]+(newly diagnosed|recurrent|refractory|relapsed|in relapse|metastatic|"
+    r"advanced|childhood|paediatric|pediatric|adult|nos)$",
+    re.IGNORECASE)
+
+
 def strip_condition_qualifiers(condition):
-    """"High-Risk Neuroblastoma" -> "Neuroblastoma". Repeats until stable."""
+    """
+    "High-Risk Neuroblastoma" and "Medulloblastoma Recurrent" -> the diagnosis.
+
+    Leading and trailing qualifiers are peeled alternately until neither
+    matches, so "Recurrent Childhood Medulloblastoma, Refractory" reduces in
+    one call. Callers try the unmodified string first: several Oncotree nodes
+    end in a word this would strip - "B-Lymphoblastic Leukemia/Lymphoma, NOS",
+    "Mixed Phenotype Acute Leukemia, B/Myeloid, NOS" - and must match as
+    themselves before anything is removed.
+    """
     condition = (condition or "").strip()
     previous = None
     while previous != condition:
         previous = condition
         condition = _CONDITION_QUALIFIER.sub("", condition).strip()
+        condition = _TRAILING_QUALIFIER.sub("", condition).strip()
     return condition
 
 
