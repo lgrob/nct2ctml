@@ -38,7 +38,17 @@ ANTHROPIC_MAX_TOKENS = 16000
 # qwen3:14b once emitted 30,251 of them on a single call and hung for 3.5h.
 # ~16 GB at Q4, so it fits a 24 GB card with room for real context.
 # Raise OLLAMA_NUM_CTX to 32768 and drop the timeout to ~300 when using this.
-LLM_AI_MODEL = "gemma3:27b"
+#LLM_AI_MODEL = "gemma3:27b"
+#
+# What is actually running on LeoMed. Benchmarked 2026-09-14 against the
+# curated key: gemma3:27b scored dx F1 0.18 / gene F1 0.09, llama3.3:70b
+# scored 0.40 / 0.61 on the same twelve trials, so capacity was a real
+# constraint rather than a prompting one. ~42 GB at Q4, resident in VRAM on
+# an A100-SXM4-80GB with room for the 32k context; ~149 s per trial.
+# This line is the single source of truth - scripts/run_ollama_mapping.sh
+# reads the model from here, so an uncommitted edit on the cluster means the
+# repo no longer says what is running.
+LLM_AI_MODEL = "llama3.3:70b"
 #
 # The same weights are also reachable through Ollama's HuggingFace
 # passthrough, which is the form upstream's guide uses. Prefer the tag above:

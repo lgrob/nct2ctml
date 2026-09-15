@@ -30,6 +30,33 @@ targets paediatric oncology worldwide.
 - `bench/` — scores automated mapping against hand-curated CTML.
 - `utils/llm_platforms.py` — added `AnthropicPlatform` alongside the
   self-hosted backends.
+- `main.py` — `pull` and `map` take `--source {nct,ctis,all}`, and `pull`
+  takes `--ct_number` for a single EU trial.
+- `src/trial_map_manager.py` — `map_single_ctis_trial()` as a separate entry
+  point, since the two registries publish different documents and local trial
+  info is keyed on NCT ids. Synonym loading also merges
+  `ref/gene_synonym_addendum.tsv`.
+- `src/trial_criteria_to_genes.py` — blocked and contextual synonyms. Aliases
+  that in trial text overwhelmingly mean something other than the gene never
+  resolve through the NCBI table; a blocked alias can still resolve when
+  supporting keywords appear nearby.
+- `utils/ai_helper.py` — a JSON schema for every prompt, not just genomic
+  criteria, so answers are constrained rather than requested in prose. Where
+  a prompt restricts the answer to a candidate list the schema enumerates it,
+  which makes an off-list answer impossible to emit. Also `get_minimum_age()`,
+  which reads an age bound out of free text for CTIS, which publishes no
+  structured age field.
+- `utils/reference_validation.py` — validates Oncotree diagnoses and HUGO
+  symbols against the reference files, rewrites Oncotree codes and retired
+  gene symbols, and reads diagnoses straight out of `conditionsModule` before
+  any model is asked.
+- `scripts/run_ollama_mapping.sh`, `doc/cluster_setup.md` — running the
+  mapping on a Slurm GPU cluster with Ollama under Apptainer.
+- `bench/benchmark_map.py`, `bench/build_reviewed.py`, `bench/curations.py`,
+  `bench/README.md`, `bench/report.json` — the benchmark harness, its scores,
+  and its 50-trial answer key, whose
+  match criteria are hand-written in `curations.py` and combined with the
+  pipeline's deterministic, non-LLM mapping of the cached record.
 
 ## Defects fixed
 
@@ -47,6 +74,20 @@ These are upstream bugs, fixed here and worth reporting back.
 - `src/match_criteria_mapper.py` — genomic criteria could be emitted asserting
   a gene both present and absent in the same AND branch, producing a trial
   that matches zero patients. Now detected and resolved.
+- `src/clinical_trials_gov.py` — diagnosis mapping picks Oncotree level_1
+  nodes and then picks children within them, so a wrong level_1 removed the
+  correct answer from the list the model was shown rather than merely making
+  it less likely. Neuroblastoma sits under Peripheral Nervous System but
+  arises in the adrenal medulla, so "Adrenal Gland" was the natural pick and
+  its only children are adrenocortical adenoma, adrenocortical carcinoma and
+  phaeochromocytoma: five of six neuroblastoma trials returned exactly that
+  pair, silently. Terms named outright in `conditionsModule` are now read
+  first and force their own branch into the second stage.
+- `utils/ai_helper.py` — nine of eleven prompts asked for JSON in prose with
+  no schema. A malformed answer was logged as a `JSONDecodeError` and replaced
+  with an empty dict, so the whole response was discarded as though the model
+  had found nothing, indistinguishable downstream from a trial with no
+  diagnoses.
 
 ## Reference data
 
@@ -56,6 +97,42 @@ These are upstream bugs, fixed here and worth reporting back.
   table mapped H3, H4 and H5 to FGFR1, which current NCBI does not list.
 - `ref/Census_gene_list.csv` — untracked. The COSMIC licence restricts
   redistribution and this fork is public. Nothing reads it at runtime.
+- `ref/genes_kispi.txt` — the raw list as Kispi supplied it, kept so the
+  normalisation to current HGNC stays auditable. The difference from
+  `ref/genes.txt` is fifteen renames, and those are the only retired spellings
+  the validator will rewrite.
+- `ref/gene_synonym_addendum.tsv` — case variants NCBI stores only in upper
+  case (`p53`, `p16`, `Ini1`), multi-gene aliases (`RAS`), and a `!` blocklist
+  for aliases handled elsewhere (`PD-L1`, which has its own biomarker path).
+- `ref/synonym_collisions.tsv` — aliases claimed by more than one gene,
+  quarantined by `utils/build_gene_synonyms.py` rather than guessed at.
+
+## Removed
+
+- `utils/schema.py` — declared `trial_genomic_json_schema` and was imported by
+  `utils/ai_helper.py` without ever being referenced. Its two extra fields,
+  `variant_classification` and `exon`, have been folded into the live
+  `GENOMIC_CRITERIA_SCHEMA`; omitting them there had silently removed the
+  model's ability to emit them at all, since llama.cpp builds its grammar from
+  the declared properties.
+
+## Tooling and documentation
+
+- `bulk_convert_yaml_to_json.py` — rewritten as a CLI over `ctml/reviewed`
+  instead of a script with a hardcoded list of NCT ids.
+- `utils/get_gene_synonym_mapping.py` — unchanged in behaviour, documented as
+  superseded by `utils/build_gene_synonyms.py` and as requiring a COSMIC
+  download that is no longer tracked.
+- `config.py` — Anthropic settings, Ollama context and prediction limits, a
+  request timeout, and the model the cluster runs. `scripts/run_ollama_mapping.sh`
+  reads the model from here, so this file is the single source of truth for it.
+- `.gitignore` — untracks pulled trial data, logs, the COSMIC census, the NCBI
+  harvest cache, and the transient `ctml/json` hand-off queue.
+- `doc/nct_to_ctml_mapping_guide.md` — updated for this fork.
+- `tests/test_reference_validation.py`, `tests/test_ai_schemas.py`,
+  `tests/test_diagnosis_branch_floor.py` are new;
+  `tests/test_match_criteria_mapper.py` gained cases for contradiction
+  resolution and fabricated inclusions.
 
 ## Still carrying upstream assumptions
 

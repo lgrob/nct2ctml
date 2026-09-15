@@ -8,7 +8,6 @@ import re
 import config
 import requests
 import urllib.parse
-import utils.schema as schema
 from inspect import cleandoc
 from loguru import logger
 from utils.llm_platforms import create_llm_platform
@@ -664,6 +663,22 @@ GENOMIC_CRITERIA_SCHEMA = {
                         ],
                     },
                     "protein_change": {"type": "string"},
+                    # Kept from utils/schema.py's trial_genomic_json_schema,
+                    # which declared these and was never wired to anything.
+                    # Omitting them here silently removed the model's ability
+                    # to say them: llama.cpp builds its grammar from the
+                    # declared properties, so an undeclared field cannot be
+                    # generated. ctml/reviewed uses variant_classification on
+                    # three trials and exon on one.
+                    "variant_classification": {
+                        "type": "string",
+                        "enum": [
+                            "In_Frame_Del", "In_Frame_Ins", "Splice_Site",
+                            "Missense_Mutation", "Nonsense_Mutation",
+                            "Frame_Shift_Del", "Frame_Shift_Ins",
+                        ],
+                    },
+                    "exon": {"type": "integer"},
                     "cnv_call": {
                         "type": "string",
                         "enum": [
