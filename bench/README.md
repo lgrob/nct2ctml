@@ -60,7 +60,7 @@ run without spending anything:
 |---|---|
 | diagnoses | Oncotree terms, exact set comparison: precision / recall / F1 |
 | genes | `hugo_symbol` values, exact set comparison |
-| age | the trial-level `age` label |
+| age | `age_numerical` bounds, exact set comparison after normalising `<` to `<=` |
 | structure | genes asserted present *and* absent in the same AND branch - the shape that matches zero patients |
 
 ## Reading the result
@@ -78,11 +78,31 @@ no patient at all, whatever the F1 says.
 
 The scorer was validated three ways:
 
-    answer key vs itself      dx F1 1.00   gene F1 1.00   (identity)
-    answers shuffled by one   dx F1 0.05   gene F1 0.26   (wrong but well-formed)
+    answer key vs itself      dx F1 1.00   gene F1 1.00   age F1 1.00   (identity)
+    answers shuffled by one   dx F1 0.05   gene F1 0.26   age F1 0.15   (wrong but well-formed)
     flattened MYCN AND        flagged      (and the correct OR is not)
 
 So 1.00 means agreement and ~0.05 means chance on diagnoses. The gene floor is
 higher because 26 trials have no genomic criterion, and empty-versus-empty
 scores 1.0; read the gene mean alongside the count of trials that actually
 carry genes, not on its own.
+
+## Why age scores the bounds and not the label
+
+The trial-level `age` label ("Children" / "All") was scored until 2026-09-15.
+It was the wrong target twice over. MatchMiner does not match on it - it
+matches on `age_numerical` in the tree - and the label is derived
+deterministically from the trial's `stdAges` bands, so scoring it compared a
+ClinicalTrials.gov fact against a curator's clinical judgement. 35 of 49
+trials disagreed, always in the same direction, and the column measured the
+curator rather than the pipeline. The key now takes whatever `map_age_group`
+derives, and the column scores the bounds that actually select patients.
+
+`<` and `<=` are normalised together because MatchMiner's query transformer
+maps both to the same Mongo operator, so `<18` and `<=18` select identical
+patients and must not count as different answers.
+
+Expect roughly 0.83 on the current key. The gap is real and worth reading: it
+is mostly trials whose age limits are stated only in the eligibility prose,
+which the deterministic mapper does not read - NCT04625907 carries no
+structured ages at all, and its curated `>=1` / `<=25` come from the text.

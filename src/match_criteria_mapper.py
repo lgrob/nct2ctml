@@ -146,9 +146,48 @@ def get_keywords_from_conditions(conditions_list):
                 all_keywords.add(cond_keyword)
     return all_keywords
 
+def _split_extra_age_bounds(clinical_critera):
+    """
+    Leave one age_numerical in the dict and return the rest as their own nodes.
+
+    A trial bounded at both ends needs two age_numerical values, and a dict
+    holds one key once. MatchMiner resolves this the same way a curator does:
+    sibling clinical nodes under `and` become separate queries whose results
+    are intersected, so ">=1" beside "<=14" is a range. Putting both in one
+    node would not work even if the schema allowed it - the engine flattens a
+    node's query parts into a single dict keyed by field, so the second bound
+    would overwrite the first.
+    """
+    value = clinical_critera.get("age_numerical")
+    if not isinstance(value, (list, tuple)):
+        return []
+    bounds = [str(v).strip() for v in value if str(v).strip()]
+    if not bounds:
+        clinical_critera.pop("age_numerical", None)
+        return []
+    clinical_critera["age_numerical"] = bounds[0]
+    return [{"clinical": {"age_numerical": b}} for b in bounds[1:]]
+
+
+def _and_together(result, extra_nodes):
+    """Attach sibling nodes to whatever shape the converter produced."""
+    if not extra_nodes:
+        return result
+    if not result:
+        return extra_nodes[0] if len(extra_nodes) == 1 else {"and": extra_nodes}
+    if len(result) == 1 and "and" in result:
+        return {"and": list(result["and"]) + extra_nodes}
+    return {"and": [result] + extra_nodes}
+
+
 def convert_to_ctml_clinical_schema(clinical_critera, trial_id: str = "") -> dict:
     clinical_critera = dict(clinical_critera or {})
+    extra_age_nodes = _split_extra_age_bounds(clinical_critera)
+    return _and_together(
+        _convert_clinical_block(clinical_critera, trial_id), extra_age_nodes)
 
+
+def _convert_clinical_block(clinical_critera, trial_id: str = "") -> dict:
     # Extract the diagnosis list
     diagnoses = []
     if "oncotree_primary_diagnosis" in clinical_critera and clinical_critera["oncotree_primary_diagnosis"]:

@@ -43,6 +43,20 @@ def walk(node, want):
             yield from walk(v, want)
 
 
+def _age_key(expr):
+    """
+    An age bound in the form MatchMiner actually compares.
+
+    Its query transformer maps "<" and "<=" to the same Mongo operator, and
+    ">" and ">=" likewise, so `<18` and `<=18` select identical patients. The
+    key must not treat them as different answers.
+    """
+    text = str(expr).strip()
+    if text.startswith(("<", ">")) and not text.startswith(("<=", ">=")):
+        return text[0] + "=" + text[1:]
+    return text
+
+
 def facts(doc):
     """Reduce a CTML document to the things worth comparing."""
     steps = (doc.get("treatment_list") or {}).get("step") or []
@@ -53,7 +67,7 @@ def facts(doc):
             if c.get("oncotree_primary_diagnosis"):
                 diagnoses.add(str(c["oncotree_primary_diagnosis"]).strip())
             if c.get("age_numerical"):
-                ages.add(str(c["age_numerical"]).strip())
+                ages.add(_age_key(c["age_numerical"]))
         for g in walk(m, "genomic"):
             if g.get("hugo_symbol"):
                 genes.add(str(g["hugo_symbol"]).strip())
@@ -110,6 +124,7 @@ def score(truth_dir, out_dir, ids):
         dp, dr, df = prf(o["diagnoses"], t["diagnoses"])
         gp, gr, gf = prf(o["genes"], t["genes"])
         uns = unsatisfiable(o["matches"])
+        ap_, ar_, af_ = prf(o["ages"], t["ages"])
         rows.append({
             "nct_id": nct, "status": "ok",
             "dx_p": dp, "dx_r": dr, "dx_f1": df,
@@ -119,9 +134,11 @@ def score(truth_dir, out_dir, ids):
             "dx_missed": sorted(t["diagnoses"] - o["diagnoses"])[:6],
             "dx_spurious": sorted(o["diagnoses"] - t["diagnoses"])[:6],
             "age_truth": t["age_label"], "age_got": o["age_label"],
+            "age_f1": af_, "age_p": ap_, "age_r": ar_,
+            "ages_truth": sorted(t["ages"]), "ages_got": sorted(o["ages"]),
             "unsatisfiable": sorted(uns),
         })
-        for k in ("dx_f1", "gene_f1", "dx_p", "dx_r", "gene_p", "gene_r"):
+        for k in ("dx_f1", "gene_f1", "age_f1", "dx_p", "dx_r", "gene_p", "gene_r"):
             agg[k].append(rows[-1][k])
     return rows, agg
 
@@ -129,8 +146,8 @@ def score(truth_dir, out_dir, ids):
 def report(rows, agg):
     ok = [r for r in rows if r["status"] == "ok"]
     print(f"\n{'trial':<14}{'dx F1':>7}{'dx P':>7}{'dx R':>7}{'gene F1':>9}"
-          f"{'#dx':>6}{'  age':>8}  flags")
-    print("-" * 78)
+          f"{'age F1':>8}{'#dx':>6}  flags")
+    print("-" * 82)
     for r in rows:
         if r["status"] != "ok":
             print(f"{r['nct_id']:<14}{r['status']}")
@@ -138,18 +155,19 @@ def report(rows, agg):
         flags = []
         if r["unsatisfiable"]:
             flags.append("UNSATISFIABLE:" + ",".join(r["unsatisfiable"]))
-        if r["age_truth"] != r["age_got"]:
-            flags.append(f"age {r['age_got']}!={r['age_truth']}")
+        missed_bound = [a for a in r["ages_truth"] if a not in r["ages_got"]]
+        if missed_bound:
+            flags.append("age bound missing:" + ",".join(missed_bound))
         if r["n_dx_got"] > 3 * max(r["n_dx_truth"], 1):
             flags.append("dx over-generated")
         print(f"{r['nct_id']:<14}{r['dx_f1']:>7.2f}{r['dx_p']:>7.2f}{r['dx_r']:>7.2f}"
-              f"{r['gene_f1']:>9.2f}{r['n_dx_got']:>3}/{r['n_dx_truth']:<2}"
-              f"{str(r['age_got'])[:7]:>8}  {' '.join(flags)}")
+              f"{r['gene_f1']:>9.2f}{r['age_f1']:>8.2f}"
+              f"{r['n_dx_got']:>4}/{r['n_dx_truth']:<2}  {' '.join(flags)}")
     if ok:
-        print("-" * 78)
+        print("-" * 82)
         print(f"{'MEAN':<14}{sum(agg['dx_f1'])/len(ok):>7.2f}"
               f"{sum(agg['dx_p'])/len(ok):>7.2f}{sum(agg['dx_r'])/len(ok):>7.2f}"
-              f"{sum(agg['gene_f1'])/len(ok):>9.2f}")
+              f"{sum(agg['gene_f1'])/len(ok):>9.2f}{sum(agg['age_f1'])/len(ok):>8.2f}")
         print(f"\nscored {len(ok)}/{len(rows)} trials")
         bad = [r['nct_id'] for r in ok if r['unsatisfiable']]
         if bad:

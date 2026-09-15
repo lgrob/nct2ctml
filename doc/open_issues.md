@@ -70,6 +70,40 @@ trials so they are skipped at *map* time - that is where the GPU cost is - with
 the skip list visible and reversible. A hard drop at pull time saves little
 more and cannot be audited.
 
+### maximumAge is ambiguous by one year, and the mapper takes it literally
+
+`map_age_numerical` now emits `<=N` straight from the structured
+`maximumAge`. ClinicalTrials.gov does not define that field consistently, and
+sponsors disagree about what they mean by it. Matching the structured value
+against each trial's own prose across the 924 cached records:
+
+    text says "< N+1 years"   -> maximumAge is completed years    38
+    text says "up to N years" -> maximumAge is inclusive         131
+    text says "< N years"     -> text contradicts the structured  86
+
+`NCT03643276` spells the first reading out: `maximumAge: 17 Years`, text "age
+< 18 years (up to 17 years and 365 days)". Under that reading `<=17` in
+MatchMiner means age <= 17.0 and drops every eligible patient between 17.0 and
+17.99 - the AYA group, which is not a rounding error in paediatric oncology.
+Under the second reading `<=N` is correct.
+
+No arithmetic rule fits all three. `<=N` was chosen because it is literally
+what the structured field says and a reviewer can check it against the
+registry entry in one click; `<=N+1` would fit more trials and silently widen
+the others. The counts above are from a crude regex over free text, so they
+bound the problem rather than settle it. Settling it is a clinical decision
+about who should be allowed to match, not a coding one.
+
+### Age bounds stated only in prose are not mapped
+
+`map_age_numerical` reads the structured `minimumAge` / `maximumAge` and
+nothing else, so a trial that states its limits only in the eligibility text
+gets no bound. `NCT04625907` carries no structured ages at all, while its
+curated key holds `>=1` and `<=25` taken from the prose; `NCT02559778` states
+18 months in the text and nothing structured. This is the bulk of the gap
+between the benchmark's age F1 (~0.83) and 1.00, and it is visible now only
+because that column scores the bounds rather than the trial-level label.
+
 ### A basket trial can get both the wildcard and specific diagnoses
 `map_global_diagnosis_to_oncotree_term` adds condition-derived terms first and
 reaches the `_SOLID_`/`_LIQUID_` path only when the eligibility mapping returns

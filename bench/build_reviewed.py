@@ -2,12 +2,18 @@
 Rebuild the hand-curated answer key in ctml/reviewed/ from bench/curations.py.
 
 The answer key is what the benchmark scores against, so it must not come from
-the model it is judging. Everything the scorer looks at - the `age` label and
-the clinical/genomic blocks in the match tree - is hand-written in
+the model it is judging. What the scorer compares - the clinical and genomic
+blocks in the match tree, age bounds included - is hand-written in
 bench/curations.py after reading the trial's own eligibility text. Everything
-it ignores - titles, arms, drugs, sponsor - comes from the pipeline's
-deterministic mapping of the cached ClinicalTrials.gov record, which involves
-no LLM.
+else - titles, arms, drugs, sponsor - comes from the pipeline's deterministic
+mapping of the cached ClinicalTrials.gov record, which involves no LLM.
+
+The trial-level `age` label is in that second group. It used to be curated,
+which made it a judgement ("this is a paediatric trial") measured against a
+fact (the trial's stdAges bands), and 35 of 49 trials disagreed. It is
+metadata rather than a match criterion - MatchMiner matches on age_numerical -
+so the key now takes whatever map_age_group derives, and the age column scores
+the bounds that actually select patients.
 
 Keeping the curated part as data rather than as 50 hand-maintained YAML files
 means a schema change does not require re-editing every file, and the
@@ -88,7 +94,6 @@ def build(nct_id, curation):
     drugs = (schema.get("drug_list") or {}).get("drug")
     if isinstance(drugs, list):
         drugs.sort(key=lambda d: str((d or {}).get("drug_name", "")))
-    schema["age"] = curation["age"]
     schema["curated_on"] = curation.get("curated_on", _first_curated_on(nct_id))
     steps = schema.setdefault("treatment_list", {}).setdefault("step", [])
     if not steps:

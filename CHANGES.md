@@ -119,6 +119,29 @@ These are upstream bugs, fixed here and worth reporting back.
   had found nothing, indistinguishable downstream from a trial with no
   diagnoses.
 
+- `map_age_numerical` — emits the trial's **upper** age bound as well as its
+  lower one. `maximumAge` was read nowhere in the codebase, so every trial was
+  open-ended at the top: NCT06776952 enrols patients aged 18 to 70 *days* and
+  matched every child in the database. 613 of the 924 cached trials state a
+  maximum and 56 cap below 18. Returns a list, and
+  `convert_to_ctml_clinical_schema` emits the second bound as a sibling
+  `clinical` node — two `age_numerical` keys cannot share one dict, and
+  MatchMiner intersects sibling nodes, which is how a range is expressed.
+  Verified against MatchMiner: `age_numerical` has no `allowed` list in
+  `yaml_clinical_schema`, its query transformer accepts `<=`, `<`, `>=`, `>`
+  and `==`, DFCI's own integration fixture `younger_than_18.json` curates
+  `"<18"`, and each `clinical` dict becomes its own query node so two bounds
+  on the same field do not collide.
+- `bench/benchmark_map.py` — scores `age_numerical` instead of the trial-level
+  `age` label. `facts()` had collected the bounds all along and nothing read
+  them. The label is derived deterministically from `stdAges`, so scoring it
+  compared a registry fact against a curator's judgement; 35 of 49 trials
+  disagreed, always in the same direction. `<` and `<=` are normalised
+  together because MatchMiner maps both to the same operator.
+- `bench/build_reviewed.py`, `bench/curations.py` — the `age` label is no
+  longer curated; it comes from `map_age_group` like every other field the
+  scorer does not compare. 39 curated entries lost the kwarg and 9
+  hand-written keys were realigned.
 - `utils/oncotree.py` — `_parse_level_value` stripped the Oncotree code by
   splitting on the first `(`, which truncated the twenty nodes whose display
   name contains a parenthesis of its own and merged those sharing a prefix:

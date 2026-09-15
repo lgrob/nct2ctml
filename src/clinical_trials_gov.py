@@ -81,9 +81,12 @@ def map_nct_to_clinical_and_genomic_criteria(trial_data: dict,
     oncotree_diagnoses_list = map_global_diagnosis_to_oncotree_term(trial_data, global_nct_criteria)
     mapped_global_clinical_critera['oncotree_primary_diagnosis'] = oncotree_diagnoses_list
 
-    age_numerical_str = map_age_numerical(trial_data)
-    if age_numerical_str:
-        mapped_global_clinical_critera['age_numerical'] = age_numerical_str
+    # A list, because a trial can bound age at both ends. The converter emits
+    # each bound as its own clinical node - two age_numerical keys cannot live
+    # in one dict, and MatchMiner intersects sibling nodes anyway.
+    age_bounds = map_age_numerical(trial_data)
+    if age_bounds:
+        mapped_global_clinical_critera['age_numerical'] = age_bounds
     
     gender_str = map_gender(trial_data)
     if gender_str:
@@ -582,39 +585,66 @@ def map_age_group(trial_data: dict) -> str:
     return cs.get_ctml_schema()['age']
 
 
-def map_age_numerical(trial_data: dict) -> str:
+def _age_bound(raw, operator, nct_id=""):
     """
-    Map minimumAge to a CTML age_numerical expression, in years.
+    One CTML age_numerical expression from a clinicaltrials.gov age string.
 
-    Handles every unit clinicaltrials.gov emits (singular and plural), not just
-    "Years". Sub-year ages become decimals - 6 Months -> ">=0.5" - so that
-    infant and neonatal trials keep a usable lower bound.
+    Returns "" when the value is absent or unparseable - the bound is then
+    simply not expressed, which is the safe direction for a lower bound and
+    the unavoidable one for an upper.
     """
-    minimum_age = tdh.safe_get(trial_data, ['protocolSection', 'eligibilityModule', 'minimumAge'])
-    if not minimum_age:
+    if not raw:
         return ""
 
-    components = minimum_age.split()
+    components = str(raw).split()
     if len(components) < 2:
-        logger.warning(f"Could not parse minimumAge {minimum_age!r}; omitting age_numerical")
+        logger.warning(f"NCTID: {nct_id} | Could not parse age {raw!r}; omitting the bound")
         return ""
 
     try:
         value = float(components[0])
     except ValueError:
-        logger.warning(f"Non-numeric minimumAge {minimum_age!r}; omitting age_numerical")
+        logger.warning(f"NCTID: {nct_id} | Non-numeric age {raw!r}; omitting the bound")
         return ""
 
     unit = components[1].lower().rstrip('s')  # "Months" -> "month", "Year" -> "year"
     if unit not in _AGE_UNIT_IN_YEARS:
-        logger.warning(f"Unknown age unit in {minimum_age!r}; omitting age_numerical")
+        logger.warning(f"NCTID: {nct_id} | Unknown age unit in {raw!r}; omitting the bound")
         return ""
 
     years = round(value * _AGE_UNIT_IN_YEARS[unit], 2)
     # Keep whole years as integers (">=18"); express the rest to 2dp (">=0.5").
+    # MatchMiner reads the fraction as a fraction of a year and converts it to
+    # whole months, so 0.5 is six months and 0.08 is one - the same reading
+    # this conversion intends.
     if years == int(years):
-        return f">={int(years)}"
-    return f">={years}"
+        return f"{operator}{int(years)}"
+    return f"{operator}{years}"
+
+
+def map_age_numerical(trial_data: dict) -> list:
+    """
+    The trial's age bounds as CTML age_numerical expressions, in years.
+
+    Both bounds, in the order lower-then-upper. maximumAge used to be
+    discarded, which left every trial open-ended at the top: a study enrolling
+    18 to 70 *days* matched every child in the database. 613 of the 924 cached
+    trials state a maximum and 56 of those cap below 18, so in a paediatric
+    service the missing bound is not a corner case.
+
+    Handles every unit clinicaltrials.gov emits (singular and plural), not just
+    "Years". Sub-year ages become decimals - 6 Months -> ">=0.5" - so that
+    infant and neonatal trials keep a usable bound at both ends.
+
+    Note that MatchMiner treats "<" and "<=" identically (likewise ">" and
+    ">="), so the inclusive forms are used throughout; nothing is lost.
+    """
+    eligibility = tdh.safe_get(trial_data, ['protocolSection', 'eligibilityModule']) or {}
+    nct_id = get_nct_id(trial_data)
+    bounds = [_age_bound(eligibility.get('minimumAge'), ">=", nct_id),
+              _age_bound(eligibility.get('maximumAge'), "<=", nct_id)]
+    return [b for b in bounds if b]
+
 
 def map_her2_er_pr_status(nct_id: str, eligibilityCriteria: str, keywords:list):    
     result = ai.get_her2_er_pr_status(nct_id, eligibilityCriteria, keywords)
