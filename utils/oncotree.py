@@ -4,8 +4,15 @@ import os
 sys.path.append(os.path.abspath('../'))
 
 import csv
+import re
 from collections import defaultdict
 import config
+
+# "Acute Myeloid Leukemia (AML)" -> the display name, dropping the trailing
+# Oncotree code. Anchored at the end because a display name may contain
+# brackets of its own, and the same pattern is used by
+# utils/reference_validation so the two parsers cannot diverge again.
+_LEVEL_VALUE = re.compile(r"\s+\([A-Z0-9_./-]+\)$")
 
 
 def _get_level_columns(fieldnames):
@@ -16,7 +23,19 @@ def _get_level_columns(fieldnames):
 
 
 def _parse_level_value(value):
-    return value.split('(')[0].strip()
+    """
+    The Oncotree display name, with its code removed.
+
+    This used to split on the first "(", which silently truncated the twenty
+    nodes whose display name contains a parenthesis - and merged them, since
+    the five B-Lymphoblastic Leukemia/Lymphoma translocation subtypes all
+    became "B-Lymphoblastic Leukemia/Lymphoma with t". The model was then
+    offered a name no patient record can carry, answered with it faithfully,
+    and had the answer rejected by the validator, which parses the same file
+    correctly. Fifteen of the twenty are haematological - ETV6-RUNX1,
+    TCF3-PBX1, BCR-ABL1, KMT2A-rearranged, RUNX1-RUNX1T1, CBFB-MYH11.
+    """
+    return _LEVEL_VALUE.sub("", value.strip()).strip()
 
 
 def _read_oncotree_rows():

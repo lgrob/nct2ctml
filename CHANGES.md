@@ -119,6 +119,21 @@ These are upstream bugs, fixed here and worth reporting back.
   had found nothing, indistinguishable downstream from a trial with no
   diagnoses.
 
+- `utils/oncotree.py` — `_parse_level_value` stripped the Oncotree code by
+  splitting on the first `(`, which truncated the twenty nodes whose display
+  name contains a parenthesis of its own and merged those sharing a prefix:
+  the five `B-Lymphoblastic Leukemia/Lymphoma with t(...)` subtypes all
+  became `B-Lymphoblastic Leukemia/Lymphoma with t`, and three `AML with
+  t(...)` translocations became `AML with t`. The model was offered a name
+  no patient record can carry, answered with it, and had the answer rejected
+  by `utils/reference_validation`, which parses the same file with an
+  end-anchored pattern. Both now use that pattern. Fifteen of the twenty are
+  haematological — ETV6-RUNX1, TCF3-PBX1, BCR-ABL1, KMT2A-rearranged,
+  RUNX1-RUNX1T1, CBFB-MYH11 — so the largest paediatric disease group was
+  the worst affected. 18 nodes became reachable, 9 invalid strings are gone,
+  and the 32 level_1 categories are unchanged. A test now asserts that every
+  name offered to the model is one the validator accepts.
+
 ## Reference data
 
 - `ref/genes.txt` — Kispi's 1,092-symbol paediatric list replaces the COSMIC
