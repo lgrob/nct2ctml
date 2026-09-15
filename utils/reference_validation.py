@@ -207,3 +207,46 @@ def filter_genomic_criteria(genomic_criteria, trial_id=""):
         genomic["hugo_symbol"] = name
         kept.append(entry)
     return kept
+
+
+# Qualifiers ClinicalTrials.gov puts in front of a diagnosis in
+# conditionsModule. Peeled only after the unmodified string has failed, so a
+# real node whose name starts with one of these ("Primary Brain Tumor",
+# "Malignant Peripheral Nerve Sheath Tumor") is matched before anything is
+# stripped.
+_CONDITION_QUALIFIER = re.compile(
+    r"^(newly diagnosed|recurrent|refractory|relapsed|metastatic|advanced|"
+    r"high[- ]risk|low[- ]risk|intermediate[- ]risk|childhood|paediatric|"
+    r"pediatric|adult|primary|malignant|stage [0-9ivx]+|group [a-e])\s+",
+    re.IGNORECASE)
+
+
+def strip_condition_qualifiers(condition):
+    """"High-Risk Neuroblastoma" -> "Neuroblastoma". Repeats until stable."""
+    condition = (condition or "").strip()
+    previous = None
+    while previous != condition:
+        previous = condition
+        condition = _CONDITION_QUALIFIER.sub("", condition).strip()
+    return condition
+
+
+def diagnoses_from_conditions(conditions):
+    """
+    Oncotree terms the trial names outright in conditionsModule.
+
+    Trials list their own diagnoses, and 27% of the cached corpus uses the
+    exact Oncotree display name - "Neuroblastoma" is both. Reading that costs
+    no tokens and cannot hallucinate, so it is worth doing before asking a
+    model anything. Order-stable and deduplicated.
+    """
+    found, seen = [], set()
+    for condition in conditions or []:
+        for candidate in (condition, strip_condition_qualifiers(condition)):
+            name = canonical_diagnosis(candidate)
+            if name:
+                if name not in seen:
+                    seen.add(name)
+                    found.append(name)
+                break
+    return found

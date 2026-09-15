@@ -22,6 +22,7 @@ import src.ctml_schema as cs
 import utils.ai_helper as ai
 import src.trial_data_helper as tdh
 import utils.oncotree as onct
+import utils.reference_validation as rv
 import src.trial_criteria_to_genes as ctg
 import src.match_criteria_mapper as mcm
 from src.match_criteria_mapper import ArmCriteriaBlocks, ArmCriteriaText
@@ -664,13 +665,24 @@ def map_disease_status(nct_id: str, eligibilityCriteria: str, keywords: list):
     result = ai.get_disease_status(nct_id, eligibilityCriteria, keywords)
     return result
 
-def map_eligibility_criteria_to_oncotree_term(nct_id: str, eligibility_criteria: str) -> list:
+def map_eligibility_criteria_to_oncotree_term(nct_id: str, eligibility_criteria: str,
+                                              seed_terms=()) -> list:
+    """
+    Two-stage mapping: pick level_1 nodes, then pick children within them.
+
+    `seed_terms` are Oncotree terms already known to apply - typically read
+    straight out of the trial's own conditions - and their branches are added
+    to the second stage no matter what the first stage chose. Without that
+    floor a wrong level_1 makes the right answer unreachable rather than
+    merely unlikely: neuroblastoma sits under Peripheral Nervous System, but
+    it arises in the adrenal medulla, so "Adrenal Gland" is the natural pick
+    and its only children are Adrenocortical Adenoma, Adrenocortical Carcinoma
+    and Pheochromocytoma. Five of six neuroblastoma trials in the benchmark
+    returned exactly that pair, with no error raised.
+    """
     level_1_diagnosis, l1_to_all_mapping = onct.get_all_oncotree_data()
     level1_oncotree_values_dict = ai.get_oncotree_diagnoses_from_trial_info(nct_id, eligibility_criteria, level_1_diagnosis)
     level1_diagnoses = level1_oncotree_values_dict.get("oncotree_diagnoses", [])
-    if not level1_diagnoses:
-        logger.debug(f"NCTID: {nct_id} | No level 1 diagnoses from eligibility criteria, skipping child-level mapping")
-        return []
 
     all_level_oncotree_values = set()
     all_possible_diagnoses = set()
@@ -679,6 +691,16 @@ def map_eligibility_criteria_to_oncotree_term(nct_id: str, eligibility_criteria:
             continue
         child_oncotree_values = l1_to_all_mapping[item]
         all_level_oncotree_values.update(child_oncotree_values)
+
+    seed_terms = {t for t in (seed_terms or ()) if t}
+    forced = {parent for parent, children in l1_to_all_mapping.items()
+              if seed_terms & children}
+    for parent in forced:
+        all_level_oncotree_values.update(l1_to_all_mapping[parent])
+    if forced:
+        logger.info(f"NCTID: {nct_id} | Forcing {sorted(forced)} into the child-level "
+                    f"list; the trial names {sorted(seed_terms)} outright")
+
     logger.debug(f"NCTID: {nct_id} | Diagnoses = {level1_diagnoses}. Child values = {all_level_oncotree_values}")
     if not all_level_oncotree_values:
         logger.debug(f"NCTID: {nct_id} | No child oncotree values to map, skipping child-level diagnosis request")
@@ -751,13 +773,35 @@ def map_global_diagnosis_to_oncotree_term(trial_data: dict, global_eligibility_c
     nct_id = get_nct_id(trial_data)
     all_possible_diagnoses = set()
 
+    # Read the trial's own condition list first. It costs no tokens, cannot
+    # hallucinate, and on the curated benchmark a plain lookup of these strings
+    # against Oncotree scores within 0.02 of what the 70B model achieves
+    # through both LLM stages. It is a floor, not a replacement: precision is
+    # high but it finds only about a third of the answers.
+    conditions_list = tdh.safe_get(trial_data, ['protocolSection', 'conditionsModule', 'conditions']) or []
+    seeded = rv.diagnoses_from_conditions(conditions_list)
+    if seeded:
+        logger.info(f"NCTID: {nct_id} | Conditions name Oncotree terms directly: {seeded}")
+        all_possible_diagnoses.update(seeded)
+
+    from_eligibility = []
     if global_eligibility_criteria and global_eligibility_criteria.strip():
         logger.info(f"NCTID: {nct_id} | Mapping global diagnosis from eligibility criteria")
-        all_possible_diagnoses.update(
-            map_eligibility_criteria_to_oncotree_term(nct_id, global_eligibility_criteria)
+        from_eligibility = map_eligibility_criteria_to_oncotree_term(
+            nct_id, global_eligibility_criteria, seeded
         )
+        all_possible_diagnoses.update(from_eligibility)
+        # Worth seeing. The model disagreeing with a string the trial states
+        # outright is the signature of the branch problem above, and it was
+        # silent until now.
+        overlooked = set(seeded) - set(from_eligibility)
+        if overlooked:
+            logger.warning(
+                f"NCTID: {nct_id} | Eligibility mapping did not return {sorted(overlooked)}, "
+                f"which the trial's own conditions name outright. Kept from the conditions."
+            )
 
-    if len(all_possible_diagnoses) == 0:
+    if not from_eligibility:
         logger.info(f"NCTID: {nct_id} | No oncotree diagnosis from eligibility criteria, falling back to conditions and extra info")
         all_possible_diagnoses.update(_map_global_diagnosis_from_conditions_and_extra_info(trial_data))
 

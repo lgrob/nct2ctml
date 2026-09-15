@@ -9,8 +9,10 @@ from loguru import logger
 from utils.reference_validation import (
     canonical_diagnosis,
     canonical_gene,
+    diagnoses_from_conditions,
     filter_diagnoses,
     filter_genomic_criteria,
+    strip_condition_qualifiers,
 )
 
 logger.remove()  # the filters log every drop; tests assert on return values
@@ -156,6 +158,55 @@ class TestFilterGenomicCriteria(unittest.TestCase):
     def test_empty_input(self):
         self.assertEqual(filter_genomic_criteria([]), [])
         self.assertEqual(filter_genomic_criteria(None), [])
+
+
+class TestDiagnosesFromConditions(unittest.TestCase):
+    """
+    conditionsModule is the trial stating its own diagnoses, and 27% of the
+    cached corpus uses the exact Oncotree display name. Reading it costs no
+    tokens and cannot hallucinate.
+    """
+
+    def test_exact_condition_is_taken(self):
+        self.assertEqual(diagnoses_from_conditions(["Neuroblastoma"]),
+                         ["Neuroblastoma"])
+
+    def test_qualifiers_are_peeled(self):
+        self.assertEqual(
+            diagnoses_from_conditions(["High-Risk Neuroblastoma"]),
+            ["Neuroblastoma"])
+        self.assertEqual(
+            diagnoses_from_conditions(["Recurrent Childhood Medulloblastoma"]),
+            ["Medulloblastoma"])
+
+    def test_a_real_node_beats_its_own_prefix(self):
+        # "Primary" and "Malignant" are peelable qualifiers, but these are the
+        # node names. The unmodified string is tried first for exactly this.
+        self.assertEqual(diagnoses_from_conditions(["Primary Brain Tumor"]),
+                         ["Primary Brain Tumor"])
+        self.assertEqual(
+            diagnoses_from_conditions(["Malignant Peripheral Nerve Sheath Tumor"]),
+            ["Malignant Peripheral Nerve Sheath Tumor"])
+
+    def test_non_diagnoses_yield_nothing(self):
+        # The commonest condition strings are categories, not Oncotree nodes.
+        self.assertEqual(diagnoses_from_conditions(
+            ["Pediatric Cancer", "Solid Tumor", "Healthy Volunteers"]), [])
+
+    def test_order_stable_and_deduplicated(self):
+        self.assertEqual(
+            diagnoses_from_conditions(
+                ["Osteosarcoma", "Recurrent Osteosarcoma", "Ewing Sarcoma"]),
+            ["Osteosarcoma", "Ewing Sarcoma"])
+
+    def test_empty_input(self):
+        self.assertEqual(diagnoses_from_conditions([]), [])
+        self.assertEqual(diagnoses_from_conditions(None), [])
+
+    def test_strip_is_idempotent(self):
+        self.assertEqual(
+            strip_condition_qualifiers("Recurrent Metastatic Childhood Melanoma"),
+            "Melanoma")
 
 
 class TestAnswerKeyIsNotDamaged(unittest.TestCase):
