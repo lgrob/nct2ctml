@@ -135,11 +135,9 @@ repeat runs.
   `clinical_trials_gov`. `print` goes to block-buffered stdout and loguru to
   stderr, so the two interleave unpredictably and neither answers to a log
   level. This is why progress was invisible during cluster runs.
-- **Reference paths hardcoded in four places** despite `GENE_LIST_FILE_PATH`
-  and `ONCOTREE_TXT_FILE_PATH` existing in `config.py`:
-  `trial_map_manager.py` opens `ref/genes.txt`, `ref/synonym_to_gene_symbol.tsv`
-  and `ref/gene_synonym_addendum.tsv` as literals, `trial_pull_manager.py` does
-  the same for `cache/nct`, and `utils/reference_validation.py` adds two more.
+- **Reference paths hardcoded** - the gene files are done (every reader now
+  goes through `config.GENE_*` and `utils/reference_validation`), but
+  `trial_pull_manager.py` still opens `cache/nct` as a literal.
 - **`walk()` is defined four times** - `bench/benchmark_map.py`,
   `bench/build_reviewed.py`, `tests/test_reference_validation.py`, and a
   variant in `src/match_criteria_mapper.py`. Walking a CTML match tree is a

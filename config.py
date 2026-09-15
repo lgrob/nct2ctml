@@ -101,7 +101,17 @@ LLM_AI_MODEL = "llama3.3:70b"
 CTML_REVIEW_PATH = "ctml/pending"
 
 ONCOTREE_TXT_FILE_PATH = "ref/oncotree_file.txt"
+# The gene reference, in the three roles it actually plays.
+# GENE_LIST_FILE_PATH is the accept-list: what a hugo_symbol is allowed
+# to be in the output. The two synonym tables are the input side: what
+# spellings of a gene are recognised in a trial's criteria text.
+# LEGACY_GENE_LIST_FILE_PATH is provenance - the raw list as Kispi
+# supplied it - and its only runtime use is that the difference from
+# GENE_LIST_FILE_PATH defines which retired spellings may be rewritten.
 GENE_LIST_FILE_PATH = "ref/genes.txt"
+LEGACY_GENE_LIST_FILE_PATH = "ref/genes_kispi.txt"
+GENE_SYNONYM_FILE_PATH = "ref/synonym_to_gene_symbol.tsv"
+GENE_SYNONYM_ADDENDUM_FILE_PATH = "ref/gene_synonym_addendum.tsv"
 
 # Mapping configuration
 # Number of days back to consider for mapping trials

@@ -1,8 +1,7 @@
-import csv
-from collections import defaultdict
-from typing import Any, Dict, List
-
 import unittest
+from typing import Dict, List
+
+import utils.reference_validation as rv
 from src.trial_criteria_to_genes import TrialCriteriaToGenes
 
 # run tests:
@@ -13,24 +12,8 @@ class TestTrialCriteriaToGenes(unittest.TestCase):
         self.mapping = self.load_gene_synonym_mapping()
 
     def load_gene_synonym_mapping(self) -> Dict[str, List[str]]:
-        """
-        Load gene synonym mapping from the reference TSV files.
-        This mirrors TrialMapManager.load_gene_synonym_mapping for test purposes.
-        """
-        m = defaultdict[Any, list](list)
-        # Main synonym -> official symbol mapping
-        with open("ref/synonym_to_gene_symbol.tsv", newline="") as f:
-            for synonym, official in csv.reader(f, delimiter="\t"):
-                synonym = synonym.strip()
-                official = official.strip()
-                m[synonym].append(official)
-        # Addendum for special / compound synonyms
-        with open("ref/gene_synonym_addendum.tsv", newline="") as f:
-            for synonym, official in csv.reader(f, delimiter="\t"):
-                synonym = synonym.strip()
-                official = official.strip()
-                m[synonym].append(official)
-        return m
+        """The same mapping production uses; no second copy of the loader."""
+        return rv.gene_synonym_mapping()
 
     def test_extract_official_gene_symbols_kras_family_1(self):
         criteria = "Patients with KRAS/NRAS/HRAS mutations are eligible."

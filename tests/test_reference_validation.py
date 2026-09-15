@@ -289,5 +289,76 @@ class TestAnswerKeyIsNotDamaged(unittest.TestCase):
         self.assertEqual(rejected, [])
 
 
+class TestGeneSynonymMapping(unittest.TestCase):
+    """
+    The input side of the gene reference. One loader now serves both this and
+    canonical_gene; before that, TrialMapManager and three tests each had
+    their own copy and only one applied the addendum's "!" blocklist.
+    """
+
+    def setUp(self):
+        from utils.reference_validation import gene_synonym_mapping
+        self.mapping = gene_synonym_mapping()
+
+    def test_blocklisted_alias_is_absent(self):
+        """
+        "!PD-L1" in the addendum vetoes the NCBI row PD-L1 -> CD274. PD-L1 has
+        its own biomarker path in the CTML schema, so resolving it as a gene
+        would route the same criterion twice.
+        """
+        self.assertNotIn("PD-L1", self.mapping)
+        self.assertNotIn("!PD-L1", self.mapping,
+                         "the marker itself must not become a searchable term")
+
+    def test_blocklist_is_applied_on_the_validation_side_too(self):
+        from utils.reference_validation import canonical_gene
+        self.assertIsNone(canonical_gene("PD-L1"))
+
+    def test_ordinary_aliases_still_resolve(self):
+        for alias, official in (("HER2", "ERBB2"), ("p53", "TP53"),
+                                ("WHSC1", "NSD2")):
+            self.assertIn(official, self.mapping.get(alias, []), alias)
+
+    def test_multi_gene_rows_arrive_intact(self):
+        """The caller splits these, not the loader."""
+        self.assertEqual(self.mapping["RAS"], ["KRAS,NRAS,HRAS"])
+
+    def test_it_is_the_permissive_table(self):
+        """
+        Deliberately unlike canonical_gene: a short alias belongs here, where
+        a false positive costs one LLM call, and not there, where it would
+        invent a criterion.
+        """
+        self.assertIn("ALL", self.mapping)
+        self.assertIsNone(canonical_gene("ALL"))
+
+
+class TestSingleReader(unittest.TestCase):
+    def test_no_module_opens_the_gene_files_directly(self):
+        """
+        reference_validation is the only reader. Six files used to spell these
+        paths as literals, which is how the blocklist came to be honoured in
+        one place and ignored in another.
+        """
+        import glob
+        root = os.path.join(os.path.dirname(__file__), '..')
+        offenders = []
+        for path in glob.glob(os.path.join(root, '*/*.py')) + glob.glob(os.path.join(root, '*.py')):
+            rel = os.path.relpath(path, root)
+            # config.py is where the paths belong; build_gene_synonyms.py
+            # writes the tables rather than reading them; this file names them
+            # in its own assertions.
+            if rel.startswith(('utils/reference_validation', 'utils/build_gene_synonyms',
+                               'config.py', '.venv')) or rel == os.path.relpath(__file__, root):
+                continue
+            text = open(path).read()
+            for literal in ('ref/genes.txt', 'ref/genes_kispi.txt',
+                            'ref/synonym_to_gene_symbol.tsv',
+                            'ref/gene_synonym_addendum.tsv'):
+                if f'"{literal}"' in text or f"'{literal}'" in text:
+                    offenders.append(f"{rel}: {literal}")
+        self.assertEqual(offenders, [])
+
+
 if __name__ == '__main__':
     unittest.main()

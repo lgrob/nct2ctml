@@ -29,7 +29,7 @@ from src.match_criteria_mapper import ArmCriteriaBlocks, ArmCriteriaText
 from loguru import logger
 
 
-def map_nct_to_ctml(trial_data: dict, genes:list, gene_synonym_mapping: Dict[str, List[str]]) -> dict:
+def map_nct_to_ctml(trial_data: dict, gene_synonym_mapping: Dict[str, List[str]]) -> dict:
     """
     Logic to map the fields from https://clinicaltrials.gov/ API response to the clinical trial schema required by matchminer
     Parameters

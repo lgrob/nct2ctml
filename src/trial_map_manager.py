@@ -12,12 +12,12 @@ This module handles the mapping of NCT trial data to CTML format.
 import csv
 import os
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Dict, List
 from loguru import logger
-from collections import defaultdict
 import src.clinical_trials_gov as ctg
 import src.ctis as ctis
 import src.trial_data_helper as tdh
+import utils.reference_validation as rv
 
 
 class TrialMapManager:
@@ -28,46 +28,18 @@ class TrialMapManager:
         self.trial_status_file = 'cache/nct/trial_status.csv'
        
     
-    def get_gene_list(self) -> List[str]:
-        """Load gene list from reference file"""
-        genes = []
-        try:
-            with open('ref/genes.txt', 'r') as file:     
-                genes = [line.strip() for line in file.readlines()]
-        except FileNotFoundError:
-            logger.warning("Gene list file not found: ref/genes.txt")
-        return genes
-
-    def load_gene_synonym_mapping(self) -> Dict[str, List[str]]:
-        m = defaultdict[Any, list](list)
-        with open('ref/synonym_to_gene_symbol.tsv', newline="") as f:
-            for synonym, official in csv.reader(f, delimiter="\t"):
-                synonym = synonym.strip()
-                official = official.strip()
-                m[synonym].append(official)
-
-        with open('ref/gene_synonym_addendum.tsv', newline="") as f:
-            for synonym, official in csv.reader(f, delimiter="\t"):
-                synonym = synonym.strip()
-                official = official.strip()
-                m[synonym].append(official)
-        return m
-    
     def get_gene_synonym_mapping(self) -> Dict[str, List[str]]:
-        """Load gene synonym mapping from reference files"""
-        synonym_mapping = self.load_gene_synonym_mapping()
+        """
+        alias -> [official symbols] for finding genes named in criteria text.
 
-        keys_to_remove = []
+        Delegates to utils.reference_validation, which is the single reader of
+        the gene reference files. This method used to open and parse them a
+        second time with its own blocklist handling, which is how the "!"
+        convention came to be honoured on this path and ignored on the
+        validation one.
+        """
+        return rv.gene_synonym_mapping()
 
-        for synonym in synonym_mapping:
-            if synonym[0] == "!":
-                key_to_be_removed = synonym[1:]
-                if key_to_be_removed in synonym_mapping:
-                    keys_to_remove.append(key_to_be_removed)
-        for synonym in keys_to_remove:
-            del synonym_mapping[synonym]
-        return synonym_mapping
-    
     def load_trial_status_dict(self) -> Dict[str, Dict]:
         """Load trial status information into a dictionary"""
         trial_status_dict = {}
@@ -199,8 +171,6 @@ class TrialMapManager:
         """Map all NCT files to CTML format with local trial info integration"""
         logger.info("Using ctml_files_path: {}".format(ctml_files_path))
         cutoff_date = self._get_cutoff_date(cutoff_days)
-        genes = self.get_gene_list()
-
         gene_synonym_mapping = self.get_gene_synonym_mapping()
         
         # Load data dictionaries
@@ -240,7 +210,7 @@ class TrialMapManager:
                     trial_data = tdh.read_from_file(nct_files_path, nct_id, 'json')
                     
                     # Map to CTML format
-                    mapped_ctml = ctg.map_nct_to_ctml(trial_data, genes, gene_synonym_mapping)
+                    mapped_ctml = ctg.map_nct_to_ctml(trial_data, gene_synonym_mapping)
                     
                     # Add local trial info if available
                     if nct_id in local_trial_dict:
@@ -313,10 +283,9 @@ class TrialMapManager:
             logger.exception(f'Error reading file {ct_number}.json: {e}')
             return False
 
-        genes = self.get_gene_list()
         gene_synonym_mapping = self.get_gene_synonym_mapping()
         try:
-            mapped_ctml = ctis.map_ctis_to_ctml(trial_data, genes, gene_synonym_mapping)
+            mapped_ctml = ctis.map_ctis_to_ctml(trial_data, gene_synonym_mapping)
             tdh.save_to_file(mapped_ctml, ctml_files_path, ct_number, 'yaml')
             logger.info(f"Successfully mapped and saved {ct_number}")
             return True
@@ -364,11 +333,10 @@ class TrialMapManager:
             logger.exception(f'Error reading file {nct_id}.json: {e}')
             return False
         
-        genes = self.get_gene_list()
         gene_synonym_mapping = self.get_gene_synonym_mapping()
         try:
             # Map to CTML format
-            mapped_ctml = ctg.map_nct_to_ctml(trial_data, genes, gene_synonym_mapping)
+            mapped_ctml = ctg.map_nct_to_ctml(trial_data, gene_synonym_mapping)
             
             # Add local trial info if available
             self._add_local_trial_info(mapped_ctml, nct_id)

@@ -53,14 +53,9 @@ _LEVEL_VALUE = re.compile(r"^(.*)\s+\(([A-Z0-9_./-]+)\)$")
 # them deterministically from the trial's conditions, never from the model.
 MATCHMINER_DIAGNOSIS_WILDCARDS = frozenset({"_SOLID_", "_LIQUID_"})
 
-# Same paths TrialMapManager.load_gene_synonym_mapping opens; they are not in
-# config.py, so they are spelled out here rather than silently diverging.
-SYNONYM_TSV = "ref/synonym_to_gene_symbol.tsv"
-SYNONYM_ADDENDUM_TSV = "ref/gene_synonym_addendum.tsv"
-# The raw gene list as Kispi supplied it, before symbols were brought up to
-# current HGNC. Nothing else reads it; here it is the authority on which
-# retired spellings are worth rewriting.
-LEGACY_GENE_LIST = "ref/genes_kispi.txt"
+SYNONYM_TSV = config.GENE_SYNONYM_FILE_PATH
+SYNONYM_ADDENDUM_TSV = config.GENE_SYNONYM_ADDENDUM_FILE_PATH
+LEGACY_GENE_LIST = config.LEGACY_GENE_LIST_FILE_PATH
 
 
 @lru_cache(maxsize=1)
@@ -85,6 +80,69 @@ def _gene_symbols():
         return {line.strip() for line in f if line.strip()}
 
 
+def gene_symbols():
+    """The accept-list: every symbol a hugo_symbol field is allowed to hold."""
+    return set(_gene_symbols())
+
+
+def _read_synonym_rows():
+    """
+    Every (alias, official) row from the synonym table and the addendum, with
+    the addendum's "!" blocklist applied.
+
+    A leading "!" on an alias means "never resolve this one" - it is the
+    addendum's way of vetoing a row NCBI supplies. PD-L1 is the standing
+    example: the table maps it to CD274, but PD-L1 has its own biomarker path
+    in the CTML schema, and letting it through as a gene would route it twice.
+    The convention is honoured here rather than in each caller, because it was
+    previously applied on the detection side and silently ignored on the
+    validation side.
+
+    Yields officials as written, so a multi-gene row ("RAS" -> KRAS,NRAS,HRAS)
+    arrives intact and each caller decides what to do with it.
+    """
+    rows, blocked = [], set()
+    for path in (SYNONYM_TSV, SYNONYM_ADDENDUM_TSV):
+        try:
+            handle = open(path, newline="")
+        except FileNotFoundError:
+            logger.warning(f"no gene synonym table at {path}")
+            continue
+        with handle:
+            for row in csv.reader(handle, delimiter="\t"):
+                if len(row) < 2:
+                    continue
+                alias, official = row[0].strip(), row[1].strip()
+                if alias.startswith("!"):
+                    blocked.add(alias[1:].strip())
+                    continue
+                rows.append((alias, official))
+    return [(a, o) for a, o in rows if a not in blocked]
+
+
+@lru_cache(maxsize=1)
+def gene_synonym_mapping():
+    """
+    alias -> [official symbols], for finding genes named in criteria text.
+
+    This is the input side of the gene reference: it decides which spellings
+    in a trial's eligibility text are recognised as genes at all. It is
+    deliberately permissive - three-character aliases and all - because a false
+    positive here only costs an LLM call on a trial with no genomics, whereas a
+    miss loses the criterion entirely. The output side is `canonical_gene`,
+    which is strict; see the module docstring for why the two cannot share a
+    table.
+
+    Cached, so the returned dict is shared - read it, do not mutate it. It is
+    a plain dict rather than the defaultdict this replaced, which silently
+    grew a new empty entry on every lookup of a token that was not a gene.
+    """
+    mapping = {}
+    for alias, official in _read_synonym_rows():
+        mapping.setdefault(alias, []).append(official)
+    return mapping
+
+
 @lru_cache(maxsize=1)
 def _gene_aliases():
     """
@@ -106,22 +164,12 @@ def _gene_aliases():
         return {}
 
     claims = {}
-    for path in (SYNONYM_TSV, SYNONYM_ADDENDUM_TSV):
-        try:
-            handle = open(path, newline="")
-        except FileNotFoundError:
+    for alias, official in _read_synonym_rows():
+        # "," means the alias names several genes (RAS -> KRAS,NRAS,HRAS);
+        # a hugo_symbol field holds one, so there is nothing to rewrite it to.
+        if alias not in retired or "," in official or official not in genes:
             continue
-        with handle:
-            for row in csv.reader(handle, delimiter="\t"):
-                if len(row) < 2:
-                    continue
-                alias, official = row[0].strip(), row[1].strip()
-                # "," means the alias names several genes (RAS -> KRAS,NRAS,
-                # HRAS); a hugo_symbol field holds one, so there is nothing to
-                # rewrite it to.
-                if alias not in retired or "," in official or official not in genes:
-                    continue
-                claims.setdefault(alias, set()).add(official)
+        claims.setdefault(alias, set()).add(official)
 
     unresolved = retired - set(claims)
     if unresolved:

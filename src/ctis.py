@@ -190,7 +190,7 @@ def map_prior_treatment_requirements(trial_schema: dict, trial_data: dict) -> di
     return trial_schema
 
 
-def map_ctis_to_ctml(trial_data: dict, genes: list,
+def map_ctis_to_ctml(trial_data: dict,
                      gene_synonym_mapping: Dict[str, List[str]]) -> dict:
     """Map one CTIS record to a MatchMiner CTML document."""
     ct = get_ct_number(trial_data)

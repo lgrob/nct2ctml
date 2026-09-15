@@ -28,9 +28,3 @@ def search_keywords_in_text(keywords:list, text):
     if not found:
         print("No keywords found.")
     return found
-
-def get_gene_list() -> list:
-    genes = []
-    with open('ref/genes.txt', 'r') as file:     
-        genes = [line.strip() for line in file.readlines()]
-    return genes

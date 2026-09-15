@@ -175,11 +175,21 @@ Genomic criteria appear under `genomic:` inside `match` (often nested in `and` /
 
 Each genomic rule must include at least **`hugo_symbol`** (gene name) and **`variant_category`** (type of alteration). Additional fields—such as `protein_change`, `variant_classification`, `exon`, or `cnv_call`—may be present when the eligibility text supports them. See [`yaml_genomic_schema`](https://github.com/sumedhasaxena/matchminer-api/blob/master/matchminer/data_model.py) for permitted values on every field.
 
-Gene names and synonyms are defined in reference files:
+Gene names and synonyms come from three reference files, which do two
+different jobs:
 
-- `ref/genes.txt`
-- `ref/synonym_to_gene_symbol.tsv`
-- `ref/gene_synonym_addendum.tsv`
+- `ref/synonym_to_gene_symbol.tsv` and `ref/gene_synonym_addendum.tsv` - the
+  **input** side. `TrialCriteriaToGenes` scans the eligibility text through
+  them to build the per-trial gene list the prompt offers the model. An alias
+  prefixed `!` in the addendum is a veto: the row is never resolved.
+- `ref/genes.txt` - the **output** side. `utils/reference_validation` checks
+  every `hugo_symbol` the model returns against it and drops what is not
+  there. It is Kispi's panel, so a symbol absent from it is a criterion no
+  local patient record could satisfy.
+
+`ref/genes_kispi.txt` is the raw list as supplied; its only runtime role is
+that the difference from `ref/genes.txt` defines the retired spellings the
+validator may rewrite.
 
 **AI** translates the trial’s inclusion and exclusion criteria into structured genomic match blocks in CTML. An optional **enrichment** step may add further detail when the criteria require it (for example exon or copy-number fields).
 

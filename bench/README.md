@@ -37,9 +37,11 @@ Two rules decide most of the hard cases:
   "confirmation of FGFR4 expression is not required".
 
 A criterion the pipeline structurally cannot produce does not belong in the
-key either: `ref/genes.txt` is the vocabulary the prompt offers the model, so a
-key requiring SET or USP9X would mark it wrong for something it was never
-given the means to say.
+key either: `ref/genes.txt` is the accept-list the validator applies to the
+model's answer, so a key requiring SET or USP9X would mark the pipeline wrong
+for a symbol it is not permitted to emit. (The prompt's own gene vocabulary is
+narrower still - it is the per-trial list `TrialCriteriaToGenes` finds in the
+criteria text, not the whole panel.)
 
 ## Running it
 

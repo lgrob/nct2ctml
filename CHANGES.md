@@ -137,8 +137,25 @@ These are upstream bugs, fixed here and worth reporting back.
 - `ref/synonym_collisions.tsv` — aliases claimed by more than one gene,
   quarantined by `utils/build_gene_synonyms.py` rather than guessed at.
 
+The seven files are read through one module. `utils/reference_validation`
+owns every open: `_read_synonym_rows` applies the `!` blocklist once,
+`gene_synonym_mapping()` serves the input side and `canonical_gene` the
+output side. `TrialMapManager` and three tests each used to carry their own
+copy of the loader, and the `!` convention was honoured in one of them and
+silently ignored in the others. Paths now come from `config.GENE_LIST_FILE_PATH`,
+`LEGACY_GENE_LIST_FILE_PATH`, `GENE_SYNONYM_FILE_PATH` and
+`GENE_SYNONYM_ADDENDUM_FILE_PATH` rather than from string literals in six
+files.
+
 ## Removed
 
+- `utils/get_gene_synonym_mapping.py` — the one-time script that built the
+  original synonym table from the COSMIC Census. `utils/build_gene_synonyms.py`
+  replaced it, and it was the last runtime reader of `ref/Census_gene_list.csv`.
+- `utils.aho_corasick.get_gene_list` and `TrialMapManager.get_gene_list` — the
+  first was called only by its own test; the second was called three times per
+  run and its result passed to `map_nct_to_ctml`/`map_ctis_to_ctml`, which
+  never referenced the parameter. The `genes` argument is gone from both.
 - `utils/schema.py` — declared `trial_genomic_json_schema` and was imported by
   `utils/ai_helper.py` without ever being referenced. Its two extra fields,
   `variant_classification` and `exon`, have been folded into the live
@@ -150,12 +167,9 @@ These are upstream bugs, fixed here and worth reporting back.
 
 - `bulk_convert_yaml_to_json.py` — rewritten as a CLI over `ctml/reviewed`
   instead of a script with a hardcoded list of NCT ids.
-- `utils/get_gene_synonym_mapping.py` — unchanged in behaviour, documented as
-  superseded by `utils/build_gene_synonyms.py` and as requiring a COSMIC
-  download that is no longer tracked.
 - `config.py` — Anthropic settings, Ollama context and prediction limits, a
   request timeout, `CTML_REVIEW_PATH` for trials that need a human before they
-  are usable, and the model the cluster runs. `scripts/run_ollama_mapping.sh`
+  are usable, the four `GENE_*` reference paths, and the model the cluster runs. `scripts/run_ollama_mapping.sh`
   reads the model from here, so this file is the single source of truth for it.
 - `.gitignore` — untracks pulled trial data, logs, the COSMIC census, the NCBI
   harvest cache, and the transient `ctml/json` hand-off queue.
