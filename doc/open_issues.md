@@ -29,6 +29,47 @@ punctuation variants ("T Acute Lymphoblastic Leukemia" for
 Sheath Tumors"), a diagnosis with a fusion appended ("Acute Promyelocytic
 Leukemia With PML-RARA"), and conditions that are not diagnoses at all.
 
+### The corpus contains non-oncology trials
+`query.cond` is a search, not a field filter. ClinicalTrials.gov matches those
+terms anywhere in the record, so a trial whose exclusion criteria say "no
+history of cancer" is pulled. NCT00929006 is an endocrinology study of
+luteinizing hormone pulse frequency in pubertal girls; it contains "cancer",
+"tumor" and "carcinoma" somewhere in its text and nothing oncological in its
+conditions, keywords or title.
+
+The fix is a post-fetch filter on the structured conditions, applied in
+`trial_pull_manager` before caching, rather than trusting the API's search. It
+is cheap and it would shrink the corpus, the mapping time and the GPU bill by
+whatever the true non-oncology fraction is.
+
+Measured with a stem vocabulary over conditions + keywords + brief title:
+**57 of 924 trials (6.2%)** carry no oncology term. Most are unambiguous -
+warts, myasthenia gravis, PCOS, asthma, autism, haemophilia, viral infections.
+
+But that list has real false positives, and they are the reason to review
+before dropping anything:
+
+- **NCT06368817** `Germinoma` - a malignant germ cell tumour. "germinom" was
+  simply missing from the vocabulary.
+- **NCT07330037** `NSCLC` - spelled only as the abbreviation.
+- **NCT07656909** `Kaposiform Hemangioendothelioma` - a vascular neoplasm
+  managed in paediatric oncology.
+- **NCT05088226** - conditions say only "Peripheral Blood Stem Cell
+  Transplantation", but it is a Bu/CY conditioning trial, i.e. leukaemia.
+
+And a class of genuine judgement calls: supportive care for oncology patients
+(virus-specific T cells post-HSCT, chemotherapy-induced cardiotoxicity), cancer
+predisposition syndromes (Peutz-Jeghers, tuberous sclerosis), plasma cell
+dyscrasias (AL amyloidosis), and vascular anomalies (infantile haemangioma,
+lymphatic malformation). Whether MatchMiner should carry those is a policy
+question, not a vocabulary one.
+
+Because a trial that is never pulled is a trial nobody can notice is missing,
+the safer shape is probably to keep pulling everything and mark non-oncological
+trials so they are skipped at *map* time - that is where the GPU cost is - with
+the skip list visible and reversible. A hard drop at pull time saves little
+more and cannot be audited.
+
 ### A basket trial can get both the wildcard and specific diagnoses
 `map_global_diagnosis_to_oncotree_term` adds condition-derived terms first and
 reaches the `_SOLID_`/`_LIQUID_` path only when the eligibility mapping returns
