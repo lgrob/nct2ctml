@@ -6,24 +6,6 @@ guesses.
 
 ## Correctness
 
-### The fabricated-inclusion rule misfires on inferred genes
-`resolve_contradictory_genes` drops an inclusion when the gene's symbol does
-not appear in the inclusion text, on the reasoning that nothing there can have
-required it. That is right for NCT03643276, where the only mention of ABL1 is
-the exclusion "Ph+ (BCR-ABL1 or t(9;22)-positive) ALL". It is wrong whenever
-the model infers a gene from variant nomenclature: "H3 K27M-mutant diffuse
-glioma" names no H3 symbol, so a correct H3-3A inclusion is dropped. Synonyms
-do not rescue it - no alias of H3-3A is the bare string "H3".
-
-`tests/test_match_criteria_mapper.py::TestContradictoryGenomicCriteria::`
-`test_spurious_exclusion_keeps_the_inclusion` is **deliberately left failing**
-to record this. Do not "fix" it by changing the assertion.
-
-Proposed fix: fire the rule only when the gene is absent from the inclusion
-text *and* present in the exclusion text, which requires threading
-`exclusion_text` into `resolve_contradictory_genes` and
-`convert_to_ctml_genomic_schema` from their single production call site.
-
 ### A trial with no diagnosis kills the whole mapping
 `clinical_trials_gov.map_global_diagnosis_to_oncotree_term` raises when no
 Oncotree diagnosis is found, and `map_single_trial` turns that into a failed

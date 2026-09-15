@@ -73,7 +73,16 @@ These are upstream bugs, fixed here and worth reporting back.
   stated minimum lost it.
 - `src/match_criteria_mapper.py` — genomic criteria could be emitted asserting
   a gene both present and absent in the same AND branch, producing a trial
-  that matches zero patients. Now detected and resolved.
+  that matches zero patients. Now detected and resolved by cause rather than
+  by rule of thumb, because the three causes need opposite treatment: a
+  disease name misread as a genomic exclusion (drop the exclusion), genuine
+  alternative cohorts where the inclusion text itself negates the gene (drop
+  both, since the net requirement is none), and an inclusion the model
+  invented (drop the inclusion). The last is decided on positive evidence -
+  the symbol absent from the inclusion text *and* present in the exclusion
+  text - not on absence from the inclusion text alone, which condemned every
+  gene inferred from variant nomenclature: "H3 K27M-mutant diffuse glioma"
+  names no H3 symbol, so a correct H3-3A requirement looked fabricated.
 - `src/clinical_trials_gov.py` — diagnosis mapping picks Oncotree level_1
   nodes and then picks children within them, so a wrong level_1 removed the
   correct answer from the list the model was shown rather than merely making

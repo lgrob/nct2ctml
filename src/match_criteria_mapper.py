@@ -223,7 +223,8 @@ def _text_mentions_gene(text: str, gene: str) -> bool:
 
 
 def resolve_contradictory_genes(inclusions: list, exclusions: list,
-                                inclusion_text: str = "") -> tuple[list, list, list]:
+                                inclusion_text: str = "",
+                                exclusion_text: str = "") -> tuple[list, list, list]:
     """
     Reconcile genes that are required and forbidden at the same time.
 
@@ -250,19 +251,25 @@ def resolve_contradictory_genes(inclusions: list, exclusions: list,
        loses the cohort distinction either way; dropping both at least keeps
        the trial matchable rather than matching nobody.
 
-    3. A fabricated inclusion. The gene is nowhere in the inclusion text, so
-       nothing there can have required it - the model invented the inclusion
-       and the exclusion is the real criterion. Observed on NCT03643276, a
-       front-line ALL protocol whose only mention of the gene is the exclusion
-       "Ph+ (BCR-ABL1 or t(9;22)-positive) ALL". Treating that as case 1 kept
-       a hallucinated ABL1 requirement and discarded a genuine exclusion, so a
-       Ph+ patient would have matched a trial that explicitly excludes them.
-       Here the inclusion is dropped and the exclusion kept.
+    3. A fabricated inclusion. The gene is absent from the inclusion text and
+       present in the exclusion text, so the exclusion is the criterion the
+       trial actually states and the inclusion is invented. Observed on
+       NCT03643276, a front-line ALL protocol whose only mention of the gene
+       is the exclusion "Ph+ (BCR-ABL1 or t(9;22)-positive) ALL". Treating
+       that as case 1 kept a hallucinated ABL1 requirement and discarded a
+       genuine exclusion, so a Ph+ patient would have matched a trial that
+       explicitly excludes them. Here the inclusion is dropped and the
+       exclusion kept.
 
-    `inclusion_text` distinguishes all three, and case 3 is checked first: if
-    the symbol is not in the text, no reading of that text can support a
-    requirement on it. Without any text, case 1 is assumed, since it is both
-    more common and the safer error when nothing can be verified.
+    Case 3 requires positive evidence from the exclusion text, not merely the
+    absence of evidence in the inclusion text. Checking only the inclusion
+    text was wrong for every gene the model infers from variant nomenclature
+    rather than a symbol: "H3 K27M-mutant diffuse glioma" names no H3 symbol,
+    so a correct H3-3A inclusion looked fabricated, and no alias rescues it -
+    none of H3-3A's aliases is the bare string "H3". When the symbol is in
+    neither text there is nothing to weigh, and case 1 is assumed, as it is
+    when no text is available at all: it is the commoner case and the safer
+    error.
 
     Returns (inclusions, exclusions, notes) where notes describes what was
     dropped and why, for the manual review step.
@@ -293,10 +300,11 @@ def resolve_contradictory_genes(inclusions: list, exclusions: list,
     text = (inclusion_text or "").lower()
     cohort_genes, artefact_genes, fabricated_genes = set(), set(), set()
     for gene in sorted(set(contradictory)):
-        if inclusion_text and not _text_mentions_gene(inclusion_text, gene):
-            # The symbol is nowhere in the inclusion text, so nothing there can
-            # have required it: the inclusion is the fabrication and the
-            # exclusion is the real criterion.
+        stated_in_inclusion = _text_mentions_gene(inclusion_text, gene)
+        stated_in_exclusion = _text_mentions_gene(exclusion_text, gene)
+        if inclusion_text and not stated_in_inclusion and stated_in_exclusion:
+            # Absent where it is required, present where it is forbidden: the
+            # exclusion is what the trial states and the inclusion is invented.
             fabricated_genes.add(gene)
         elif any(cue in text for cue in _COHORT_NEGATION_CUES):
             cohort_genes.add(gene)
@@ -325,7 +333,7 @@ def resolve_contradictory_genes(inclusions: list, exclusions: list,
     for gene in sorted(fabricated_genes):
         logger.warning(
             f"Contradictory genomic criteria for {gene}: required and excluded in the "
-            f"same match tree, but {gene} does not appear in the inclusion text at all. "
+            f"same match tree, but {gene} appears only in the exclusion text. "
             f"The inclusion is fabricated and the exclusion is the real criterion. "
             f"Dropping the inclusion and keeping the exclusion."
         )
@@ -382,7 +390,8 @@ def find_unsatisfiable_genes(match_node) -> list:
 
 
 def convert_to_ctml_genomic_schema(inclusion_genomic_criteria: list, exclusion_genomic_criteria: list,
-                                   inclusion_text: str = "", trial_id: str = "") -> dict: 
+                                   inclusion_text: str = "", exclusion_text: str = "",
+                                   trial_id: str = "") -> dict: 
     inclusions = []
     exclusions = []
     print(tdh.get_all_keys(inclusion_genomic_criteria))
@@ -408,7 +417,7 @@ def convert_to_ctml_genomic_schema(inclusion_genomic_criteria: list, exclusion_g
                 exclusions.append(alteration)
 
     inclusions, exclusions, contradiction_notes = resolve_contradictory_genes(
-        inclusions, exclusions, inclusion_text)
+        inclusions, exclusions, inclusion_text, exclusion_text)
     if contradiction_notes:
         print(f"Contradictory gene constraints resolved: {contradiction_notes}")
 

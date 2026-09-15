@@ -555,16 +555,17 @@ class TestFabricatedInclusion(unittest.TestCase):
         "newly diagnosed acute lymphoblastic leukemia or newly diagnosed mixed "
         "phenotype acute leukemia (MPAL); age < 18 years at the day of diagnosis"
     )
+    ALL_EXCLUSION = "Ph+ (BCR-ABL1 or t(9;22)-positive) ALL"
 
     @staticmethod
     def _gene(symbol, category="Mutation"):
         return {"genomic": {"hugo_symbol": symbol, "variant_category": category}}
 
-    def test_inclusion_dropped_when_gene_absent_from_inclusion_text(self):
+    def test_inclusion_dropped_when_only_the_exclusion_states_the_gene(self):
         inc, exc, notes = mcm.resolve_contradictory_genes(
             [self._gene("ABL1")],
             [self._gene("ABL1", "!Any Variation")],
-            self.ALL_INCLUSION)
+            self.ALL_INCLUSION, self.ALL_EXCLUSION)
         self.assertEqual(inc, [], "hallucinated inclusion should be dropped")
         self.assertEqual(len(exc), 1, "the real exclusion must survive")
         self.assertIn("fabricated", notes[0])
@@ -583,7 +584,8 @@ class TestFabricatedInclusion(unittest.TestCase):
         inc, exc, notes = mcm.resolve_contradictory_genes(
             [self._gene("AR")],
             [self._gene("AR", "!Any Variation")],
-            "patients are eligible if the target lesion is measurable")
+            "patients are eligible if the target lesion is measurable",
+            "patients with AR amplification are not eligible")
         self.assertEqual(inc, [], "AR is not actually mentioned")
         self.assertEqual(len(exc), 1)
         self.assertIn("fabricated", notes[0])
@@ -593,6 +595,36 @@ class TestFabricatedInclusion(unittest.TestCase):
             [self._gene("BRAF")], [self._gene("BRAF", "!Any Variation")], "")
         self.assertEqual(len(inc), 1, "without text, keep the requirement")
         self.assertEqual(exc, [])
+
+    def test_a_gene_in_neither_text_is_not_fabricated(self):
+        """
+        The reason case 3 needs positive evidence rather than absence of it.
+
+        A gene inferred from variant nomenclature appears as a symbol in no
+        text at all: "H3 K27M-mutant diffuse glioma" names H3-3A only by the
+        alteration. Judging on the inclusion text alone dropped that correct
+        inclusion and kept a spurious exclusion - the clinically wrong
+        direction, and the same mistake case 3 exists to prevent.
+        """
+        glioma = "Histologically diagnosed H3 K27M-mutant diffuse glioma"
+        inc, exc, notes = mcm.resolve_contradictory_genes(
+            [self._gene("H3-3A", "Any Variation")],
+            [self._gene("H3-3A", "!Any Variation")],
+            glioma, "no prior bevacizumab since the diagnosis of H3 K27M glioma")
+        self.assertEqual(len(inc), 1, "the inclusion is not evidenced as invented")
+        self.assertEqual(exc, [])
+        self.assertIn("spurious exclusion", notes[0])
+
+    def test_a_gene_in_both_texts_is_not_fabricated(self):
+        # Stated on both sides: a real contradiction to weigh by other means,
+        # not an invented requirement.
+        inc, exc, notes = mcm.resolve_contradictory_genes(
+            [self._gene("ABL1")],
+            [self._gene("ABL1", "!Any Variation")],
+            "BCR-ABL1 positive disease is eligible",
+            "prior therapy targeting BCR-ABL1 is not permitted")
+        self.assertEqual(len(inc), 1)
+        self.assertNotIn("fabricated", notes[0])
 
 
 if __name__ == '__main__':
