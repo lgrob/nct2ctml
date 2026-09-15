@@ -157,9 +157,14 @@ These are upstream bugs, fixed here and worth reporting back.
   precise answer with `_SOLID_`: NCT04775485 lists "Advanced Solid Tumor"
   next to "Low-grade Glioma", NCT04897321 puts "Pediatric Solid Tumor" ahead
   of osteosarcoma, rhabdomyosarcoma, neuroblastoma, Ewing sarcoma and Wilms
-  tumour. 31 of the 104 cached trials with a broad condition also name a
-  specific one, and are no longer treated as baskets. The genuine kind -
-  NCT02813135, whose only condition is "Pediatric Cancer" - is unaffected.
+  tumour. The genuine kind - NCT02813135, whose only condition is "Pediatric
+  Cancer" - is unaffected. A trial registering **two or more** umbrella terms
+  is a basket even when it also names diagnoses: a registry lists one umbrella
+  as a header, so several different ways of saying "any malignancy" describe
+  an unrestricted population. NCT07440290 registers "Malignant Neoplasm",
+  "Cancer" and "Solid Tumour" among twenty conditions, and reading its two
+  resolvable ones as the answer produced 55 diagnoses against a curated
+  `_SOLID_` + `_LIQUID_`.
 - `bench/curations.py` — NCT02813135 re-curated as `_SOLID_` + `_LIQUID_`.
   The key enumerated twelve paediatric tumours for a trial whose criterion is
   "a haematologic or solid tumor malignancy that has progressed despite

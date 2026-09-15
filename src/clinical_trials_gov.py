@@ -761,6 +761,11 @@ def map_eligibility_criteria_to_oncotree_term(nct_id: str, eligibility_criteria:
         all_possible_diagnoses.update(oncotree_diagnoses_result['oncotree_diagnoses'])   
     return list(all_possible_diagnoses)
 
+# How many umbrella conditions mean "any malignancy qualifies" rather than
+# "here is a heading for my list". See _basket_wildcards.
+_BASKET_BROAD_TERMS = 2
+
+
 def _basket_wildcards(conditions_list, nct_id: str = "") -> set:
     """
     The MatchMiner wildcards this trial's conditions justify, if any.
@@ -777,10 +782,27 @@ def _basket_wildcards(conditions_list, nct_id: str = "") -> set:
     31 of the 104 cached trials whose conditions contain a broad term also
     name a specific Oncotree diagnosis, so this is not a corner case.
 
-    The broad term therefore wins only when the trial names nothing specific.
-    NCT02813135 is the shape that qualifies: its sole condition is "Pediatric
-    Cancer" and its criterion is "a haematologic or solid tumor malignancy
-    that has progressed despite standard therapy".
+    The broad term therefore wins when the trial names nothing specific -
+    NCT02813135's sole condition is "Pediatric Cancer" - or when it registers
+    two or more umbrella terms.
+
+    That second case is the one this rule missed at first. A registry lists
+    *one* umbrella term as a header for its list, so "Pediatric Solid Tumor"
+    ahead of fifteen paediatric solid tumours is a header. A trial that
+    registers several different ways of saying "any malignancy" is not
+    heading a list, it is describing an unrestricted population: NCT07440290
+    (tumour-agnostic dabrafenib) registers "Malignant Neoplasm", "Cancer" and
+    "Solid Tumour" among twenty conditions, and reading its two resolvable
+    ones as the answer produced 55 diagnoses where the curated answer is
+    _SOLID_ + _LIQUID_.
+
+    The threshold is a heuristic fitted to a handful of trials, and it
+    over-reaches: NCT06607692 restates one umbrella twice ("Solid Tumor
+    Cancer", "Solid Tumor Refractory to Conventional Treatment") beside six
+    named tumours, and is read as a basket when it is not. That direction is
+    the tolerable one - a wildcard is one over-broad criterion a clinician
+    dismisses in a moment, where the alternative was dozens of wrong specific
+    diagnoses.
     """
     broad_any = tdh.all_tumours(conditions_list)
     broad_solid = tdh.all_solid_tumours(conditions_list)
@@ -788,13 +810,21 @@ def _basket_wildcards(conditions_list, nct_id: str = "") -> set:
         return set()
 
     named = rv.diagnoses_from_conditions(conditions_list)
-    if named:
+    broad_terms = [c for c in (conditions_list or [])
+                   if tdh.all_tumours([c]) or tdh.all_solid_tumours([c])]
+    if named and len(broad_terms) < _BASKET_BROAD_TERMS:
         logger.info(
             f"NCTID: {nct_id} | Conditions contain a broad term but also name "
             f"{sorted(named)}. Treating the broad term as a category header, "
             f"not a basket, and mapping the specific diagnoses instead."
         )
         return set()
+    if named:
+        logger.info(
+            f"NCTID: {nct_id} | Conditions name {sorted(named)} but register "
+            f"{len(broad_terms)} umbrella terms {broad_terms}. Reading the "
+            f"specific ones as examples and the trial as a basket."
+        )
 
     return {"_SOLID_", "_LIQUID_"} if broad_any else {"_SOLID_"}
 

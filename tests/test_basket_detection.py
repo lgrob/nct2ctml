@@ -53,12 +53,40 @@ class TestBasketWildcards(unittest.TestCase):
         self.assertIn("_LIQUID_", ctg._basket_wildcards(["Cancer"]))
 
 
+class TestSeveralUmbrellaTerms(unittest.TestCase):
+    """
+    A registry lists ONE umbrella term as a header for its list. A trial that
+    registers several different ways of saying "any malignancy" is not heading
+    a list, it is describing an unrestricted population.
+    """
+
+    def test_two_umbrella_terms_outweigh_a_named_diagnosis(self):
+        self.assertEqual(
+            ctg._basket_wildcards(["Malignant Neoplasm", "Cancer", "Glioma",
+                                   "Erdheim-Chester Disease"]),
+            {"_SOLID_", "_LIQUID_"})
+
+    def test_one_umbrella_term_is_still_a_header(self):
+        self.assertEqual(
+            ctg._basket_wildcards(["Pediatric Solid Tumor", "Osteosarcoma",
+                                   "Neuroblastoma"]),
+            set())
+
+    def test_the_threshold_is_named_not_magic(self):
+        self.assertEqual(ctg._BASKET_BROAD_TERMS, 2)
+
+
 class TestBasketWildcardsOnRealTrials(unittest.TestCase):
     """The trials that motivated the rule, read from the cached records."""
 
     def test_genuine_baskets(self):
+        # NCT07440290 is the one this rule got wrong at first: a
+        # tumour-agnostic dabrafenib arm registering "Malignant Neoplasm",
+        # "Cancer" and "Solid Tumour" among twenty conditions. Reading its two
+        # resolvable ones as the answer produced 55 diagnoses.
         for nct_id, expected in (("NCT02813135", {"_SOLID_", "_LIQUID_"}),
-                                 ("NCT04094610", {"_SOLID_"})):
+                                 ("NCT04094610", {"_SOLID_"}),
+                                 ("NCT07440290", {"_SOLID_", "_LIQUID_"})):
             conditions = _cached(nct_id)
             if conditions is None:
                 self.skipTest(f"{nct_id} not cached")
