@@ -81,6 +81,38 @@ those two use the wildcards, so the benchmark will now score the difference;
 whether the pipeline should suppress the seed when the broad-basket test fires
 is undecided.
 
+### Off-panel fusion partners are dropped, and that is correct
+
+A scan of all 924 cached trials against the Cancer Gene Census finds only ten
+off-panel symbols anywhere in their eligibility text, and just five used as
+molecular criteria: `RUNX1T1`, `IGH`, `SET`, `ZC3H7B` and `USP9X`. The
+validator drops all five. Every one is a fusion partner, and adding them was
+considered and rejected.
+
+(The other five - `HLA-A`, `CYP2C8`, `CD28`, `TNC`, `RNF43`/`RRAS2` - are
+donor matching, a drug-interaction rule and a CAR construct. None belongs on
+a somatic panel.)
+
+CTML expresses a fusion as one `hugo_symbol` plus `Structural Variation`, with
+the partners under `or` - see `ctml/reviewed/2025-520982-39-00.yaml`, where
+BCR-ABL1 is four OR'd nodes. So a criterion matches if *either* partner is on
+the panel, and for all five the other half already is: RUNX1T1/RUNX1,
+IGH/CRLF2, SET/NUP214, ZC3H7B/BCOR, USP9X/DDX3X.
+
+NCT05985161 is the clearest case: BCOR-ITD, BCOR-CCNB3, BCOR-MAML3 and
+ZC3H7B-BCOR all carry BCOR. NCT05745714 names P2RY8-CRLF2, EPOR, STAT5B and
+DNM2 beside its USP9X clause, and all four of those are on the panel.
+
+Adding them would therefore add an OR branch that can never fire, because
+`ref/genes.txt` is Kispi's panel and a gene absent from it is a gene the lab
+does not report. The drop is noisy in the log and costs nothing. Revisit only
+if the panel itself changes.
+
+Not the same question as whether the *alias* table should widen. `HIST1H3A` and
+`HIST2H3C` are dropped too, but the synonym table resolves them to H3C1 and
+H3C14, which are on the panel - a correct answer thrown away over spelling.
+See "The rewrite set is narrower than it needs to be" below.
+
 ## Unmeasured guesses
 
 ### The 400-value enum cap
@@ -127,6 +159,38 @@ repeat runs.
 - No tests for `src/clinical_trials_gov.py` (854 lines),
   `utils/llm_platforms.py` (432) or `src/ctis.py` (250) beyond what
   `tests/test_diagnosis_branch_floor.py` covers.
+
+### The rewrite set is narrower than it needs to be
+
+`canonical_gene` rewrites a retired symbol only if it is one of the fifteen
+renames between `ref/genes.txt` and `ref/genes_kispi.txt`. That set exists
+because the full synonym table maps `ALL` to BCR, `AT` to BTK, `ARF` to
+CDKN2A and `H3` to H3C14, and in a paediatric pipeline "ALL" is a disease
+name in nearly every trial.
+
+The cost is real: `HIST1H3A` -> H3C1 and `HIST2H3C` -> H3C14 are panel genes
+the validator throws away over spelling, even though the synonym table holds
+both mappings. `HIST1H3B` and `HIST1H3C` *are* rewritten, purely because
+`genes_kispi.txt` happened to list those two spellings and not the others -
+which is the whole argument that the set is drawn on the wrong criterion. The
+DMG trials are worst hit, since the WHO literature spelling of the histone
+genes is the retired one.
+
+Widening would not rescue everything. `cCBL` is in neither table; it is a
+lowercase-prefix variant of CBL that only a normalisation step would catch.
+
+Every dangerous alias is three characters or fewer. Measured over the synonym
+table: 4,885 unambiguous aliases point at a panel gene, a >=4-character floor
+keeps 4,301 of them, and none of the 447 four-letter purely alphabetic
+aliases collides with a common English or clinical word. Unmeasured is what
+the widened set would do to a real run, which is why this is written down
+rather than applied.
+
+One dependency: widening this makes the addendum's `!` blocklist load-bearing
+on the validation side for the first time. `!PD-L1` would otherwise start
+resolving PD-L1 to CD274 and bypass the dedicated biomarker path. The
+blocklist is now applied in `_read_synonym_rows`, so the guard is in place,
+but it is the thing to check first.
 
 ## Cleanup
 
