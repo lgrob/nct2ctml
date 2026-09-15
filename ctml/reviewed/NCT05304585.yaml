@@ -302,4 +302,4 @@ treatment_list:
               hugo_symbol: FOXO1
               variant_category: '!Structural Variation'
       - clinical:
-          age_numerical: <=21
+          age_numerical: <=22

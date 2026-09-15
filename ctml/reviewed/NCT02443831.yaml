@@ -149,7 +149,7 @@ treatment_list:
       - clinical:
           oncotree_primary_diagnosis: B-Lymphoblastic Leukemia/Lymphoma, NOS
       - clinical:
-          age_numerical: <=24
+          age_numerical: <=25
       - clinical:
           disease_status:
           - Recurrent

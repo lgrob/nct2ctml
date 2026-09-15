@@ -81,7 +81,7 @@ treatment_list:
       - clinical:
           age_numerical: '>=0.5'
       - clinical:
-          age_numerical: <=25
+          age_numerical: <=26
       - genomic:
           hugo_symbol: NF1
           variant_category: '!Mutation'

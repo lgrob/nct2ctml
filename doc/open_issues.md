@@ -70,29 +70,35 @@ trials so they are skipped at *map* time - that is where the GPU cost is - with
 the skip list visible and reversible. A hard drop at pull time saves little
 more and cannot be audited.
 
-### maximumAge is ambiguous by one year, and the mapper takes it literally
+### maximumAge is in completed units, and ~1 trial in 3 says otherwise
 
-`map_age_numerical` now emits `<=N` straight from the structured
-`maximumAge`. ClinicalTrials.gov does not define that field consistently, and
-sponsors disagree about what they mean by it. Matching the structured value
-against each trial's own prose across the 924 cached records:
+`map_age_numerical` emits `<=N+1` from the structured `maximumAge`, because
+that field is in completed units: a participant whose maximum age is 17 years
+is 17 until the day they turn 18, so the eligible set is age < 18. The
+registry's own trials confirm the reading - NCT02443831 pairs "24 Years" with
+"24 years or younger", NCT03643276 pairs "17 Years" with "age < 18 years (up
+to 17 years and 365 days)". Emitting `<=17` would drop every eligible patient
+between 17.0 and 17.99, which in paediatric oncology is the adolescent and
+young adult group, not a rounding error.
 
-    text says "< N+1 years"   -> maximumAge is completed years    38
-    text says "up to N years" -> maximumAge is inclusive         131
-    text says "< N years"     -> text contradicts the structured  86
+Sponsors are not consistent about it. Reading the age sentence out of all 50
+benchmark trials by hand, roughly two in three state an inclusive limit that
+matches the completed-units reading, and **eleven state an exclusive one** -
+NCT06528691 says "birth to age <3 years" against a structured "3 Years",
+NCT02813135 says "Age < 18 years" against "18 Years", NCT06023641 says
+"< 22 years (eligible for enrollment until 22nd birthday)" against "22 Years".
+For those, `<=N+1` is a year too wide.
 
-`NCT03643276` spells the first reading out: `maximumAge: 17 Years`, text "age
-< 18 years (up to 17 years and 365 days)". Under that reading `<=17` in
-MatchMiner means age <= 17.0 and drops every eligible patient between 17.0 and
-17.99 - the AYA group, which is not a rounding error in paediatric oncology.
-Under the second reading `<=N` is correct.
+No arithmetic rule on the structured field fits both groups. The wider reading
+was chosen deliberately: an over-broad trial costs a clinician the minute it
+takes to reject it, while a narrow one silently withholds a trial from a
+patient who qualifies. The fix that would settle it is reading the explicit
+bound out of the eligibility prose and preferring it - see below, it is the
+same gap.
 
-No arithmetic rule fits all three. `<=N` was chosen because it is literally
-what the structured field says and a reviewer can check it against the
-registry entry in one click; `<=N+1` would fit more trials and silently widen
-the others. The counts above are from a crude regex over free text, so they
-bound the problem rather than settle it. Settling it is a clinical decision
-about who should be allowed to match, not a coding one.
+The answer keys were re-curated against each trial's own age sentence rather
+than against either rule, so the benchmark's age column measures this honestly:
+expect about 0.76, with 11 of the 16 disagreements being exactly this.
 
 ### Age bounds stated only in prose are not mapped
 

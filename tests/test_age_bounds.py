@@ -29,26 +29,46 @@ class TestAgeBounds(unittest.TestCase):
 
     def test_both_bounds_are_emitted(self):
         self.assertEqual(ctg.map_age_numerical(_trial("1 Year", "14 Years")),
-                         [">=1", "<=14"])
+                         [">=1", "<=15"])
 
     def test_either_bound_alone(self):
         self.assertEqual(ctg.map_age_numerical(_trial("18 Years", None)), [">=18"])
-        self.assertEqual(ctg.map_age_numerical(_trial(None, "18 Years")), ["<=18"])
+        self.assertEqual(ctg.map_age_numerical(_trial(None, "17 Years")), ["<=18"])
         self.assertEqual(ctg.map_age_numerical(_trial(None, None)), [])
+
+    def test_the_maximum_is_in_completed_units(self):
+        """
+        maximumAge "17 Years" describes a participant who is 17 until the day
+        they turn 18, so the eligible set is age < 18. MatchMiner compares
+        against a birth date, where "<=17" admits only up to 17.0 and drops
+        every eligible 17-to-18-year-old - the AYA group.
+
+        The registry's own trials settle the reading: NCT02443831 pairs
+        maximumAge "24 Years" with "24 years or younger"; NCT03643276 pairs
+        "17 Years" with "age < 18 years (up to 17 years and 365 days)".
+        """
+        self.assertEqual(ctg.map_age_numerical(_trial(None, "24 Years")), ["<=25"])
+        self.assertEqual(ctg.map_age_numerical(_trial(None, "21 Years")), ["<=22"])
+
+    def test_the_minimum_is_exact(self):
+        """A lower bound admits a patient the day they reach it; no offset."""
+        self.assertEqual(ctg.map_age_numerical(_trial("1 Year", None)), [">=1"])
+        self.assertEqual(ctg.map_age_numerical(_trial("6 Months", None)), [">=0.5"])
 
     def test_sub_year_units_on_both_ends(self):
         """
         A neonatal study. MatchMiner reads the fraction as a fraction of a
         year and rounds it to whole months, which is the same reading this
-        conversion intends.
+        conversion intends - so the one-unit offset on a day-scale maximum
+        disappears below its granularity, as it should.
         """
         self.assertEqual(ctg.map_age_numerical(_trial("18 Days", "70 Days")),
                          [">=0.05", "<=0.19"])
         self.assertEqual(ctg.map_age_numerical(_trial("6 Months", "18 Months")),
-                         [">=0.5", "<=1.5"])
+                         [">=0.5", "<=1.58"])
 
     def test_unparseable_bounds_are_dropped_not_fatal(self):
-        self.assertEqual(ctg.map_age_numerical(_trial("N/A", "14 Years")), ["<=14"])
+        self.assertEqual(ctg.map_age_numerical(_trial("N/A", "14 Years")), ["<=15"])
         self.assertEqual(ctg.map_age_numerical(_trial("1 Year", "14 Fortnights")),
                          [">=1"])
 

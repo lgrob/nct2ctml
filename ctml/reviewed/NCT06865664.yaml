@@ -269,7 +269,7 @@ treatment_list:
       - clinical:
           age_numerical: '>=3'
       - clinical:
-          age_numerical: <=39
+          age_numerical: <=40
       - clinical:
           disease_status:
           - Recurrent

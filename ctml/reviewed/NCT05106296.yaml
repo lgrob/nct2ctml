@@ -222,7 +222,7 @@ treatment_list:
       - clinical:
           age_numerical: '>=3'
       - clinical:
-          age_numerical: <=25
+          age_numerical: <=26
       - clinical:
           disease_status:
           - Recurrent

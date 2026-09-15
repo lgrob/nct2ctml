@@ -120,7 +120,12 @@ These are upstream bugs, fixed here and worth reporting back.
   diagnoses.
 
 - `map_age_numerical` — emits the trial's **upper** age bound as well as its
-  lower one. `maximumAge` was read nowhere in the codebase, so every trial was
+  lower one, one unit above the stated `maximumAge` because that field is in
+  completed units: a participant whose maximum age is 17 years is 17 until the
+  day they turn 18, so the eligible set is age < 18. `<=17` would drop every
+  eligible 17-to-18-year-old, which in paediatric oncology is the AYA group.
+  NCT02443831 pairs "24 Years" with "24 years or younger" and NCT03643276
+  pairs "17 Years" with "age < 18 years (up to 17 years and 365 days)". `maximumAge` was read nowhere in the codebase, so every trial was
   open-ended at the top: NCT06776952 enrols patients aged 18 to 70 *days* and
   matched every child in the database. 613 of the 924 cached trials state a
   maximum and 56 cap below 18. Returns a list, and

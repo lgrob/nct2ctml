@@ -234,4 +234,4 @@ treatment_list:
       - clinical:
           oncotree_primary_diagnosis: Hepatoblastoma
       - clinical:
-          age_numerical: <=18
+          age_numerical: <=19

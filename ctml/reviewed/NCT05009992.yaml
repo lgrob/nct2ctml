@@ -71,7 +71,7 @@ treatment_list:
       - clinical:
           age_numerical: '>=2'
       - clinical:
-          age_numerical: <=39
+          age_numerical: <=40
     arm:
     - arm_code: 'NOT CURRENTLY ENROLLING - ARM 2: ONC201 (Day -1), Radiation+ONC201, Paxalisib+ONC201'
       arm_internal_id: 0

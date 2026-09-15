@@ -102,7 +102,11 @@ derives, and the column scores the bounds that actually select patients.
 maps both to the same Mongo operator, so `<18` and `<=18` select identical
 patients and must not count as different answers.
 
-Expect roughly 0.83 on the current key. The gap is real and worth reading: it
-is mostly trials whose age limits are stated only in the eligibility prose,
-which the deterministic mapper does not read - NCT04625907 carries no
-structured ages at all, and its curated `>=1` / `<=25` come from the text.
+Expect roughly 0.76 on the current key, and read the gap rather than the mean.
+Every answer was re-curated against the trial's own age sentence, so the 16
+disagreements are all explicable: 11 are trials whose sponsor put an
+*exclusive* bound in the structured `maximumAge` field, where the mapper's
+completed-units reading is a year too wide; the other 5 state a bound only in
+prose, which the deterministic mapper does not read at all - NCT04625907
+carries no structured ages whatsoever, and its `>=1` / `<=26` come from the
+text.

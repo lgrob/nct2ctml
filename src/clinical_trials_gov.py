@@ -585,13 +585,30 @@ def map_age_group(trial_data: dict) -> str:
     return cs.get_ctml_schema()['age']
 
 
-def _age_bound(raw, operator, nct_id=""):
+def _age_bound(raw, operator, nct_id="", unit_offset=0):
     """
     One CTML age_numerical expression from a clinicaltrials.gov age string.
 
+    `unit_offset` is added to the stated value before conversion, in the unit
+    the trial stated. It is 1 for an upper bound and 0 for a lower one,
+    because the two fields do not mean the same kind of thing.
+
+    minimumAge is exact: "1 Year" admits a patient the day they turn one.
+    maximumAge is in completed units - a participant whose "maximum age" is 17
+    years is 17 until the day they turn 18 - so the eligible set is age < 18,
+    not age <= 17.0. The registry's own trials confirm it: NCT02443831 pairs
+    maximumAge "24 Years" with "24 years or younger", NCT06647953 pairs
+    "21 Years" with "21 years of age or younger", and NCT03643276 spells it
+    out as "age < 18 years (up to 17 years and 365 days)" against a structured
+    "17 Years".
+
+    This matters because MatchMiner compares against a birth date: "<=17"
+    admits only patients up to 17.0 years and silently drops every eligible
+    17-to-18-year-old. In paediatric oncology that is the adolescent and young
+    adult group, not a rounding error.
+
     Returns "" when the value is absent or unparseable - the bound is then
-    simply not expressed, which is the safe direction for a lower bound and
-    the unavoidable one for an upper.
+    simply not expressed.
     """
     if not raw:
         return ""
@@ -612,7 +629,7 @@ def _age_bound(raw, operator, nct_id=""):
         logger.warning(f"NCTID: {nct_id} | Unknown age unit in {raw!r}; omitting the bound")
         return ""
 
-    years = round(value * _AGE_UNIT_IN_YEARS[unit], 2)
+    years = round((value + unit_offset) * _AGE_UNIT_IN_YEARS[unit], 2)
     # Keep whole years as integers (">=18"); express the rest to 2dp (">=0.5").
     # MatchMiner reads the fraction as a fraction of a year and converts it to
     # whole months, so 0.5 is six months and 0.08 is one - the same reading
@@ -626,7 +643,9 @@ def map_age_numerical(trial_data: dict) -> list:
     """
     The trial's age bounds as CTML age_numerical expressions, in years.
 
-    Both bounds, in the order lower-then-upper. maximumAge used to be
+    Both bounds, in the order lower-then-upper. The upper one is one unit above
+    the stated maximum, because maximumAge is in completed units - see
+    _age_bound. maximumAge used to be
     discarded, which left every trial open-ended at the top: a study enrolling
     18 to 70 *days* matched every child in the database. 613 of the 924 cached
     trials state a maximum and 56 of those cap below 18, so in a paediatric
@@ -642,7 +661,7 @@ def map_age_numerical(trial_data: dict) -> list:
     eligibility = tdh.safe_get(trial_data, ['protocolSection', 'eligibilityModule']) or {}
     nct_id = get_nct_id(trial_data)
     bounds = [_age_bound(eligibility.get('minimumAge'), ">=", nct_id),
-              _age_bound(eligibility.get('maximumAge'), "<=", nct_id)]
+              _age_bound(eligibility.get('maximumAge'), "<=", nct_id, unit_offset=1)]
     return [b for b in bounds if b]
 
 

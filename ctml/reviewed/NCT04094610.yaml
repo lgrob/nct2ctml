@@ -172,4 +172,4 @@ treatment_list:
             hugo_symbol: NTRK3
             variant_category: Structural Variation
       - clinical:
-          age_numerical: <=25
+          age_numerical: <=26

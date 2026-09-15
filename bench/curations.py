@@ -85,7 +85,7 @@ CURATIONS["NCT02559778"] = dict(
             all_of(dx("Neuroblastoma", "Ganglioneuroblastoma"), amplified("MYCN")),
             all_of(dx("Neuroblastoma", "Ganglioneuroblastoma"), age(">=1.5")),
         ),
-        age("<=21"),
+        age("<=22"),
     )],
 )
 
@@ -97,7 +97,7 @@ CURATIONS["NCT06172296"] = dict(
             all_of(dx("Neuroblastoma", "Ganglioneuroblastoma"), amplified("MYCN")),
             all_of(dx("Neuroblastoma", "Ganglioneuroblastoma"), age(">=1.5")),
         ),
-        age("<=30"),
+        age("<=31"),
     )],
 )
 
@@ -148,7 +148,7 @@ CURATIONS["NCT02443831"] = dict(
     # among many, so nothing genomic is required of every patient.
     match=[all_of(
         dx("B-Lymphoblastic Leukemia/Lymphoma, NOS"),
-        age("<=24"),
+        age("<=25"),
         status("Recurrent", "Refractory"),
     )],
 )
@@ -180,7 +180,7 @@ CURATIONS["NCT06177067"] = dict(
             fusion("DEK"), fusion("NUP214"),
             gene("UBTF", "Mutation"), fusion("KAT6A"),
         ),
-        age(">=1"), age("<=30"),
+        age(">=1"), age("<=31"),
         status("Recurrent", "Refractory"),
     )],
 )
@@ -216,7 +216,7 @@ CURATIONS["NCT07059975"] = dict(
     # no genetics at all, so none of it is required.
     match=[all_of(
         dx("Acute Myeloid Leukemia", "Myeloid Sarcoma"),
-        age("<=30"),
+        age(">=0.08"), age("<=31"),
     )],
 )
 
@@ -231,7 +231,7 @@ CURATIONS["NCT05180825"] = dict(
         dx("Low-Grade Glioma, NOS", "Pleomorphic Xanthoastrocytoma",
            "Ganglioglioma", "Papillary Glioneuronal Tumor",
            "Rosette-forming Glioneuronal Tumor of the Fourth Ventricle"),
-        age("<=25"),
+        age(">=0.08"), age("<=26"),
         gene("BRAF", "!Mutation"),
         gene("IDH1", "!Mutation"),
         gene("H3-3A", "!Mutation"),
@@ -269,7 +269,7 @@ CURATIONS["NCT04696029"] = dict(
     # cohort enrols, so nothing genomic is required.
     match=[all_of(
         dx("Medulloblastoma"),
-        age("<=21"),
+        age("<=22"),
     )],
 )
 
@@ -290,13 +290,13 @@ CURATIONS["NCT04322318"] = dict(
     # AREN1921. Diffuse anaplastic Wilms tumour and relapsed favourable
     # histology Wilms tumour; histology and relapse risk group decide the arm,
     # nothing molecular is required.
-    match=[all_of(dx("Wilms' Tumor"), age("<=30"))],
+    match=[all_of(dx("Wilms' Tumor"), age("<=31"))],
 )
 
 CURATIONS["NCT04478292"] = dict(
     # Newly diagnosed hepatoblastoma. No molecular eligibility at all - the
     # criteria are histology, performance status and organ function.
-    match=[all_of(dx("Hepatoblastoma"), age("<=18"))],
+    match=[all_of(dx("Hepatoblastoma"), age("<=19"))],
 )
 
 CURATIONS["NCT05504291"] = dict(
@@ -349,7 +349,7 @@ CURATIONS["NCT02393157"] = dict(
            "High-Grade B-Cell Lymphoma, NOS",
            "Primary Mediastinal (Thymic) Large B-Cell Lymphoma",
            "B-Lymphoblastic Leukemia/Lymphoma, NOS", "Follicular Lymphoma"),
-        age(">=3"), age("<=31"),
+        age(">=3"), age("<=32"),
         status("Recurrent", "Refractory"),
     )],
 )
@@ -366,7 +366,7 @@ CURATIONS["NCT05304585"] = dict(
             dx("Spindle Cell/Sclerosing Rhabdomyosarcoma"),
             all_of(dx("Alveolar Rhabdomyosarcoma"), fusion("FOXO1", negated=True)),
         ),
-        age("<=21"),
+        age("<=22"),
     )],
 )
 
@@ -376,7 +376,7 @@ CURATIONS["NCT06083883"] = dict(
     # is a genomic match criterion.
     match=[all_of(
         dx("Synovial Sarcoma", "Myxoid/Round-Cell Liposarcoma"),
-        age(">=16"), age("<=80"),
+        age(">=16"), age("<=81"),
         status("Recurrent", "Refractory"),
     )],
 )
@@ -387,7 +387,7 @@ CURATIONS["NCT06865664"] = dict(
     # FGFR4 expression is not required."
     match=[all_of(
         dx("Rhabdomyosarcoma"),
-        age(">=3"), age("<=39"),
+        age(">=3"), age("<=40"),
         status("Recurrent", "Refractory"),
     )],
 )
@@ -429,7 +429,7 @@ CURATIONS["NCT04094610"] = dict(
             gene("ROS1", "Copy Number Variation", cnv_call="High Amplification"),
             fusion("NTRK1"), fusion("NTRK2"), fusion("NTRK3"),
         ),
-        age("<=25"),
+        age("<=26"),
     )],
 )
 
@@ -443,7 +443,7 @@ CURATIONS["NCT05106296"] = dict(
     match=[all_of(
         dx("Ependymoma", "Medulloblastoma", "Glioblastoma, IDH-Wildtype",
            "Primary Brain Tumor"),
-        age(">=3"), age("<=25"),
+        age(">=3"), age("<=26"),
         status("Recurrent", "Refractory"),
     )],
 )
@@ -455,7 +455,7 @@ CURATIONS["NCT04655404"] = dict(
         dx("High-Grade Glioma, NOS", "Glioblastoma, IDH-Wildtype",
            "Diffuse Midline Glioma, H3 K27-Altered"),
         any_of(fusion("NTRK1"), fusion("NTRK2"), fusion("NTRK3")),
-        age("<=21"),
+        age("<=22"),
     )],
 )
 
@@ -472,7 +472,7 @@ CURATIONS["NCT04185038"] = dict(
            "Medulloblastoma", "Germ Cell Tumor, Brain",
            "Atypical Teratoid/Rhabdoid Tumor", "Primitive Neuroectodermal Tumor",
            "Choroid Plexus Carcinoma", "Pineoblastoma"),
-        age(">=1"), age("<=26"),
+        age(">=1"), age("<=27"),
         status("Recurrent", "Refractory"),
     )],
 )
@@ -516,7 +516,7 @@ CURATIONS["NCT04897321"] = dict(
            "Desmoplastic Small-Round-Cell Tumor", "Clear Cell Sarcoma",
            "Hepatoblastoma", "Melanoma", "Rhabdoid Cancer",
            "Malignant Peripheral Nerve Sheath Tumor"),
-        age("<=21"),
+        age("<=22"),
         status("Recurrent", "Refractory"),
     )],
 )
@@ -531,7 +531,7 @@ CURATIONS["NCT05489887"] = dict(
             all_of(dx("Neuroblastoma", "Ganglioneuroblastoma"), amplified("MYCN")),
             all_of(dx("Neuroblastoma", "Ganglioneuroblastoma"), age(">=1.5")),
         ),
-        age(">=1"), age("<=21"),
+        age(">=1"), age("<=22"),
     )],
 )
 
@@ -540,7 +540,7 @@ CURATIONS["NCT06071897"] = dict(
     # criterion appears in the inclusion list at all.
     match=[all_of(
         dx("Neuroblastoma", "Ganglioneuroblastoma"),
-        age(">=1.5"), age("<=18"),
+        age(">=1.5"), age("<=19"),
     )],
 )
 
@@ -585,7 +585,7 @@ CURATIONS["NCT04634357"] = dict(
     # patient's germline type; neither is a tumour genomic criterion.
     match=[all_of(
         dx("Hepatoblastoma", "Hepatocellular Carcinoma"),
-        age(">=1"), age("<=21"),
+        age(">=1"), age("<=22"),
         status("Recurrent", "Refractory"),
     )],
 )
@@ -610,6 +610,6 @@ CURATIONS["NCT06239272"] = dict(
            "Myxofibrosarcoma", "Pleomorphic Liposarcoma", "Round Cell Sarcoma, NOS",
            "Sclerosing Epithelioid Fibrosarcoma", "Synovial Sarcoma",
            "Undifferentiated Pleomorphic Sarcoma/Malignant Fibrous Histiocytoma/High-Grade Spindle Cell Sarcoma"),
-        age(">=1"), age("<=30"),
+        age(">=1"), age("<=31"),
     )],
 )

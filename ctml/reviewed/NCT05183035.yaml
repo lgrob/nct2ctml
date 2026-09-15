@@ -60,6 +60,8 @@ treatment_list:
       - clinical:
           oncotree_primary_diagnosis: Acute Myeloid Leukemia
       - clinical:
+          age_numerical: '>=0.08'
+      - clinical:
           age_numerical: <22
       - clinical:
           disease_status:

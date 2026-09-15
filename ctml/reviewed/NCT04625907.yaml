@@ -72,7 +72,7 @@ treatment_list:
       - clinical:
           age_numerical: '>=1'
       - clinical:
-          age_numerical: <=25
+          age_numerical: <=26
     arm:
     - arm_code: 'Phase 1b Dose finding: VHR induction - IRIVA'
       arm_internal_id: 0

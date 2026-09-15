@@ -209,7 +209,9 @@ treatment_list:
             oncotree_primary_diagnosis: Rosette-forming Glioneuronal Tumor of the
               Fourth Ventricle
       - clinical:
-          age_numerical: <=25
+          age_numerical: '>=0.08'
+      - clinical:
+          age_numerical: <=26
       - genomic:
           hugo_symbol: BRAF
           variant_category: '!Mutation'
