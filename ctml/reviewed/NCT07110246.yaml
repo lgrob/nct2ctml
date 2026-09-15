@@ -1,17 +1,17 @@
 nct_id: NCT07110246
 age: Children
 cancer_center_accrual_goal_upper: 0
-curated_on: '2026-09-14'
+curated_on: '2026-09-15'
 study_start_date: '2025-11-07'
 study_completion_date: null
 data_table4: Interventional
 drug_list:
   drug:
   - drug_name: 'Drug: Dabrafenib'
-  - drug_name: 'Procedure: Specimen Collection'
-  - drug_name: 'Procedure: Magnetic Resonance Imaging (MRI)'
   - drug_name: 'Drug: Trametinib'
+  - drug_name: 'Procedure: Magnetic Resonance Imaging (MRI)'
   - drug_name: 'Procedure: Optional Lumbar puncture'
+  - drug_name: 'Procedure: Specimen Collection'
 long_title: A Phase 2 De-escalation Study of Dabrafenib and Trametinib for Patients
   With BRAF V600 Mutant Low-Grade Gliomas
 last_updated: '2026-09-03'

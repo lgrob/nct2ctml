@@ -1,16 +1,16 @@
 nct_id: NCT05106296
 age: Children
 cancer_center_accrual_goal_upper: 0
-curated_on: '2026-09-14'
+curated_on: '2026-09-15'
 study_start_date: '2022-02-08'
 study_completion_date: null
 data_table4: Interventional
 drug_list:
   drug:
-  - drug_name: 'Drug: Indoximod'
   - drug_name: 'Drug: Cyclophosphamide'
   - drug_name: 'Drug: Etoposide'
   - drug_name: 'Drug: Ibrutinib'
+  - drug_name: 'Drug: Indoximod'
   - drug_name: 'Drug: Temozolomide'
 long_title: Repurposing Ibrutinib for Chemo-Immunotherapy in a Phase 1b Study of Ibrutinib
   With Indoximod Plus Metronomic Cyclophosphamide and Etoposide for Pediatric Patients
@@ -217,6 +217,8 @@ treatment_list:
             oncotree_primary_diagnosis: Medulloblastoma
         - clinical:
             oncotree_primary_diagnosis: Glioblastoma, IDH-Wildtype
+        - clinical:
+            oncotree_primary_diagnosis: Primary Brain Tumor
       - clinical:
           age_numerical: '>=3'
       - clinical:

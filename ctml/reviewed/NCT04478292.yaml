@@ -1,24 +1,24 @@
 nct_id: NCT04478292
 age: Children
 cancer_center_accrual_goal_upper: 0
-curated_on: '2026-09-14'
+curated_on: '2026-09-15'
 study_start_date: '2021-03-01'
 study_completion_date: null
 data_table4: Interventional
 drug_list:
   drug:
-  - drug_name: 'Procedure: Resection or transplant'
-  - drug_name: 'Drug: Consolidation (Carboplatin, Doxorubicin) -Group D1'
+  - drug_name: 'Drug: Block 1 to 3 (Cisplatin, Doxorubicin) Group D'
+  - drug_name: 'Drug: Cisplatin, 5-Fluorouracil, Vincristine, Doxorubicin-Group C'
   - drug_name: 'Drug: Consolidation (Carboplatin +Doxorubicin/Vincristine + Irinotecan)-Group
       D2'
-  - drug_name: 'Procedure: Primary surgery resection'
+  - drug_name: 'Drug: Consolidation (Carboplatin, Doxorubicin) -Group D1'
   - drug_name: 'Drug: Sodium Thiosulfate Injection'
-  - drug_name: 'Drug: mono CDDP-Group A2'
-  - drug_name: 'Procedure: Resection of pulmonary nodules'
-  - drug_name: 'Drug: Block 1 to 3 (Cisplatin, Doxorubicin) Group D'
-  - drug_name: 'Procedure: Biopsy'
-  - drug_name: 'Drug: Cisplatin, 5-Fluorouracil, Vincristine, Doxorubicin-Group C'
   - drug_name: 'Drug: mono CDDP- Group B'
+  - drug_name: 'Drug: mono CDDP-Group A2'
+  - drug_name: 'Procedure: Biopsy'
+  - drug_name: 'Procedure: Primary surgery resection'
+  - drug_name: 'Procedure: Resection of pulmonary nodules'
+  - drug_name: 'Procedure: Resection or transplant'
 long_title: A Phase 3 Multi-institutional Study for Treatment of Children With Newly
   Diagnosed Hepatoblastoma Using a Modified PHITT Strategy Incorporating a Randomized
   Assessment of Sodium Thiosulfate as Otoprotection for Children With Localized Disease,

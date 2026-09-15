@@ -1,21 +1,21 @@
 nct_id: NCT05304585
 age: Children
 cancer_center_accrual_goal_upper: 0
-curated_on: '2026-09-14'
+curated_on: '2026-09-15'
 study_start_date: '2022-08-04'
 study_completion_date: null
 data_table4: Interventional
 drug_list:
   drug:
-  - drug_name: 'Drug: Cyclophosphamide'
-  - drug_name: 'Procedure: Magnetic Resonance Elastography'
-  - drug_name: 'Procedure: Biopsy Procedure'
-  - drug_name: 'Radiation: Radiation Therapy'
-  - drug_name: 'Procedure: Positron Emission Tomography'
-  - drug_name: 'Procedure: Computed Tomography'
   - drug_name: 'Biological: Dactinomycin'
+  - drug_name: 'Drug: Cyclophosphamide'
   - drug_name: 'Drug: Vincristine'
+  - drug_name: 'Procedure: Biopsy Procedure'
   - drug_name: 'Procedure: Bone Scan'
+  - drug_name: 'Procedure: Computed Tomography'
+  - drug_name: 'Procedure: Magnetic Resonance Elastography'
+  - drug_name: 'Procedure: Positron Emission Tomography'
+  - drug_name: 'Radiation: Radiation Therapy'
 long_title: A Prospective Phase 3 Study of Patients With Newly Diagnosed Very Low-Risk
   and Low-Risk Fusion Negative Rhabdomyosarcoma
 last_updated: '2026-08-25'

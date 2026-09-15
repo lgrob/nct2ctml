@@ -1,17 +1,17 @@
 nct_id: NCT02443831
 age: Children
 cancer_center_accrual_goal_upper: 0
-curated_on: '2026-09-14'
+curated_on: '2026-09-15'
 study_start_date: 2016-04
 study_completion_date: null
 data_table4: Interventional
 drug_list:
   drug:
-  - drug_name: 'Procedure: Leukapheresis'
-  - drug_name: 'Drug: Lymphodepletion with Cyclophosphamide'
-  - drug_name: 'Radiation: Total Body Irradiation (TBI)'
-  - drug_name: 'Drug: Lymphodepletion with Fludarabine'
   - drug_name: 'Biological: CD19+CD22 CAR T-cells'
+  - drug_name: 'Drug: Lymphodepletion with Cyclophosphamide'
+  - drug_name: 'Drug: Lymphodepletion with Fludarabine'
+  - drug_name: 'Procedure: Leukapheresis'
+  - drug_name: 'Radiation: Total Body Irradiation (TBI)'
 long_title: Immunotherapy With CD19+CD22 CAR Redirected T-cells for High Risk/Relapsed
   Paediatric CD19+ and CD22+ Acute Lymphoblastic Leukaemia
 last_updated: '2026-05-22'

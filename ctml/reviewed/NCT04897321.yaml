@@ -1,16 +1,16 @@
 nct_id: NCT04897321
 age: Children
 cancer_center_accrual_goal_upper: 0
-curated_on: '2026-09-14'
+curated_on: '2026-09-15'
 study_start_date: '2022-07-06'
 study_completion_date: null
 data_table4: Interventional
 drug_list:
   drug:
-  - drug_name: 'Drug: MESNA'
-  - drug_name: 'Drug: Fludarabine'
-  - drug_name: 'Drug: Cyclophosphamide'
   - drug_name: 'Drug: B7-H3 CAR T cells'
+  - drug_name: 'Drug: Cyclophosphamide'
+  - drug_name: 'Drug: Fludarabine'
+  - drug_name: 'Drug: MESNA'
 long_title: B7-H3-Specific Chimeric Antigen Receptor Autologous T-Cell Therapy for
   Pediatric Patients With Solid Tumors (3CAR)
 last_updated: '2026-05-19'
@@ -177,6 +177,16 @@ treatment_list:
             oncotree_primary_diagnosis: Adrenocortical Carcinoma
         - clinical:
             oncotree_primary_diagnosis: Desmoplastic Small-Round-Cell Tumor
+        - clinical:
+            oncotree_primary_diagnosis: Clear Cell Sarcoma
+        - clinical:
+            oncotree_primary_diagnosis: Hepatoblastoma
+        - clinical:
+            oncotree_primary_diagnosis: Melanoma
+        - clinical:
+            oncotree_primary_diagnosis: Rhabdoid Cancer
+        - clinical:
+            oncotree_primary_diagnosis: Malignant Peripheral Nerve Sheath Tumor
       - clinical:
           age_numerical: <=21
       - clinical:

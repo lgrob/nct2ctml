@@ -450,9 +450,13 @@ CURATIONS["NCT04094610"] = dict(
 # ---------------------------------------------------------------------- CNS (2)
 CURATIONS["NCT05106296"] = dict(
     # Ibrutinib + indoximod. Histology only; nothing molecular is required.
+    # "ependymoma, medulloblastoma, glioblastoma, or another type of primary
+    # cancer of the central nervous system" - that last clause is what the
+    # Oncotree node Primary Brain Tumor is for, and I had omitted it.
     age="Children",
     match=[all_of(
-        dx("Ependymoma", "Medulloblastoma", "Glioblastoma, IDH-Wildtype"),
+        dx("Ependymoma", "Medulloblastoma", "Glioblastoma, IDH-Wildtype",
+           "Primary Brain Tumor"),
         age(">=3"), age("<=25"),
         status("Recurrent", "Refractory"),
     )],
@@ -473,10 +477,17 @@ CURATIONS["NCT04655404"] = dict(
 CURATIONS["NCT04185038"] = dict(
     # B7-H3 CAR-T, locoregional. B7-H3 (CD276) is scored by IHC and is not
     # part of the inclusion criteria here in any case.
+    #
+    # The criterion is "refractory or recurrent CNS disease for which there is
+    # no standard therapy, or DIPG or DMG" - any CNS tumour. The trial's own
+    # condition list is its enumeration of what that means, so all eight named
+    # entities belong here, not the four I first transcribed.
     age="Children",
     match=[all_of(
         dx("Diffuse Midline Glioma, H3 K27-Altered", "Ependymoma",
-           "Medulloblastoma", "Germ Cell Tumor, Brain"),
+           "Medulloblastoma", "Germ Cell Tumor, Brain",
+           "Atypical Teratoid/Rhabdoid Tumor", "Primitive Neuroectodermal Tumor",
+           "Choroid Plexus Carcinoma", "Pineoblastoma"),
         age(">=1"), age("<=26"),
         status("Recurrent", "Refractory"),
     )],
@@ -513,9 +524,15 @@ CURATIONS["NCT04897321"] = dict(
     # is an immunohistochemistry H-score, not a genomic alteration.
     age="Children",
     match=[all_of(
+        # The criterion is "B7-H3+ solid tumor with measurable disease", so the
+        # trial's condition list is the enumeration. Clear Cell Sarcoma,
+        # Hepatoblastoma, Melanoma, Rhabdoid Cancer and MPNST are named there
+        # and were missing from my first pass.
         dx("Osteosarcoma", "Rhabdomyosarcoma", "Neuroblastoma", "Ewing Sarcoma",
            "Wilms' Tumor", "Adrenocortical Carcinoma",
-           "Desmoplastic Small-Round-Cell Tumor"),
+           "Desmoplastic Small-Round-Cell Tumor", "Clear Cell Sarcoma",
+           "Hepatoblastoma", "Melanoma", "Rhabdoid Cancer",
+           "Malignant Peripheral Nerve Sheath Tumor"),
         age("<=21"),
         status("Recurrent", "Refractory"),
     )],

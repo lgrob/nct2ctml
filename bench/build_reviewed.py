@@ -61,14 +61,35 @@ def validate(nct_id, match):
     return problems
 
 
+def _first_curated_on(nct_id):
+    """
+    Keep the date a trial was first curated rather than restamping it.
+
+    Re-stamping makes every rebuild touch every file, so a real change to one
+    answer hides among 49 date bumps.
+    """
+    path = f"{OUT_DIR}/{nct_id}.yaml"
+    if os.path.exists(path):
+        with open(path) as handle:
+            for line in handle:
+                if line.startswith("curated_on:"):
+                    return line.split(":", 1)[1].strip().strip("'\"")
+    return datetime.date.today().isoformat()
+
+
 def build(nct_id, curation):
     trial_data = tdh.read_from_file(CACHE_DIR, nct_id, "json")
     schema = cs.get_ctml_schema()
     schema = ctg.map_ctml_general_fields(schema, trial_data)
     schema = ctg.map_prior_treatment_requirements(schema, trial_data)
+    # The pipeline collects drugs into a set, so their order changes with
+    # Python's hash seed on every run. Sort them: an answer key nobody can
+    # diff is an answer key nobody will review.
+    drugs = (schema.get("drug_list") or {}).get("drug")
+    if isinstance(drugs, list):
+        drugs.sort(key=lambda d: str((d or {}).get("drug_name", "")))
     schema["age"] = curation["age"]
-    schema["curated_on"] = curation.get("curated_on",
-                                        datetime.date.today().isoformat())
+    schema["curated_on"] = curation.get("curated_on", _first_curated_on(nct_id))
     steps = schema.setdefault("treatment_list", {}).setdefault("step", [])
     if not steps:
         steps.append({"step_internal_id": 1, "step_code": "1",

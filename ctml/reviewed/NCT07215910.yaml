@@ -1,21 +1,21 @@
 nct_id: NCT07215910
 age: All
 cancer_center_accrual_goal_upper: 0
-curated_on: '2026-09-14'
+curated_on: '2026-09-15'
 study_start_date: '2026-06-24'
 study_completion_date: null
 data_table4: Interventional
 drug_list:
   drug:
-  - drug_name: 'Drug: Vorasidenib'
   - drug_name: 'Drug: Placebo Administration'
-  - drug_name: 'Procedure: Biospecimen Collection'
-  - drug_name: 'Other: Questionnaire Administration'
   - drug_name: 'Drug: Temozolomide'
-  - drug_name: 'Radiation: Intensity-Modulated Radiation Therapy'
-  - drug_name: 'Procedure: Magnetic Resonance Imaging'
-  - drug_name: 'Radiation: Pencil Beam Scanning'
+  - drug_name: 'Drug: Vorasidenib'
+  - drug_name: 'Other: Questionnaire Administration'
+  - drug_name: 'Procedure: Biospecimen Collection'
   - drug_name: 'Procedure: Intensity-Modulated Proton Therapy'
+  - drug_name: 'Procedure: Magnetic Resonance Imaging'
+  - drug_name: 'Radiation: Intensity-Modulated Radiation Therapy'
+  - drug_name: 'Radiation: Pencil Beam Scanning'
   - drug_name: 'Radiation: Volume Modulated Arc Therapy'
 long_title: Phase III Trial of Radiotherapy Followed by Adjuvant Temozolomide in Combination
   With the IDH Inhibitor Vorasidenib vs Placebo in IDH-Mutated Newly-Diagnosed Grade

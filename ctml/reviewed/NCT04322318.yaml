@@ -1,30 +1,30 @@
 nct_id: NCT04322318
 age: Children
 cancer_center_accrual_goal_upper: 0
-curated_on: '2026-09-14'
+curated_on: '2026-09-15'
 study_start_date: '2020-10-19'
 study_completion_date: null
 data_table4: Interventional
 drug_list:
   drug:
   - drug_name: 'Drug: Carboplatin'
-  - drug_name: 'Drug: Topotecan'
   - drug_name: 'Drug: Cyclophosphamide'
+  - drug_name: 'Drug: Doxorubicin'
   - drug_name: 'Drug: Etoposide'
-  - drug_name: 'Procedure: Transabdominal Ultrasound'
+  - drug_name: 'Drug: Ifosfamide'
+  - drug_name: 'Drug: Irinotecan'
+  - drug_name: 'Drug: Topotecan'
+  - drug_name: 'Drug: Vincristine'
   - drug_name: 'Procedure: Biopsy Procedure'
-  - drug_name: 'Radiation: Radiation Therapy'
+  - drug_name: 'Procedure: Biospecimen Collection'
+  - drug_name: 'Procedure: Bone Scan'
+  - drug_name: 'Procedure: Computed Tomography'
+  - drug_name: 'Procedure: Magnetic Resonance Imaging'
   - drug_name: 'Procedure: Positron Emission Tomography'
   - drug_name: 'Procedure: Surgical Procedure'
-  - drug_name: 'Drug: Irinotecan'
-  - drug_name: 'Procedure: Biospecimen Collection'
-  - drug_name: 'Procedure: Computed Tomography'
-  - drug_name: 'Drug: Doxorubicin'
-  - drug_name: 'Drug: Vincristine'
+  - drug_name: 'Procedure: Transabdominal Ultrasound'
   - drug_name: 'Procedure: X-Ray Imaging'
-  - drug_name: 'Procedure: Magnetic Resonance Imaging'
-  - drug_name: 'Procedure: Bone Scan'
-  - drug_name: 'Drug: Ifosfamide'
+  - drug_name: 'Radiation: Radiation Therapy'
 long_title: Treatment of Newly Diagnosed Diffuse Anaplastic Wilms Tumors (DAWT) and
   Relapsed Favorable Histology Wilms Tumors (FHWT)
 last_updated: '2026-08-25'

@@ -1,14 +1,14 @@
 nct_id: NCT05748171
 age: Children
 cancer_center_accrual_goal_upper: 0
-curated_on: '2026-09-14'
+curated_on: '2026-09-15'
 study_start_date: '2023-05-17'
 study_completion_date: null
 data_table4: Interventional
 drug_list:
   drug:
-  - drug_name: 'Drug: Inotuzumab ozogamicin'
   - drug_name: 'Drug: ALLR3'
+  - drug_name: 'Drug: Inotuzumab ozogamicin'
 long_title: A PROSPECTIVE, RANDOMIZED, OPEN-LABEL PHASE 2 STUDY TO EVALUATE THE SUPERIORITY
   OF INOTUZUMAB OZOGAMICIN MONOTHERAPY VERSUS ALLR3 FOR INDUCTION TREATMENT OF CHILDHOOD
   HIGH-RISK OR VERY HIGH-RISK FIRST RELAPSE B-CELL PRECURSOR ACUTE LYMPHOBLASTIC LEUKAEMIA

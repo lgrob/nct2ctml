@@ -1,23 +1,23 @@
 nct_id: NCT03067181
 age: All
 cancer_center_accrual_goal_upper: 0
-curated_on: '2026-09-14'
+curated_on: '2026-09-15'
 study_start_date: '2017-05-25'
 study_completion_date: null
 data_table4: Interventional
 drug_list:
   drug:
-  - drug_name: 'Drug: Carboplatin'
-  - drug_name: 'Drug: Etoposide'
-  - drug_name: 'Procedure: Biopsy Procedure'
   - drug_name: 'Biological: Bleomycin Sulfate'
-  - drug_name: 'Procedure: Pulmonary Function Test'
+  - drug_name: 'Drug: Carboplatin'
+  - drug_name: 'Drug: Cisplatin'
+  - drug_name: 'Drug: Etoposide'
+  - drug_name: 'Other: Best Practice'
+  - drug_name: 'Other: Questionnaire Administration'
+  - drug_name: 'Procedure: Biopsy Procedure'
   - drug_name: 'Procedure: Biospecimen Collection'
   - drug_name: 'Procedure: Computed Tomography'
-  - drug_name: 'Other: Questionnaire Administration'
-  - drug_name: 'Other: Best Practice'
-  - drug_name: 'Drug: Cisplatin'
   - drug_name: 'Procedure: Magnetic Resonance Imaging'
+  - drug_name: 'Procedure: Pulmonary Function Test'
 long_title: A Phase 3 Study of Active Surveillance for Low Risk and a Randomized Trial
   of Carboplatin vs. Cisplatin for Standard Risk Pediatric and Adult Patients With
   Germ Cell Tumors
