@@ -43,7 +43,7 @@ The CTML directory on root level contains the trial CTML files. The sub-director
 ------------
 #### Rules for assigning values to various CTML fields
 
-1. Oncotree diagnosis — see [nct_to_ctml_mapping_guide.md § Diagnosis](nct_to_ctml_mapping_guide.md#diagnosis-oncotree); uses [OncoTree `oncotree_2021_11_02`](https://oncotree.mskcc.org/?version=oncotree_2021_11_02&field=NAME) (`ref/oncotree_file.txt`); allowed diagnosis strings are OncoTree names (not enumerated in `data_model.py`)
+1. Oncotree diagnosis — see [nct_to_ctml_mapping_guide.md § Diagnosis](nct_to_ctml_mapping_guide.md#diagnosis-oncotree); uses [OncoTree `oncotree_2025_10_03`](https://oncotree.mskcc.org/?version=oncotree_2025_10_03&field=NAME) (`ref/oncotree_file.txt`); allowed diagnosis strings are OncoTree names (not enumerated in `data_model.py`)
 2. Genes / genomic criteria — see mapping guide § Genomic match; allowed values in `yaml_genomic_schema`
 3. General fields — see mapping guide § Part 1; trial-level fields in `parent_schema`
 4. `protocol_id` and `protocol_no` — leave empty/`0` in CTML; MatchMiner assigns unique auto-incremented values on database insert (see [mapping guide § protocol_id and protocol_no](nct_to_ctml_mapping_guide.md#protocol_id-and-protocol_no-intentionally-empty)). Use `protocol_ids` for local IDs from `local_trial_info.csv`.

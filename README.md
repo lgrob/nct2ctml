@@ -143,6 +143,6 @@ See [LICENSE](LICENSE).
 ## Resources
 - [ClinicalTrials.gov API](https://clinicaltrials.gov/data-api/api#extapi)
 - [MatchMiner CTML](https://matchminer.gitbook.io/matchminer/deployment/ctml-and-trial-curation)
-- [Oncotree (oncotree_2021_11_02)](https://oncotree.mskcc.org/?version=oncotree_2021_11_02&field=NAME)
+- [Oncotree (oncotree_2025_10_03)](https://oncotree.mskcc.org/?version=oncotree_2025_10_03&field=NAME)
 - [COSMIC Cancer Gene Census](https://cancer.sanger.ac.uk/census)
 - [Manual CTML Curation Guide](doc/trial_creation_guide.md)

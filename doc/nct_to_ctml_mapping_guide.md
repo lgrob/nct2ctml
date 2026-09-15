@@ -205,11 +205,24 @@ Permitted field names and values are in [`yaml_genomic_schema`](https://github.c
 
 | Item | Value |
 |------|--------|
-| **Version** | `oncotree_2021_11_02` |
-| **Browser (by name)** | [OncoTree — oncotree_2021_11_02](https://oncotree.mskcc.org/?version=oncotree_2021_11_02&field=NAME) |
+| **Version** | `oncotree_2025_10_03` (879 names; currently `oncotree_latest_stable`) |
+| **Browser (by name)** | [OncoTree — oncotree_2025_10_03](https://oncotree.mskcc.org/?version=oncotree_2025_10_03&field=NAME) |
 | **Local hierarchy file** | `ref/oncotree_file.txt` (configured as `ONCOTREE_TXT_FILE_PATH` in `config.py`) |
+| **Origin** | The tab-delimited export from <https://oncotree.mskcc.org>, dropped in by hand. No script fetches or refreshes it. |
 
 When verifying a diagnosis in CTML, look up the exact **NAME** in that OncoTree release. The converter only proposes values that exist in `ref/oncotree_file.txt` (Level 1 categories and their descendant names used in the mapping steps below).
+
+> **This release is newer than the OncoTree most MatchMiner deployments map
+> against.** MatchMiner resolves `oncotree_primary_diagnosis` through an
+> `oncotree_mapping.json`: a name in that file expands to its descendants, and
+> a name absent from it falls back to an exact string match. The 2021 WHO CNS5
+> restructuring sits inside the gap, so the terms differ in both directions -
+> `Diffuse Midline Glioma, H3 K27-Altered` and
+> `Pediatric-Type Diffuse High-Grade Glioma` are in this release and not in
+> older tables, while `Anaplastic Astrocytoma` and
+> `Diffuse Intrinsic Pontine Glioma` are retired here and still present there.
+> Those are precisely the paediatric neuro-oncology terms, so confirm which
+> table the receiving instance runs before trusting a diagnosis to match.
 
 ### Global (trial-level) diagnosis
 

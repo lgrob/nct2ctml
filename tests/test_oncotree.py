@@ -38,6 +38,30 @@ class TestOncotree(unittest.TestCase):
         ):
             self.assertEqual(_parse_level_value(raw), expected)
 
+    def test_the_documented_version_matches_the_file(self):
+        """
+        The docs told reviewers to verify diagnoses against
+        oncotree_2021_11_02 for a month after the file was updated to
+        2025_10_03, and the gap between those two is the WHO CNS5
+        restructuring - exactly the paediatric neuro-oncology terms. Pin the
+        node count so a silent swap of ref/oncotree_file.txt is visible.
+        """
+        import glob
+        import os
+        level_1, mapping = get_all_oncotree_data()
+        names = set(level_1)
+        for children in mapping.values():
+            names |= children
+        self.assertEqual(len(names), 879)
+
+        root = os.path.join(os.path.dirname(__file__), "..")
+        docs = ["README.md", "doc/nct_to_ctml_mapping_guide.md",
+                "doc/trial_creation_guide.md"]
+        for rel in docs:
+            text = open(os.path.join(root, rel)).read()
+            self.assertNotIn("oncotree_2021_11_02", text, rel)
+            self.assertIn("oncotree_2025_10_03", text, rel)
+
     def test_read_oncotree_rows(self):
         rows, level_columns = _read_oncotree_rows()
         self.assertGreater(len(rows), 0)

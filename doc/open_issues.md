@@ -110,6 +110,44 @@ curated key holds `>=1` and `<=25` taken from the prose; `NCT02559778` states
 between the benchmark's age F1 (~0.83) and 1.00, and it is visible now only
 because that column scores the bounds rather than the trial-level label.
 
+### Our OncoTree is newer than the table MatchMiner maps against
+
+`ref/oncotree_file.txt` is `oncotree_2025_10_03`, the current latest stable
+(verified against the OncoTree API: 879 names, zero difference). MatchMiner
+resolves `oncotree_primary_diagnosis` through an `oncotree_mapping.json` -
+`external_file_mapping` in the matchengine does
+`resource.setdefault(trial_value, trial_value)`, so a name in that file
+expands to every descendant and a name absent from it falls back to an exact
+string match.
+
+The table shipped with DFCI's matchengine predates the 2021 WHO CNS5
+restructuring, and the differences are in both directions:
+
+    in ours, absent there    Diffuse Midline Glioma, H3 K27-Altered
+                             Pediatric-Type Diffuse High-Grade Glioma
+                             B-Lymphoblastic Leukemia/Lymphoma, NOS
+    there, retired in ours   Anaplastic Astrocytoma
+                             Diffuse Intrinsic Pontine Glioma
+
+313 of our 879 nodes are absent from it, including 22 of the 87 diagnoses our
+own answer keys use. Absent does not mean broken - the fallback is an exact
+match - but it does mean matching is a string join between our vocabulary and
+whatever vocabulary the patient records use, and nobody has checked that they
+agree.
+
+Two consequences. Emitting a *parent* is the cheap way to cover a population,
+because a mapped parent expands (`Diffuse Glioma` to 13, `Rhabdomyosarcoma` to
+6, `_SOLID_` to 561) - but only for names the receiving table knows. And the
+benchmark cannot see any of this: a diagnosis scoring 1.00 against
+`ctml/reviewed` matches nothing if the patient records spell it differently.
+**Confirm the receiving instance's table before tuning the diagnosis path
+further.**
+
+One inherited hazard worth checking there: upstream shipped its own
+`ref/oncotree_mapping.json` until commit `520826f` deleted it, and in that
+file `_LIQUID_` mapped to an empty list - which the engine turns into
+`{"$in": []}`, matching no patient at all.
+
 ### Stage 2 over-generates, and that is where the diagnosis score is
 
 Measured on the 2026-09-15 run (llama3.3:70b, 50 trials): diagnosis **recall

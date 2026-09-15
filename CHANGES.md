@@ -224,6 +224,17 @@ These are upstream bugs, fixed here and worth reporting back.
 
 ## Reference data
 
+- `ref/oncotree_file.txt` — the tab-delimited export from
+  <https://oncotree.mskcc.org>, dropped in by hand; no script fetches it.
+  Upstream commit `520826f` updated it to **`oncotree_2025_10_03`** and the
+  documentation was not updated with it, so `README.md`,
+  `doc/nct_to_ctml_mapping_guide.md` and `doc/trial_creation_guide.md` told
+  reviewers to verify diagnoses against `oncotree_2021_11_02` for the next
+  three months. Verified against the OncoTree API: 879 names, zero difference
+  from the 2025_10_03 release. A test pins the count and the documented
+  version together.
+
+
 - `ref/genes.txt` — Kispi's 1,092-symbol paediatric list replaces the COSMIC
   Cancer Gene Census, resolved to 1,086 current HGNC symbols.
 - `ref/synonym_to_gene_symbol.tsv` — regenerated from NCBI Gene. The previous
