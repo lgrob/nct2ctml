@@ -119,6 +119,14 @@ These are upstream bugs, fixed here and worth reporting back.
   had found nothing, indistinguishable downstream from a trial with no
   diagnoses.
 
+- `bench/curations.py` — NCT05009992 moved out of a hand-written YAML and
+  re-curated. Its diagnosis held one Oncotree node where the trial names two:
+  it enrols "diffuse midline glioma H3K27M mutant; WHO grade III and IV H3
+  wildtype gliomas", and the H3-wildtype half is its own node. Its gene set
+  stays empty and that is deliberate - H3K27M and cohort 5's
+  BRAF/PDGFRA/FGFR1/NF1 requirement are both alternative cohorts, so the
+  trial-level requirement is none.
+
 - `map_age_numerical` — emits the trial's **upper** age bound as well as its
   lower one, one unit above the stated `maximumAge` because that field is in
   completed units: a participant whose maximum age is 17 years is 17 until the

@@ -613,3 +613,33 @@ CURATIONS["NCT06239272"] = dict(
         age(">=1"), age("<=31"),
     )],
 )
+
+CURATIONS["NCT05009992"] = dict(
+    # PNOC022, an adaptive platform trial in diffuse midline glioma. Two
+    # things in it look like genomic criteria and are not.
+    #
+    # H3K27M is not a requirement. The inclusions admit "diffuse midline
+    # glioma H3K27M mutant; WHO grade III and IV H3 wildtype gliomas" in the
+    # same sentence, so the trial enrols patients with and without the
+    # alteration - alternative cohorts, net requirement none. H3K27M appears
+    # again in the exclusions as "Thalamic and Cerebellar H3K27M DMG", which
+    # is anatomic as much as molecular and has no CTML expression; cohort 6
+    # then enrols thalamic DMG outright.
+    #
+    # Cohort 5 does require one of BRAF V600E, PDGFRA, FGFR1 or NF1, but
+    # cohorts 1-4 and 6 do not. Writing that at trial level would hide the
+    # study from every patient without a targetable alteration, which is the
+    # larger group. Arm-level criteria are not expressible in this key format.
+    #
+    # The diagnosis needed both of the children this trial names. Oncotree has
+    # no DIPG node - DIPG is the H3 K27-altered midline glioma - and the
+    # H3-wildtype grade III/IV gliomas the trial admits alongside it are their
+    # own node. Not their parent, Pediatric-Type Diffuse High-Grade Glioma,
+    # which would add the hemispheric G34-mutant and infant-type gliomas that
+    # this midline-only trial does not enrol.
+    match=[all_of(
+        dx("Diffuse Midline Glioma, H3 K27-Altered",
+           "Diffuse Pediatric-Type High-Grade Glioma, H3-Wildtype and IDH-Wildtype"),
+        age(">=2"), age("<=40"),
+    )],
+)

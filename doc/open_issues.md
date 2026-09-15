@@ -183,13 +183,25 @@ repeat runs.
 
 ## Answer key
 
-- **NCT06239272 may be under-curated.** It is one of the original twelve, not
-  one of the 38 added later, so it has been left alone. The trial lists 42
-  conditions - every non-rhabdomyosarcoma soft tissue sarcoma subtype - and
-  its eligibility is "patients with NRSTS", but the key holds 6 diagnoses.
-  18 of the 42 resolve to Oncotree terms; the union with the existing key is
-  20. Worth a curator's eye, since the key is what everything else is measured
-  against.
+Five keys have now been corrected after a run log exposed them, all of them
+mine. The pattern is worth naming: every one was written from a truncated
+view of a long trial, and every one was caught by the pipeline producing
+*more* than the key held rather than less. A key that is too small is
+invisible until something disagrees with it.
+
+- **NCT06239272** (fixed 2026-09-12). 42 conditions - every
+  non-rhabdomyosarcoma soft tissue sarcoma subtype - against a key holding 6.
+  18 of the 42 resolve to Oncotree; the union with the old key is 20.
+
+- **NCT05009992** (fixed 2026-09-15), after a run log made it look
+  under-curated on genes. It was not. H3K27M reads like a requirement and is
+  not one: the inclusions admit "diffuse midline glioma H3K27M mutant; WHO
+  grade III and IV H3 wildtype gliomas" in one sentence, and cohort 5's
+  BRAF/PDGFRA/FGFR1/NF1 requirement applies to cohort 5 alone. Both are
+  alternative cohorts, so the trial-level genomic requirement is none and the
+  empty gene set was right. The *diagnosis* was wrong, though - one node where
+  the trial names two, missing the H3-wildtype high-grade gliomas it enrols
+  beside the H3 K27-altered ones.
 
 ## Coverage
 
