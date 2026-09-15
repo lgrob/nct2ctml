@@ -77,13 +77,13 @@ def get_level1_diagnosis_from_original_conditions(nct_id:str, original_condition
     logger.debug(f"NCTID: {nct_id} | AI Prompt for Level 1 diagnosis from original conditions: {prompt}")
         
     ai_response = send_ai_request(nct_id, prompt, schema)
-    oncotree_diagnoses_dict = parse_ai_response(ai_response)
+    oncotree_diagnoses_dict = parse_ai_response(ai_response, nct_id)
     return oncotree_diagnoses_dict
 
 def get_oncotree_diagnoses_from_trial_info(nct_id: str, trial_info, oncotree_values: set) -> dict:
     schema, prompt = get_ai_prompt_oncotree_diagnoses_from_trial_info(trial_info, list(oncotree_values))
     ai_response = send_ai_request(nct_id, prompt, schema)
-    return parse_ai_response(ai_response)
+    return parse_ai_response(ai_response, nct_id)
 
 def get_child_level_diagnoses_from_condition(nct_id:str, child_nodes_oncotree:set, nct_condition: str) -> dict:
     child_nodes_oncotree_list = list(child_nodes_oncotree)
@@ -91,31 +91,31 @@ def get_child_level_diagnoses_from_condition(nct_id:str, child_nodes_oncotree:se
     schema, prompt = get_ai_prompt_child_values(nct_condition, child_nodes_oncotree_list)
 
     ai_response = send_ai_request(nct_id, prompt, schema)
-    oncotree_diagnoses_dict = parse_ai_response(ai_response)   
+    oncotree_diagnoses_dict = parse_ai_response(ai_response, nct_id)   
     return oncotree_diagnoses_dict
 
 def get_her2_er_pr_status(nct_id:str, eligibilityCriteria: str, keywords: list)-> dict:
     schema, prompt = get_her2_er_pr_status_prompt(eligibilityCriteria, keywords)
     ai_response = send_ai_request(nct_id, prompt, schema)
-    her2_er_pr_status_dict = parse_ai_response(ai_response)   
+    her2_er_pr_status_dict = parse_ai_response(ai_response, nct_id)   
     return her2_er_pr_status_dict
 
 def get_pdl1_status(nct_id:str, eligibilityCriteria: str, keywords: list)-> dict:
     schema, prompt = get_pdl1_status_prompt(eligibilityCriteria, keywords)
     ai_response = send_ai_request(nct_id, prompt, schema)
-    pdl1_status_dict = parse_ai_response(ai_response)   
+    pdl1_status_dict = parse_ai_response(ai_response, nct_id)   
     return pdl1_status_dict
 
 def get_mmr_status(nct_id:str, eligibilityCriteria: str, keywords: list)-> dict:
     schema, prompt = get_mmr_status_prompt(eligibilityCriteria, keywords)
     ai_response = send_ai_request(nct_id, prompt, schema)
-    mmr_status_dict = parse_ai_response(ai_response)   
+    mmr_status_dict = parse_ai_response(ai_response, nct_id)   
     return mmr_status_dict
 
 def get_disease_status(nct_id:str, eligibilityCriteria: str, keywords: list)-> dict:
     schema, prompt = get_disease_status_prompt(eligibilityCriteria, keywords)
     ai_response = send_ai_request(nct_id, prompt, schema)
-    disease_status_dict = parse_ai_response(ai_response)   
+    disease_status_dict = parse_ai_response(ai_response, nct_id)   
     return disease_status_dict
 
 
@@ -132,7 +132,7 @@ def get_minimum_age(nct_id: str, inclusion_criteria: str) -> dict:
     """
     schema, prompt = get_minimum_age_prompt(inclusion_criteria)
     ai_response = send_ai_request(nct_id, prompt, schema)
-    return parse_ai_response(ai_response)
+    return parse_ai_response(ai_response, nct_id)
 
 
 def get_arm_criteria_mapping(nct_id: str, arm_groups: list, inclusion_criteria: str, exclusion_criteria: str) -> dict:
@@ -157,22 +157,22 @@ def get_arm_criteria_mapping(nct_id: str, arm_groups: list, inclusion_criteria: 
         inclusion_criteria=inclusion_criteria,
         exclusion_criteria=exclusion_criteria,
     )
-    # Intentionally call the model without a JSON schema for now and rely on its
-    # natural JSON output.
-    ai_response = send_ai_request(nct_id, prompt)
-    mapping = parse_ai_response(ai_response)
+    labels = [a.get("label") for a in (arm_groups or []) if isinstance(a, dict) and a.get("label")]
+    json_schema = arm_criteria_mapping_schema(labels)
+    ai_response = send_ai_request(nct_id, prompt, json_schema)
+    mapping = parse_ai_response(ai_response, nct_id)
     return mapping
 
 def get_inclusion_genomic_criteria(nct_id:str, genes:list, eligibilityCriteria:str)-> list:
     json_schema, prompt = get_inclusion_genomic_criteria_prompt(genes, eligibilityCriteria)
     ai_response = send_ai_request(nct_id, prompt, json_schema)
-    genomic_criteria = parse_ai_response(ai_response)
+    genomic_criteria = parse_ai_response(ai_response, nct_id)
     return genomic_criteria
 
 def get_exclusion_genomic_criteria(nct_id:str, genes:list, eligibilityCriteria:str)-> list:
     json_schema, prompt = get_exclusion_genomic_criteria_prompt(genes, eligibilityCriteria)
     ai_response = send_ai_request(nct_id, prompt, json_schema)
-    genomic_criteria = parse_ai_response(ai_response)
+    genomic_criteria = parse_ai_response(ai_response, nct_id)
     return genomic_criteria
 
 
@@ -218,7 +218,7 @@ def enrich_mutation_details(nct_id: str, mutation_criteria: list, criteria_text:
     
     try:
         ai_response = send_ai_request(nct_id, prompt, json_schema)
-        enrichment_result = parse_ai_response(ai_response)
+        enrichment_result = parse_ai_response(ai_response, nct_id)
         
         if isinstance(enrichment_result, dict):
             enriched_mutations = enrichment_result.get("enriched_mutations", [])
@@ -275,7 +275,7 @@ def enrich_cnv_details(nct_id: str, cnv_criteria: list, criteria_text: str) -> l
     
     try:
         ai_response = send_ai_request(nct_id, prompt, json_schema)
-        enrichment_result = parse_ai_response(ai_response)
+        enrichment_result = parse_ai_response(ai_response, nct_id)
         
         if isinstance(enrichment_result, dict):
             enriched_cnvs = enrichment_result.get("enriched_cnvs", [])
@@ -292,8 +292,8 @@ def enrich_cnv_details(nct_id: str, cnv_criteria: list, criteria_text: str) -> l
         logger.error(f"NCTID: {nct_id} | CNV enrichment failed: {e}")
         return []
 
-def parse_ai_response(ai_response):
-    return _llm_platform.parse_response(ai_response)
+def parse_ai_response(ai_response, trial_id=""):
+    return _llm_platform.parse_response(ai_response, trial_id)
 
 def send_ai_request(id, prompt, json_schema=None):
     """Send AI request using the configured platform."""
@@ -629,6 +629,46 @@ MMR_MS_SCHEMA = {
             "MSI-H", "MSI-L", "MSS", "!MSI-H", "!MSI-L"]},
     },
 }
+
+def arm_criteria_mapping_schema(arm_labels):
+    """
+    Constrain the global-vs-per-arm split.
+
+    This was the last prompt asking a model for JSON without a grammar, and it
+    is the one that emits the largest nested object. It produced invalid JSON
+    on the cluster - a parse failure at character 6057, well under the output
+    cap, so malformed rather than truncated - and NCT05745714 lost its entire
+    genomic block as a result, silently, because parse_response returns {}.
+
+    arm_label is an enum over the labels actually present, which also enforces
+    in the grammar what the prompt only asks for in prose: that the label come
+    back verbatim so it can be mapped to a CTML arm afterwards.
+    """
+    text = {"type": "string"}
+    return {
+        "type": "object",
+        "properties": {
+            "global": {
+                "type": "object",
+                "properties": {"inclusion_text": text, "exclusion_text": text},
+                "required": ["inclusion_text", "exclusion_text"],
+            },
+            "arms": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "arm_label": _one_of(arm_labels),
+                        "inclusion_text": text,
+                        "exclusion_text": text,
+                    },
+                    "required": ["arm_label", "inclusion_text", "exclusion_text"],
+                },
+            },
+        },
+        "required": ["global", "arms"],
+    }
+
 
 DISEASE_STATUS_SCHEMA = {
     "type": "object",

@@ -8,7 +8,7 @@ This guide explains how a trial downloaded from [ClinicalTrials.gov](https://cli
 
 **Input:** A JSON file from the ClinicalTrials.gov API (one file per trial, e.g. `cache/nct/NCT03997435.json`).
 
-**Output:** A YAML CTML file (e.g. `cache/ctml/NCT03997435.yaml` or under `ctml/pending/` / `ctml/reviewed/`).
+**Output:** A YAML CTML file (e.g. `cache/ctml/NCT03997435.yaml` or under `ctml/needs-review/` / `ctml/reviewed/`).
 
 ### Authoritative CTML schema (allowed values)
 

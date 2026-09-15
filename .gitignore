@@ -37,3 +37,5 @@ ctml/json/*
 # Awaiting review - working state, not a record of anything yet.
 ctml/pending/*
 !ctml/pending/.gitkeep
+ctml/needs-review/*
+!ctml/needs-review/.gitkeep

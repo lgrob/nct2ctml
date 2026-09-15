@@ -98,7 +98,13 @@ LLM_AI_MODEL = "llama3.3:70b"
 # currently, when no Oncotree diagnosis could be determined at all. Kept out of
 # the normal output so nobody loads it into MatchMiner by accident, and kept as
 # a directory rather than a log line so the queue is visible without grepping.
-CTML_REVIEW_PATH = "ctml/pending"
+#
+# Not ctml/pending: the README gives that directory to hand-authored CTML for
+# local trials awaiting review. Both are review queues, so nothing reaches
+# MatchMiner unreviewed either way, but sharing one directory means a reviewer
+# opening it cannot tell a colleague's draft from machine output that failed to
+# find a diagnosis. Those need opposite kinds of attention.
+CTML_REVIEW_PATH = "ctml/needs-review"
 
 ONCOTREE_TXT_FILE_PATH = "ref/oncotree_file.txt"
 # The gene reference, in the three roles it actually plays.

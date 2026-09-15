@@ -94,3 +94,34 @@ contextual_gene_synonyms = {
     'H3': (['k27', 'k27m', 'g34', 'histone'], ['H3-3A', 'H3-3B', 'H3C2']),
     'H4': (['histone'], ['H4C9']),
 }
+
+
+# Genes whose eligibility criteria are about protein expression, not a somatic
+# alteration, so they must never become a `genomic` block in CTML.
+#
+# MatchMiner's genomic path matches a patient's sequencing report: mutations,
+# copy number, structural variants. An antigen is measured by flow cytometry or
+# IHC and lives on a different axis entirely - PD-L1 already has its own
+# biomarker field for exactly this reason.
+#
+# The cost of getting this wrong is asymmetric and severe. A CAR-T trial
+# enrolling "CD19+ and CD22+ acute lymphoblastic leukaemia" is describing the
+# disease it treats; emitting that as a required CD19 mutation produces a trial
+# that matches no patient at all, and nobody can see a trial that is missing.
+# Paediatric oncology runs a lot of CAR-T and TCR trials, so this is not rare:
+# it fired on NCT02443831 (CD19/CD22) and NCT06083883 (NY-ESO-1, HLA-A) in one
+# 50-trial benchmark.
+#
+# Deliberately narrow. A gene belongs here only when it is used as an
+# immunophenotype or HLA restriction and essentially never as a somatic
+# criterion. CD74 is NOT here despite showing up as a false positive - it forms
+# real fusions (CD74-ROS1, CD74-NRG1) that a trial can legitimately require.
+expression_only_genes = [
+    'CD19',    # CAR-T target, flow cytometry
+    'CD22',    # CAR-T target, flow cytometry
+    'CD274',   # PD-L1; has its own pdl1_status field
+    'CTAG1B',  # NY-ESO-1; cancer-testis antigen for TCR therapy, IHC
+    'HLA-A',   # TCR restriction, HLA typing rather than tumour sequencing
+    'HLA-B',
+    'HLA-C',
+]

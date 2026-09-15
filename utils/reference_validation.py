@@ -242,9 +242,27 @@ def filter_diagnoses(diagnoses, trial_id=""):
     return kept
 
 
+@lru_cache(maxsize=1)
+def _expression_only_genes():
+    """Genes whose criteria are about protein expression, not an alteration."""
+    try:
+        import src.trial_config as trial_config
+        return {str(g).strip().upper()
+                for g in getattr(trial_config, "expression_only_genes", ())}
+    except Exception:
+        return set()
+
+
 def filter_genomic_criteria(genomic_criteria, trial_id=""):
     """
-    Drop CTML genomic entries whose hugo_symbol is not a known gene.
+    Drop CTML genomic entries that cannot match a patient.
+
+    Two reasons to drop. The symbol is not a gene the panel reports, or the
+    gene is one whose eligibility criteria are about protein expression rather
+    than a somatic alteration - see trial_config.expression_only_genes. Both
+    produce the same silent failure if kept: MatchMiner matches genomic blocks
+    against a sequencing report, so a criterion the report can never satisfy
+    makes the trial invisible rather than merely wrong.
 
     Entries are {"genomic": {"hugo_symbol": ..., "variant_category": ...}};
     an entry carrying no symbol at all is left alone for the existing
@@ -261,6 +279,14 @@ def filter_genomic_criteria(genomic_criteria, trial_id=""):
         if name is None:
             logger.warning(f"{trial_id}: dropped genomic criterion, "
                            f"{symbol!r} is not in {config.GENE_LIST_FILE_PATH}")
+            continue
+        if name.upper() in _expression_only_genes():
+            logger.warning(
+                f"{trial_id}: dropped genomic criterion on {name}. It is an "
+                f"antigen or HLA restriction, measured by flow or IHC rather "
+                f"than sequencing, so as a genomic requirement it would match "
+                f"no patient."
+            )
             continue
         genomic["hugo_symbol"] = name
         kept.append(entry)

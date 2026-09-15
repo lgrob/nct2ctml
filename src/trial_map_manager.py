@@ -309,7 +309,7 @@ class TrialMapManager:
         if 'oncotree_primary_diagnosis' in tdh.get_all_keys(mapped_ctml):
             return ctml_files_path
         import config  # imported here, as elsewhere in this module
-        review_path = getattr(config, 'CTML_REVIEW_PATH', 'ctml/pending')
+        review_path = getattr(config, 'CTML_REVIEW_PATH', 'ctml/needs-review')
         os.makedirs(review_path, exist_ok=True)
         logger.warning(
             f"{trial_id} | No diagnosis criterion in the mapped CTML. Writing to "

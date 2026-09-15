@@ -39,7 +39,7 @@ class LLMPlatform(ABC):
         pass
     
     @abstractmethod
-    def parse_response(self, ai_response: Dict[str, Any]) -> Dict[str, Any]:
+    def parse_response(self, ai_response: Dict[str, Any], trial_id: str = "") -> Dict[str, Any]:
         """Parse the response from this platform."""
         pass
     
@@ -93,7 +93,7 @@ class SGLangPlatform(LLMPlatform):
 
         return req_body
     
-    def parse_response(self, ai_response: Dict[str, Any]) -> Dict[str, Any]:
+    def parse_response(self, ai_response: Dict[str, Any], trial_id: str = "") -> Dict[str, Any]:
         """Parse SGLang response."""
         response_dict = {}
         try: # todo: simplify it with a find_tag() function or extract_tag()
@@ -120,7 +120,7 @@ class SGLangPlatform(LLMPlatform):
                     if isinstance(response_dict, dict) and "error" in response_dict:
                         response_dict.pop("error", None)
         except json.JSONDecodeError as ex:
-            logger.error(f"Unexpected response format: {ex=} | response_string = {sanitized_res}, {type(ex)=}")
+            logger.error(f"{trial_id or 'unknown trial'}: the model returned text that is not valid JSON, so this criterion is empty. {ex=} | {sanitized_res[:400]}")
         return response_dict
     
     def _safe_get(self, dict_data, keys):
@@ -245,7 +245,7 @@ class OllamaPlatform(LLMPlatform):
         
         return req_body
     
-    def parse_response(self, ai_response: Dict[str, Any]) -> Dict[str, Any]:
+    def parse_response(self, ai_response: Dict[str, Any], trial_id: str = "") -> Dict[str, Any]:
         
         response_dict = {}
         if self.chat_endpoint == "api/generate":
@@ -254,7 +254,7 @@ class OllamaPlatform(LLMPlatform):
                     ai_response_content = ai_response['response']
                     response_dict = json.loads(ai_response_content)
             except json.JSONDecodeError as ex:
-                logger.error(f"Unexpected response format: {ex=}, {type(ex)=}")
+                logger.error(f"{trial_id or 'unknown trial'}: the model returned text that is not valid JSON, so this criterion is empty. {ex=}")
         
         elif self.chat_endpoint == "api/chat":
             try:
@@ -262,7 +262,7 @@ class OllamaPlatform(LLMPlatform):
                     ai_response_content = self._safe_get(ai_response, ['message', 'content'])
                     response_dict = json.loads(ai_response_content)
             except json.JSONDecodeError as ex:
-                logger.error(f"Unexpected response format: {ex=}, {type(ex)=}")
+                logger.error(f"{trial_id or 'unknown trial'}: the model returned text that is not valid JSON, so this criterion is empty. {ex=}")
         return response_dict
 
 
@@ -285,7 +285,7 @@ class LocalAIPlatform(LLMPlatform):
         """Generate Local AI request body."""
         raise NotImplementedError("Local_ai platform is not configured yet.")
     
-    def parse_response(self, ai_response: Dict[str, Any]) -> Dict[str, Any]:
+    def parse_response(self, ai_response: Dict[str, Any], trial_id: str = "") -> Dict[str, Any]:
         """Parse Local AI response."""
         raise NotImplementedError("Local_ai platform is not configured yet.")
 
@@ -406,7 +406,7 @@ class AnthropicPlatform(LLMPlatform):
         )
         return {"text": text, "stop_reason": response.stop_reason}
 
-    def parse_response(self, ai_response: Dict[str, Any]) -> Dict[str, Any]:
+    def parse_response(self, ai_response: Dict[str, Any], trial_id: str = "") -> Dict[str, Any]:
         """Extract the JSON object out of the model's text response."""
         response_dict: Dict[str, Any] = {}
         content = (ai_response or {}).get("text", "")
@@ -428,5 +428,5 @@ class AnthropicPlatform(LLMPlatform):
             if isinstance(response_dict, dict):
                 response_dict.pop("error", None)
         except json.JSONDecodeError as ex:
-            logger.error(f"Unexpected response format: {ex=} | response_string = {sanitized_res}")
+            logger.error(f"{trial_id or 'unknown trial'}: the model returned text that is not valid JSON, so this criterion is empty. {ex=} | {sanitized_res[:400]}")
         return response_dict

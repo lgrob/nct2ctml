@@ -119,6 +119,29 @@ These are upstream bugs, fixed here and worth reporting back.
   had found nothing, indistinguishable downstream from a trial with no
   diagnoses.
 
+- `get_arm_criteria_mapping` — now sends a JSON schema, the last prompt that
+  did not. It emits the largest nested object of any prompt and produced
+  invalid JSON on the cluster (a parse failure at character 6057, well under
+  the output cap, so malformed rather than truncated); NCT05745714 lost all
+  twelve of its genomic criteria to it, silently, because `parse_response`
+  returns `{}`. `arm_label` is an enum over the labels actually present, which
+  also enforces in the grammar what the prompt only asked for in prose.
+- Every `parse_response` names the trial when the model returns invalid JSON.
+  The old message said only "Unexpected response format", so a run log could
+  not say which trial had just lost a criterion. The identifier is threaded
+  through all twelve `parse_ai_response` call sites.
+- `expression_only_genes` in `src/trial_config.py`, applied by
+  `filter_genomic_criteria` — CD19, CD22, CD274, CTAG1B and the HLA loci never
+  become `genomic` blocks. Their criteria are about protein expression measured
+  by flow or IHC, while MatchMiner's genomic path matches a sequencing report,
+  so "CD19+ and CD22+ acute lymphoblastic leukaemia" became a required CD19
+  mutation and a trial that matches nobody. Two trials in one 50-trial
+  benchmark. Deliberately narrow: CD74 is excluded from the list despite being
+  a false positive, because it forms real fusions a trial can require.
+- `config.CTML_REVIEW_PATH` is `ctml/needs-review`, not `ctml/pending`. The
+  README gives `ctml/pending` to hand-authored CTML for local trials, so the
+  two review queues were sharing a directory and a reviewer could not tell a
+  colleague's draft from machine output that failed to find a diagnosis.
 - `diagnoses_from_conditions` — tries `", NOS"` as a last candidate. Oncotree
   suffixes its catch-all nodes that way and registries do not, so
   "Low-grade Glioma", "Glioma", "Sarcoma" and "Round Cell Sarcoma" named nodes

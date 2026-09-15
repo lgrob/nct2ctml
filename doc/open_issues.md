@@ -255,6 +255,10 @@ but it is the thing to check first.
 
 ## Cleanup
 
+- **`get_arm_criteria_mapping_prompt` was the last schema-less prompt** and is
+  now schema'd, but the arm labels it returns are still matched back to CTML
+  arms by string equality downstream. The enum makes the label verbatim, so
+  this should hold; it has not been exercised on a trial with awkward labels.
 - **49 `print()` calls in library code** alongside loguru, including
   `print(endpoint_url)` on every model request and genomic-criteria dumps in
   `clinical_trials_gov`. `print` goes to block-buffered stdout and loguru to
