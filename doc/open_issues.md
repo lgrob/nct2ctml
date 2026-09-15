@@ -110,35 +110,6 @@ curated key holds `>=1` and `<=25` taken from the prose; `NCT02559778` states
 between the benchmark's age F1 (~0.83) and 1.00, and it is visible now only
 because that column scores the bounds rather than the trial-level label.
 
-### The condition seed matches exactly, so "Low-grade Glioma" resolves to nothing
-
-`diagnoses_from_conditions` compares a condition to the Oncotree display name
-exactly (after stripping leading and trailing qualifiers). That is deliberate
-- substring matching would map "Neoplasms, Brain" onto half the tree - but it
-misses one systematic spelling difference. Oncotree suffixes its catch-all
-nodes with ", NOS", and registries do not: a trial registering "Low-grade
-Glioma", "Glioma", "AML", "Sarcoma" or "Round Cell Sarcoma" names an Oncotree
-node the seed does not find.
-
-Measured as a *fallback* - try ", NOS" only when the condition resolves to
-nothing on its own, so `Medulloblastoma` is not joined by
-`Medulloblastoma, NOS` - it would give **54 trials a seed they currently have
-none for**, and every mapping inspected was correct:
-
-    Low-grade Glioma          -> Low-Grade Glioma, NOS
-    Glioma / Malignant Glioma -> Glioma, NOS
-    High-grade Glioma         -> High-Grade Glioma, NOS
-    Round Cell Sarcoma        -> Round Cell Sarcoma, NOS
-    Peripheral T-cell Lymphoma-> Peripheral T-Cell lymphoma, NOS
-
-Four of those 54 are currently mis-read as baskets, NCT04775485 among them -
-it lists "Low-grade Glioma" beside "Advanced Solid Tumor", so the basket rule
-above cannot see the specific diagnosis and still returns `_SOLID_`. And
-`Round Cell Sarcoma, NOS` is one of the two terms NCT06239272 was scored as
-missing in the last run.
-
-Unapplied because it has not been run end to end.
-
 ### A basket trial can get both the wildcard and specific diagnoses
 `map_global_diagnosis_to_oncotree_term` adds condition-derived terms first and
 reaches the `_SOLID_`/`_LIQUID_` path only when the eligibility mapping returns

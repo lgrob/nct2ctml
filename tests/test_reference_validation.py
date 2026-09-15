@@ -289,6 +289,44 @@ class TestAnswerKeyIsNotDamaged(unittest.TestCase):
         self.assertEqual(rejected, [])
 
 
+class TestNosFallback(unittest.TestCase):
+    """
+    Oncotree suffixes its catch-all nodes with ", NOS" and registries do not,
+    so a trial registering "Low-grade Glioma" names a node an exact match
+    cannot find. The fallback is tried last, which is what keeps it from
+    over-generating.
+    """
+
+    def test_catch_all_conditions_now_resolve(self):
+        for condition, expected in (
+            ("Low-grade Glioma", "Low-Grade Glioma, NOS"),
+            ("Glioma", "Glioma, NOS"),
+            ("High-grade Glioma", "High-Grade Glioma, NOS"),
+            ("Round Cell Sarcoma", "Round Cell Sarcoma, NOS"),
+        ):
+            self.assertEqual(diagnoses_from_conditions([condition]), [expected],
+                             condition)
+
+    def test_an_exact_node_does_not_also_collect_its_nos_sibling(self):
+        """
+        The ordering is the whole guard. Tried first, ", NOS" would give
+        "Medulloblastoma" both the exact node and "Medulloblastoma, NOS", and
+        the seed would over-generate instead of reaching further.
+        """
+        self.assertEqual(diagnoses_from_conditions(["Medulloblastoma"]),
+                         ["Medulloblastoma"])
+        self.assertEqual(diagnoses_from_conditions(["Neuroblastoma"]),
+                         ["Neuroblastoma"])
+
+    def test_it_composes_with_qualifier_stripping(self):
+        self.assertEqual(diagnoses_from_conditions(["Pediatric Sarcoma, Refractory"]),
+                         ["Sarcoma, NOS"])
+
+    def test_it_invents_nothing(self):
+        for condition in ("Neoplasms, Brain", "Asthma", "Healthy Volunteers", ""):
+            self.assertEqual(diagnoses_from_conditions([condition]), [], condition)
+
+
 class TestGeneSynonymMapping(unittest.TestCase):
     """
     The input side of the gene reference. One loader now serves both this and

@@ -317,10 +317,21 @@ def diagnoses_from_conditions(conditions):
     exact Oncotree display name - "Neuroblastoma" is both. Reading that costs
     no tokens and cannot hallucinate, so it is worth doing before asking a
     model anything. Order-stable and deduplicated.
+
+    Matching is exact rather than substring, deliberately: "Neoplasms, Brain"
+    shares a substring with half the tree. The ", NOS" candidates are the one
+    concession, and they are tried last so they only ever fire when nothing
+    else matched. Oncotree suffixes its catch-all nodes that way and
+    registries do not, so "Low-grade Glioma", "Glioma", "Sarcoma" and "Round
+    Cell Sarcoma" each name a node this would otherwise miss. Ordering matters
+    as much as the candidates: tried first, "Medulloblastoma" would pick up
+    "Medulloblastoma, NOS" alongside the exact node it already matches, and
+    the seed would start over-generating rather than merely reaching further.
     """
     found, seen = [], set()
     for condition in conditions or []:
-        for candidate in (condition, strip_condition_qualifiers(condition)):
+        stripped = strip_condition_qualifiers(condition)
+        for candidate in (condition, stripped, f"{condition}, NOS", f"{stripped}, NOS"):
             name = canonical_diagnosis(candidate)
             if name:
                 if name not in seen:

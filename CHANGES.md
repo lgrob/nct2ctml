@@ -119,6 +119,14 @@ These are upstream bugs, fixed here and worth reporting back.
   had found nothing, indistinguishable downstream from a trial with no
   diagnoses.
 
+- `diagnoses_from_conditions` — tries `", NOS"` as a last candidate. Oncotree
+  suffixes its catch-all nodes that way and registries do not, so
+  "Low-grade Glioma", "Glioma", "Sarcoma" and "Round Cell Sarcoma" named nodes
+  an exact match could not find. Tried last, after the plain and
+  qualifier-stripped forms, so it fires only when nothing else matched -
+  ordering is the guard, since first place would give "Medulloblastoma" both
+  the exact node and its ", NOS" sibling. Across the corpus the seed now
+  covers 356 of 924 trials rather than 326, and 611 terms rather than 556.
 - `_basket_wildcards` in `src/clinical_trials_gov.py` — a trial is a basket
   only when its conditions name no specific Oncotree diagnosis. `all_tumours`
   and `all_solid_tumours` fire on any broad condition, and registries file a
