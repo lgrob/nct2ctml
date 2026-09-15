@@ -110,6 +110,55 @@ curated key holds `>=1` and `<=25` taken from the prose; `NCT02559778` states
 between the benchmark's age F1 (~0.83) and 1.00, and it is visible now only
 because that column scores the bounds rather than the trial-level label.
 
+### Stage 2 over-generates, and that is where the diagnosis score is
+
+Measured on the 2026-09-15 run (llama3.3:70b, 50 trials): diagnosis **recall
+0.775, precision 0.598**. Eleven trials emit **232 diagnoses against 39
+curated** - 55 against 2, 45 against 12, 32 against 10, 28 against 4. The
+model finds the right answers and buries them. This is now the largest single
+lever in the project.
+
+The mechanism is the size of the candidate list. Stage 2 is handed every child
+of the chosen level_1 and asked which apply: 126 for CNS/Brain, 120 for
+Lymphoid, 148-234 when a trial spans several branches. NCT04732065 is handed
+all 126 CNS nodes and returns 28; its curated answer is 4.
+
+**Two obvious fixes are already ruled out by measurement.**
+
+Asking for less is not it - the prompt already says "Only include a diagnosis
+if the condition or cancer type is explicitly stated in TrialInfo" and "Do not
+infer diagnoses from drug names, treatment regimens, parent studies, or other
+indirect clues". The model is not disobeying a vague instruction; it is being
+generous over a 126-item list.
+
+Dropping the model is not it either. Conditions-only, with no stage-2 call at
+all, scores **0.529** against the run's 0.616. The model contributes about
+0.09 of real recall. It needs constraining, not removing.
+
+A deterministic text-support filter has a measured ceiling: only **67% of
+curated diagnoses (98/147) appear literally in the trial's own text**, so a
+hard "must be named" gate would discard a third of correct answers. The other
+third are genuine inferences. Useful as a signal, not as a gate.
+
+**What is worth trying, in order.**
+
+1. *Shrink the candidate list.* Ask within the level_2 the conditions point
+   at rather than all children of level_1 - "Diffuse Glioma" rather than the
+   whole of CNS/Brain. The seed can supply the floor the same way it already
+   does for level_1, so a wrong level_2 does not make the answer unreachable.
+2. *Ask per condition, not per trial.* `get_child_level_diagnoses_from_condition`
+   already works this way on the other path and is naturally bounded; the
+   eligibility path asks once for the whole trial.
+3. *Verify each returned term in a second pass*, the same shape as the genomic
+   enrichment pass. Doubles the calls on the diagnosis path.
+
+**Build the harness first.** None of these can be judged from a single run -
+run-to-run variance on this benchmark exceeds the effect size of a single fix,
+which has already misled us once. A replay harness that exercises only stage 1
+and stage 2 over the 50 cached trials would cut the loop from ~100 minutes to
+minutes and make an A/B honest. That is the first thing to build, not the
+last.
+
 ### A basket trial can get both the wildcard and specific diagnoses
 `map_global_diagnosis_to_oncotree_term` adds condition-derived terms first and
 reaches the `_SOLID_`/`_LIQUID_` path only when the eligibility mapping returns
