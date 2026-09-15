@@ -627,3 +627,28 @@ CURATIONS["NCT04634357"] = dict(
         status("Recurrent", "Refractory"),
     )],
 )
+
+# ---------------------------------------------------------- soft tissue (NRSTS)
+CURATIONS["NCT06239272"] = dict(
+    # NRSTS2021. Curated early, from a truncated view of the condition list,
+    # and it held six diagnoses. The trial enrols "patients with NRSTS" and
+    # enumerates 42 conditions - every non-rhabdomyosarcoma soft tissue sarcoma
+    # subtype - of which 18 resolve to Oncotree nodes. Round Cell Sarcoma, NOS
+    # and the UPS/MFH composite come from "Round Cell Sarcoma, Undifferentiated"
+    # and "Pleomorphic Sarcoma, Undifferentiated", which do not resolve on
+    # their own.
+    age="Children",
+    curated_on="2026-09-12",
+    match=[all_of(
+        dx("Angiomatoid Fibrous Histiocytoma", "Angiosarcoma",
+           "Atypical Fibroxanthoma", "Clear Cell Sarcoma",
+           "Dedifferentiated Liposarcoma", "Epithelioid Hemangioendothelioma",
+           "Epithelioid Sarcoma", "Extraskeletal Myxoid Chondrosarcoma",
+           "Fibrosarcoma", "Intimal Sarcoma", "Leiomyosarcoma", "Liposarcoma",
+           "Malignant Peripheral Nerve Sheath Tumor", "Myoepithelial Carcinoma",
+           "Myxofibrosarcoma", "Pleomorphic Liposarcoma", "Round Cell Sarcoma, NOS",
+           "Sclerosing Epithelioid Fibrosarcoma", "Synovial Sarcoma",
+           "Undifferentiated Pleomorphic Sarcoma/Malignant Fibrous Histiocytoma/High-Grade Spindle Cell Sarcoma"),
+        age(">=1"), age("<=30"),
+    )],
+)
