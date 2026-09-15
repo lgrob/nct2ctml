@@ -73,49 +73,49 @@ def get_level1_diagnosis_from_original_conditions(nct_id:str, original_condition
     original_conditions_list = list(original_conditions)
     level1_oncotree_list = list(level1_oncotree) 
     
-    prompt = get_ai_prompt_level1_for_original_conditions(original_conditions_list, level1_oncotree_list)
+    schema, prompt = get_ai_prompt_level1_for_original_conditions(original_conditions_list, level1_oncotree_list)
 
     logger.debug(f"NCTID: {nct_id} | AI Prompt for Level 1 diagnosis from original conditions: {prompt}")
         
-    ai_response = send_ai_request(nct_id, prompt)
+    ai_response = send_ai_request(nct_id, prompt, schema)
     oncotree_diagnoses_dict = parse_ai_response(ai_response)
     return oncotree_diagnoses_dict
 
 def get_oncotree_diagnoses_from_trial_info(nct_id: str, trial_info, oncotree_values: set) -> dict:
-    prompt = get_ai_prompt_oncotree_diagnoses_from_trial_info(trial_info, list(oncotree_values))
-    ai_response = send_ai_request(nct_id, prompt)
+    schema, prompt = get_ai_prompt_oncotree_diagnoses_from_trial_info(trial_info, list(oncotree_values))
+    ai_response = send_ai_request(nct_id, prompt, schema)
     return parse_ai_response(ai_response)
 
 def get_child_level_diagnoses_from_condition(nct_id:str, child_nodes_oncotree:set, nct_condition: str) -> dict:
     child_nodes_oncotree_list = list(child_nodes_oncotree)
 
-    prompt = get_ai_prompt_child_values(nct_condition, child_nodes_oncotree_list)
+    schema, prompt = get_ai_prompt_child_values(nct_condition, child_nodes_oncotree_list)
 
-    ai_response = send_ai_request(nct_id, prompt)
+    ai_response = send_ai_request(nct_id, prompt, schema)
     oncotree_diagnoses_dict = parse_ai_response(ai_response)   
     return oncotree_diagnoses_dict
 
 def get_her2_er_pr_status(nct_id:str, eligibilityCriteria: str, keywords: list)-> dict:
-    prompt = get_her2_er_pr_status_prompt(eligibilityCriteria, keywords)
-    ai_response = send_ai_request(nct_id, prompt)
+    schema, prompt = get_her2_er_pr_status_prompt(eligibilityCriteria, keywords)
+    ai_response = send_ai_request(nct_id, prompt, schema)
     her2_er_pr_status_dict = parse_ai_response(ai_response)   
     return her2_er_pr_status_dict
 
 def get_pdl1_status(nct_id:str, eligibilityCriteria: str, keywords: list)-> dict:
-    prompt = get_pdl1_status_prompt(eligibilityCriteria, keywords)
-    ai_response = send_ai_request(nct_id, prompt)
+    schema, prompt = get_pdl1_status_prompt(eligibilityCriteria, keywords)
+    ai_response = send_ai_request(nct_id, prompt, schema)
     pdl1_status_dict = parse_ai_response(ai_response)   
     return pdl1_status_dict
 
 def get_mmr_status(nct_id:str, eligibilityCriteria: str, keywords: list)-> dict:
-    prompt = get_mmr_status_prompt(eligibilityCriteria, keywords)
-    ai_response = send_ai_request(nct_id, prompt)
+    schema, prompt = get_mmr_status_prompt(eligibilityCriteria, keywords)
+    ai_response = send_ai_request(nct_id, prompt, schema)
     mmr_status_dict = parse_ai_response(ai_response)   
     return mmr_status_dict
 
 def get_disease_status(nct_id:str, eligibilityCriteria: str, keywords: list)-> dict:
-    prompt = get_disease_status_prompt(eligibilityCriteria, keywords)
-    ai_response = send_ai_request(nct_id, prompt)
+    schema, prompt = get_disease_status_prompt(eligibilityCriteria, keywords)
+    ai_response = send_ai_request(nct_id, prompt, schema)
     disease_status_dict = parse_ai_response(ai_response)   
     return disease_status_dict
 
@@ -131,8 +131,8 @@ def get_minimum_age(nct_id: str, inclusion_criteria: str) -> dict:
     all, such as the Karnofsky/Lansky split at 16 years, which a pattern
     reliably mistakes for one.
     """
-    prompt = get_minimum_age_prompt(inclusion_criteria)
-    ai_response = send_ai_request(nct_id, prompt)
+    schema, prompt = get_minimum_age_prompt(inclusion_criteria)
+    ai_response = send_ai_request(nct_id, prompt, schema)
     return parse_ai_response(ai_response)
 
 
@@ -342,7 +342,7 @@ def get_ai_prompt_level1_for_original_conditions(original_conditions_list, level
             }}
         ]
         }}"""
-    return cleandoc(prompt)
+    return level1_diagnoses_schema(level1_oncotree_list), cleandoc(prompt)
 
 def get_ai_prompt_oncotree_diagnoses_from_trial_info(trial_info, oncotree_values):
     prompt = f"""Task: From the TrialInfo, extract OncotreeValues that correspond to medical conditions explicitly mentioned in the text.
@@ -360,7 +360,7 @@ def get_ai_prompt_oncotree_diagnoses_from_trial_info(trial_info, oncotree_values
         "oncotree_diagnoses": []
         }}"""
 
-    return cleandoc(prompt)
+    return oncotree_diagnoses_schema(oncotree_values), cleandoc(prompt)
 
 def get_ai_prompt_child_values(nct_condition, child_nodes_oncotree_list):
 
@@ -378,7 +378,7 @@ def get_ai_prompt_child_values(nct_condition, child_nodes_oncotree_list):
         "oncotree_diagnoses": []
         }}
         """
-    return cleandoc(prompt)
+    return child_values_schema(child_nodes_oncotree_list), cleandoc(prompt)
 
 def get_her2_er_pr_status_prompt(eligibilityCriteria, keywords):
     prompt = f"""
@@ -395,7 +395,7 @@ def get_her2_er_pr_status_prompt(eligibilityCriteria, keywords):
         }}
         where "value" must be in ["Positive", "Negative", "Unknown", "!Positive", "!Negative"]
         """
-    return cleandoc(prompt)
+    return HER2_ER_PR_SCHEMA, cleandoc(prompt)
 
 def get_pdl1_status_prompt(eligibilityCriteria, keywords):
     prompt = f"""
@@ -409,7 +409,7 @@ def get_pdl1_status_prompt(eligibilityCriteria, keywords):
         }}
         where "value" is in ["High", "Low", "Unknown"].
         """
-    return cleandoc(prompt)
+    return PDL1_SCHEMA, cleandoc(prompt)
 
 def get_mmr_status_prompt(eligibilityCriteria, keywords):
     prompt = f"""
@@ -426,7 +426,7 @@ def get_mmr_status_prompt(eligibilityCriteria, keywords):
         where "value1" is in ["MMR-Proficient", "MMR-Deficient",'!MMR-Proficient', '!MMR-Deficient']. 
         and "value2" is in ['MSI-H', 'MSI-L', 'MSS','!MSI-H', '!MSI-L'].
         """
-    return cleandoc(prompt)
+    return MMR_MS_SCHEMA, cleandoc(prompt)
 
 def get_disease_status_prompt(eligibilityCriteria, keywords):
     prompt = f"""Task: From the EligibilityCriteria and TrialKeywords, return the required disease statuses of the cancer.
@@ -439,7 +439,7 @@ def get_disease_status_prompt(eligibilityCriteria, keywords):
         }}
         where each disease_status is in ["Untreated", "Localized", "Locally Advanced", "Metastatic", "Advanced", "Recurrent", "Refractory", "Unresectable", "Early Stage"].
         """
-    return cleandoc(prompt)
+    return DISEASE_STATUS_SCHEMA, cleandoc(prompt)
 
 
 def get_minimum_age_prompt(inclusion_criteria):
@@ -463,7 +463,7 @@ def get_minimum_age_prompt(inclusion_criteria):
         }}
         where minimum_age_years is a number or null.
         """
-    return cleandoc(prompt)
+    return MINIMUM_AGE_SCHEMA, cleandoc(prompt)
 
 
 def get_arm_criteria_mapping_prompt(arm_groups: list, inclusion_criteria: str, exclusion_criteria: str) -> str:
@@ -539,6 +539,112 @@ def get_arm_criteria_mapping_prompt(arm_groups: list, inclusion_criteria: str, e
 # keys - gemma3:27b returned {"EligibilityCriteria": ..., "Possible GeneList":
 # [], "Output": []} on 8 of 12 benchmark trials, treating the prompt as a
 # template to fill in.
+# Structured output for everything the model is asked for, not just genomic
+# criteria. Without it Ollama is free to return prose or malformed JSON, and
+# parse_response logs a JSONDecodeError and hands back an empty dict - so the
+# whole answer is discarded as if the model had found nothing. Observed twice
+# on a single trial: "Expecting ',' delimiter: line 68 column 1 (char 514)",
+# which is 68 lines in 514 characters, i.e. a list of diagnoses one per line
+# with the commas missing.
+#
+# Where the prompt already restricts the answer to a list of candidates, the
+# schema restricts it too, which makes an off-list answer impossible to emit
+# rather than merely discouraged. "Lymphoma" and "_SOLID_" are not Oncotree
+# display names and cannot be produced under these schemas at all.
+
+# Ollama compiles `format` into a generation grammar, and one with several
+# hundred alternatives is slow to build. Above this many candidates the enum is
+# dropped and the schema still guarantees well-formed JSON of the right shape.
+# The cap is a guard, not a tuned value - it has not been measured on the GPU.
+_MAX_ENUM_VALUES = 400
+
+
+def _one_of(allowed, extra=()):
+    """A string constrained to `allowed`, or an unconstrained one if too many."""
+    values = sorted({a for a in list(allowed) + list(extra) if a is not None})
+    if values and len(values) <= _MAX_ENUM_VALUES:
+        return {"type": "string", "enum": values}
+    return {"type": "string"}
+
+
+def oncotree_diagnoses_schema(allowed):
+    return {
+        "type": "object",
+        "properties": {"oncotree_diagnoses": {"type": "array",
+                                              "items": _one_of(allowed)}},
+        "required": ["oncotree_diagnoses"],
+    }
+
+
+def level1_diagnoses_schema(allowed):
+    # "" and "Other" are how the caller is told a condition has no level_1, and
+    # clinical_trials_gov skips exactly those two. They must stay sayable, or a
+    # constrained model is forced to pick a branch it does not believe in.
+    return {
+        "type": "object",
+        "properties": {"oncotree_diagnoses": {"type": "array", "items": {
+            "type": "object",
+            "properties": {"cancer_condition": {"type": "string"},
+                           "oncotree_value": _one_of(allowed, ("", "Other"))},
+            "required": ["cancer_condition", "oncotree_value"],
+        }}},
+        "required": ["oncotree_diagnoses"],
+    }
+
+
+def child_values_schema(allowed):
+    return {
+        "type": "object",
+        "properties": {"cancer_condition": {"type": "string"},
+                       "oncotree_diagnoses": {"type": "array",
+                                              "items": _one_of(allowed)}},
+        "required": ["oncotree_diagnoses"],
+    }
+
+
+_RECEPTOR_VALUES = ["Positive", "Negative", "Unknown", "!Positive", "!Negative"]
+HER2_ER_PR_SCHEMA = {
+    "type": "object",
+    "properties": {name: {"type": "string", "enum": _RECEPTOR_VALUES}
+                   for name in ("her2_status", "er_status", "pr_status")},
+    "required": ["her2_status", "er_status", "pr_status"],
+}
+
+PDL1_SCHEMA = {
+    "type": "object",
+    "properties": {"pdl1_status": {"type": "string",
+                                   "enum": ["High", "Low", "Unknown"]}},
+    "required": ["pdl1_status"],
+}
+
+# No "Unknown" here, so neither field is required: forcing a choice between
+# proficient and deficient would invent one.
+MMR_MS_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "mmr_status": {"type": "string", "enum": [
+            "MMR-Proficient", "MMR-Deficient", "!MMR-Proficient", "!MMR-Deficient"]},
+        "ms_status": {"type": "string", "enum": [
+            "MSI-H", "MSI-L", "MSS", "!MSI-H", "!MSI-L"]},
+    },
+}
+
+DISEASE_STATUS_SCHEMA = {
+    "type": "object",
+    "properties": {"disease_status": {"type": "array", "items": {
+        "type": "string", "enum": [
+            "Untreated", "Localized", "Locally Advanced", "Metastatic",
+            "Advanced", "Recurrent", "Refractory", "Unresectable", "Early Stage"]}}},
+    "required": ["disease_status"],
+}
+
+MINIMUM_AGE_SCHEMA = {
+    "type": "object",
+    "properties": {"minimum_age_years": {"type": ["number", "null"]}},
+    "required": ["minimum_age_years"],
+}
+
+
 GENOMIC_CRITERIA_SCHEMA = {
     "type": "array",
     "items": {
