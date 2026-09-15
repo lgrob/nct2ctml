@@ -119,6 +119,22 @@ These are upstream bugs, fixed here and worth reporting back.
   had found nothing, indistinguishable downstream from a trial with no
   diagnoses.
 
+- `_basket_wildcards` in `src/clinical_trials_gov.py` — a trial is a basket
+  only when its conditions name no specific Oncotree diagnosis. `all_tumours`
+  and `all_solid_tumours` fire on any broad condition, and registries file a
+  category header beside the real diagnoses often enough that this replaced a
+  precise answer with `_SOLID_`: NCT04775485 lists "Advanced Solid Tumor"
+  next to "Low-grade Glioma", NCT04897321 puts "Pediatric Solid Tumor" ahead
+  of osteosarcoma, rhabdomyosarcoma, neuroblastoma, Ewing sarcoma and Wilms
+  tumour. 31 of the 104 cached trials with a broad condition also name a
+  specific one, and are no longer treated as baskets. The genuine kind -
+  NCT02813135, whose only condition is "Pediatric Cancer" - is unaffected.
+- `bench/curations.py` — NCT02813135 re-curated as `_SOLID_` + `_LIQUID_`.
+  The key enumerated twelve paediatric tumours for a trial whose criterion is
+  "a haematologic or solid tumor malignancy that has progressed despite
+  standard therapy". A list is not a safer basket; it withholds the trial from
+  every child whose tumour is not on it.
+
 - `bench/curations.py` — NCT05009992 moved out of a hand-written YAML and
   re-curated. Its diagnosis held one Oncotree node where the trial names two:
   it enrols "diffuse midline glioma H3K27M mutant; WHO grade III and IV H3

@@ -643,3 +643,24 @@ CURATIONS["NCT05009992"] = dict(
         age(">=2"), age("<=40"),
     )],
 )
+
+CURATIONS["NCT02813135"] = dict(
+    # ESMART / MAPPYACTS. A true basket, and the key used to enumerate twelve
+    # paediatric tumours instead. The trial's sole registered condition is
+    # "Pediatric Cancer" and its first criterion is "a haematologic or solid
+    # tumor malignancy that has progressed despite standard therapy, or for
+    # which no effective standard therapy exists" - it enrols across the whole
+    # of paediatric oncology and stratifies by molecular profile afterwards.
+    # Listing twelve diagnoses is not a safer version of that: it silently
+    # withholds the trial from every child whose tumour is not on the list,
+    # which is the failure nobody sees.
+    #
+    # _SOLID_ and _LIQUID_ together are MatchMiner's way of saying "any
+    # malignancy", and the pipeline reaches the same answer from the same
+    # conditions.
+    match=[all_of(
+        dx("_SOLID_", "_LIQUID_"),
+        age("<18"),
+        status("Recurrent", "Refractory"),
+    )],
+)

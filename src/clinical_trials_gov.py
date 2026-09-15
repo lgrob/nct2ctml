@@ -761,16 +761,52 @@ def map_eligibility_criteria_to_oncotree_term(nct_id: str, eligibility_criteria:
         all_possible_diagnoses.update(oncotree_diagnoses_result['oncotree_diagnoses'])   
     return list(all_possible_diagnoses)
 
+def _basket_wildcards(conditions_list, nct_id: str = "") -> set:
+    """
+    The MatchMiner wildcards this trial's conditions justify, if any.
+
+    A broad condition alone is not enough. Registries routinely file a
+    category header beside the actual diagnoses: NCT04775485 lists
+    "Advanced Solid Tumor" next to "Low-grade Glioma", and NCT04897321 puts
+    "Pediatric Solid Tumor" ahead of osteosarcoma, rhabdomyosarcoma,
+    neuroblastoma, Ewing sarcoma and Wilms tumour. Reading those as baskets
+    throws away a precise answer and replaces it with _SOLID_, which matches
+    every solid-tumour patient in the database - the failure a clinician
+    notices as noise and a curator never sees.
+
+    31 of the 104 cached trials whose conditions contain a broad term also
+    name a specific Oncotree diagnosis, so this is not a corner case.
+
+    The broad term therefore wins only when the trial names nothing specific.
+    NCT02813135 is the shape that qualifies: its sole condition is "Pediatric
+    Cancer" and its criterion is "a haematologic or solid tumor malignancy
+    that has progressed despite standard therapy".
+    """
+    broad_any = tdh.all_tumours(conditions_list)
+    broad_solid = tdh.all_solid_tumours(conditions_list)
+    if not (broad_any or broad_solid):
+        return set()
+
+    named = rv.diagnoses_from_conditions(conditions_list)
+    if named:
+        logger.info(
+            f"NCTID: {nct_id} | Conditions contain a broad term but also name "
+            f"{sorted(named)}. Treating the broad term as a category header, "
+            f"not a basket, and mapping the specific diagnoses instead."
+        )
+        return set()
+
+    return {"_SOLID_", "_LIQUID_"} if broad_any else {"_SOLID_"}
+
+
 def _map_global_diagnosis_from_conditions_and_extra_info(trial_data: dict) -> set:
     nct_id = get_nct_id(trial_data)
     conditions_list = tdh.safe_get(trial_data, ['protocolSection', 'conditionsModule', 'conditions'])
     all_possible_diagnoses = set()
 
-    if tdh.all_tumours(conditions_list):
-        all_possible_diagnoses.add("_SOLID_")
-        all_possible_diagnoses.add("_LIQUID_")
-    elif tdh.all_solid_tumours(conditions_list):
-        all_possible_diagnoses.add("_SOLID_")
+    wildcards = _basket_wildcards(conditions_list, nct_id)
+    if wildcards:
+        all_possible_diagnoses.update(wildcards)
     else:
         level_1_diagnosis, l1_to_all_mapping = onct.get_all_oncotree_data()
         logger.debug(f"NCTID: {nct_id} | Stage 1 - Original Conditions:{conditions_list}")
