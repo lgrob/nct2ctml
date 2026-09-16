@@ -136,7 +136,7 @@ treatment_list:
     match:
     - and:
       - clinical:
-          oncotree_primary_diagnosis: B-Lymphoblastic Leukemia/Lymphoma, NOS
+          oncotree_primary_diagnosis: B-Lymphoblastic Leukemia/Lymphoma
       - clinical:
           age_numerical: '>=3'
       - clinical:

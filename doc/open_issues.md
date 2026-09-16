@@ -197,6 +197,37 @@ and stage 2 over the 50 cached trials would cut the loop from ~100 minutes to
 minutes and make an A/B honest. That is the first thing to build, not the
 last.
 
+### The benchmark cannot see which diagnosis actually matches a patient
+
+This was filed for two days under "scoring decisions, not defects", on the
+reasoning that `B-Lymphoblastic Leukemia/Lymphoma` and
+`B-Lymphoblastic Leukemia/Lymphoma, NOS` are both valid Oncotree nodes and
+choosing between them is curation policy. Checked against the running
+MatchMiner instance on 2026-09-16, that was wrong.
+
+    B-Lymphoblastic Leukemia/Lymphoma        expands to 8 terms, incl. the NOS leaf
+    B-Lymphoblastic Leukemia/Lymphoma, NOS   expands to 1: itself
+
+Patients are coded with the parent. The instance holds the controlled pair
+already: `2023-509392-17-00` names the parent and matched its B-ALL patient,
+`NCT03643276` named the leaf and matched nothing - same patient, same engine,
+same run. Seven of the fifty keys said ", NOS", so seven trials were invisible
+to a patient with the commonest childhood cancer. All seven now name the
+parent, and the dry run over the live mapping goes from 23 of 55 trials
+reaching a patient to 30.
+
+The general problem stands and is larger than those seven. `prf()` compares
+strings, so it scores a diagnosis that matches every B-ALL patient exactly the
+same as one that matches none - and on 2026-09-15 it scored the pipeline's
+*correct* parent answers as spurious on NCT05366218 and NCT05748171, marking
+them 0.0. **The benchmark is blind to the only property that matters.**
+
+Fixing the metric properly means scoring through the instance's
+`oncotree_mapping.json`: expand both sides and compare the patient
+populations, not the strings. That makes the benchmark depend on a file from
+the deployment, which is a real cost - but the alternative is a number that
+can improve while matching gets worse.
+
 ### A basket trial can get both the wildcard and specific diagnoses
 `map_global_diagnosis_to_oncotree_term` adds condition-derived terms first and
 reaches the `_SOLID_`/`_LIQUID_` path only when the eligibility mapping returns
@@ -251,15 +282,6 @@ branches, the candidate list can approach it. If per-trial time jumps, look
 here first.
 
 ## Scoring decisions, not defects
-
-### Parent versus ", NOS"
-`bench/benchmark_map.py` compares diagnosis sets exactly, so returning
-`B-Lymphoblastic Leukemia/Lymphoma` where the key holds
-`B-Lymphoblastic Leukemia/Lymphoma, NOS` scores 0.0 - both are valid Oncotree
-nodes, parent and child. This cost NCT05366218 and NCT05748171 their entire
-diagnosis score on 2026-09-14 for answers that were essentially right.
-Crediting an ancestor match is defensible; so is not crediting it, since the
-parent matches more patients. It is a curation policy question.
 
 ### Run-to-run variance exceeds most single fixes
 Measured 2026-09-14: the reference-validation change did exactly what was

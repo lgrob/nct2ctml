@@ -248,7 +248,7 @@ treatment_list:
     - and:
       - or:
         - clinical:
-            oncotree_primary_diagnosis: B-Lymphoblastic Leukemia/Lymphoma, NOS
+            oncotree_primary_diagnosis: B-Lymphoblastic Leukemia/Lymphoma
         - clinical:
             oncotree_primary_diagnosis: T-Lymphoblastic Leukemia/Lymphoma
       - or:

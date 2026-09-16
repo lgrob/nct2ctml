@@ -222,6 +222,14 @@ These are upstream bugs, fixed here and worth reporting back.
   and the 32 level_1 categories are unchanged. A test now asserts that every
   name offered to the model is one the validator accepts.
 
+- Seven answer keys named `B-Lymphoblastic Leukemia/Lymphoma, NOS` where they
+  should name the parent, `B-Lymphoblastic Leukemia/Lymphoma`. Checked against
+  the running MatchMiner instance: the parent expands to eight terms including
+  the NOS leaf, the leaf expands only to itself, and patients are coded with
+  the parent — so those seven trials were invisible to a B-ALL patient. The
+  instance held the proof already, in a pair of loaded trials differing only
+  in that term, one matching and one not.
+
 ## Reference data
 
 - `ref/oncotree_file.txt` — the tab-delimited export from

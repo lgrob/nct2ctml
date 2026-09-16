@@ -175,7 +175,7 @@ treatment_list:
             oncotree_primary_diagnosis: Primary Mediastinal (Thymic) Large B-Cell
               Lymphoma
         - clinical:
-            oncotree_primary_diagnosis: B-Lymphoblastic Leukemia/Lymphoma, NOS
+            oncotree_primary_diagnosis: B-Lymphoblastic Leukemia/Lymphoma
         - clinical:
             oncotree_primary_diagnosis: Follicular Lymphoma
       - clinical:

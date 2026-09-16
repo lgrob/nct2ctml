@@ -35,6 +35,24 @@ ANY_SOLID = "_SOLID_"
 ANY_LIQUID = "_LIQUID_"
 
 
+# A note on parents and ", NOS" leaves, learned from the live MatchMiner
+# instance on 2026-09-16 rather than from reasoning.
+#
+# MatchMiner resolves oncotree_primary_diagnosis through an
+# oncotree_mapping.json: a name in that file expands to every descendant, a
+# name absent from it falls back to an exact string match. The parent
+# "B-Lymphoblastic Leukemia/Lymphoma" expands to eight terms *including* the
+# ", NOS" leaf; the leaf expands only to itself. Patients are coded with the
+# parent - the instance's B-ALL patient carries exactly that string - so a
+# trial curated to the leaf matches nobody, silently.
+#
+# The instance proved it with a controlled pair: 2023-509392-17-00 uses the
+# parent and matched that patient, NCT03643276 used the leaf and matched
+# nothing, same engine and same run. Seven keys said ", NOS"; all seven now
+# say the parent. Prefer the node a patient would actually be coded with, and
+# remember that the benchmark cannot see this distinction at all.
+
+
 def dx(*names):
     """One diagnosis, or an `or` over several."""
     if len(names) == 1:
@@ -136,7 +154,7 @@ CURATIONS["NCT05748171"] = dict(
     # both strata enrol - HR is defined by *lacking* them. Stratification, not
     # eligibility.
     match=[all_of(
-        dx("B-Lymphoblastic Leukemia/Lymphoma, NOS"),
+        dx("B-Lymphoblastic Leukemia/Lymphoma"),
         age(">=1"), age("<18"),
         status("Recurrent"),
     )],
@@ -147,7 +165,7 @@ CURATIONS["NCT02443831"] = dict(
     # them disease-burden or MRD based; the high-risk genetics are one route
     # among many, so nothing genomic is required of every patient.
     match=[all_of(
-        dx("B-Lymphoblastic Leukemia/Lymphoma, NOS"),
+        dx("B-Lymphoblastic Leukemia/Lymphoma"),
         age("<=25"),
         status("Recurrent", "Refractory"),
     )],
@@ -158,7 +176,7 @@ CURATIONS["NCT05366218"] = dict(
     # "either ... or"; only the first names molecular alterations, the other
     # three are MRD- and transplant-history based.
     match=[all_of(
-        dx("B-Lymphoblastic Leukemia/Lymphoma, NOS"),
+        dx("B-Lymphoblastic Leukemia/Lymphoma"),
         age(">=3"), age("<18"),
         status("Recurrent", "Refractory"),
     )],
@@ -348,7 +366,7 @@ CURATIONS["NCT02393157"] = dict(
         dx("Diffuse Large B-Cell Lymphoma, NOS", "Burkitt Lymphoma",
            "High-Grade B-Cell Lymphoma, NOS",
            "Primary Mediastinal (Thymic) Large B-Cell Lymphoma",
-           "B-Lymphoblastic Leukemia/Lymphoma, NOS", "Follicular Lymphoma"),
+           "B-Lymphoblastic Leukemia/Lymphoma", "Follicular Lymphoma"),
         age(">=3"), age("<=32"),
         status("Recurrent", "Refractory"),
     )],
@@ -551,7 +569,7 @@ CURATIONS["NCT05745714"] = dict(
     # IL-7R and/or JAK-STAT signaling pathways". USP9X is named too but is not
     # in the Kispi gene list, so its fusion partner DDX3X carries it.
     match=[all_of(
-        dx("B-Lymphoblastic Leukemia/Lymphoma, NOS", "T-Lymphoblastic Leukemia/Lymphoma"),
+        dx("B-Lymphoblastic Leukemia/Lymphoma", "T-Lymphoblastic Leukemia/Lymphoma"),
         any_of(*([gene(g, "Mutation") for g in
                   ("CRLF2", "EPOR", "JAK1", "JAK2", "JAK3", "IL7R", "SH2B3",
                    "DDX3X", "STAT5B", "DNM2", "PTPN2")]
@@ -567,7 +585,7 @@ CURATIONS["NCT05658640"] = dict(
     # activating mutations including but not limited to KRAS, NRAS, HRAS, FLT3,
     # PTPN11, MAP2K1 ... cCBL; NF1 del".
     match=[all_of(
-        dx("B-Lymphoblastic Leukemia/Lymphoma, NOS", "T-Lymphoblastic Leukemia/Lymphoma"),
+        dx("B-Lymphoblastic Leukemia/Lymphoma", "T-Lymphoblastic Leukemia/Lymphoma"),
         any_of(
             *[gene(g, "Mutation") for g in
               ("KRAS", "NRAS", "HRAS", "FLT3", "PTPN11", "MAP2K1", "CBL")],
