@@ -486,8 +486,41 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Cleanup: upstream leftovers and a suite that could not go green
+
+- `ref/local_trial_info.csv` — emptied to its header. It held 96 rows of
+  CUHK/HKU and Korean institutional trials (87 distinct NCT ids), and five
+  of them had reached the pulled corpus carrying a foreign protocol number:
+  NCT03093116, NCT03157128, NCT06099366, NCT06184009, NCT06516679. None had
+  been mapped or reviewed. Emptying the file does not remove them:
+  `TrialPullManager.modify_trial_status_file` keeps an existing
+  `local_protocol_ids` value whenever the caller passes an empty one, so a
+  stale id is permanent. The five were cleared by hand from
+  `cache/nct/trial_status.csv` (untracked; a `.bak` sits beside it). The file
+  also gates one behaviour worth knowing about: a *closed* trial is pulled
+  only if it appears here, which is how NCT03157128 entered the corpus. With
+  the file empty, closed trials are not pulled. When Kispi has local trials
+  to record, the header is the format.
+- `src/ctml_schema.py` — the `age` default is `All`, not `Adults`. It is not
+  only a placeholder the mapper overwrites: `clinical_trials_gov.map_age_group`
+  returns it for any trial with no `stdAges`. That fires on none of the 924
+  cached trials today, so no output changed, but in a paediatric corpus
+  `Adults` is the one fallback guaranteed wrong, and `ctis.map_age_group`
+  already falls back to `All`. Both registries now agree.
+- `requirements.txt` — adds `anthropic`, imported lazily by the Anthropic
+  backend. `doc/open_issues.md` also listed `pandas` as missing; nothing
+  imports it, so it is not added.
+- `tests/test_ai_helper.py` — the two tests send real prompts to the
+  configured model, so on any machine without a running server the suite
+  reported two errors and never went green, which is how a real regression
+  there goes unnoticed. They are now opt-in with `RUN_LIVE_LLM_TESTS=1`
+  rather than skipped on connection failure, because a skip that fires
+  whenever the server is down also fires the day it is misconfigured. The
+  offline suite is 229 tests, 2 skipped, 0 failing.
+
 ## Still carrying upstream assumptions
 
-- `ref/local_trial_info.csv` holds ~97 CUHK/HKU/Korean institutional trials
-  and is merged into `trial_status.csv`, so it mislabels trials with foreign
-  PIs and protocol IDs. Needs replacing with Kispi data or emptying.
+- `get_nct_local_status` still describes itself as recruitment in Hong Kong,
+  and `src/ctml_schema.py` still carries MatchMiner-only fields
+  (`management_group_list`, `oncology_group_list`, `program_area_list`) with
+  placeholder values.

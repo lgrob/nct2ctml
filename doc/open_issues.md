@@ -380,14 +380,10 @@ but it is the thing to check first.
   `bench/build_reviewed.py`, `tests/test_reference_validation.py`, and a
   variant in `src/match_criteria_mapper.py`. Walking a CTML match tree is a
   core operation and belongs in one place.
-- **`requirements.txt` is missing `pandas` and `anthropic`**, both imported.
-  A clean checkout cannot run the Anthropic backend.
 - **README documents neither CTIS nor the benchmark**, though `main.py` has
   `--source {nct,ctis,all}` and `bench/` is a full harness.
 - **`doc/nct_to_ctml_mapping_guide.md`** does not describe the two-stage
   level_1 mapping or the branch floor.
-- **`src/ctml_schema.py` defaults `'age': 'Adults'`** in a paediatric fork.
-  Harmless while the mapper overwrites it.
 - **`config.py` carries ~24 commented-out `LLM_AI_MODEL` lines**, which is why
   the live setting drifted out of step with the cluster unnoticed.
 - **Possibly dead, unconfirmed**: `bulk_convert_yaml_to_json.py` and
@@ -398,9 +394,6 @@ but it is the thing to check first.
 
 ## Inherited from upstream
 
-- `ref/local_trial_info.csv` holds ~97 CUHK/HKU/Korean institutional trials and
-  is merged into `trial_status.csv`, mislabelling trials with foreign PIs and
-  protocol ids. Needs Kispi data or emptying.
 - `src/trial_pull_manager.py:329` — trials in `trial_status.csv` that the API
   stops returning are unhandled (upstream `TODO`).
 - `utils/ai_helper.get_arm_criteria_mapping_prompt` is the one prompt still

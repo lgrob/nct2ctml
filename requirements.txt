@@ -2,3 +2,6 @@ requests>=2.32.0
 loguru>=0.7.0
 PyYAML>=6.0.0
 pyahocorasick>=2.1.0
+# Only for LLM_PLATFORM = "Anthropic"; imported lazily, so the Ollama and
+# llama.cpp backends run without it. Floor is the version this fork was run on.
+anthropic>=1.4.0

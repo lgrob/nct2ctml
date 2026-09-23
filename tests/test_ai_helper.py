@@ -1,8 +1,22 @@
+"""
+Live-model tests: these send real prompts to whatever backend config.py
+selects, so they need a running Ollama/llama.cpp server or an Anthropic key.
+
+They are opt-in rather than skipped on connection failure. A skip that fires
+whenever the server is down would also fire the day the server is
+misconfigured, and a suite that goes green by not testing is the failure this
+fork keeps finding elsewhere. Run them explicitly:
+
+    RUN_LIVE_LLM_TESTS=1 python -m unittest tests.test_ai_helper -v
+"""
+import os
 import unittest
 
 import utils.reference_validation as rv
 from utils.ai_helper import get_child_level_diagnoses_from_condition, get_inclusion_genomic_criteria, get_exclusion_genomic_criteria
 
+@unittest.skipUnless(os.environ.get("RUN_LIVE_LLM_TESTS") == "1",
+                     "live LLM test; set RUN_LIVE_LLM_TESTS=1 to run")
 class TestAITasks(unittest.TestCase):
 
     def setUp(self):

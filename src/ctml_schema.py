@@ -1,11 +1,22 @@
+# Modified by Kinderspital Zurich (Kispi) from the original
+# nct2ctml, Copyright 2026 The University of Hong Kong, Apache-2.0.
+# Retargeted from adult oncology in Hong Kong to paediatric oncology.
+# See CHANGES.md for what differs.
+
 '''
-This script contains defines the clinical trial schema as requied by Matchminer app
+The CTML trial skeleton every mapper starts from.
+
+The `age` default is "All", not upstream's "Adults". It is the value a
+trial keeps when its registry gives no age band, and in a paediatric corpus
+"Adults" is the one answer guaranteed to be wrong. "All" is also what
+src/ctis.map_age_group already returns in the same situation, so both
+registries now fall back to the same, deliberately wide, label.
 '''
 
 def get_ctml_schema():
     return {
   'nct_id': '',
-  'age': 'Adults',
+  'age': 'All',
   'cancer_center_accrual_goal_upper': 0,
   'curated_on': '',
   'study_start_date':'',

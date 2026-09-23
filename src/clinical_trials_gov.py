@@ -565,8 +565,8 @@ def map_age_group(trial_data: dict) -> str:
     """
     Derive the CTML `age` label from the trial's stdAges bands.
 
-    The schema default is "Adults", which is wrong for any trial enrolling
-    children. Labels are configurable in src/trial_config.py because the
+    With no stdAges at all the schema default applies, which is "All" - see
+    src/ctml_schema.py for why it is not upstream's "Adults". Labels are configurable in src/trial_config.py because the
     vocabulary MatchMiner accepts here is deployment-specific.
     """
     std_ages = tdh.safe_get(trial_data, ['protocolSection', 'eligibilityModule', 'stdAges']) or []

@@ -6,7 +6,7 @@ The **nct2ctml** repository is a specialized ETL (Extract, Transform, Load) appl
 
 ## Workflow
 - For the trials present on clinicaltrials.gov:
-  1. The trials are pulled and synced automatically via 'pull' command. The trials are saved in `cache\nct` directory.
+  1. The trials are pulled and synced automatically via 'pull' command. The trials are savedasdfasdfasidosidjfaoidjfop in `cache\nct` directory.
   2. Once pulled, they are converted to CTML format via 'map' command. The CTML files are saved in `cache\ctml` directory.
   3. Once mapped, manual review is encouraged to verify that the AI generated diagnosis and match criteria is correct. Once reviewed, the files are saved in `ctml\reviewed` directory. A trial the mapper could not give a diagnosis at all goes to `ctml/needs-review` instead of the normal output, so it cannot reach MatchMiner until a human supplies one - that queue is machine output awaiting a fix, distinct from `ctml/pending` below, which is human drafts awaiting a check.
   4. Further, they are converted to json and placed under `ctml/json` directory for matchminer-admin workflow to pick up and inserted to matchminer DB.
@@ -110,7 +110,12 @@ chmod +x sync_trials.sh
   ```
 - **Run a specific test:**
   ```bash
-  python -m unittest tests.test_ai_helper.TestAITasks.test_get_genomic_criteria -v
+  python -m unittest tests.test_reference_validation -v
+  ```
+- **Run the live-model tests** (skipped by default; they send real prompts to
+  the backend `config.py` selects, so they need a running server or an API key):
+  ```bash
+  RUN_LIVE_LLM_TESTS=1 python -m unittest tests.test_ai_helper -v
   ```
 
 ## Citation
