@@ -535,6 +535,14 @@ the 50 NCT keys, age F1 went **0.763 -> 0.919** and exact matches went
 the same answers. It costs one extra model call per ClinicalTrials.gov
 trial.
 
+## Documentation: README rewritten for this fork
+
+The README described upstream: no CTIS, no benchmark, no index, the Miro
+board and DeepWiki for upstream's code, Windows paths, and stray keyboard
+text in the workflow. It now documents the real CLI (checked against
+`--help`), the review queues, the flat index as the primary consumer, the
+LLM backends, the benchmark modes, and the reference files.
+
 ## Benchmark: diagnoses scored by the patients they reach
 
 `bench/benchmark_map.py` compared diagnosis *names*. A trial that matched
