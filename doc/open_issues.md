@@ -100,7 +100,33 @@ The answer keys were re-curated against each trial's own age sentence rather
 than against either rule, so the benchmark's age column measures this honestly:
 expect about 0.76, with 11 of the 16 disagreements being exactly this.
 
+**Addressed 2026-09-23** together with the next entry: the model now reads
+both bounds from the inclusion text (`utils.ai_helper.get_age_bounds`), and
+a structured maximum is narrowed to `<N` when the prose states an exclusive
+bound at the same N (`utils/age_bounds.py`). Measured with the production
+prompt on claude-haiku-4-5 over the 50 NCT keys: age F1 **0.763 -> 0.919**,
+exact 34 -> 44, no trial worse. This costs one extra model call per
+ClinicalTrials.gov trial.
+
+What remains is judgement, not reading. Several neuroblastoma trials put
+ages into their *risk definitions* ("Age 12-18 months with unfavourable
+biology", "Age >= 547 days and INRG stage M"), and the keys and the model
+draw the line between a risk definition and an enrolment bound differently
+(NCT02559778, NCT04221035, NCT06172296). The structured minimum also stays
+authoritative where the key followed the prose instead (NCT01704716:
+structured 1 month, key 1 year).
+
 ### Age bounds stated only in prose are not mapped
+
+*Addressed 2026-09-23 - see the entry above. NCT04625907 now gets `>=1` and
+`<26` from its text.*
+
+**Still open: site-dependent limits.** 2025-520982-39-00 (ALLTogether)
+states "<18 years (for AIEOP-BFM), <22 years (for COG) and <46 years (for
+ALLTogether sites)". The widest-range rule returns `<46`, the key says
+`<=22`, and neither is Kispi's own limit. That limit is presumably `<18`, as
+an AIEOP-BFM site. No trial-level rule gets this right; it needs a
+per-site field or a curator.
 
 `map_age_numerical` reads the structured `minimumAge` / `maximumAge` and
 nothing else, so a trial that states its limits only in the eligibility text

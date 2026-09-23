@@ -23,6 +23,7 @@ import utils.ai_helper as ai
 import src.trial_data_helper as tdh
 import utils.oncotree as onct
 import utils.reference_validation as rv
+import utils.age_bounds as ab
 import src.trial_criteria_to_genes as ctg
 import src.match_criteria_mapper as mcm
 from src.match_criteria_mapper import ArmCriteriaBlocks, ArmCriteriaText
@@ -84,7 +85,10 @@ def map_nct_to_clinical_and_genomic_criteria(trial_data: dict,
     # A list, because a trial can bound age at both ends. The converter emits
     # each bound as its own clinical node - two age_numerical keys cannot live
     # in one dict, and MatchMiner intersects sibling nodes anyway.
-    age_bounds = map_age_numerical(trial_data)
+    # The full inclusion text, not the global slice: the prose reading takes
+    # the widest range across cohorts, so it needs to see every cohort.
+    age_prose = ab.read_age_bounds(nct_id, split_inclusion_exclusion_criteria(trial_data)[0])
+    age_bounds = map_age_numerical(trial_data, age_prose)
     if age_bounds:
         mapped_global_clinical_critera['age_numerical'] = age_bounds
     
@@ -585,6 +589,35 @@ def map_age_group(trial_data: dict) -> str:
     return cs.get_ctml_schema()['age']
 
 
+def _parse_age(raw, nct_id=""):
+    """(value, unit) from a clinicaltrials.gov age string, or None."""
+    if not raw:
+        return None
+    components = str(raw).split()
+    if len(components) < 2:
+        logger.warning(f"NCTID: {nct_id} | Could not parse age {raw!r}; omitting the bound")
+        return None
+    try:
+        value = float(components[0])
+    except ValueError:
+        logger.warning(f"NCTID: {nct_id} | Non-numeric age {raw!r}; omitting the bound")
+        return None
+    unit = components[1].lower().rstrip('s')  # "Months" -> "month", "Year" -> "year"
+    if unit not in _AGE_UNIT_IN_YEARS:
+        logger.warning(f"NCTID: {nct_id} | Unknown age unit in {raw!r}; omitting the bound")
+        return None
+    return value, unit
+
+
+def _stated_age_years(raw, nct_id=""):
+    """The age as stated, in years, with no completed-units offset; or None."""
+    parsed = _parse_age(raw, nct_id)
+    if parsed is None:
+        return None
+    value, unit = parsed
+    return value * _AGE_UNIT_IN_YEARS[unit]
+
+
 def _age_bound(raw, operator, nct_id="", unit_offset=0):
     """
     One CTML age_numerical expression from a clinicaltrials.gov age string.
@@ -610,25 +643,10 @@ def _age_bound(raw, operator, nct_id="", unit_offset=0):
     Returns "" when the value is absent or unparseable - the bound is then
     simply not expressed.
     """
-    if not raw:
+    parsed = _parse_age(raw, nct_id)
+    if parsed is None:
         return ""
-
-    components = str(raw).split()
-    if len(components) < 2:
-        logger.warning(f"NCTID: {nct_id} | Could not parse age {raw!r}; omitting the bound")
-        return ""
-
-    try:
-        value = float(components[0])
-    except ValueError:
-        logger.warning(f"NCTID: {nct_id} | Non-numeric age {raw!r}; omitting the bound")
-        return ""
-
-    unit = components[1].lower().rstrip('s')  # "Months" -> "month", "Year" -> "year"
-    if unit not in _AGE_UNIT_IN_YEARS:
-        logger.warning(f"NCTID: {nct_id} | Unknown age unit in {raw!r}; omitting the bound")
-        return ""
-
+    value, unit = parsed
     years = round((value + unit_offset) * _AGE_UNIT_IN_YEARS[unit], 2)
     # Keep whole years as integers (">=18"); express the rest to 2dp (">=0.5").
     # MatchMiner reads the fraction as a fraction of a year and converts it to
@@ -639,7 +657,7 @@ def _age_bound(raw, operator, nct_id="", unit_offset=0):
     return f"{operator}{years}"
 
 
-def map_age_numerical(trial_data: dict) -> list:
+def map_age_numerical(trial_data: dict, prose: dict = None) -> list:
     """
     The trial's age bounds as CTML age_numerical expressions, in years.
 
@@ -656,13 +674,23 @@ def map_age_numerical(trial_data: dict) -> list:
     infant and neonatal trials keep a usable bound at both ends.
 
     Note that MatchMiner treats "<" and "<=" identically (likewise ">" and
-    ">="), so the inclusive forms are used throughout; nothing is lost.
+    ">=") - the flat index does not, which is why a maximum the prose states
+    as exclusive is now emitted as "<N".
+
+    `prose` is the model's reading of the age sentence
+    (utils.age_bounds.read_age_bounds), or None. It narrows a maximum the
+    sponsor meant as exclusive and fills bounds the structured fields leave
+    empty; the rules are in utils/age_bounds.py. Without it the result is
+    the structured reading alone, exactly as before.
     """
     eligibility = tdh.safe_get(trial_data, ['protocolSection', 'eligibilityModule']) or {}
     nct_id = get_nct_id(trial_data)
-    bounds = [_age_bound(eligibility.get('minimumAge'), ">=", nct_id),
-              _age_bound(eligibility.get('maximumAge'), "<=", nct_id, unit_offset=1)]
-    return [b for b in bounds if b]
+    minimum = _age_bound(eligibility.get('minimumAge'), ">=", nct_id)
+    maximum = _age_bound(eligibility.get('maximumAge'), "<=", nct_id, unit_offset=1)
+    if prose is None:
+        return [b for b in (minimum, maximum) if b]
+    stated_maximum = _stated_age_years(eligibility.get('maximumAge'), nct_id) if maximum else None
+    return ab.reconcile_with_structured(minimum, maximum, stated_maximum, prose, nct_id)
 
 
 def map_her2_er_pr_status(nct_id: str, eligibilityCriteria: str, keywords:list):    

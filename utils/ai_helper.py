@@ -119,20 +119,24 @@ def get_disease_status(nct_id:str, eligibilityCriteria: str, keywords: list)-> d
     return disease_status_dict
 
 
-def get_minimum_age(nct_id: str, inclusion_criteria: str) -> dict:
+def get_age_bounds(trial_id: str, inclusion_criteria: str) -> dict:
     """
-    Read the minimum eligible age out of free-text criteria.
+    Read the enrolment age range out of free-text criteria: both bounds, each
+    with its unit and whether it is inclusive.
 
-    ClinicalTrials.gov publishes a structured minimumAge field; CTIS does not,
-    and the text is too varied for a pattern ("Age >=1 and <80 years",
-    "Patients aged 1 to <=21 years", "Children between 1 year (>= 12 months)
-    and 18 years"). It also contains ages that are not eligibility bounds at
-    all, such as the Karnofsky/Lansky split at 16 years, which a pattern
-    reliably mistakes for one.
+    CTIS publishes no structured age; ClinicalTrials.gov publishes one whose
+    maximum is ambiguous between completed units and an exclusive bound. The
+    text is too varied for a pattern ("Age >=1 and <80 years", "Patients aged
+    1 to <=21 years", "Children between 1 year (>= 12 months) and 18 years")
+    and contains ages that are not eligibility bounds at all, such as the
+    Karnofsky/Lansky split at 16 years. The unit is returned as stated rather
+    than converted, because the completed-units reading adds one unit of
+    whatever the trial wrote. See utils/age_bounds.py for how the answer is
+    used.
     """
-    schema, prompt = get_minimum_age_prompt(inclusion_criteria)
-    ai_response = send_ai_request(nct_id, prompt, schema)
-    return parse_ai_response(ai_response, nct_id)
+    schema, prompt = get_age_bounds_prompt(inclusion_criteria)
+    ai_response = send_ai_request(trial_id, prompt, schema)
+    return parse_ai_response(ai_response, trial_id)
 
 
 def get_arm_criteria_mapping(nct_id: str, arm_groups: list, inclusion_criteria: str, exclusion_criteria: str) -> dict:
@@ -441,28 +445,38 @@ def get_disease_status_prompt(eligibilityCriteria, keywords):
     return DISEASE_STATUS_SCHEMA, cleandoc(prompt)
 
 
-def get_minimum_age_prompt(inclusion_criteria):
-    prompt = f"""Task: From the InclusionCriteria, find the minimum age a participant must be to be eligible.
+def get_age_bounds_prompt(inclusion_criteria):
+    prompt = f"""Task: From the InclusionCriteria, find the age range a participant must be in to enrol.
 
         InclusionCriteria: {inclusion_criteria}
 
         Rules:
-        - Report only an age a participant must MEET OR EXCEED to enrol.
-        - Ignore ages that are not eligibility limits, for example the age at
-          which a different performance scale is used (Karnofsky vs Lansky),
-          the age at original diagnosis when enrolment age differs, or ages
-          appearing in exclusion or dosing text.
-        - Ignore maximum ages entirely.
-        - Convert to years: 12 months = 1, 6 months = 0.5, 28 days = 0.08.
-        - If the criteria state no minimum age, return null.
+        - Report only limits on the participant's age at enrolment.
+        - Ignore ages that are not eligibility limits: the age at which a
+          different performance scale applies (Karnofsky vs Lansky), the age at
+          original diagnosis when it differs from enrolment age, and ages in
+          dosing, consent or assent text.
+        - If different cohorts, parts or phases allow different ages, report the
+          widest range across them: the lowest minimum and the highest maximum.
+          Any one cohort admitting the participant is enough.
+        - Report each number and unit exactly as written. Do not convert
+          "18 months" to years.
+        - inclusive is true when the limit itself is allowed: ">=", "at least",
+          "or older", "<=", "or younger", "up to and including", and ranges such
+          as "between 1 and 21 years" or "1-21 years". inclusive is false when
+          the limit itself is excluded: "<", "under", "younger than", "less
+          than", "older than", "before their 22nd birthday".
+        - If no minimum (or no maximum) is stated, set its value to null.
 
         Output in JSON format:
         {{
-        "minimum_age_years": null
+        "minimum": {{"value": 1, "unit": "years", "inclusive": true}},
+        "maximum": {{"value": null, "unit": "years", "inclusive": true}}
         }}
-        where minimum_age_years is a number or null.
+        where value is a number or null, and unit is one of years, months,
+        weeks, days.
         """
-    return MINIMUM_AGE_SCHEMA, cleandoc(prompt)
+    return AGE_BOUNDS_SCHEMA, cleandoc(prompt)
 
 
 def get_arm_criteria_mapping_prompt(arm_groups: list, inclusion_criteria: str, exclusion_criteria: str) -> str:
@@ -679,10 +693,20 @@ DISEASE_STATUS_SCHEMA = {
     "required": ["disease_status"],
 }
 
-MINIMUM_AGE_SCHEMA = {
+_AGE_BOUND_SCHEMA = {
     "type": "object",
-    "properties": {"minimum_age_years": {"type": ["number", "null"]}},
-    "required": ["minimum_age_years"],
+    "properties": {
+        "value": {"type": ["number", "null"]},
+        "unit": {"type": "string", "enum": ["years", "months", "weeks", "days"]},
+        "inclusive": {"type": "boolean"},
+    },
+    "required": ["value", "unit", "inclusive"],
+}
+
+AGE_BOUNDS_SCHEMA = {
+    "type": "object",
+    "properties": {"minimum": _AGE_BOUND_SCHEMA, "maximum": _AGE_BOUND_SCHEMA},
+    "required": ["minimum", "maximum"],
 }
 
 

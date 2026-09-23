@@ -507,6 +507,34 @@ describes a basket. This overturns the docstring's earlier claim that
 NCT06607692 was an over-reach. `bench/benchmark_map.py --conditions-only`
 now calls `seed_and_map_diagnosis` itself instead of restating it.
 
+## Defect fixed: age bounds stated in prose were not read
+
+ClinicalTrials.gov's `maximumAge` is in completed units for most sponsors
+and an exclusive bound for about one in three, so the structured reading was
+a year too wide on 11 of the 50 benchmark trials. Bounds stated only in
+prose were not read at all. CTIS read only a minimum, so every unreviewed
+CTIS trial was open-ended at the top.
+
+- `utils.ai_helper.get_age_bounds` replaces `get_minimum_age`. The model
+  reports both bounds, each with its unit as stated and whether it is
+  inclusive, and takes the widest range across cohorts. The unit is not
+  converted by the model, because the completed-units reading adds one unit
+  of whatever the trial wrote, and that unit is a month for "<= 18 months".
+- `utils/age_bounds.py` holds the rules, which are deterministic and tested
+  offline. The structured minimum stays authoritative. A structured maximum
+  is narrowed to `<N` only when the prose states an exclusive bound at the
+  same N. Prose fills a bound only where the structured field is empty, and
+  "birth" is not a minimum. Any failure of the reading step leaves the
+  structured result as it was.
+- CTIS gets both bounds from the call it already made.
+
+Measured on 2026-09-23 with the production prompt on claude-haiku-4-5. Over
+the 50 NCT keys, age F1 went **0.763 -> 0.919** and exact matches went
+34 -> 44, with no trial worse. Over the 5 curated CTIS keys it went
+0.667 -> 0.800; the "before" figure there is the minimum alone, taken from
+the same answers. It costs one extra model call per ClinicalTrials.gov
+trial.
+
 ## Benchmark: diagnoses scored by the patients they reach
 
 `bench/benchmark_map.py` compared diagnosis *names*. A trial that matched

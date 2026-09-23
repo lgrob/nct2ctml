@@ -28,7 +28,7 @@ from loguru import logger
 import src.clinical_trials_gov as ctg
 import src.ctml_schema as cs
 import src.match_criteria_mapper as mcm
-import utils.ai_helper as ai
+import utils.age_bounds as ab
 
 # CTIS ageRangeCategoryCode. Code 2 is the paediatric bucket - the same code
 # the pull stage filters on (trial_config.ctis_age_group_codes).
@@ -110,41 +110,29 @@ def map_age_group(trial_data: dict) -> str:
     return "All"
 
 
-def map_age_numerical(ct_number: str, inclusion_text: str) -> Optional[str]:
+def map_age_numerical(ct_number: str, inclusion_text: str) -> List[str]:
     """
-    Minimum eligible age as a CTML age_numerical string, or None.
+    The trial's age bounds as CTML age_numerical strings, lower first.
 
-    ClinicalTrials.gov publishes a structured minimumAge; CTIS does not, so
-    this asks the model. A pattern was tried first and rejected: across the
-    331 cached records it missed 162 that do state an age, because the
-    phrasings vary too much ("Age >=1 and <80 years", "Patients aged 1 to
+    ClinicalTrials.gov publishes structured ages; CTIS does not, so the model
+    reads them from the criteria text. A pattern was tried first and rejected:
+    across the 331 cached records it missed 162 that do state an age, because
+    the phrasings vary too much ("Age >=1 and <80 years", "Patients aged 1 to
     <=21 years", "Children between 1 year (>= 12 months) and 18 years of
     age"). Loosening it far enough to catch those also caught the
-    Karnofsky/Lansky split at 16 years, which is not an eligibility bound -
-    a false minimum silently narrows who the trial can match.
+    Karnofsky/Lansky split at 16 years, which is not an eligibility bound - a
+    false minimum silently narrows who the trial can match.
 
-    Returns None when no minimum is stated. An absent bound is correct; an
-    invented one is not.
+    Only the minimum used to be read, so every CTIS trial was open-ended at
+    the top: an adolescent trial matched adults. Both bounds now come from one
+    call, at the same cost; the rules are in utils/age_bounds.py.
+
+    Returns [] when no age is stated. An absent bound is correct; an invented
+    one is not.
     """
-    if not (inclusion_text or "").strip():
-        return None
-    try:
-        result = ai.get_minimum_age(ct_number, inclusion_text) or {}
-    except Exception as e:
-        logger.warning(f"CTIS: {ct_number} | minimum age lookup failed ({e}); leaving unset")
-        return None
-    value = result.get("minimum_age_years")
-    if value in (None, "", "null"):
-        return None
-    try:
-        years = round(float(value), 2)
-    except (TypeError, ValueError):
-        logger.warning(f"CTIS: {ct_number} | unusable minimum age {value!r}; leaving unset")
-        return None
-    if years < 0 or years > 100:
-        logger.warning(f"CTIS: {ct_number} | implausible minimum age {years}; leaving unset")
-        return None
-    return f">={int(years)}" if years == int(years) else f">={years}"
+    minimum, maximum = ab.prose_bounds(ab.read_age_bounds(f"CTIS: {ct_number}", inclusion_text),
+                                       f"CTIS: {ct_number}")
+    return [b for b in (minimum, maximum) if b]
 
 
 def map_ctml_general_fields(trial_schema: dict, trial_data: dict) -> dict:

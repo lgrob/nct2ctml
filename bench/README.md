@@ -154,11 +154,16 @@ derives, and the column scores the bounds that actually select patients.
 maps both to the same Mongo operator, so `<18` and `<=18` select identical
 patients and must not count as different answers.
 
-Expect roughly 0.76 on the current key, and read the gap rather than the mean.
-Every answer was re-curated against the trial's own age sentence, so the 16
-disagreements are all explicable: 11 are trials whose sponsor put an
-*exclusive* bound in the structured `maximumAge` field, where the mapper's
-completed-units reading is a year too wide; the other 5 state a bound only in
-prose, which the deterministic mapper does not read at all - NCT04625907
-carries no structured ages whatsoever, and its `>=1` / `<=26` come from the
-text.
+Every answer was re-curated against the trial's own age sentence. On the
+structured fields alone the column scores about 0.76. Of the 16
+disagreements, 11 are trials whose sponsor put an *exclusive* bound in
+`maximumAge`, where the completed-units reading is a year too wide, and 5
+state a bound only in prose.
+
+Since 2026-09-23 the mapper also reads the age sentence (`utils/age_bounds.py`),
+and a full run should score about 0.92. That figure was measured with the
+production prompt on claude-haiku-4-5: 44 of 50 trials exact, none worse
+than the structured reading. The remaining gaps are neuroblastoma risk
+definitions that contain ages, and one structured minimum that disagrees with
+the prose; both are listed in `doc/open_issues.md`. `--conditions-only` does
+not produce ages.

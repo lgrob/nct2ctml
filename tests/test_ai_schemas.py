@@ -28,7 +28,7 @@ class TestEveryPromptIsStructured(unittest.TestCase):
             ai.get_pdl1_status_prompt("c", []),
             ai.get_mmr_status_prompt("c", []),
             ai.get_disease_status_prompt("c", []),
-            ai.get_minimum_age_prompt("c"),
+            ai.get_age_bounds_prompt("c"),
             ai.get_inclusion_genomic_criteria_prompt(["MYCN"], "c"),
             ai.get_exclusion_genomic_criteria_prompt(["MYCN"], "c"),
         ]
@@ -96,8 +96,15 @@ class TestStatusSchemas(unittest.TestCase):
         # model to invent proficient or deficient.
         self.assertNotIn("required", ai.MMR_MS_SCHEMA)
 
-    def test_minimum_age_may_be_null(self):
-        self.assertIn("null", ai.MINIMUM_AGE_SCHEMA["properties"]["minimum_age_years"]["type"])
+    def test_either_age_bound_may_be_null(self):
+        for end in ("minimum", "maximum"):
+            bound = ai.AGE_BOUNDS_SCHEMA["properties"][end]
+            self.assertIn("null", bound["properties"]["value"]["type"])
+
+    def test_age_units_are_constrained_to_what_the_code_converts(self):
+        from utils.age_bounds import UNIT_IN_YEARS
+        unit = ai.AGE_BOUNDS_SCHEMA["properties"]["maximum"]["properties"]["unit"]
+        self.assertEqual(set(unit["enum"]), set(UNIT_IN_YEARS))
 
 
 if __name__ == '__main__':
