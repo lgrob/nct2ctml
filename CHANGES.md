@@ -346,6 +346,62 @@ reading the deployed file, so mapping stays independent of a running
 MatchMiner; the two agree on 852 of 861 shared names, and all nine differences
 are nodes our newer Oncotree has and the deployed table does not.
 
+## New capability: a flat query index for downstream pipelines
+
+`utils/build_trial_index.py` turns the curated CTML into three TSVs plus a
+manifest, for a Nextflow pipeline that matches samples against trials without
+MatchMiner.
+
+CTML is a nested boolean tree, and "does this tree evaluate true for sample X"
+is not expressible as a query over nested JSON - so every consumer would have
+to implement a tree evaluator, which is the work MatchMiner's matchengine used
+to do. The index flattens the expensive, semantics-heavy dimension once, at
+build time, where it is tested:
+
+    trials.tsv           one row per trial: phase, status, and the numeric age
+                         window parsed out of the match tree, with the
+                         inclusive/exclusive distinction kept ("<18" and
+                         "<=18" differ by a year of patients). The trial-level
+                         `age` label is carried for display only - it matches
+                         no patient field.
+    trial_diagnosis.tsv  one row per (trial, arm, Oncotree code), with the
+                         diagnosis subtree already expanded.
+    trial_genomic.tsv    one row per (trial, arm, gene), exclusions flagged
+                         rather than dropped.
+    manifest.json        row counts and SHA-256 of every output and of the
+                         Oncotree file it was built against.
+
+A consumer therefore needs no knowledge of CTML, of the Oncotree hierarchy or
+of MatchMiner's wildcards: `_SOLID_` and `_LIQUID_` are expanded at build time,
+and both the Oncotree code and the display name are emitted so a join can use
+whichever the sample map carries. Prefer the code - it is stable across
+releases where display names are not, `H3 K27M-Mutant` having become
+`H3 K27-Altered`.
+
+**The index is screening, not decisive.** Rows are a union of everything a
+trial could match; the CTML file remains the authority on whether it does.
+Exclusions and mixed and/or nesting do not denormalise losslessly, and a flat
+table that claims to be authoritative is how it starts quietly disagreeing
+with its source. `source_term` keeps the term the curator actually wrote, so a
+screening hit can be explained back to the file rather than to an expanded
+code.
+
+Measured on the 55 curated trials: 3,975 diagnosis rows, 276 KB, and a full
+scan for one diagnosis takes about a millisecond. Extrapolated to the whole
+1,256-trial corpus that is roughly 88,000 rows and 3.4 MB - a lookup table, not
+a data warehouse, so a database server would add a service dependency and buy
+nothing. A single immutable file is also the better Nextflow input: it is
+content-hashable, so `-resume` works, and it needs nothing standing up inside
+a container.
+
+The build is deterministic - identical inputs give byte-identical outputs - so
+the manifest checksum identifies exactly which trial set produced a given
+report. That property is worth keeping if any of this falls under the IVD:
+a mutable database cannot answer "what would this have returned in March"
+without separate audit machinery. `index/` is gitignored, on the assumption
+that it is regenerated; if a report ever cites it, ship it as a versioned
+release artefact with its manifest instead.
+
 ## Reference data
 
 - `ref/oncotree_file.txt` — the tab-delimited export from

@@ -39,3 +39,9 @@ ctml/pending/*
 !ctml/pending/.gitkeep
 ctml/needs-review/*
 !ctml/needs-review/.gitkeep
+
+# Derived query index (utils/build_trial_index.py). Rebuilt deterministically
+# from ctml/json, so it is not tracked by default - but see CHANGES.md: if the
+# index is cited by a patient report, ship it as a versioned release artefact
+# with its manifest rather than regenerating it ad hoc.
+index/
