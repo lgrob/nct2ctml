@@ -486,6 +486,94 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## New capability: fusion partners
+
+CTML wrote BCR-ABL1 as OR'd single-gene nodes, so the index could not tell
+an EWSR1::FLI1 trial from any EWSR1 fusion trial. The pairing is now kept
+from extraction onwards.
+
+- The genomic schema has `fusion_partner`, and prompt rule 9 asks for one
+  Structural Variation entry per fusion named by both genes, and for no
+  partner when one gene is named. Genes are not derived from cytogenetic
+  notation.
+- `reference_validation.fusion_partner` accepts a panel gene or alias, an
+  exact current symbol with a MANE Select transcript (`ref/mane_genes.tsv`,
+  19,364 genes), or an IG/TR locus. Off-panel aliases are not guessed:
+  "CAR", as in CAR-T, is an alias of PRKAR1A, and a text-pattern pass over the
+  corpus found exactly that spurious pair three times.
+- The mapper keeps a partner only on a Structural Variation criterion, on a
+  real gene other than the criterion's own. Otherwise the partner moves to
+  `fusion_partner_unverified` and the criterion means any fusion of the gene.
+  When only the partner is on the panel, the two are swapped before the panel
+  filter runs. Without the swap, "USP9X-DDX3X" dropped the whole criterion,
+  DDX3X included.
+- `trial_genomic.tsv` gains `fusion_partner`, `fusion` ("EWSR1::FLI1") and
+  `fusion_partner_check`, and a pair of panel genes is emitted from both
+  sides.
+- CD276 (B7-H3) joins the expression-only genes. All 11 cached mentions are
+  IHC expression, and the new prompt had started emitting it as a genomic
+  criterion on NCT04897321.
+
+Measured with the production prompt on claude-haiku-4-5 over the 55
+reviewed trials, two replicates each at temperature 0; a third was cut off by
+the session's token limit. The new prompt names 36 pairs in 12 trials, every
+one a pair the trial's text names, and all pass the check. Gene-level F1
+(inclusion genes, counting a panel partner as published) is 0.601/0.606
+against the old prompt's 0.613/0.615, and at most 3 trials differ between
+replicates. The four trials that moved consistently account for the whole
+gap (net -0.66 F1 across 55 trials). The largest term is a genuine error:
+NCT06071897, -1.00, where the new prompt infers MYCN from "high-risk
+neuroblastoma" (doc/open_issues.md). Next is NCT05918640, -0.45, which lists
+example FET pairs "including but not limited to". The new output keeps the
+partner-free EWSR1, FUS and TAF15 rows beside those pairs, so no patient is
+lost there; that term comes from how partners are counted in the score.
+Against these, NCT03643276 gains +0.67 and NCT06177067 +0.12. Existing index output is unchanged,
+since no curated key carries a partner yet.
+
+## Index: every mapped trial, with its review status
+
+The index read one directory, by default `ctml/json`, a MatchMiner hand-off
+queue that empties itself after ingest. It now reads `cache/ctml` (mapped),
+`ctml/needs-review` and `ctml/reviewed`, a later copy of a trial replacing an
+earlier one, and `trials.tsv` records `review_status`, `reviewed` and
+`source_file`. That is the input set decided on 2026-09-23: every mapped
+trial is searchable, and a hit on an unreviewed one is marked as such. A
+single `--source` directory still works; it is reported as `reviewed` only
+if it is `ctml/reviewed`. A reviewed-only build is byte-identical to before.
+
+## Mapping: out-of-scope trials skipped, CLI fixes
+
+- `utils/oncology_scope.py` skips trials with no oncology term in their
+  conditions, keywords or titles at map time, and lists them with reasons in
+  `ctml/out-of-scope.tsv`. Every trial is still pulled.
+  `ref/scope_overrides.tsv` forces either decision per trial. On the current
+  cache this skips 84 of 1,255 trials (49 NCT, 35 CTIS), none of them
+  reviewed. The vocabulary covers the four false positives the first
+  measurement found, plus insulinoma. The official title is read because
+  conditions alone miss trials that name the procedure rather than the
+  disease: NCT05088226's only condition is "Peripheral Blood Stem Cell
+  Transplantation".
+- `map --source all` maps both registries. `map --out DIR` sets the output
+  directory, which defaults to the new `config.CTML_MAPPED_PATH`.
+  `--test_mode` writes to `cache/ctml_test/<date>_<model>` instead of a
+  hard-coded April path.
+- `sync_trials.sh` covers both registries (`SOURCE=nct` for one) and
+  rebuilds the index.
+- The CTIS bulk loop moved from `main.py` into
+  `TrialMapManager.map_all_ctis_trials`, which applies the same scope skip.
+
+## Mapping: protein changes checked, not pattern-filtered
+
+`_clean_protein_change_fields` kept a protein change only if it matched one
+of three one-letter patterns. Nonsense changes, three-letter forms,
+single-residue deletions, duplications, delins and frameshifts were removed
+silently, so a trial naming a specific variant matched every variant in the
+gene. It now uses `utils/protein_change.normalise`, and the value is kept as
+the trial wrote it when it verifies against the reference protein. A value
+that fails becomes `protein_change_unverified` with its reason, the trial
+goes to `ctml/needs-review`, and the index reports it in `protein_check`.
+The trailing-X wildcard convention is unchanged.
+
 ## New capability: protein changes published as checked HGVS
 
 Trials write protein changes in literature shorthand: `V600E`, `p.G12C`,

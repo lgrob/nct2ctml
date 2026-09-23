@@ -1,7 +1,11 @@
 #!/bin/bash
 
-# Sync trials from clinicaltrials.gov to CTML
-# Runs 'pull all' and 'map all' commands once and exits
+# Sync trials to CTML and rebuild the flat index.
+# Runs 'pull --all', 'map --all' and the index build once, then exits.
+#
+# SOURCE selects the registries: all (default), nct or ctis.
+#     SOURCE=nct ./sync_trials.sh
+SOURCE="${SOURCE:-all}"
 
 echo "========================================"
 echo "    NCT2CTML Trial Sync"
@@ -53,9 +57,9 @@ else
 fi
 
 # Run pull all
-echo "Step 1: Pulling trials from clinicaltrials.gov..."
-echo "Running: python main.py pull --all"
-python main.py pull --all
+echo "Step 1: Pulling trials (source: $SOURCE)..."
+echo "Running: python main.py pull --all --source $SOURCE"
+python main.py pull --all --source "$SOURCE"
 PULL_EXIT_CODE=$?
 
 if [ $PULL_EXIT_CODE -ne 0 ]; then
@@ -70,8 +74,8 @@ echo
 # Uses MAPPING_CUTOFF_DAYS days from config.py.
 # Maps the trials for which last_updated_date is within MAPPING_CUTOFF_DAYS days.
 echo "Step 2: Mapping trials to CTML..."
-echo "Running: python main.py map --all"
-python main.py map --all
+echo "Running: python main.py map --all --source $SOURCE"
+python main.py map --all --source "$SOURCE"
 MAP_EXIT_CODE=$?
 
 if [ $MAP_EXIT_CODE -ne 0 ]; then
@@ -80,6 +84,20 @@ if [ $MAP_EXIT_CODE -ne 0 ]; then
 fi
 
 echo "Trial mapping completed successfully"
+echo
+
+# Rebuild the index over mapped, needs-review and reviewed trials. Not
+# --strict: trials whose protein change failed its check are in the review
+# queue by design, and the index reports them in protein_check.
+echo "Step 3: Rebuilding the flat index..."
+echo "Running: python -m utils.build_trial_index"
+python -m utils.build_trial_index
+INDEX_EXIT_CODE=$?
+
+if [ $INDEX_EXIT_CODE -ne 0 ]; then
+    echo "ERROR: Index build failed with exit code $INDEX_EXIT_CODE"
+    exit $INDEX_EXIT_CODE
+fi
 echo
 echo "========================================"
 echo "Trial sync completed at $(date '+%Y-%m-%d %H:%M:%S')"

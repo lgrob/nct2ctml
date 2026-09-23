@@ -50,5 +50,26 @@ class TestReviewRouting(unittest.TestCase):
             TrialMapManager._destination_for(doc, "cache/ctml", "NCT4"), "cache/ctml")
 
 
+class TestUnverifiedProteinChangeRouting(unittest.TestCase):
+    def test_an_unverified_protein_change_goes_to_review(self):
+        normal = os.path.join(os.path.dirname(__file__), "ctml-out")
+        ctml = {"match": [{"and": [
+            {"clinical": {"oncotree_primary_diagnosis": "Melanoma"}},
+            {"genomic": {"hugo_symbol": "BRAF", "variant_category": "Mutation",
+                         "protein_change_unverified": "p.V601E",
+                         "protein_change_check": "reference_mismatch"}}]}]}
+        self.assertNotEqual(TrialMapManager._destination_for(ctml, normal, "NCT00000000"),
+                            normal)
+
+    def test_a_verified_protein_change_stays_in_the_normal_output(self):
+        normal = os.path.join(os.path.dirname(__file__), "ctml-out")
+        ctml = {"match": [{"and": [
+            {"clinical": {"oncotree_primary_diagnosis": "Melanoma"}},
+            {"genomic": {"hugo_symbol": "BRAF", "variant_category": "Mutation",
+                         "protein_change": "p.V600E"}}]}]}
+        self.assertEqual(TrialMapManager._destination_for(ctml, normal, "NCT00000000"),
+                         normal)
+
+
 if __name__ == '__main__':
     unittest.main()

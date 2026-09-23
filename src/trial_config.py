@@ -120,6 +120,7 @@ expression_only_genes = [
     'CD19',    # CAR-T target, flow cytometry
     'CD22',    # CAR-T target, flow cytometry
     'CD274',   # PD-L1; has its own pdl1_status field
+    'CD276',   # B7-H3; CAR-T/ADC target by IHC - all 11 cached mentions are expression
     'CTAG1B',  # NY-ESO-1; cancer-testis antigen for TCR therapy, IHC
     'HLA-A',   # TCR restriction, HLA typing rather than tumour sequencing
     'HLA-B',

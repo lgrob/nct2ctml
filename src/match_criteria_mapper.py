@@ -12,7 +12,8 @@ from loguru import logger
 import config
 import utils.aho_corasick as ac
 import src.trial_data_helper as tdh
-from utils.genomic_patterns import _ACCEPTABLE_PROTEIN_CHANGE_PATTERNS
+import utils.protein_change as pc
+import utils.reference_validation as rv
 from utils.reference_validation import filter_diagnoses, filter_genomic_criteria
 
 
@@ -75,13 +76,28 @@ Example shape:
 """
 
 
-def _clean_protein_change_fields(genomic_criteria: list) -> list:
+def _clean_protein_change_fields(genomic_criteria: list, trial_id: str = "") -> list:
     """
-    Clean up protein_change-related fields on genomic criteria in place.
+    Check each protein change against the gene's reference protein, in place.
 
-    - Drop protein_change when null/empty (do not emit `protein_change: null` in YAML).
-    - Remove protein_change fields that do not match any acceptable pattern.
-    - If protein_change ends with X/x (e.g. p.G719X), move it to wildcard_protein_change.
+    - A null or empty protein_change is removed, so YAML never serialises
+      `protein_change: null`.
+    - A trailing X is this repo's wildcard (EGFR "p.G719X" = any substitution
+      at Gly719) and moves to wildcard_protein_change, as before.
+    - Every other value is checked with utils.protein_change.normalise: it
+      must parse, and every residue it names must be the residue the MANE
+      Select protein carries there. A value that passes is kept exactly as
+      the trial wrote it; the index publishes the HGVS form.
+    - A value that fails moves to protein_change_unverified, with the reason
+      in protein_change_check. The criterion is then gene-level, which is
+      over-broad, and TrialMapManager._destination_for sends the trial to
+      review.
+
+    This replaces three one-letter regular expressions. They silently removed
+    every nonsense change (p.R213*), every three-letter form, single-residue
+    deletions, duplications, delins and frameshifts, so a trial naming a
+    specific variant quietly matched every variant in the gene, and a curator
+    had no way to see it had happened.
     """
     if not genomic_criteria:
         return genomic_criteria
@@ -100,18 +116,80 @@ def _clean_protein_change_fields(genomic_criteria: list) -> list:
             genomic.pop("protein_change", None)
             continue
 
-        protein_change_str = str(protein_change).strip()
-
-        # Handle wildcard protein changes, e.g. p.G719X
-        if protein_change_str.upper().endswith("X"):
-            genomic.pop("protein_change", None)
-            genomic["wildcard_protein_change"] = protein_change_str.strip("X")
+        stated = str(protein_change).strip()
+        result = pc.normalise(genomic.get("hugo_symbol", ""), stated)
+        if result.verified:
+            if stated.upper().endswith("X") and result.kind == "any_substitution":
+                genomic.pop("protein_change", None)
+                genomic["wildcard_protein_change"] = stated.rstrip("Xx")
             continue
 
-        # Remove incorrect protein_change values that do not match acceptable patterns
-        if not any(pattern.match(protein_change_str) for pattern in _ACCEPTABLE_PROTEIN_CHANGE_PATTERNS):
-            genomic.pop("protein_change", None)
+        genomic.pop("protein_change", None)
+        genomic["protein_change_unverified"] = stated
+        genomic["protein_change_check"] = result.status
+        logger.warning(
+            f"{trial_id} | {genomic.get('hugo_symbol')} protein change {stated!r} did not "
+            f"verify ({result.status}: {result.detail}); kept as protein_change_unverified, "
+            f"so the criterion is gene-level until a curator resolves it")
 
+    return genomic_criteria
+
+
+def _orient_fusions(genomic_criteria: list, trial_id: str = "") -> list:
+    """
+    Put the panel gene in hugo_symbol when only the fusion partner is on it.
+
+    The prompt asks for the first-named gene first, and trials name
+    "USP9X-DDX3X". USP9X is not a panel gene, so the panel filter that runs
+    next would drop the whole criterion and DDX3X with it. Swapping keeps
+    the criterion on the gene the lab reports. Runs before that filter.
+    """
+    for alteration in genomic_criteria or []:
+        genomic = alteration.get("genomic") if isinstance(alteration, dict) else None
+        if not isinstance(genomic, dict) or not genomic.get("fusion_partner"):
+            continue
+        gene, partner = genomic.get("hugo_symbol"), genomic["fusion_partner"]
+        if rv.canonical_gene(gene) is None and rv.canonical_gene(partner) is not None:
+            genomic["hugo_symbol"], genomic["fusion_partner"] = partner, gene
+            logger.info(f"{trial_id} | {gene}::{partner}: {gene} is off-panel, so the "
+                        f"criterion is written on {partner} with partner {gene}")
+    return genomic_criteria
+
+
+def _clean_fusion_partners(genomic_criteria: list, trial_id: str = "") -> list:
+    """
+    Check each fusion partner the model named, in place.
+
+    A partner is only meaningful on a Structural Variation criterion, and
+    must be a real gene other than the criterion's own (see
+    reference_validation.fusion_partner). A partner that passes is written
+    as its current symbol. One that fails is moved to
+    fusion_partner_unverified: the criterion stays, now meaning any fusion
+    of the gene - over-broad, the tolerable direction - and the index
+    reports why.
+    """
+    for alteration in genomic_criteria or []:
+        genomic = alteration.get("genomic") if isinstance(alteration, dict) else None
+        if not isinstance(genomic, dict) or "fusion_partner" not in genomic:
+            continue
+        stated = genomic.pop("fusion_partner")
+        if stated is None or not str(stated).strip() or str(stated).strip().lower() == "null":
+            continue
+        stated = str(stated).strip()
+        category = str(genomic.get("variant_category", "")).lstrip("!")
+        partner, status = rv.fusion_partner(stated)
+        if category != "Structural Variation":
+            problem = f"partner on a {category or 'blank'} criterion"
+        elif partner is None:
+            problem = "not a current gene symbol"
+        elif partner == genomic.get("hugo_symbol"):
+            problem = "same gene as the criterion"
+        else:
+            genomic["fusion_partner"] = partner
+            continue
+        genomic["fusion_partner_unverified"] = stated
+        logger.warning(f"{trial_id} | {genomic.get('hugo_symbol')} fusion partner {stated!r} "
+                       f"not kept ({problem}); the criterion means any fusion of the gene")
     return genomic_criteria
 
 
@@ -132,8 +210,10 @@ def _postprocess_genomic_criteria(genomic_criteria: list, trial_id: str = "") ->
     # symbols are brought up to date and unrecognised ones are dropped. Dropping
     # beats keeping: an invented symbol matches no patient, so it silently
     # narrows the arm rather than failing visibly.
+    genomic_criteria = _orient_fusions(genomic_criteria, trial_id)
     genomic_criteria = filter_genomic_criteria(genomic_criteria, trial_id)
-    genomic_criteria = _clean_protein_change_fields(genomic_criteria)
+    genomic_criteria = _clean_protein_change_fields(genomic_criteria, trial_id)
+    genomic_criteria = _clean_fusion_partners(genomic_criteria, trial_id)
 
     return genomic_criteria
 

@@ -29,6 +29,15 @@ Consequences worth knowing:
   `H3 K27-Altered` - so join on the code where you can.
 - `source_term` keeps the term the trial actually stated, so a match can be
   explained back to the curated file rather than to an expanded code.
+- A fusion criterion carries `fusion_partner` when the trial names both genes,
+  and `fusion` is the HGNC fusion notation ("EWSR1::FLI1", first-named gene
+  first). The row is emitted from both genes' sides - hugo_symbol EWSR1 with
+  partner FLI1, and hugo_symbol FLI1 with partner EWSR1 when FLI1 is a panel
+  gene - so a join works whichever gene the fusion caller reports first.
+  Match the pair unordered: trial text does not reliably give 5'/3' order.
+  An empty partner means any fusion of the gene. `fusion_partner_check`
+  says why a stated partner was not kept (utils/reference_validation.
+  fusion_partner), in which case the row means any fusion of the gene.
 - `protein_change` is HGVS three-letter notation on the gene's MANE Select
   protein ("p.Val600Glu"), the notation VEP writes in CSQ_HGVSp after the
   accession. It is filled only when `protein_check` is `verified`, meaning
@@ -46,7 +55,23 @@ output's checksum. That is what lets you say which trial set produced a given
 report, which a mutable database cannot without separate audit machinery.
 
 Usage:
-    python -m utils.build_trial_index [--source ctml/json] [--out index] [--strict]
+    python -m utils.build_trial_index [--out index] [--strict]
+        # every mapped trial, with review_status: cache/ctml (mapped), then
+        # ctml/needs-review, then ctml/reviewed, a later copy replacing an
+        # earlier one
+    python -m utils.build_trial_index --source ctml/reviewed
+        # one directory only; review_status is `reviewed` only for that one
+
+Input and review status
+-----------------------
+By default the index covers every trial the pipeline has mapped, not just the
+reviewed ones, so a patient can be screened against the whole corpus from
+the first full run. `trials.tsv` says what each trial's criteria are worth:
+`review_status` is `reviewed` (a curator signed it off), `needs_review` (the
+mapper flagged it: no diagnosis, or a protein change that failed its check)
+or `mapped` (machine output nobody has read), with `reviewed` as 0/1 and
+`source_file` naming the file the rows came from. A hit on an unreviewed
+trial is a lead for a curator, not a finding; route it accordingly.
 """
 import argparse
 from collections import Counter
@@ -67,7 +92,7 @@ from loguru import logger
 import config
 from utils import protein_change
 from utils.oncotree import get_all_oncotree_data, get_lineage
-from utils.reference_validation import _oncotree
+from utils.reference_validation import _oncotree, canonical_gene, fusion_partner
 
 # MatchMiner's wildcards are not Oncotree nodes, so they are defined here
 # rather than looked up. Everything haematological is liquid and everything
@@ -84,10 +109,20 @@ DIAGNOSIS_COLUMNS = ["trial_id", "arm_code", "oncotree_code", "oncotree_name",
 GENOMIC_COLUMNS = ["trial_id", "arm_code", "hugo_symbol", "variant_category",
                    "cnv_call", "protein_change", "protein_change_stated",
                    "protein_change_kind", "protein_refseq", "protein_ensembl",
-                   "protein_check", "variant_classification", "include"]
+                   "protein_check", "fusion_partner", "fusion", "fusion_partner_check",
+                   "variant_classification", "include"]
 TRIAL_COLUMNS = ["trial_id", "source", "nct_id", "protocol_no", "short_title",
-                 "phase", "status", "age_label", "age_min", "age_min_inclusive",
+                 "phase", "status", "review_status", "reviewed", "source_file",
+                 "age_label", "age_min", "age_min_inclusive",
                  "age_max", "age_max_inclusive", "n_diagnosis_codes", "n_genes"]
+
+# Input layers, lowest precedence first. The status says what a row is worth:
+# `reviewed` was signed off by a curator, `needs_review` is machine output the
+# mapper itself flagged (no diagnosis, or a protein change that failed its
+# reference check), `mapped` is machine output nobody has looked at yet.
+DEFAULT_LAYERS = [(config.CTML_MAPPED_PATH, "mapped"),
+                  (config.CTML_REVIEW_PATH, "needs_review"),
+                  (config.CTML_REVIEWED_PATH, "reviewed")]
 
 
 def _name_to_code():
@@ -193,8 +228,11 @@ def _parse_age_bounds(values):
 
 
 def _read_trials(source_dir):
-    """Every CTML file in `source_dir`, as (trial_id, dict), name-sorted."""
+    """Every CTML file in `source_dir`, as (trial_id, dict, path), name-sorted."""
     trials = []
+    if not os.path.isdir(source_dir):
+        logger.warning(f"{source_dir} does not exist; contributing no trials")
+        return trials
     for filename in sorted(os.listdir(source_dir)):
         stem, extension = os.path.splitext(filename)
         if extension not in (".json", ".yaml", ".yml"):
@@ -202,8 +240,54 @@ def _read_trials(source_dir):
         path = os.path.join(source_dir, filename)
         with open(path) as handle:
             trials.append((stem, json.load(handle) if extension == ".json"
-                           else yaml.safe_load(handle)))
+                           else yaml.safe_load(handle), path))
     return trials
+
+
+def _layers(source):
+    """
+    [(directory, review_status)] from a directory, a list of layers, or None.
+
+    A single directory is one layer. It counts as `reviewed` only when it is
+    the reviewed directory itself; anything else is `mapped`, because a
+    status that cannot be established must not be reported as review.
+    """
+    if source is None:
+        return list(DEFAULT_LAYERS)
+    if isinstance(source, str):
+        reviewed = os.path.realpath(source) == os.path.realpath(config.CTML_REVIEWED_PATH)
+        return [(source, "reviewed" if reviewed else "mapped")]
+    return list(source)
+
+
+def _collect(layers):
+    """{trial_id: (trial, path, status)}: later layers replace earlier ones."""
+    chosen = {}
+    for directory, status in layers:
+        for trial_id, trial, path in _read_trials(directory):
+            if trial_id in chosen:
+                logger.debug(f"{trial_id} | {status} copy in {directory} replaces "
+                             f"the {chosen[trial_id][2]} copy")
+            chosen[trial_id] = (trial, path, status)
+    return dict(sorted(chosen.items()))
+
+
+def _fusion_fields(leaf):
+    """fusion_partner, fusion ("A::B") and fusion_partner_check for one leaf."""
+    partner = leaf.get("fusion_partner") or ""
+    unverified = leaf.get("fusion_partner_unverified") or ""
+    gene = leaf.get("hugo_symbol") or ""
+    if partner:
+        # Re-checked here too: curated YAML never passed through the mapper.
+        resolved, status = fusion_partner(partner)
+        if resolved and resolved != gene:
+            return {"fusion_partner": resolved, "fusion": f"{gene}::{resolved}",
+                    "fusion_partner_check": status}
+        unverified = partner
+    if unverified:
+        return {"fusion_partner": "", "fusion": "",
+                "fusion_partner_check": f"unverified: {unverified}"}
+    return {"fusion_partner": "", "fusion": "", "fusion_partner_check": ""}
 
 
 def index_trial(trial_id, trial, descendants, solid, liquid, name_to_code):
@@ -224,11 +308,21 @@ def index_trial(trial_id, trial, descendants, solid, liquid, name_to_code):
                 "hugo_symbol": leaf.get("hugo_symbol") or "",
                 "variant_category": category.lstrip("!"),
                 "cnv_call": leaf.get("cnv_call") or "",
+                # An unverified change is carried so the index reports it
+                # (protein_check) instead of silently publishing a gene-level row.
                 "protein_change": leaf.get("protein_change")
-                                  or leaf.get("wildcard_protein_change") or "",
+                                  or leaf.get("wildcard_protein_change")
+                                  or leaf.get("protein_change_unverified") or "",
                 "variant_classification": leaf.get("variant_classification") or "",
                 "include": 0 if category.startswith("!") else 1,
+                **_fusion_fields(leaf),
             })
+            partner = genomics[-1]["fusion_partner"]
+            # The same fusion seen from the partner's side, when the panel
+            # reports the partner: joins then work whichever gene comes first.
+            if partner and canonical_gene(partner) == partner:
+                genomics.append(dict(genomics[-1], hugo_symbol=partner,
+                                     fusion_partner=genomics[-1]["hugo_symbol"]))
 
     for step in (trial.get("treatment_list") or {}).get("step") or []:
         _walk(step.get("match"), on_leaf)
@@ -307,15 +401,22 @@ def _normalise_protein_changes(genomic_rows):
     return dict(sorted(counts.items()))
 
 
-def build(source_dir, out_dir, strict=False):
+def build(source=None, out_dir="index", strict=False):
+    """
+    Build the index. `source` is None (the default layers), one directory,
+    or a list of (directory, review_status) layers, lowest precedence first.
+    """
+    layers = _layers(source)
     _, _, descendants = get_lineage()
     solid, liquid = _basket_members()
     name_to_code = _name_to_code()
 
     trial_rows, diagnosis_rows, genomic_rows = [], [], []
-    for trial_id, trial in _read_trials(source_dir):
+    for trial_id, (trial, path, status) in _collect(layers).items():
         trial_row, diagnoses, genomics = index_trial(
             trial_id, trial, descendants, solid, liquid, name_to_code)
+        trial_row.update(review_status=status, reviewed=int(status == "reviewed"),
+                         source_file=path)
         if not diagnoses:
             # Mirrors trial_map_manager._destination_for: a trial with no
             # diagnosis would match every sample, so it is indexed but flagged
@@ -346,7 +447,8 @@ def build(source_dir, out_dir, strict=False):
 
     manifest = {
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "source_dir": source_dir,
+        "layers": [{"directory": d, "review_status": s} for d, s in layers],
+        "review_status": dict(sorted(Counter(r["review_status"] for r in trial_rows).items())),
         "trials": len(trial_rows),
         "oncotree_file": config.ONCOTREE_TXT_FILE_PATH,
         "oncotree_sha256": _sha256(config.ONCOTREE_TXT_FILE_PATH),
@@ -373,15 +475,16 @@ def _sha256(path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--source", default="ctml/json",
-                        help="directory of curated CTML files (.json/.yaml)")
+    parser.add_argument("--source", default=None,
+                        help="a single directory of CTML files (.json/.yaml); default: "
+                             "the mapped, needs-review and reviewed layers from config.py")
     parser.add_argument("--out", default="index", help="output directory")
     parser.add_argument("--strict", action="store_true",
                         help="fail if any protein change does not match its reference protein")
     args = parser.parse_args()
 
     manifest = build(args.source, args.out, strict=args.strict)
-    print(f"Indexed {manifest['trials']} trials from {args.source}")
+    print(f"Indexed {manifest['trials']} trials: {manifest['review_status']}")
     for name, info in manifest["outputs"].items():
         print(f"  {name:22} {info['rows']:>7,} rows")
     print(f"  manifest.json          oncotree {manifest['oncotree_sha256'][:12]}")

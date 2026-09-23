@@ -105,6 +105,17 @@ LLM_AI_MODEL = "llama3.3:70b"
 # opening it cannot tell a colleague's draft from machine output that failed to
 # find a diagnosis. Those need opposite kinds of attention.
 CTML_REVIEW_PATH = "ctml/needs-review"
+# Where `main.py map` writes machine output, and where curator-signed trials
+# live. The flat index reads mapped, then needs-review, then reviewed; a later
+# layer replaces an earlier one for the same trial (utils/build_trial_index.py).
+CTML_MAPPED_PATH = "cache/ctml"
+CTML_REVIEWED_PATH = "ctml/reviewed"
+# Bulk mapping skips trials with no oncology term (utils/oncology_scope.py).
+# Mapping a single trial by id never skips. Per-trial decisions go in the
+# overrides file; the skipped trials are listed, with reasons, in the report.
+SKIP_OUT_OF_SCOPE_AT_MAP = True
+SCOPE_OVERRIDES_FILE_PATH = "ref/scope_overrides.tsv"
+SCOPE_REPORT_FILE_PATH = "ctml/out-of-scope.tsv"
 
 ONCOTREE_TXT_FILE_PATH = "ref/oncotree_file.txt"
 # The gene reference, in the three roles it actually plays.
@@ -121,6 +132,11 @@ GENE_SYNONYM_ADDENDUM_FILE_PATH = "ref/gene_synonym_addendum.tsv"
 # MANE Select protein sequences every trial protein change is checked
 # against (utils/protein_change.py); built by utils/build_protein_reference.py.
 PROTEIN_REFERENCE_FILE_PATH = "ref/mane_select_proteins.tsv"
+# Every gene with a MANE Select transcript, symbol and HGNC id. Not an
+# accept-list for hugo_symbol (that is the panel); it validates fusion
+# partners, which are often off-panel (RUNX1T1, SET) yet reported by the
+# fusion caller. Built by the same script as the protein reference.
+MANE_GENES_FILE_PATH = "ref/mane_genes.tsv"
 # Registry disease spellings that folding cannot reach - lineage decisions,
 # WHO reclassifications and registry house style. See the header of the file
 # itself for what belongs in it and what does not.

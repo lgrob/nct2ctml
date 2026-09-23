@@ -349,6 +349,47 @@ def canonical_gene(symbol):
     return _gene_aliases().get(symbol)
 
 
+# Rearranging immunoglobulin and T-cell receptor loci. They are HGNC symbols
+# (IGH is HGNC:5477) and common fusion partners (IGH::CRLF2, IGH::MYC), but
+# a locus has no MANE transcript, so ref/mane_genes.tsv cannot list them.
+FUSION_PARTNER_LOCI = frozenset({"IGH", "IGK", "IGL", "TRA", "TRB", "TRG", "TRD"})
+
+
+@lru_cache(maxsize=1)
+def _mane_genes():
+    with open(config.MANE_GENES_FILE_PATH) as handle:
+        rows = [line.rstrip("\n").split("\t") for line in handle if not line.startswith("#")]
+    return frozenset(row[0] for row in rows[1:] if row and row[0])
+
+
+def fusion_partner(symbol):
+    """
+    (symbol, status) for a fusion partner named by a trial.
+
+    A partner need not be on the panel: RUNX1::RUNX1T1 is reported by the
+    fusion caller although RUNX1T1 is not a panel gene. So the order is:
+    a panel gene or its alias (as canonical_gene), then any current symbol
+    with a MANE Select transcript, then the immunoglobulin/TCR loci. Only
+    exact symbols are accepted off-panel - the alias table covers the panel
+    alone, and guessing an alias across 19,000 genes is how "CAR" (as in
+    CAR-T) would become PRKAR1A.
+
+    status is "panel", "off_panel", "locus", or "unknown" with symbol None.
+    """
+    if not symbol:
+        return None, "unknown"
+    on_panel = canonical_gene(symbol)
+    if on_panel:
+        return on_panel, "panel"
+    token = str(symbol).strip()
+    for candidate in (token, token.upper()):
+        if candidate in _mane_genes():
+            return candidate, "off_panel"
+        if candidate in FUSION_PARTNER_LOCI:
+            return candidate, "locus"
+    return None, "unknown"
+
+
 def filter_diagnoses(diagnoses, trial_id=""):
     """Canonicalise a list of diagnoses, dropping unknown terms. Order-stable."""
     kept, seen = [], set()

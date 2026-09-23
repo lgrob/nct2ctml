@@ -30,6 +30,17 @@ Sheath Tumors"), a diagnosis with a fusion appended ("Acute Promyelocytic
 Leukemia With PML-RARA"), and conditions that are not diagnoses at all.
 
 ### The corpus contains non-oncology trials
+
+**Addressed 2026-09-23** in the reversible form recommended below:
+`utils/oncology_scope.py` skips out-of-scope trials at *map* time, lists
+them with reasons in `ctml/out-of-scope.tsv`, and honours per-trial
+overrides in `ref/scope_overrides.tsv`. With conditions, keywords and both
+titles, 84 of 1,255 cached trials are skipped (49 NCT, 35 CTIS), and none of
+the 55 reviewed trials is among them. The four false positives listed below
+are in scope; the supportive-care, predisposition, vascular-anomaly and
+amyloidosis classes are out, which is a policy choice recorded in the
+module docstring and reversible per trial.
+
 `query.cond` is a search, not a field filter. ClinicalTrials.gov matches those
 terms anywhere in the record, so a trial whose exclusion criteria say "no
 history of cancer" is pulled. NCT00929006 is an endocrinology study of
@@ -181,6 +192,21 @@ file `_LIQUID_` mapped to an empty list - which the engine turns into
 
 ### Stage 2 over-generates, and that is where the diagnosis score is
 
+**Replay harness built, experiment incomplete (2026-09-23).** A replay of
+stage 1 + 2 over the 50 NCT trials on claude-haiku-4-5 (temperature 1.0,
+commit bec9223) finished one complete baseline replicate before the session's
+model-token ceiling stopped it; the harness, response cache and report are
+kept outside the repo (stage2_harness.tar.gz, stage2_report.md). Baseline:
+population P 0.799 / R 0.927, name F1 0.724, 313 diagnoses against 155
+curated, 8 trials over 3x. Provisional, on partial arms, one replicate:
+a per-term verification pass (arm 3 above) raised name precision by 0.04 with
+recall flat at 1.31x tokens but did not fix the worst trials; shrinking to
+the seed's own subtree lost Ganglioneuroblastoma on neuroblastoma trials
+(recall 0.927 -> 0.889), so the floor must include sibling branches;
+shrinking to the level-2 subtree looked best (name F1 0.847 vs 0.812, one
+trial over 3x) but on a skewed 22-29 trial subset. None of this beats the
+spread until replicates 2-3 run: about 1.8M tokens per five-arm replicate.
+
 Measured on the 2026-09-15 run (llama3.3:70b, 50 trials): diagnosis **recall
 0.775, precision 0.598**. Eleven trials emit **232 diagnoses against 39
 curated** - 55 against 2, 45 against 12, 32 against 10, 28 against 4. The
@@ -292,19 +318,40 @@ were read: each describes a basket. NCT02332668 stays short of 1.00 because
 its rule yields `_SOLID_` alone, and its "lymphoma" arm is covered only by
 the Classical Hodgkin Lymphoma it names.
 
-### The mapper drops protein changes the index could now check
+### The gene scan misses genes written in fusion notation
 
-`match_criteria_mapper._clean_protein_change_fields` keeps a protein change
-only if it matches one of three one-letter patterns: substitution,
-deletion range, insertion range. Anything else is removed silently: nonsense
-(`p.R213*`), three-letter code, single-residue deletions, duplications,
-delins, frameshifts. The criterion is not lost; it becomes gene-level, which
-is over-broad, the tolerable direction. But a trial that names a specific
-variant then matches every variant in the gene. `utils/protein_change.py`
-handles all of those forms and checks them against the reference, so the
-mapper could use it instead of the patterns and send failures to review.
-Not changed yet: the curated corpus has no example, and the change moves
-output on the next full mapping run.
+`TrialCriteriaToGenes` finds the gene names in a trial's text and hands them
+to the model as the "possible GeneList". On the 55 reviewed trials it misses
+curated genes in 12, most of them written as fusions or in lists: TCF3 and
+KMT2A in NCT05366218, DEK/NUP214/PICALM/MLLT10 in NCT06177067, six AML genes
+in NCT07012447. The model usually recovers them anyway (prompt rule 4 lets it
+go beyond the list). A "the gene must appear in the scan" gate was measured
+on the saved outputs of both prompt versions (claude-haiku-4-5, 55 trials).
+It drops about two wrong genes for every correct one: 28 wrong and 13
+correct on the old prompt, 17 wrong and 11 correct on the new one. Net F1
+barely moves (0.614 -> 0.617 and 0.582 -> 0.587), and recall falls slightly.
+It is not adopted, because the correct genes it drops are real criteria
+lost silently: TCF3, KMT2A, DEK and PICALM in fusion-defined leukaemia
+trials. Fixing the scan's tokenisation of `A-B`, `A::B` and `A/B` would
+remove most of those losses and make the gate worth revisiting.
+
+### Cytogenetic translocations are not turned into fusion pairs
+
+Prompt rule 9 tells the model not to derive genes from notation such as
+t(9;22), and it does not. 31 of 924 cached NCT trials state a translocation,
+most often t(9;22), t(1;19), t(4;11) and t(17;19). A curated table
+(`ref/translocation_fusions.tsv`, each row with its reason, like
+`ref/diagnosis_synonyms.tsv`) mapping the unambiguous ones to their pair
+would let a deterministic step add the partner. Ambiguous ones, such as
+t(X;18) (SS18 with SSX1, SSX2 or SSX4), should stay gene-level.
+
+### The fusion rule made the model infer one gene from a disease name
+
+With prompt rule 9, NCT06071897 (high-risk neuroblastoma, no gene named in
+its inclusion text) gained `MYCN` in both replicates. That is the
+disease-to-gene inference rule 7 forbids. It is one trial of 55 and the only
+consistent regression left after the fixes in CHANGES.md, but it is the kind
+the next full run should be checked for.
 
 ### Off-panel fusion partners are dropped, and that is correct
 

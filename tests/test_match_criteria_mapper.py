@@ -428,6 +428,38 @@ class TestCleanProteinChangeFields(unittest.TestCase):
         result = _clean_protein_change_fields(criteria)
         self.assertEqual(result[0]["genomic"]["protein_change"], "p.G12C")
 
+    def _one(self, gene, change):
+        return _clean_protein_change_fields(
+            [{"genomic": {"hugo_symbol": gene, "variant_category": "Mutation",
+                          "protein_change": change}}], "NCT00000000")[0]["genomic"]
+
+    def test_forms_the_old_patterns_dropped_are_now_kept(self):
+        # Each of these used to be removed silently, leaving a gene-level row.
+        for gene, change in (("TP53", "p.R213*"), ("BRAF", "p.Val600Glu"),
+                             ("EGFR", "p.E746del"), ("APC", "p.R1450fs"),
+                             ("EGFR", "p.E746_S752delinsV")):
+            genomic = self._one(gene, change)
+            self.assertEqual(genomic.get("protein_change"), change, genomic)
+            self.assertNotIn("protein_change_unverified", genomic)
+
+    def test_wildcard_still_moves_to_wildcard_field(self):
+        genomic = self._one("EGFR", "p.G719X")
+        self.assertEqual(genomic.get("wildcard_protein_change"), "p.G719")
+        self.assertNotIn("protein_change", genomic)
+
+    def test_a_wrong_reference_residue_is_kept_visible_not_dropped(self):
+        genomic = self._one("BRAF", "p.V601E")
+        self.assertNotIn("protein_change", genomic)
+        self.assertEqual(genomic["protein_change_unverified"], "p.V601E")
+        self.assertEqual(genomic["protein_change_check"], "reference_mismatch")
+
+    def test_unparseable_is_kept_visible(self):
+        genomic = self._one("BRAF", "V600E/K")
+        self.assertEqual(genomic["protein_change_check"], "unparsed")
+
+    def test_histone_literature_numbering_verifies(self):
+        self.assertEqual(self._one("H3-3A", "p.K27M").get("protein_change"), "p.K27M")
+
 
 class TestContradictoryGenomicCriteria(unittest.TestCase):
     """

@@ -252,5 +252,49 @@ class TestProteinChanges(unittest.TestCase):
                          ("p.Val600Glu", "ENSP00000493543.1"))
 
 
+class TestLayers(unittest.TestCase):
+    """The index covers every mapped trial and says which ones were reviewed."""
+
+    @staticmethod
+    def _dir(*trials):
+        d = tempfile.mkdtemp()
+        for trial_id, term in trials:
+            doc = {"nct_id": trial_id, "treatment_list": {"step": [{"match": [
+                {"clinical": {"oncotree_primary_diagnosis": term}}]}]}}
+            with open(os.path.join(d, f"{trial_id}.json"), "w") as handle:
+                json.dump(doc, handle)
+        return d
+
+    def _trials(self, layers):
+        out = tempfile.mkdtemp()
+        manifest = build(layers, out)
+        with open(os.path.join(out, "trials.tsv")) as handle:
+            rows = {r["trial_id"]: r for r in csv.DictReader(handle, delimiter='\t')}
+        with open(os.path.join(out, "trial_diagnosis.tsv")) as handle:
+            dx = [r for r in csv.DictReader(handle, delimiter='\t')]
+        return manifest, rows, dx
+
+    def test_a_reviewed_copy_replaces_the_mapped_one(self):
+        mapped = self._dir(("NCT1", "Melanoma"), ("NCT2", "Neuroblastoma"))
+        reviewed = self._dir(("NCT1", "Osteosarcoma"))
+        manifest, rows, dx = self._trials([(mapped, "mapped"), (reviewed, "reviewed")])
+        self.assertEqual((rows["NCT1"]["review_status"], rows["NCT1"]["reviewed"]), ("reviewed", "1"))
+        self.assertEqual((rows["NCT2"]["review_status"], rows["NCT2"]["reviewed"]), ("mapped", "0"))
+        nct1 = {r["source_term"] for r in dx if r["trial_id"] == "NCT1"}
+        self.assertEqual(nct1, {"Osteosarcoma"})
+        self.assertEqual(manifest["review_status"], {"mapped": 1, "reviewed": 1})
+
+    def test_a_single_directory_is_reviewed_only_if_it_is_the_reviewed_one(self):
+        _, rows, _ = self._trials(self._dir(("NCT1", "Melanoma")))
+        self.assertEqual(rows["NCT1"]["review_status"], "mapped")
+        _, rows, _ = self._trials(REVIEWED)
+        self.assertEqual({r["review_status"] for r in rows.values()}, {"reviewed"})
+
+    def test_a_missing_layer_contributes_nothing_rather_than_failing(self):
+        _, rows, _ = self._trials([("/nonexistent/dir", "mapped"),
+                                   (self._dir(("NCT1", "Melanoma")), "reviewed")])
+        self.assertEqual(list(rows), ["NCT1"])
+
+
 if __name__ == '__main__':
     unittest.main()

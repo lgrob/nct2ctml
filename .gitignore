@@ -49,3 +49,6 @@ index/
 # Benchmark outputs (bench/benchmark_map.py --out). Regenerated per run;
 # the scored summary is bench/report.json.
 bench/output*/
+
+# Regenerated from the (untracked) cache by utils/oncology_scope.py and map --all.
+ctml/out-of-scope.tsv

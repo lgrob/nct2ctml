@@ -5,6 +5,7 @@
 
 from loguru import logger
 import argparse
+import os
 
 def main():
     parser = argparse.ArgumentParser(
@@ -109,19 +110,27 @@ Examples:
     )
     
     map_parser.add_argument(
+        '--out',
+        metavar='DIR',
+        default=None,
+        help="Where to write mapped CTML (default: CTML_MAPPED_PATH in config.py, which "
+             "the flat index reads). Use a scratch directory for development runs."
+    )
+    map_parser.add_argument(
         '--test_mode',
         nargs='?',
         const=True,
         default=False,
         metavar='TEST_MODE',
-        help='Enable test mode for mapping (e.g., map a small subset of trials for testing purposes). Use --test_mode or --test_mode true/false.'
+        help="Development run: write to cache/ctml_test/<date>_<model> instead of the "
+             "mapped output, so it never reaches the index. --out takes precedence."
     )
     
     map_parser.add_argument(
         '--source',
-        choices=['nct', 'ctis'],
+        choices=['nct', 'ctis', 'all'],
         default='nct',
-        help="Which registry to map from when using --all (default: nct)."
+        help="Which registry to map from when using --all: nct (default), ctis, or all."
     )
 
     # Add cutoff days option for map --all
@@ -154,15 +163,24 @@ Examples:
         if isinstance(test_mode, str):
             test_mode = test_mode.lower() in ('true', '1', 'yes')
         
-        if test_mode:
-            ctml_files_path = "cache/ctml_test/20260428/gemma4_31B"
+        import config
+        if args.out:
+            ctml_files_path = args.out
+        elif test_mode:
+            # Dated and named after the model, so development runs never
+            # overwrite each other or land in the directory the index reads.
+            from datetime import date
+            model = str(getattr(config, 'LLM_AI_MODEL', 'model')).replace('/', '_').replace(':', '_')
+            ctml_files_path = os.path.join('cache', 'ctml_test', f"{date.today():%Y%m%d}_{model}")
         else:
-            ctml_files_path = "cache/ctml/"
+            ctml_files_path = config.CTML_MAPPED_PATH
+        os.makedirs(ctml_files_path, exist_ok=True)
+        logger.info(f"Writing mapped CTML to {ctml_files_path}")
         if args.all:
-            if args.source == 'ctis':
-                map_all_ctis(ctis_files_path, ctml_files_path, args)
-            else:
+            if args.source in ('nct', 'all'):
                 map_all(nct_files_path, ctml_files_path, args)
+            if args.source in ('ctis', 'all'):
+                map_all_ctis(ctis_files_path, ctml_files_path, args)
         elif args.ct_number:
             map_ctis(args.ct_number, ctis_files_path, ctml_files_path)
         else:
@@ -178,16 +196,10 @@ def map_ctis(ct_number, ctis_files_path, ctml_files_path):
 
 def map_all_ctis(ctis_files_path, ctml_files_path, args):
     """Map every cached CTIS trial to CTML."""
-    import os
     from src.trial_map_manager import TrialMapManager
-    manager = TrialMapManager()
-    numbers = sorted(f[:-5] for f in os.listdir(ctis_files_path) if f.endswith('.json'))
-    done = failed = 0
-    for n, ct in enumerate(numbers, 1):
-        ok = manager.map_single_ctis_trial(ct, ctis_files_path, ctml_files_path)
-        done, failed = done + bool(ok), failed + (not ok)
-        print(f"  [{n}/{len(numbers)}] {ct}: {'ok' if ok else 'FAILED'}")
-    print(f"\nmapped {done}, failed {failed}")
+    result = TrialMapManager().map_all_ctis_trials(ctis_files_path, ctml_files_path)
+    print(f"\nmapped {result['processed']}, failed {result['failed']}, "
+          f"out of scope {result['skipped']}")
 
 
 def pull_all():

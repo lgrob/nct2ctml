@@ -729,6 +729,9 @@ GENOMIC_CRITERIA_SCHEMA = {
                         ],
                     },
                     "protein_change": {"type": "string"},
+                    # The other gene of a named fusion (EWSR1::FLI1 -> FLI1).
+                    # Absent means any fusion of hugo_symbol qualifies.
+                    "fusion_partner": {"type": "string"},
                     # Kept from utils/schema.py's trial_genomic_json_schema,
                     # which declared these and was never wired to anything.
                     # Omitting them here silently removed the model's ability
@@ -778,6 +781,7 @@ def get_inclusion_genomic_criteria_prompt(genes, inclusion_criteria):
     6. Do not infer or add genes from disease names, cancer types, histologies, syndromes, or other conditions. Only include genes that are explicitly mentioned in the criteria text itself.
     7. Do not use known disease-to-gene associations to guess a gene when the gene name is not written in the criteria. For example, do not infer BRCA1/2 from "breast cancer", KRAS/BRAF from "colorectal cancer", or EGFR from "glioblastoma" unless the gene name is explicitly present.
     8. Output should be a list of dictionaries with each genetic alteration under a separate "genomic" key, as in the provided example. No wrapper objects, no extra keys or explanation.
+    9. When the criteria name a specific fusion by BOTH genes (e.g. "EWSR1-FLI1", "BCR::ABL1", "KMT2A rearranged with AFF1"), return ONE "Structural Variation" entry with the first-named gene in "hugo_symbol" and the other in "fusion_partner". When only one gene is named ("NTRK1 rearrangement", "any KMT2A fusion"), omit "fusion_partner". Do not derive genes from cytogenetic notation such as t(9;22) unless the genes are also written.
     
     *CRITICAL RULE:** If the `EligibilityCriteria` only mentions a gene or variant **in the context of a patient *receiving treatment* for it** (e.g., "Have received prior treatment with any KRAS G12C", "currently on EGFR TKI therapy"), you must **EXCLUDE that gene/variant from the output entirely.**
     Only include genetic states that are direct reasons for inclusion (e.g., "patients *with* a BRAF V600E mutation are included").

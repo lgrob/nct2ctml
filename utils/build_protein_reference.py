@@ -62,6 +62,17 @@ def _fasta(path):
     return sequences
 
 
+def _write_gene_list(genes, release, summary_path, out=None):
+    """ref/mane_genes.tsv: symbol and HGNC id of every MANE Select gene."""
+    out = out or config.MANE_GENES_FILE_PATH
+    with open(out, "w") as handle:
+        handle.write(f"# MANE Select GRCh38 v{release}: every gene, symbol and HGNC id.\n")
+        handle.write(f"# source {os.path.basename(summary_path)} sha256 {_sha256(summary_path)}\n")
+        handle.write("symbol\thgnc_id\n")
+        for symbol in sorted(genes):
+            handle.write(f"{symbol}\t{genes[symbol]}\n")
+
+
 def build(release, source_dir, out=OUT):
     paths = []
     for template in FILES:
@@ -76,13 +87,15 @@ def build(release, source_dir, out=OUT):
 
     wanted = gene_symbols()
     panel = config.GENE_LIST_FILE_PATH
-    select = {}
+    select, every_gene = {}, {}
     with gzip.open(summary_path, "rt") as handle:
         header = handle.readline().lstrip("#").rstrip("\n").split("\t")
         for line in handle:
             row = dict(zip(header, line.rstrip("\n").split("\t")))
             if row["MANE_status"] == "MANE Select":
                 select[row["symbol"]] = row
+                every_gene[row["symbol"]] = row["HGNC_ID"]
+    _write_gene_list(every_gene, release, summary_path)
     # Non-coding genes (PVT1, TERC, ...) have a MANE transcript but no
     # protein, so no protein change can be checked against them.
     noncoding = sorted(s for s in wanted if s in select and not select[s]["RefSeq_prot"])

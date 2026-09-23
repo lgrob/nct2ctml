@@ -1,0 +1,5 @@
+# Per-trial overrides of utils/oncology_scope.py's in-scope decision.
+# decision is "map" (map it even though no oncology term was found) or
+# "skip" (do not map it even though one was). Give the reason; it is shown in
+# the log and in ctml/out-of-scope.tsv.
+trial_id	decision	reason

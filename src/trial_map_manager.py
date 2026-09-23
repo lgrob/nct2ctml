@@ -18,6 +18,8 @@ import src.clinical_trials_gov as ctg
 import src.ctis as ctis
 import src.trial_data_helper as tdh
 import utils.reference_validation as rv
+import utils.oncology_scope as scope
+import config
 
 
 class TrialMapManager:
@@ -183,6 +185,8 @@ class TrialMapManager:
         
         processed_count = 0
         skipped_count = 0
+        out_of_scope = []
+        scope_overrides = scope.load_overrides() if config.SKIP_OUT_OF_SCOPE_AT_MAP else {}
         
         for file_name in os.listdir(nct_files_path):
             if os.path.isfile(os.path.join(nct_files_path, file_name)) and file_name.endswith('.json'):
@@ -204,10 +208,17 @@ class TrialMapManager:
                     continue
                 
                 try:
+                    trial_data = tdh.read_from_file(nct_files_path, nct_id, 'json')
+                    if config.SKIP_OUT_OF_SCOPE_AT_MAP:
+                        in_scope, why = scope.assess(nct_id, trial_data, "nct", scope_overrides)
+                        if not in_scope:
+                            logger.info(f"Skipping NCT ID: {nct_id} - out of scope: {why}")
+                            out_of_scope.append((nct_id, "nct", why))
+                            skipped_count += 1
+                            continue
+
                     logger.info(f"Mapping NCT ID: {nct_id}")   
                     logger.info("-----------------------")
-                    
-                    trial_data = tdh.read_from_file(nct_files_path, nct_id, 'json')
                     
                     # Map to CTML format
                     mapped_ctml = ctg.map_nct_to_ctml(trial_data, gene_synonym_mapping)
@@ -258,6 +269,10 @@ class TrialMapManager:
                 except Exception as ex:
                     logger.error(f"nct_id: {nct_id} | Unexpected {ex=}, {type(ex)=}")
         
+        if config.SKIP_OUT_OF_SCOPE_AT_MAP:
+            scope.write_report(out_of_scope, config.SCOPE_REPORT_FILE_PATH, registry="nct")
+            logger.info(f"{len(out_of_scope)} trials out of scope, listed in "
+                        f"{config.SCOPE_REPORT_FILE_PATH}")
         logger.info(f"Mapping completed. Processed: {processed_count}, Skipped: {skipped_count}")
         
         return {
@@ -265,6 +280,31 @@ class TrialMapManager:
             'skipped': skipped_count
         }
     
+    def map_all_ctis_trials(self, ctis_files_path: str, ctml_files_path: str) -> Dict[str, int]:
+        """Map every cached CTIS trial, skipping out-of-scope ones as for NCT."""
+        numbers = sorted(f[:-5] for f in os.listdir(ctis_files_path) if f.endswith('.json'))
+        overrides = scope.load_overrides() if config.SKIP_OUT_OF_SCOPE_AT_MAP else {}
+        out_of_scope, done, failed = [], 0, 0
+        for n, ct in enumerate(numbers, 1):
+            if config.SKIP_OUT_OF_SCOPE_AT_MAP:
+                try:
+                    trial_data = tdh.read_from_file(ctis_files_path, ct, 'json')
+                except Exception as e:
+                    logger.error(f"CTIS: {ct} | could not read cached record: {e}")
+                    failed += 1
+                    continue
+                in_scope, why = scope.assess(ct, trial_data, "ctis", overrides)
+                if not in_scope:
+                    logger.info(f"CTIS: {ct} | Skipping - out of scope: {why}")
+                    out_of_scope.append((ct, "ctis", why))
+                    continue
+            ok = self.map_single_ctis_trial(ct, ctis_files_path, ctml_files_path)
+            done, failed = done + bool(ok), failed + (not ok)
+            print(f"  [{n}/{len(numbers)}] {ct}: {'ok' if ok else 'FAILED'}")
+        if config.SKIP_OUT_OF_SCOPE_AT_MAP:
+            scope.write_report(out_of_scope, config.SCOPE_REPORT_FILE_PATH, registry="ctis")
+        return {'processed': done, 'failed': failed, 'skipped': len(out_of_scope)}
+
     def map_single_ctis_trial(self, ct_number: str, ctis_files_path: str, ctml_files_path: str) -> bool:
         """
         Map one CTIS record to CTML.
@@ -305,22 +345,34 @@ class TrialMapManager:
         Where this trial should be written: the normal output, or the review
         queue when it is not usable as it stands.
 
-        The only such case today is a trial with no oncotree_primary_diagnosis
-        anywhere in its match tree. That trial would match on its remaining
-        criteria alone, which for a basket trial is every patient in the
-        database, so it must not reach MatchMiner unreviewed - but discarding
-        it is worse, because a trial that is not there is a trial nobody can be
-        matched to and nobody can see is missing.
+        Two cases send a trial to review:
+
+        - No oncotree_primary_diagnosis anywhere in its match tree. That trial
+          would match on its remaining criteria alone, which for a basket
+          trial is every patient in the database.
+        - A protein change that failed the reference check
+          (protein_change_unverified, see
+          match_criteria_mapper._clean_protein_change_fields). The criterion
+          is gene-level until a curator resolves it, so the trial matches
+          every variant in that gene.
+
+        Discarding either is worse than queueing it: a trial that is not there
+        is a trial nobody can be matched to and nobody can see is missing.
         """
-        if 'oncotree_primary_diagnosis' in tdh.get_all_keys(mapped_ctml):
+        keys = tdh.get_all_keys(mapped_ctml)
+        reasons = []
+        if 'oncotree_primary_diagnosis' not in keys:
+            reasons.append("no diagnosis criterion, so as it stands it would match every patient")
+        if 'protein_change_unverified' in keys:
+            reasons.append("a protein change did not match its reference protein")
+        if not reasons:
             return ctml_files_path
         import config  # imported here, as elsewhere in this module
         review_path = getattr(config, 'CTML_REVIEW_PATH', 'ctml/needs-review')
         os.makedirs(review_path, exist_ok=True)
         logger.warning(
-            f"{trial_id} | No diagnosis criterion in the mapped CTML. Writing to "
-            f"{review_path} instead of {ctml_files_path}: as it stands this trial "
-            f"would match every patient."
+            f"{trial_id} | Writing to {review_path} instead of {ctml_files_path}: "
+            f"{'; '.join(reasons)}."
         )
         return review_path
 
@@ -365,7 +417,7 @@ def main():
     
     # Test mapping all trials
     nct_files_path = 'cache/nct'
-    ctml_files_path = 'cache/ctml/'
+    ctml_files_path = config.CTML_MAPPED_PATH
         
     # Ensure directories exist
     os.makedirs(ctml_files_path, exist_ok=True)

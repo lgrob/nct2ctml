@@ -67,13 +67,6 @@ CNV_DETAIL_KEYWORDS = [
     r'\blow\s+copy\b',
 ]
 
-# Acceptable protein_change patterns for point mutations and small indels
-_ACCEPTABLE_PROTEIN_CHANGE_PATTERNS = [
-    # Simple missense substitutions, e.g. p.D277N, p.L858R, p.L861Q
-    re.compile(r"^p\.[A-Z]\d+[A-Z]$"),
-    # In-frame deletions spanning a range, e.g. p.E746_A750del
-    re.compile(r"^p\.[A-Z]\d+_[A-Z]\d+del$"),
-    # Insertions spanning a range, e.g. p.H773_V774insH
-    re.compile(r"^p\.[A-Z]\d+_[A-Z]\d+ins[A-Z]+$"),
-]
+# Protein changes are no longer checked by pattern here: see
+# utils/protein_change.py, which checks them against the reference protein.
 
