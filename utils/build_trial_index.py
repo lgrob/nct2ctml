@@ -29,6 +29,16 @@ Consequences worth knowing:
   `H3 K27-Altered` - so join on the code where you can.
 - `source_term` keeps the term the trial actually stated, so a match can be
   explained back to the curated file rather than to an expanded code.
+- `protein_change` is HGVS three-letter notation on the gene's MANE Select
+  protein ("p.Val600Glu"), the notation VEP writes in CSQ_HGVSp after the
+  accession. It is filled only when `protein_check` is `verified`, meaning
+  every residue it names was found at that position in
+  ref/mane_select_proteins.tsv (utils/protein_change.py). Histone H3 changes
+  are renumbered from the literature's mature-protein count, so "K27M" is
+  `p.Lys28Met`. What the trial wrote stays in `protein_change_stated`. A
+  row whose change fails the check keeps an empty `protein_change` and the
+  reason in `protein_check`, so a join on it cannot silently hit the wrong
+  residue; `--strict` makes such a row fail the build.
 
 Outputs are deterministic: the same inputs produce byte-identical files, and
 `manifest.json` records the row counts, the Oncotree file's checksum and each
@@ -36,9 +46,10 @@ output's checksum. That is what lets you say which trial set produced a given
 report, which a mutable database cannot without separate audit machinery.
 
 Usage:
-    python -m utils.build_trial_index [--source ctml/json] [--out index]
+    python -m utils.build_trial_index [--source ctml/json] [--out index] [--strict]
 """
 import argparse
+from collections import Counter
 import csv
 import hashlib
 import json
@@ -54,6 +65,7 @@ import yaml
 from loguru import logger
 
 import config
+from utils import protein_change
 from utils.oncotree import get_all_oncotree_data, get_lineage
 from utils.reference_validation import _oncotree
 
@@ -70,7 +82,9 @@ _AGE_BOUND = re.compile(r"^\s*(>=|<=|>|<)\s*([0-9]*\.?[0-9]+)\s*$")
 DIAGNOSIS_COLUMNS = ["trial_id", "arm_code", "oncotree_code", "oncotree_name",
                     "source_term", "from_basket", "include"]
 GENOMIC_COLUMNS = ["trial_id", "arm_code", "hugo_symbol", "variant_category",
-                   "cnv_call", "protein_change", "variant_classification", "include"]
+                   "cnv_call", "protein_change", "protein_change_stated",
+                   "protein_change_kind", "protein_refseq", "protein_ensembl",
+                   "protein_check", "variant_classification", "include"]
 TRIAL_COLUMNS = ["trial_id", "source", "nct_id", "protocol_no", "short_title",
                  "phase", "status", "age_label", "age_min", "age_min_inclusive",
                  "age_max", "age_max_inclusive", "n_diagnosis_codes", "n_genes"]
@@ -273,7 +287,27 @@ def index_trial(trial_id, trial, descendants, solid, liquid, name_to_code):
     return trial_row, diagnosis_rows, genomic_rows
 
 
-def build(source_dir, out_dir):
+def _normalise_protein_changes(genomic_rows):
+    """Rewrite each row's protein change as checked HGVS, in place."""
+    counts = Counter()
+    for row in genomic_rows:
+        stated = row["protein_change"]
+        row.update(protein_change="", protein_change_stated=stated, protein_change_kind="",
+                   protein_refseq="", protein_ensembl="", protein_check="")
+        if not stated:
+            continue
+        result = protein_change.normalise(row["hugo_symbol"], stated)
+        row.update(protein_change=result.hgvs, protein_change_kind=result.kind,
+                   protein_refseq=result.refseq_protein,
+                   protein_ensembl=result.ensembl_protein, protein_check=result.status)
+        counts[result.status] += 1
+        if not result.verified:
+            logger.warning(f"{row['trial_id']} | {row['hugo_symbol']} {stated!r} not emitted "
+                           f"as HGVS: {result.status} ({result.detail})")
+    return dict(sorted(counts.items()))
+
+
+def build(source_dir, out_dir, strict=False):
     _, _, descendants = get_lineage()
     solid, liquid = _basket_members()
     name_to_code = _name_to_code()
@@ -291,6 +325,11 @@ def build(source_dir, out_dir):
         trial_rows.append(trial_row)
         diagnosis_rows.extend(diagnoses)
         genomic_rows.extend(genomics)
+
+    protein_checks = _normalise_protein_changes(genomic_rows)
+    failed = {k: v for k, v in protein_checks.items() if k != protein_change.VERIFIED}
+    if strict and failed:
+        raise SystemExit(f"--strict: protein changes failed the reference check: {failed}")
 
     os.makedirs(out_dir, exist_ok=True)
     written = {}
@@ -312,6 +351,9 @@ def build(source_dir, out_dir):
         "oncotree_file": config.ONCOTREE_TXT_FILE_PATH,
         "oncotree_sha256": _sha256(config.ONCOTREE_TXT_FILE_PATH),
         "liquid_roots": sorted(LIQUID_ROOTS),
+        "protein_reference_file": protein_change.REFERENCE,
+        "protein_reference_sha256": _sha256(protein_change.REFERENCE),
+        "protein_checks": protein_checks,
         "outputs": written,
     }
     with open(os.path.join(out_dir, "manifest.json"), "w") as handle:
@@ -334,13 +376,16 @@ def main():
     parser.add_argument("--source", default="ctml/json",
                         help="directory of curated CTML files (.json/.yaml)")
     parser.add_argument("--out", default="index", help="output directory")
+    parser.add_argument("--strict", action="store_true",
+                        help="fail if any protein change does not match its reference protein")
     args = parser.parse_args()
 
-    manifest = build(args.source, args.out)
+    manifest = build(args.source, args.out, strict=args.strict)
     print(f"Indexed {manifest['trials']} trials from {args.source}")
     for name, info in manifest["outputs"].items():
         print(f"  {name:22} {info['rows']:>7,} rows")
     print(f"  manifest.json          oncotree {manifest['oncotree_sha256'][:12]}")
+    print(f"  protein changes        {manifest['protein_checks'] or 'none'}")
 
 
 if __name__ == "__main__":

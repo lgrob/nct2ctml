@@ -118,6 +118,9 @@ GENE_LIST_FILE_PATH = "ref/genes.txt"
 LEGACY_GENE_LIST_FILE_PATH = "ref/genes_kispi.txt"
 GENE_SYNONYM_FILE_PATH = "ref/synonym_to_gene_symbol.tsv"
 GENE_SYNONYM_ADDENDUM_FILE_PATH = "ref/gene_synonym_addendum.tsv"
+# MANE Select protein sequences every trial protein change is checked
+# against (utils/protein_change.py); built by utils/build_protein_reference.py.
+PROTEIN_REFERENCE_FILE_PATH = "ref/mane_select_proteins.tsv"
 # Registry disease spellings that folding cannot reach - lineage decisions,
 # WHO reclassifications and registry house style. See the header of the file
 # itself for what belongs in it and what does not.

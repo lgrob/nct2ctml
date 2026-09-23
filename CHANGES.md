@@ -486,6 +486,46 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## New capability: protein changes published as checked HGVS
+
+Trials write protein changes in literature shorthand: `V600E`, `p.G12C`,
+`E746_A750del`, and, for diffuse midline glioma, `H3 K27M`. The pipeline's
+VEP annotation writes HGVS on the MANE Select protein:
+`ENSP00000493543.1:p.Val600Glu`. A join between the two needs one notation,
+and it has to be the official one.
+
+- `utils/protein_change.py` rewrites a stated change as HGVS three-letter
+  notation. It then checks the result against the reference protein: every
+  residue the notation names must be the residue at that position, a range
+  must run forwards, and an insertion's flanks must be adjacent. A change
+  that fails is not published in HGVS form, because a notation naming the
+  wrong residue describes a different variant. The row keeps an empty
+  `protein_change` and records the reason.
+- Histone H3 is renumbered from the mature-protein count histone literature
+  uses, so `K27M` becomes `p.Lys28Met` and `G34R` becomes `p.Gly35Arg`. The
+  rule applies to proteins that begin with the H3 N-terminus, which is a
+  property of the sequence rather than a list of names. The shifted residue
+  is checked like any other. A change already written in three-letter code
+  is HGVS numbering and is not shifted.
+- Anything outside the grammar returns `unparsed` and is never guessed:
+  `V600E/K`, `exon 19 deletion`.
+- `ref/mane_select_proteins.tsv` holds the MANE Select v1.5 sequences for the
+  1,081 panel genes that have one, plus every H3 gene. It is 860 KB and
+  committed, so checking needs no network. `utils/build_protein_reference.py`
+  rebuilds it, records the SHA-256 of each source file, and asserts that the
+  RefSeq and Ensembl proteins are identical, which they are for all MANE
+  Select genes.
+- `trial_genomic.tsv` gains `protein_change_stated`, `protein_change_kind`,
+  `protein_refseq`, `protein_ensembl` and `protein_check`. The manifest
+  records the reference checksum and a count per check outcome. `--strict`
+  fails the build on any unverified change.
+
+The three curated changes, `p.K27M` on H3-3A, H3-3B and H3C2, all verify as
+`p.Lys28Met`. As a cross-check, a Kispi sample's own VEP output had 18
+protein changes on MANE panel transcripts. All 18 verified, and all 18 came
+back as the identical HGVS string. So the two sides now agree character for
+character.
+
 ## Defect fixed: a basket that names entities lost the basket
 
 `_basket_wildcards` decided correctly that NCT02332668 (KEYNOTE-051, "solid

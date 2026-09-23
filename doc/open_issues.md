@@ -292,6 +292,20 @@ were read: each describes a basket. NCT02332668 stays short of 1.00 because
 its rule yields `_SOLID_` alone, and its "lymphoma" arm is covered only by
 the Classical Hodgkin Lymphoma it names.
 
+### The mapper drops protein changes the index could now check
+
+`match_criteria_mapper._clean_protein_change_fields` keeps a protein change
+only if it matches one of three one-letter patterns: substitution,
+deletion range, insertion range. Anything else is removed silently: nonsense
+(`p.R213*`), three-letter code, single-residue deletions, duplications,
+delins, frameshifts. The criterion is not lost; it becomes gene-level, which
+is over-broad, the tolerable direction. But a trial that names a specific
+variant then matches every variant in the gene. `utils/protein_change.py`
+handles all of those forms and checks them against the reference, so the
+mapper could use it instead of the patterns and send failures to review.
+Not changed yet: the curated corpus has no example, and the change moves
+output on the next full mapping run.
+
 ### Off-panel fusion partners are dropped, and that is correct
 
 A scan of all 924 cached trials against the Cancer Gene Census finds only ten

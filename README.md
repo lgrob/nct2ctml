@@ -119,7 +119,7 @@ output directory. Outputs:
 |---|---|---|
 | `trials.tsv` | trial | `trial_id`, `source`, `nct_id`, `phase`, `status`, `age_min`/`age_max` with `age_min_inclusive`/`age_max_inclusive` |
 | `trial_diagnosis.tsv` | trial, arm, Oncotree node | `oncotree_code`, `oncotree_name`, `source_term`, `from_basket`, `include` |
-| `trial_genomic.tsv` | trial, arm, gene criterion | `hugo_symbol`, `variant_category`, `cnv_call`, `protein_change`, `variant_classification`, `include` |
+| `trial_genomic.tsv` | trial, arm, gene criterion | `hugo_symbol`, `variant_category`, `cnv_call`, `protein_change`, `protein_change_stated`, `protein_change_kind`, `protein_refseq`, `protein_ensembl`, `protein_check`, `variant_classification`, `include` |
 | `manifest.json` | - | row counts, SHA-256 of each output and of `ref/oncotree_file.txt` |
 
 Join samples on `oncotree_code` and `hugo_symbol`. Diagnosis subtrees and the
@@ -134,6 +134,15 @@ distinction; the trial-level `age_label` is for display only.
 trial could match; exclusions and mixed and/or nesting do not flatten
 losslessly. Use the index to narrow the corpus to candidates, then take the
 eligibility call from the CTML file, which is the authority. In particular,
+`protein_change` is HGVS three-letter notation on the gene's MANE Select
+protein (`p.Val600Glu`). That is the same string VEP writes after the
+accession in `CSQ_HGVSp`, so it joins on string equality. It is filled only
+when `protein_check` is `verified`, meaning every residue it names was found at
+that position in `ref/mane_select_proteins.tsv`. Histone H3 is renumbered
+from the literature's mature-protein count: `K27M` is `p.Lys28Met`. What the
+trial wrote stays in `protein_change_stated`. `--strict` fails the build if
+any change does not verify. See `utils/protein_change.py`.
+
 `include = 0` rows in `trial_genomic.tsv` are **exclusions** (the CTML
 `variant_category` was negated with `!`): a filter that ignores `include`
 will report a patient who carries an excluded alteration as a hit.
@@ -209,6 +218,7 @@ RUN_LIVE_LLM_TESTS=1 python -m unittest tests.test_ai_helper -v
 | `ref/gene_synonym_addendum.tsv` | case variants, multi-gene aliases, and a `!` blocklist. |
 | `ref/synonym_collisions.tsv` | aliases claimed by more than one gene, quarantined rather than guessed. |
 | `ref/diagnosis_synonyms.tsv` | curated registry disease spellings that folding cannot reach, each with its reason. |
+| `ref/mane_select_proteins.tsv` | MANE Select GRCh38 v1.5 protein sequences for the panel and every histone H3 gene, with RefSeq and Ensembl accessions; the header records each source file's SHA-256. Rebuilt per MANE release with `python -m utils.build_protein_reference --release 1.5`. |
 
 `ref/Census_gene_list.csv` (COSMIC) is untracked because its licence restricts
 redistribution; nothing reads it at runtime.

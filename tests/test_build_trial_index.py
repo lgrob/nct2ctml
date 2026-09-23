@@ -204,5 +204,53 @@ class TestBuildOutputs(unittest.TestCase):
                 self.assertIn(row["trial_id"], known)
 
 
+class TestProteinChanges(unittest.TestCase):
+    """The index publishes HGVS, and only HGVS that matched the reference."""
+
+    def _genomic(self, source_dir, strict=False):
+        out = tempfile.mkdtemp()
+        manifest = build(source_dir, out, strict=strict)
+        with open(os.path.join(out, "trial_genomic.tsv")) as handle:
+            return manifest, list(csv.DictReader(handle, delimiter='\t'))
+
+    def test_curated_k27m_is_published_as_lys28met(self):
+        manifest, rows = self._genomic(REVIEWED)
+        stated = [r for r in rows if r["protein_change_stated"]]
+        self.assertTrue(stated)
+        for r in stated:
+            self.assertEqual(r["protein_check"], "verified", r)
+        k27m = {r["hugo_symbol"]: r["protein_change"] for r in stated
+                if r["protein_change_stated"] == "p.K27M"}
+        self.assertEqual(k27m, {"H3-3A": "p.Lys28Met", "H3-3B": "p.Lys28Met",
+                                "H3C2": "p.Lys28Met"})
+        self.assertEqual(len(manifest["protein_reference_sha256"]), 64)
+
+    def _one_trial_dir(self, protein):
+        source = tempfile.mkdtemp()
+        doc = {"nct_id": "NCT00000001", "treatment_list": {"step": [{"match": [{"and": [
+            {"clinical": {"oncotree_primary_diagnosis": "Melanoma"}},
+            {"genomic": {"hugo_symbol": "BRAF", "variant_category": "Mutation",
+                         "protein_change": protein}}]}]}]}}
+        with open(os.path.join(source, "NCT00000001.json"), "w") as handle:
+            json.dump(doc, handle)
+        return source
+
+    def test_a_mismatching_change_is_not_published(self):
+        manifest, rows = self._genomic(self._one_trial_dir("p.V601E"))
+        self.assertEqual(rows[0]["protein_change"], "")
+        self.assertEqual(rows[0]["protein_change_stated"], "p.V601E")
+        self.assertEqual(rows[0]["protein_check"], "reference_mismatch")
+        self.assertEqual(manifest["protein_checks"], {"reference_mismatch": 1})
+
+    def test_strict_refuses_to_build_with_a_mismatch(self):
+        with self.assertRaises(SystemExit):
+            self._genomic(self._one_trial_dir("p.V601E"), strict=True)
+
+    def test_strict_builds_when_every_change_verifies(self):
+        _, rows = self._genomic(self._one_trial_dir("p.V600E"), strict=True)
+        self.assertEqual((rows[0]["protein_change"], rows[0]["protein_ensembl"]),
+                         ("p.Val600Glu", "ENSP00000493543.1"))
+
+
 if __name__ == '__main__':
     unittest.main()
