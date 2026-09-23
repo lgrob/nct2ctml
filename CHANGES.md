@@ -230,6 +230,101 @@ These are upstream bugs, fixed here and worth reporting back.
   instance held the proof already, in a pair of loaded trials differing only
   in that term, one matching and one not.
 
+## Defect fixed: diagnosis matching lost to punctuation
+
+`utils/reference_validation.canonical_diagnosis` matched Oncotree display
+names exactly, by code, or case-insensitively, and nothing else. Registries
+do not write what Oncotree writes, so the difference of a hyphen, an
+apostrophe or a British spelling dropped the diagnosis and left it to the
+LLM — which then had to pick a branch of a tree it could not see, the step
+that puts neuroblastoma under Adrenal Gland
+(see the two-stage funnel in `src/clinical_trials_gov.py`).
+
+Real condition strings that returned nothing: `High Grade Glioma`
+(NCT04655404), `Anaplastic Kidney Wilms Tumor` (NCT04322318),
+`Acute Lymphoblastic Leukemia` (NCT02443831), `Diffuse Intrinsic Pontine
+Glioma` (NCT05009992), `Stage I Testicular Seminoma AJCC v6 and v7`
+(NCT03067181).
+
+Three changes, all deterministic and offline:
+
+- `_fold()` — a comparison key ignoring case, apostrophes, hyphens, slashes
+  and British spelling. Commas survive, because Oncotree uses them to carry
+  meaning (`Glioma, NOS` is not `Glioma`). British spellings matter here
+  because the CTIS half of the corpus is European. All 879 display names fold
+  to 879 distinct keys, so folding merges nothing the tree distinguishes; a
+  test asserts this so a future Oncotree release cannot break it quietly.
+- `ref/diagnosis_synonyms.tsv` — the curated aliases folding cannot reach.
+- wider qualifier vocabulary — `Stage IIIB` (substage letters), `AJCC v6 and
+  v7` (a staging-manual citation, not a diagnosis), bare trailing `Relapse`,
+  and `untreated` / `unresectable` / `extracranial` / `extragonadal`.
+
+Lookup order runs from most to least literal: exact, code, case-insensitive,
+folded, then alias. Folding precedes the alias table so no hand-edited entry
+can shadow a real Oncotree name.
+
+Measured on the 50-trial curated key, conditions only, no LLM and no network:
+diagnosis F1 **0.496 → 0.684** (precision 0.650 → 0.859, recall 0.436 →
+0.617), 12 → 19 trials exactly right. That is above the 0.663 the full
+two-stage LLM pipeline scored on 2026-09-15, at zero tokens and with no
+run-to-run variance. Across the 924 cached trials, those resolvable from
+conditions alone rise from 356 (39%) to 478 (52%).
+
+The remaining gap is not a naming problem: it is the `_SOLID_`/`_LIQUID_`
+basket heuristic, and trials like NCT03838042 whose conditions are only
+`CNS Tumor, Solid Tumor` and whose diagnoses live in the eligibility text.
+
+Two external vocabulary sources were tested and rejected, both because they
+restate `conditionsModule` rather than adding to it. NCBI MeSH via E-utilities
+resolves only terms that already match exactly, and misses every failing case
+above — MeSH keeps DIPG as current, collapses `High Grade Glioma` to `Glioma`,
+and does not split ALL by lineage; its fuzzy search also reaches Retinoblastoma
+from "Neuroblastoma". `derivedSection.conditionBrowseModule`, which CT.gov
+derives algorithmically from the same conditions, measured +0.006 F1 with
+precision slightly down: one correct addition against three wrong ones.
+
+## Defect fixed: inferred ", NOS" leaves matched almost nobody
+
+`diagnoses_from_conditions` appends ", NOS" as a last-resort candidate, because
+Oncotree suffixes its catch-all nodes that way and registries do not. But
+MatchMiner expands a diagnosis to its descendants before querying, and a leaf
+expands to itself alone. Verified against the deployed `oncotree_mapping.json`
+on 2026-09-21: `Glioma, NOS` reaches **1** patient code where its parent
+`Diffuse Glioma` reaches **24**. NCT05580562, whose conditions are
+`['H3 K27M', 'Glioma']` and whose curated diagnosis is
+`Diffuse Midline Glioma, H3 K27-Altered`, enrolled against a term that matched
+nobody — not even the DMG patient — and the benchmark scored it correct,
+because it compares strings and the deployment expands them.
+
+An inferred leaf is now replaced by its parent, under two guards:
+
+- climbing stops below level_1, so `Sarcoma, NOS` keeps its leaf rather than
+  becoming the whole `Soft Tissue` root — which would enrol every soft-tissue
+  tumour and still miss the bone sarcomas a sarcoma trial means;
+- the parent must keep every word the leaf states, so `High-Grade Glioma, NOS`
+  is not widened into `Diffuse Glioma` (which includes low-grade entities) and
+  `Low-Grade Glioma, NOS` is not widened into `Encapsulated Glioma`.
+
+Across the tree that widens the 8 true catch-alls — including
+`B-Lymphoblastic Leukemia/Lymphoma, NOS`, the parent-beats-NOS case already
+confirmed against two loaded MatchMiner trials — and leaves the 20
+qualifier-bearing leaves alone, logged for a curator. A trial that writes
+", NOS" itself is respected; only the suffix this code adds is widened.
+
+Measured on the 50-trial key, scored through the deployed mapping: recall
+0.672 → **0.692**, precision 0.890 → **0.879**, F1 flat. The aggregate does
+not capture the point — the justification is the asymmetry this repo already
+states, that an over-broad trial costs a clinician minutes while a missing one
+can cost a patient a trial they were eligible for. Note that string-equality
+scoring cannot see this trade at all, which is the argument for scoring
+`bench/benchmark_map.py` through `oncotree_mapping.json`.
+
+`utils/oncotree.get_lineage()` provides the parent, level_1 and descendant
+relations. It computes expansion from `ref/oncotree_file.txt` rather than
+reading the deployed file, so mapping stays independent of a running
+MatchMiner; the two agree on 852 of 861 shared names, and all nine differences
+are nodes our newer Oncotree has and the deployed table does not.
+
 ## Reference data
 
 - `ref/oncotree_file.txt` — the tab-delimited export from
@@ -242,6 +337,19 @@ These are upstream bugs, fixed here and worth reporting back.
   from the 2025_10_03 release. A test pins the count and the documented
   version together.
 
+
+- `ref/diagnosis_synonyms.tsv` — new. Registry disease spellings that no
+  string transform can reach, mapped to Oncotree display names: lineage
+  decisions (`Acute Lymphoblastic Leukemia` names no lineage, Oncotree has
+  only B- and T- nodes), WHO CNS5 reclassifications (`Diffuse Intrinsic
+  Pontine Glioma` is retired, its successor is `Diffuse Midline Glioma,
+  H3 K27-Altered`) and NCI/COG house style (`Stage II Kidney Wilms Tumor`).
+  Fifteen rows, each with its reason in a third column, because these are
+  clinical judgements a curator must be able to challenge. Deliberately
+  excludes the bare abbreviation `ALL` — three-character aliases are how the
+  gene table went wrong. Rows whose target is not an Oncotree node, or whose
+  alias already resolves without the table, are dropped at load time with a
+  warning, so the file cannot silently rot as Oncotree moves.
 
 - `ref/genes.txt` — Kispi's 1,092-symbol paediatric list replaces the COSMIC
   Cancer Gene Census, resolved to 1,086 current HGNC symbols.

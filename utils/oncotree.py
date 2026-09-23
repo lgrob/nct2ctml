@@ -84,3 +84,40 @@ def get_l1_l2_oncotree_data():
             s.remove('')
 
     return level_1_list, mapping_11_l2
+
+
+def get_lineage():
+    """
+    (parent, level_1_names, descendants) for every Oncotree node.
+
+    `parent` maps a display name to the node above it, `descendants` maps a
+    name to itself plus everything below it, and `level_1_names` is the set of
+    organ-system roots.
+
+    `descendants` is the same relation MatchMiner's oncotree_mapping.json
+    encodes: the matchengine expands a trial's diagnosis to every descendant
+    before querying, so a parent matches every patient its children do.
+    Computing it here rather than reading the deployed file keeps mapping
+    independent of a running MatchMiner; checked against the live instance on
+    2026-09-21, the two agree on 852 of 861 shared names, and all nine
+    differences are nodes our newer Oncotree has and the deployed table does
+    not.
+    """
+    rows, level_columns = _read_oncotree_rows()
+
+    parent = {}
+    level_1_names = set()
+    descendants = defaultdict(set)
+
+    for row in rows:
+        path = [_parse_level_value(row[col]) for col in level_columns]
+        path = [node for node in path if node]
+        if not path:
+            continue
+        level_1_names.add(path[0])
+        for depth, node in enumerate(path):
+            descendants[node].update(path[depth:])
+            if depth:
+                parent[node] = path[depth - 1]
+
+    return parent, level_1_names, dict(descendants)

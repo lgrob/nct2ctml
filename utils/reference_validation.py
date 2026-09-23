@@ -41,6 +41,7 @@ from functools import lru_cache
 from loguru import logger
 
 import config
+import utils.oncotree as onct
 
 # "Acute Myeloid Leukemia (AML)" -> name, code. Codes are upper-case with
 # digits and a few separators; anything else is a name containing brackets.
@@ -179,13 +180,128 @@ def _gene_aliases():
             if len(owners) == 1}
 
 
+# Spelling differences that carry no information. Registries and Oncotree
+# disagree about punctuation far more often than about medicine: "High Grade
+# Glioma" for "High-Grade Glioma", "Wilms Tumor" for "Wilms' Tumor",
+# "B Lymphoblastic Leukemia/Lymphoma" for "B-Lymphoblastic ...". Each of those
+# used to fall through to the LLM, which then had to guess a branch of a tree
+# it could not see - so a hyphen became a coin flip on the diagnosis.
+#
+# British spellings are folded for the same reason and are not hypothetical
+# here: the CTIS half of the corpus is European, and "tumour" appears in EU
+# trial records where ClinicalTrials.gov writes "tumor". Only endings that
+# cannot change meaning are listed; no oncology term is distinguished from
+# another by its -our/-or or -aemia/-emia spelling.
+_FOLD_SUBSTITUTIONS = (
+    ("tumour", "tumor"),
+    ("leukaemia", "leukemia"),
+    ("lymphoedema", "lymphedema"),
+    ("anaemia", "anemia"),
+    ("haemato", "hemato"),
+    ("oesophag", "esophag"),
+    ("paediatric", "pediatric"),
+    ("coeliac", "celiac"),
+)
+
+
+def _fold(term):
+    """
+    A comparison key that ignores case, punctuation and British spelling.
+
+    Commas survive because Oncotree uses them to carry meaning - "Glioma, NOS"
+    and "Mixed Phenotype Acute Leukemia, B/Myeloid, NOS" are distinct nodes -
+    while hyphens and slashes become spaces because the two vocabularies place
+    them differently around identical terms.
+
+    Verified against ref/oncotree_file.txt: all 879 display names fold to 879
+    distinct keys, so folding merges nothing that Oncotree distinguishes. A
+    test asserts this, because a future Oncotree release could introduce a
+    genuine collision and it must fail loudly rather than pick a winner.
+    """
+    term = (term or "").lower().replace("'", "").replace("\u2019", "")
+    for british, american in _FOLD_SUBSTITUTIONS:
+        term = term.replace(british, american)
+    term = re.sub(r"[-/]", " ", term)
+    term = re.sub(r"[^a-z0-9, ]", " ", term)
+    return re.sub(r"\s+", " ", term).strip()
+
+
+@lru_cache(maxsize=1)
+def _oncotree_folded():
+    """Folded display name -> display name."""
+    names, _, _ = _oncotree()
+    folded = {}
+    for name in sorted(names):
+        folded.setdefault(_fold(name), name)
+    return folded
+
+
+@lru_cache(maxsize=1)
+def _diagnosis_aliases():
+    """
+    Folded alias -> Oncotree display name, from config.DIAGNOSIS_SYNONYM_FILE_PATH.
+
+    Two classes of row are dropped rather than trusted, both loudly:
+
+    - a target that is not an Oncotree display name, which would put a string
+      into CTML that matches no patient - the failure this module exists to
+      prevent;
+    - an alias that already resolves without the table, which is dead weight
+      that cannot fire and would mislead the next person reading the file.
+
+    The second check is what keeps the table honest as Oncotree moves. If a
+    future release adds "Nephroblastoma" as a real node, that row starts
+    warning instead of quietly shadowing nothing.
+    """
+    aliases = {}
+    try:
+        handle = open(config.DIAGNOSIS_SYNONYM_FILE_PATH)
+    except FileNotFoundError:
+        logger.warning(
+            f"No diagnosis synonym table at {config.DIAGNOSIS_SYNONYM_FILE_PATH}; "
+            f"registry spellings will only resolve by folding."
+        )
+        return aliases
+
+    names, _, _ = _oncotree()
+    folded_names = _oncotree_folded()
+    with handle:
+        for row in csv.reader(handle, delimiter="\t"):
+            if not row or row[0].lstrip().startswith("#") or len(row) < 2:
+                continue
+            alias, target = row[0].strip(), row[1].strip()
+            if not alias or not target:
+                continue
+            if target not in names:
+                logger.warning(
+                    f"Diagnosis synonym {alias!r} -> {target!r} dropped: the target "
+                    f"is not an Oncotree display name."
+                )
+                continue
+            key = _fold(alias)
+            if key in folded_names:
+                logger.warning(
+                    f"Diagnosis synonym {alias!r} -> {target!r} dropped: {alias!r} "
+                    f"already resolves to {folded_names[key]!r} without the table."
+                )
+                continue
+            aliases[key] = target
+    return aliases
+
+
 @lru_cache(maxsize=4096)
 def canonical_diagnosis(term):
     """
     The Oncotree display name for `term`, or None if there is no such node.
 
-    Accepts the display name, the code, either in any case, and MatchMiner's
-    _SOLID_ / _LIQUID_ wildcards.
+    Accepts the display name, the code, either in any case, MatchMiner's
+    _SOLID_ / _LIQUID_ wildcards, a spelling that differs only in punctuation
+    or British/American convention, and the curated aliases in
+    ref/diagnosis_synonyms.tsv.
+
+    Order is deliberate and runs from most to least literal. Folding is tried
+    before the alias table so that no curated entry can shadow a real Oncotree
+    name: a table is edited by hand and the tree is not, so the tree wins.
     """
     if not term:
         return None
@@ -197,7 +313,14 @@ def canonical_diagnosis(term):
         return term
     if term in codes:
         return codes[term]
-    return lowered.get(term.lower())
+    exact_case_insensitive = lowered.get(term.lower())
+    if exact_case_insensitive:
+        return exact_case_insensitive
+    key = _fold(term)
+    folded = _oncotree_folded().get(key)
+    if folded:
+        return folded
+    return _diagnosis_aliases().get(key)
 
 
 @lru_cache(maxsize=4096)
@@ -298,10 +421,16 @@ def filter_genomic_criteria(genomic_criteria, trial_id=""):
 # real node whose name starts with one of these ("Primary Brain Tumor",
 # "Malignant Peripheral Nerve Sheath Tumor") is matched before anything is
 # stripped.
+# "stage [0-9ivx]+[ab]?" rather than "stage [0-9ivx]+": ClinicalTrials.gov
+# writes "Stage IIIB", and leaving the substage attached blocked the match.
+# "untreated", "unresectable", "extracranial" and "extragonadal" are likewise
+# observed in the cached corpus, not anticipated.
 _CONDITION_QUALIFIER = re.compile(
-    r"^(newly diagnosed|recurrent|refractory|relapsed|metastatic|advanced|"
+    r"^(newly diagnosed|previously treated|untreated|recurrent|refractory|"
+    r"relapsed|metastatic|advanced|unresectable|"
     r"high[- ]risk|low[- ]risk|intermediate[- ]risk|childhood|paediatric|"
-    r"pediatric|adult|primary|malignant|stage [0-9ivx]+|group [a-e])\s+",
+    r"pediatric|adult|primary|malignant|extracranial|extragonadal|"
+    r"stage [0-9ivx]+[ab]?|group [a-e])\s+",
     re.IGNORECASE)
 
 
@@ -309,9 +438,14 @@ _CONDITION_QUALIFIER = re.compile(
 # ClinicalTrials.gov does at least as often: "Medulloblastoma Recurrent",
 # "Neuroblastoma, Recurrent, Refractory", "Medulloblastoma, Childhood". A comma
 # before it is optional, and several can stack.
+# "AJCC v6 and v7" is the staging-manual citation NCI appends to its germ cell
+# and sarcoma conditions - "Stage I Testicular Seminoma AJCC v6 and v7" - and
+# it is provenance, not diagnosis. "relapse" as a bare noun joins "in relapse"
+# because ClinicalTrials.gov writes both ("Acute Lymphoid Leukemia Relapse").
 _TRAILING_QUALIFIER = re.compile(
-    r"[,\s]+(newly diagnosed|recurrent|refractory|relapsed|in relapse|metastatic|"
-    r"advanced|childhood|paediatric|pediatric|adult|nos)$",
+    r"[,\s]+(newly diagnosed|recurrent|refractory|relapsed|relapse|in relapse|"
+    r"metastatic|advanced|childhood|paediatric|pediatric|adult|nos|"
+    r"ajcc v[0-9]+( and v[0-9]+)*)$",
     re.IGNORECASE)
 
 
@@ -335,7 +469,74 @@ def strip_condition_qualifiers(condition):
     return condition
 
 
-def diagnoses_from_conditions(conditions):
+def _words(name):
+    """The set of words in a display name, ignoring case and punctuation."""
+    return set(re.sub(r"[^a-z0-9 ]", " ", name.lower().replace("-", " ")).split())
+
+
+def _widen_inferred_nos_leaf(name, condition, trial_id=""):
+    """
+    Swap an inferred ", NOS" leaf for an ancestor that actually matches patients.
+
+    Oncotree suffixes its catch-all nodes ", NOS", and MatchMiner expands a
+    diagnosis to its descendants before querying - so a leaf expands to itself
+    alone. Verified against the deployed oncotree_mapping.json on 2026-09-21:
+    "Glioma, NOS" reaches 1 patient code where its parent "Diffuse Glioma"
+    reaches 24. A trial registering the condition "Glioma" therefore enrolled
+    against a term matching almost nobody, and the benchmark scored it correct,
+    because it compares strings and the deployment expands them.
+
+    Two guards, because widening trades a false negative for a false positive
+    and only one of those is visible to a clinician.
+
+    Climbing stops below level_1. "Sarcoma, NOS" sits directly under the
+    "Soft Tissue" root, and promoting it would enrol every soft-tissue tumour
+    while still missing the bone sarcomas - Ewing, osteosarcoma - that a
+    sarcoma trial means.
+
+    The parent must also keep every word the leaf states. A catch-all may
+    generalise, but it may not silently drop a restriction: "High-Grade
+    Glioma, NOS" sits under "Diffuse Glioma", so promoting it would enrol
+    low-grade patients into a high-grade trial, and "Low-Grade Glioma, NOS"
+    sits under "Encapsulated Glioma", which is not where low-grade gliomas
+    generally live. Across the tree this widens the eight true catch-alls -
+    "Medulloblastoma, NOS" to "Medulloblastoma", "B-Lymphoblastic
+    Leukemia/Lymphoma, NOS" to its parent, the case verified against two
+    loaded trials in MatchMiner - and leaves the twenty qualifier-bearing
+    leaves alone.
+
+    Note the ancestor is not always complete cover either: "Diffuse Glioma"
+    excludes the encapsulated and angiocentric gliomas filed elsewhere in the
+    tree. It is the tree's own placement of the catch-all node, and 24 codes
+    beat 1, but a trial whose population is genuinely "any glioma" still wants
+    a human.
+    """
+    if not name.endswith(", NOS"):
+        return name
+    parent_of, level_1_names, descendants = onct.get_lineage()
+    if len(descendants.get(name, {name})) > 1:
+        return name  # already expands; nothing to fix
+    parent = parent_of.get(name)
+    drops_a_qualifier = parent and not _words(name[:-len(", NOS")]) <= _words(parent)
+    if (not parent or parent in level_1_names
+            or len(descendants.get(parent, ())) <= 1 or drops_a_qualifier):
+        logger.warning(
+            f"{trial_id} | Condition {condition!r} resolves only to {name!r}, which "
+            f"matches one patient code, and no ancestor widens it without dropping a "
+            f"restriction it states or reaching an organ-system root. Keeping it; a "
+            f"curator should decide what population this trial actually wants."
+        )
+        return name
+    logger.info(
+        f"{trial_id} | Condition {condition!r} inferred {name!r}, which expands to "
+        f"itself alone. Using its parent {parent!r} instead, which expands to "
+        f"{len(descendants[parent])} terms and so matches the patients the leaf "
+        f"would miss."
+    )
+    return parent
+
+
+def diagnoses_from_conditions(conditions, trial_id=""):
     """
     Oncotree terms the trial names outright in conditionsModule.
 
@@ -357,9 +558,16 @@ def diagnoses_from_conditions(conditions):
     found, seen = [], set()
     for condition in conditions or []:
         stripped = strip_condition_qualifiers(condition)
-        for candidate in (condition, stripped, f"{condition}, NOS", f"{stripped}, NOS"):
+        candidates = (condition, stripped, f"{condition}, NOS", f"{stripped}, NOS")
+        for position, candidate in enumerate(candidates):
             name = canonical_diagnosis(candidate)
             if name:
+                # Positions 2 and 3 are the ", NOS" suffix this function added.
+                # The trial did not say NOS, so the leaf is our inference and
+                # is open to correction; a trial that writes "Glioma, NOS"
+                # itself matches at position 0 and is left alone.
+                if position >= 2:
+                    name = _widen_inferred_nos_leaf(name, condition, trial_id)
                 if name not in seen:
                     seen.add(name)
                     found.append(name)

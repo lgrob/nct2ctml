@@ -1,0 +1,45 @@
+# Registry spellings that no string transform can reach, mapped to Oncotree
+# display names. Tab-delimited: alias, Oncotree display name, why.
+#
+# This table is ONLY for the cases utils/reference_validation._fold cannot
+# handle. Folding already forgives case, apostrophes, hyphens, slashes and
+# British spelling, so "Wilms Tumor" -> "Wilms' Tumor" and "High Grade
+# Glioma, NOS" -> "High-Grade Glioma, NOS" need no entry here and must not
+# get one. What is left is three kinds of genuine mismatch:
+#
+#   1. Granularity. Oncotree splits what a registry does not. "Acute
+#      Lymphoblastic Leukemia" names no lineage; Oncotree has only B- and
+#      T-lineage nodes, so a lineage has to be chosen. That is a clinical
+#      decision, not a naming fact, which is why it is written down here
+#      where a clinician can disagree with it rather than buried in code.
+#   2. Reclassification. WHO CNS5 retired Diffuse Intrinsic Pontine Glioma;
+#      our Oncotree carries the successor. MeSH still lists DIPG as current,
+#      so no external synonym source bridges this - only a dated decision.
+#   3. Registry house style. NCI/COG trials write "Stage II Kidney Wilms
+#      Tumor"; the organ is part of the label, not a qualifier.
+#
+# Aliases are applied AFTER an exact, code, case- and fold-insensitive lookup
+# has failed, so nothing here can shadow a real Oncotree name. An alias whose
+# own name already resolves is rejected at load time as dead weight.
+#
+# Deliberately absent: the bare string "ALL". Three-character aliases are how
+# the gene table went wrong (see the module docstring in
+# utils/reference_validation), and a condition list that says only "ALL" is
+# rare enough to be worth a review queue rather than a guess.
+#
+# alias	oncotree_display_name	why
+Acute Lymphoblastic Leukemia	B-Lymphoblastic Leukemia/Lymphoma	Oncotree splits lineage, registries do not; paediatric ALL is B-lineage in ~85% of cases
+Acute Lymphocytic Leukemia	B-Lymphoblastic Leukemia/Lymphoma	as above, NCI house spelling
+Acute Lymphoid Leukemia	B-Lymphoblastic Leukemia/Lymphoma	as above, NCI house spelling
+ALL, Childhood B-Cell	B-Lymphoblastic Leukemia/Lymphoma	NCT05366218 house style; lineage stated, word order not Oncotree's
+B-Cell Acute Lymphoblastic Leukemia	B-Lymphoblastic Leukemia/Lymphoma	lineage stated, word order not Oncotree's
+Precursor B-Cell Lymphoblastic Leukemia	B-Lymphoblastic Leukemia/Lymphoma	WHO/MeSH wording for the same entity
+T-Cell Acute Lymphoblastic Leukemia	T-Lymphoblastic Leukemia/Lymphoma	lineage stated, word order not Oncotree's
+Precursor T-Cell Lymphoblastic Leukemia	T-Lymphoblastic Leukemia/Lymphoma	WHO/MeSH wording for the same entity
+Nephroblastoma	Wilms' Tumor	same entity, different name; the spelling used across continental Europe
+Kidney Wilms Tumor	Wilms' Tumor	NCI/COG house style puts the organ in the label
+Anaplastic Kidney Wilms Tumor	Wilms' Tumor	as above; Oncotree has no anaplastic Wilms node, so the parent is the honest answer
+Diffuse Intrinsic Pontine Glioma	Diffuse Midline Glioma, H3 K27-Altered	retired by WHO CNS5; our Oncotree carries only the successor
+DIPG	Diffuse Midline Glioma, H3 K27-Altered	as above; unambiguous in oncology, unlike the ALL abbreviation
+Diffuse Midline Glioma, H3 K27M-Mutant	Diffuse Midline Glioma, H3 K27-Altered	WHO CNS5 renamed K27M-Mutant to K27-Altered to admit non-K27M alterations
+Diffuse Midline Glioma H3 K27M	Diffuse Midline Glioma, H3 K27-Altered	as above, comma-free registry spelling

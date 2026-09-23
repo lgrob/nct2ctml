@@ -1,12 +1,22 @@
 import os
 import sys
+import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from loguru import logger
 
+import config
+
+from utils.oncotree import get_lineage
 from utils.reference_validation import (
+    _diagnosis_aliases,
+    _widen_inferred_nos_leaf,
+    _fold,
+    _oncotree,
+    _oncotree_folded,
     canonical_diagnosis,
     canonical_gene,
     diagnoses_from_conditions,
@@ -298,9 +308,17 @@ class TestNosFallback(unittest.TestCase):
     """
 
     def test_catch_all_conditions_now_resolve(self):
+        """
+        "Glioma" used to assert "Glioma, NOS" here and now asserts "Diffuse
+        Glioma". The leaf expands to one patient code and its parent to 24, so
+        the old expectation named a term that matched almost nobody. The other
+        three still resolve to their leaf: each states a qualifier its parent
+        drops, so widening them would change the population. See
+        TestNosWidening.
+        """
         for condition, expected in (
             ("Low-grade Glioma", "Low-Grade Glioma, NOS"),
-            ("Glioma", "Glioma, NOS"),
+            ("Glioma", "Diffuse Glioma"),
             ("High-grade Glioma", "High-Grade Glioma, NOS"),
             ("Round Cell Sarcoma", "Round Cell Sarcoma, NOS"),
         ):
@@ -396,6 +414,275 @@ class TestSingleReader(unittest.TestCase):
                 if f'"{literal}"' in text or f"'{literal}'" in text:
                     offenders.append(f"{rel}: {literal}")
         self.assertEqual(offenders, [])
+
+
+class TestFolding(unittest.TestCase):
+    """
+    Punctuation and British spelling are not medicine.
+
+    Every case here is a real condition string from the cached corpus that
+    used to return None and fall through to the LLM, which then had to pick
+    an Oncotree branch unaided - the step that makes neuroblastoma land under
+    Adrenal Gland. A hyphen should not cost a diagnosis.
+    """
+
+    def test_hyphen_is_forgiven(self):
+        # NCT04655404 registers "High Grade Glioma".
+        self.assertEqual(canonical_diagnosis("High Grade Glioma, NOS"),
+                         "High-Grade Glioma, NOS")
+
+    def test_apostrophe_is_forgiven(self):
+        # NCT04322318 registers "... Kidney Wilms Tumor", never "Wilms'".
+        self.assertEqual(canonical_diagnosis("Wilms Tumor"), "Wilms' Tumor")
+
+    def test_slash_and_hyphen_are_interchangeable(self):
+        self.assertEqual(canonical_diagnosis("B Lymphoblastic Leukemia Lymphoma"),
+                         "B-Lymphoblastic Leukemia/Lymphoma")
+
+    def test_british_spelling_is_forgiven(self):
+        # The CTIS half of the corpus is European.
+        self.assertEqual(canonical_diagnosis("Wilms Tumour"), "Wilms' Tumor")
+        self.assertEqual(canonical_diagnosis("Acute Myeloid Leukaemia"),
+                         "Acute Myeloid Leukemia")
+
+    def test_commas_are_load_bearing_and_survive(self):
+        # "Glioma, NOS" and "Glioma" are different nodes; folding must not
+        # merge them, or a catch-all would answer for a specific tumour.
+        self.assertNotEqual(_fold("Glioma, NOS"), _fold("Glioma"))
+
+    def test_folding_invents_nothing(self):
+        self.assertIsNone(canonical_diagnosis("Not A Disease"))
+        self.assertIsNone(canonical_diagnosis("Cancer"))
+
+    def test_folding_is_injective_over_the_whole_tree(self):
+        """
+        No two Oncotree display names may fold to the same key.
+
+        True of oncotree_2025_10_03 (879 names, 879 keys). This asserts it
+        rather than trusting it: a future release could introduce a pair
+        distinguished only by a hyphen, and folding would then silently pick
+        one. That must fail here, loudly, not in a patient's match list.
+        """
+        names, _, _ = _oncotree()
+        self.assertEqual(len(_oncotree_folded()), len(names))
+
+
+class TestDiagnosisAliases(unittest.TestCase):
+    def test_lineage_is_resolved(self):
+        # Oncotree has no lineage-free ALL node, so a lineage must be chosen.
+        self.assertEqual(canonical_diagnosis("Acute Lymphoblastic Leukemia"),
+                         "B-Lymphoblastic Leukemia/Lymphoma")
+        self.assertEqual(canonical_diagnosis("T-Cell Acute Lymphoblastic Leukemia"),
+                         "T-Lymphoblastic Leukemia/Lymphoma")
+
+    def test_who_reclassification_is_resolved(self):
+        # WHO CNS5 retired DIPG; our Oncotree carries only the successor.
+        self.assertEqual(canonical_diagnosis("Diffuse Intrinsic Pontine Glioma"),
+                         "Diffuse Midline Glioma, H3 K27-Altered")
+        self.assertEqual(canonical_diagnosis("Diffuse Midline Glioma, H3 K27M-Mutant"),
+                         "Diffuse Midline Glioma, H3 K27-Altered")
+
+    def test_european_name_is_resolved(self):
+        self.assertEqual(canonical_diagnosis("Nephroblastoma"), "Wilms' Tumor")
+
+    def test_the_bare_all_abbreviation_is_not_an_alias(self):
+        """
+        Three-character aliases are how the gene table went wrong.
+
+        "ALL" is left unresolved on purpose: a condition list containing only
+        it should reach the review queue rather than be guessed at.
+        """
+        self.assertIsNone(canonical_diagnosis("ALL"))
+
+    def test_every_alias_targets_a_real_oncotree_node(self):
+        names, _, _ = _oncotree()
+        for alias, target in _diagnosis_aliases().items():
+            self.assertIn(target, names, f"{alias} targets a non-existent node")
+
+    def test_no_alias_shadows_a_real_oncotree_name(self):
+        """
+        The table may only reach what the tree cannot.
+
+        An alias whose own name already resolves is dead weight that cannot
+        fire, and it would mislead the next person editing the file.
+        """
+        folded = _oncotree_folded()
+        for alias in _diagnosis_aliases():
+            self.assertNotIn(alias, folded)
+
+    def test_a_row_with_an_unknown_target_is_dropped(self):
+        """
+        A typo in the table must not put an unmatchable string into CTML.
+
+        This is the failure the whole module exists to prevent: CTML matching
+        is on exact strings, so a target that is not an Oncotree node matches
+        no patient and reads as a correct answer in the log.
+        """
+        with tempfile.NamedTemporaryFile('w', suffix='.tsv', delete=False) as handle:
+            handle.write("# comment row\n")
+            handle.write("Some Registry Name\tNot An Oncotree Node\twhy\n")
+            handle.write("Nephroblastoma\tWilms' Tumor\twhy\n")
+            path = handle.name
+        try:
+            with patch.object(config, 'DIAGNOSIS_SYNONYM_FILE_PATH', path):
+                _diagnosis_aliases.cache_clear()
+                aliases = _diagnosis_aliases()
+            self.assertNotIn(_fold("Some Registry Name"), aliases)
+            self.assertEqual(aliases.get(_fold("Nephroblastoma")), "Wilms' Tumor")
+        finally:
+            os.unlink(path)
+            _diagnosis_aliases.cache_clear()
+            canonical_diagnosis.cache_clear()
+
+    def test_a_missing_table_is_survivable(self):
+        """Folding must still work if the file is absent."""
+        with patch.object(config, 'DIAGNOSIS_SYNONYM_FILE_PATH',
+                          '/nonexistent/diagnosis_synonyms.tsv'):
+            _diagnosis_aliases.cache_clear()
+            try:
+                self.assertEqual(_diagnosis_aliases(), {})
+                self.assertEqual(canonical_diagnosis("Wilms Tumor"), "Wilms' Tumor")
+            finally:
+                _diagnosis_aliases.cache_clear()
+                canonical_diagnosis.cache_clear()
+
+
+class TestExtendedQualifiers(unittest.TestCase):
+    def test_ajcc_staging_citation_is_stripped(self):
+        # NCI appends the staging manual to its germ cell conditions.
+        self.assertEqual(
+            strip_condition_qualifiers("Stage I Testicular Seminoma AJCC v6 and v7"),
+            "Testicular Seminoma")
+
+    def test_substage_letters_are_stripped(self):
+        self.assertEqual(strip_condition_qualifiers("Stage IIIB Osteosarcoma"),
+                         "Osteosarcoma")
+
+    def test_bare_relapse_noun_is_stripped(self):
+        # NCT05366218 registers "Acute Lymphoid Leukemia Relapse".
+        self.assertEqual(strip_condition_qualifiers("Acute Lymphoid Leukemia Relapse"),
+                         "Acute Lymphoid Leukemia")
+
+    def test_a_real_node_still_beats_stripping(self):
+        """
+        Stripping is a fallback; the unmodified string is tried first.
+
+        Both of these begin with a word the leading-qualifier regex removes,
+        and both are real nodes: "Malignant ..." would otherwise become
+        "Peripheral Nerve Sheath Tumor" and "Primary CNS Melanoma" would
+        become "CNS Melanoma", neither of which is what the trial said.
+        """
+        self.assertEqual(canonical_diagnosis("Malignant Peripheral Nerve Sheath Tumor"),
+                         "Malignant Peripheral Nerve Sheath Tumor")
+        self.assertEqual(canonical_diagnosis("Primary CNS Melanoma"),
+                         "Primary CNS Melanoma")
+
+
+class TestConditionSeedRegressions(unittest.TestCase):
+    """
+    The condition lists these trials actually register, verbatim.
+
+    Each returned nothing before this change, so the trial's diagnosis was
+    left entirely to the LLM.
+    """
+
+    def test_nci_wilms_house_style(self):
+        self.assertEqual(
+            diagnoses_from_conditions([
+                'Anaplastic Kidney Wilms Tumor', 'Recurrent Kidney Wilms Tumor',
+                'Stage II Kidney Wilms Tumor']),
+            ["Wilms' Tumor"])
+
+    def test_paediatric_all(self):
+        self.assertEqual(
+            diagnoses_from_conditions(['Acute Lymphoblastic Leukemia, Pediatric']),
+            ['B-Lymphoblastic Leukemia/Lymphoma'])
+
+    def test_all_spelling_variants_collapse_to_one_term(self):
+        self.assertEqual(
+            diagnoses_from_conditions([
+                'ALL, Childhood B-Cell', 'Acute Lymphoid Leukemia Relapse',
+                'Acute Lymphocytic Leukemia Refractory']),
+            ['B-Lymphoblastic Leukemia/Lymphoma'])
+
+    def test_retired_dipg_maps_to_its_successor(self):
+        self.assertEqual(
+            diagnoses_from_conditions([
+                'Diffuse Intrinsic Pontine Glioma',
+                'Diffuse Midline Glioma, H3 K27M-Mutant',
+                'Recurrent Diffuse Intrinsic Pontine Glioma']),
+            ['Diffuse Midline Glioma, H3 K27-Altered'])
+
+    def test_unhyphenated_high_grade_glioma(self):
+        self.assertEqual(
+            diagnoses_from_conditions(['High Grade Glioma']),
+            ['High-Grade Glioma, NOS'])
+
+
+class TestNosWidening(unittest.TestCase):
+    """
+    An inferred ", NOS" leaf matches one patient code; its parent may match
+    dozens. MatchMiner expands a diagnosis to its descendants before querying,
+    so the leaf is a silent false negative - the trial looks curated and
+    enrols nobody.
+    """
+
+    def test_a_true_catch_all_is_widened(self):
+        # "Glioma, NOS" expands to 1 code, "Diffuse Glioma" to 24.
+        self.assertEqual(diagnoses_from_conditions(["Glioma"]), ["Diffuse Glioma"])
+
+    def test_widening_never_drops_a_stated_qualifier(self):
+        """
+        The guard that keeps this safe.
+
+        "High-Grade Glioma, NOS" sits under "Diffuse Glioma", which includes
+        low-grade entities, so widening would enrol low-grade patients into a
+        high-grade trial. "Low-Grade Glioma, NOS" sits under "Encapsulated
+        Glioma", which is not where low-grade gliomas generally live.
+        """
+        self.assertEqual(diagnoses_from_conditions(["High Grade Glioma"]),
+                         ["High-Grade Glioma, NOS"])
+        self.assertEqual(diagnoses_from_conditions(["Low Grade Glioma"]),
+                         ["Low-Grade Glioma, NOS"])
+
+    def test_widening_stops_below_the_organ_system_root(self):
+        """
+        "Sarcoma, NOS" hangs directly off the "Soft Tissue" root. Promoting it
+        would enrol every soft-tissue tumour and still miss the bone sarcomas
+        a sarcoma trial means, so the leaf is kept and logged instead.
+        """
+        self.assertEqual(diagnoses_from_conditions(["Sarcoma"]), ["Sarcoma, NOS"])
+
+    def test_a_trial_that_says_nos_itself_is_respected(self):
+        """
+        Widening applies only to the suffix this code adds. If the trial wrote
+        ", NOS", that is the curator's word, not an inference.
+        """
+        self.assertEqual(diagnoses_from_conditions(["Glioma, NOS"]), ["Glioma, NOS"])
+
+    def test_the_verified_b_all_case(self):
+        """
+        The parent-beats-NOS case confirmed against two loaded MatchMiner
+        trials: the parent expands to 8 terms including the leaf, the leaf to
+        itself, and patients are coded with the parent.
+        """
+        self.assertEqual(
+            canonical_diagnosis("B-Lymphoblastic Leukemia/Lymphoma, NOS"),
+            "B-Lymphoblastic Leukemia/Lymphoma, NOS")
+        self.assertEqual(
+            diagnoses_from_conditions(["B-Lymphoblastic Leukemia/Lymphoma"]),
+            ["B-Lymphoblastic Leukemia/Lymphoma"])
+
+    def test_widening_only_ever_reaches_a_real_node(self):
+        parent_of, level_1_names, descendants = get_lineage()
+        for leaf in (n for n in descendants if n.endswith(", NOS")):
+            widened = _widen_inferred_nos_leaf(leaf, leaf)
+            self.assertIn(widened, descendants, leaf)
+
+    def test_widening_never_reaches_an_organ_system_root(self):
+        parent_of, level_1_names, descendants = get_lineage()
+        for leaf in (n for n in descendants if n.endswith(", NOS")):
+            self.assertNotIn(_widen_inferred_nos_leaf(leaf, leaf), level_1_names, leaf)
 
 
 if __name__ == '__main__':
