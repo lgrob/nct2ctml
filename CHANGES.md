@@ -486,6 +486,27 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Defect fixed: a basket that names entities lost the basket
+
+`_basket_wildcards` decided correctly that NCT02332668 (KEYNOTE-051, "solid
+malignancy or lymphoma") and NCT07440290 (tumour-agnostic BRAF V600) are
+baskets, but both callers consulted it only when no specific diagnosis had
+been found. Both trials name a few entities, so they kept those entities
+and lost the basket. By population they reached 2% and 3% of the patients
+their keys do.
+
+`seed_and_map_diagnosis` now adds the wildcards whenever the rule fires, as a
+union with the named terms. It is not a replacement, because NCT02332668's
+rule yields `_SOLID_` alone and dropping the Classical Hodgkin Lymphoma it
+names would remove it from every lymphoma patient. The wildcards are added
+after the model call, because the floor handed to the model must be Oncotree
+nodes. Recall went 0.02 -> 0.75 and 0.03 -> 1.00, and nothing else on the
+benchmark moved. The change touches 12 of 924 cached ClinicalTrials.gov
+trials, and the inclusion criteria of all 12 were read by hand: each
+describes a basket. This overturns the docstring's earlier claim that
+NCT06607692 was an over-reach. `bench/benchmark_map.py --conditions-only`
+now calls `seed_and_map_diagnosis` itself instead of restating it.
+
 ## Benchmark: diagnoses scored by the patients they reach
 
 `bench/benchmark_map.py` compared diagnosis *names*. A trial that matched

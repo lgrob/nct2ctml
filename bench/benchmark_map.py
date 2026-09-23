@@ -230,13 +230,15 @@ def write_conditions_baseline(ids, out_dir):
     from loguru import logger
     logger.remove()
     import src.clinical_trials_gov as ctg
-    import utils.reference_validation as rv
     for nct in ids:
         with open(f"{CACHE_DIR}/{nct}.json") as handle:
             record = json.load(handle)
         conditions = (record.get("protocolSection", {}).get("conditionsModule", {})
                       .get("conditions", []))
-        diagnoses = rv.diagnoses_from_conditions(conditions, nct)
+        # The pipeline's own function with no eligibility text, so the model
+        # is never called: whatever the seed and basket rules decide is exactly
+        # what reaches the full run as its floor.
+        diagnoses, _ = ctg.seed_and_map_diagnosis(nct, conditions, "")
         if not diagnoses:
             diagnoses = sorted(ctg.basket_wildcards(conditions, nct))
         doc = {"nct_id": nct, "treatment_list": {"step": [{"match": [

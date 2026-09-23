@@ -54,6 +54,34 @@ class TestSharedSeeding(unittest.TestCase):
             '2023-507222-17-00', ['Acute Myeloid Leukaemia'], '')
         self.assertEqual(seeded, ['Acute Myeloid Leukemia'])
 
+    def test_a_basket_keeps_its_wildcards_beside_named_entities(self):
+        # NCT02332668, KEYNOTE-051: "solid malignancy or lymphoma", with
+        # melanoma and classical Hodgkin lymphoma as named cohorts. Before the
+        # union it kept the two entities and lost the basket.
+        conditions = ['Melanoma', 'Lymphoma', 'Solid Tumor',
+                      'Classical Hodgkin Lymphoma',
+                      'Microsatellite-instability-high Solid Tumor']
+        seeded, _ = ctg.seed_and_map_diagnosis('NCT02332668', conditions, '')
+        self.assertIn('_SOLID_', seeded)
+        # Union, not replacement: CHL is liquid, and _SOLID_ does not cover it.
+        self.assertIn('Classical Hodgkin Lymphoma', seeded)
+        self.assertIn('Melanoma', seeded)
+
+    def test_the_model_floor_never_carries_wildcards(self):
+        # The floor forces Oncotree branches; _SOLID_ is not a node.
+        with patch.object(ctg, 'map_eligibility_criteria_to_oncotree_term',
+                          return_value=[]) as mapper:
+            seeded, _ = ctg.seed_and_map_diagnosis(
+                'NCT02332668', ['Melanoma', 'Solid Tumor', 'Cancer'], 'text')
+        self.assertIn('_SOLID_', seeded)
+        self.assertEqual(mapper.call_args.args[2], ['Melanoma'])
+
+    def test_a_category_header_adds_no_wildcard(self):
+        # One umbrella term ahead of a list is a header, not a basket.
+        seeded, _ = ctg.seed_and_map_diagnosis(
+            'NCT04897321', ['Pediatric Solid Tumor', 'Osteosarcoma', 'Neuroblastoma'], '')
+        self.assertFalse({'_SOLID_', '_LIQUID_'} & set(seeded))
+
     def test_basket_wildcards_are_reachable_publicly(self):
         self.assertEqual(ctg.basket_wildcards(['Pediatric Cancer']),
                          {'_SOLID_', '_LIQUID_'})

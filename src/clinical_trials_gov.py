@@ -796,13 +796,22 @@ def _basket_wildcards(conditions_list, nct_id: str = "") -> set:
     ones as the answer produced 55 diagnoses where the curated answer is
     _SOLID_ + _LIQUID_.
 
-    The threshold is a heuristic fitted to a handful of trials, and it
-    over-reaches: NCT06607692 restates one umbrella twice ("Solid Tumor
-    Cancer", "Solid Tumor Refractory to Conventional Treatment") beside six
-    named tumours, and is read as a basket when it is not. That direction is
-    the tolerable one - a wildcard is one over-broad criterion a clinician
-    dismisses in a moment, where the alternative was dozens of wrong specific
-    diagnoses.
+    The threshold is a heuristic fitted to a handful of trials. NCT06607692
+    restates one umbrella twice ("Solid Tumor Cancer", "Solid Tumor
+    Refractory to Conventional Treatment") beside six named tumours, and was
+    filed here as an over-reach. Its inclusion criteria say otherwise -
+    "relapsed/refractory solid tumours with positive uptake on SSTR-PET" - so
+    the named tumours are examples and the basket reading is right. On
+    2026-09-23 the inclusion criteria of all 12 cached trials where this rule
+    and a specific seed both fire were read by hand, and each describes a
+    basket: a tumour-agnostic alteration (the four DETERMINE arms,
+    NCT04585750), "solid malignancy or lymphoma" (NCT02332668), any
+    histology of solid tumour (NCT03465592, NCT04222413, NCT06607692,
+    NCT06721689), or a
+    solid-tumour part alongside diagnosis-restricted parts (NCT05468359,
+    NCT06636435). If it does over-reach, that direction is the tolerable
+    one - a wildcard is one over-broad criterion a clinician dismisses in a
+    moment.
     """
     broad_any = tdh.all_tumours(conditions_list)
     broad_solid = tdh.all_solid_tumours(conditions_list)
@@ -897,6 +906,10 @@ def seed_and_map_diagnosis(trial_id: str, conditions_list, eligibility_criteria:
     model failed to return a diagnosis the trial names outright. What differs
     between the two registries is only the fallback when this returns nothing,
     so that stays with each caller.
+
+    `seeded` includes `_SOLID_`/`_LIQUID_` when the conditions describe a
+    basket, alongside any specific terms they name. The model is still
+    handed only the Oncotree terms.
     """
     # Read the trial's own condition list first. It costs no tokens, cannot
     # hallucinate, and on the curated benchmark a plain lookup of these strings
@@ -922,6 +935,21 @@ def seed_and_map_diagnosis(trial_id: str, conditions_list, eligibility_criteria:
                 f"{trial_id} | Eligibility mapping did not return {sorted(overlooked)}, "
                 f"which the trial's own conditions name outright. Kept from the conditions."
             )
+
+    # A basket is a basket whatever else the conditions name. The wildcards
+    # used to be reached only when nothing specific was found, so a
+    # tumour-agnostic trial that also lists a few entities kept the entities
+    # and lost the basket: NCT02332668 (KEYNOTE-051, "solid malignancy or
+    # lymphoma") and NCT07440290 (tumour-agnostic BRAF V600) reached 2% and 3%
+    # of the patients their curated keys do. The union, not a replacement:
+    # NCT02332668's rule yields _SOLID_ alone, and dropping the Classical
+    # Hodgkin Lymphoma it names would remove the trial from every lymphoma
+    # patient. Added after the model call, because the floor handed to the
+    # model must be Oncotree nodes and the wildcards are not.
+    wildcards = sorted(_basket_wildcards(conditions_list, trial_id) - set(seeded))
+    if wildcards:
+        logger.info(f"{trial_id} | Conditions describe a basket; adding {wildcards}")
+        seeded = list(seeded) + wildcards
     return seeded, from_eligibility
 
 

@@ -257,6 +257,15 @@ NCT03838042 and NCT05580562 get `_SOLID_` where the key names specific
 tumours, so precision is 0.02 and 0.04. Both are over-broad rather than
 missing, which costs less.
 
+**Addressed 2026-09-23** for the first shape: `seed_and_map_diagnosis` now
+adds the wildcards whenever the basket rule fires, as a union with the named
+terms. Recall on NCT02332668 went 0.02 -> 0.75 and on NCT07440290 0.03 -> 1.00,
+with no other benchmark trial changed. Across the corpus the change touches
+12 of 924 ClinicalTrials.gov trials, and the inclusion criteria of all 12
+were read: each describes a basket. NCT02332668 stays short of 1.00 because
+its rule yields `_SOLID_` alone, and its "lymphoma" arm is covered only by
+the Classical Hodgkin Lymphoma it names.
+
 ### Off-panel fusion partners are dropped, and that is correct
 
 A scan of all 924 cached trials against the Cancer Gene Census finds only ten
