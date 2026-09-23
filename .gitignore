@@ -45,3 +45,7 @@ ctml/needs-review/*
 # index is cited by a patient report, ship it as a versioned release artefact
 # with its manifest rather than regenerating it ad hoc.
 index/
+
+# Benchmark outputs (bench/benchmark_map.py --out). Regenerated per run;
+# the scored summary is bench/report.json.
+bench/output*/

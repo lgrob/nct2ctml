@@ -10,7 +10,12 @@ Scoring is deliberately blunt and reported alongside the raw sets, because no
 single number decides this - a reviewer needs to see what the model actually
 said. Three dimensions:
 
-  diagnoses  Oncotree terms, exact set comparison (precision / recall / F1)
+  diagnoses  Oncotree terms, two ways: exact set comparison of the names, and
+             comparison of the patient populations they reach - each side
+             expanded to the Oncotree nodes a patient can be coded to (see
+             utils.build_trial_index.diagnosis_population). The names are
+             kept for continuity with earlier runs; the population is the
+             one that says whether a patient reaches the trial.
   genes      hugo_symbol values, exact set comparison
   structure  does the tree contain a gene asserted both present and absent -
              the unsatisfiable shape that matches zero patients
@@ -20,11 +25,17 @@ Usage:
     python -m bench.benchmark_map --score-only    # score an existing output dir
     python -m bench.benchmark_map --out DIR       # where mapped CTML goes
     python -m bench.benchmark_map --limit N       # first N trials only
+    python -m bench.benchmark_map --conditions-only
+        # diagnoses from the trial's own conditions, no model, no network:
+        # the deterministic floor, scored in seconds. Genes and ages are not
+        # produced on this path and are not scored.
 """
 import argparse, json, os, sys, time, yaml
 from collections import defaultdict
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from utils.build_trial_index import diagnosis_population
 
 TRUTH_DIR = "ctml/reviewed"
 CACHE_DIR = "cache/nct"
@@ -112,6 +123,22 @@ def prf(got, want):
     return p, r, f
 
 
+def population_prf(got, want):
+    """
+    Precision and recall over the patients each diagnosis set reaches.
+
+    Recall is the share of the key's patients the output also reaches - a
+    miss is a patient who never sees a trial they qualify for. Precision is
+    the share of the output's patients the key agrees with - a miss is a
+    clinician rejecting a trial by hand. They are reported apart because the
+    two errors do not cost the same, and F1 is carried only for comparison.
+    Every codable node counts once; a rare subtype weighs as much as a common
+    one, which is the thing a patient-frequency weighting would change.
+    """
+    reached, wanted = diagnosis_population(got), diagnosis_population(want)
+    return prf(reached, wanted) + (reached, wanted)
+
+
 # ---------------------------------------------------------------- reporting
 def score(truth_dir, out_dir, ids):
     rows, agg = [], defaultdict(list)
@@ -122,12 +149,17 @@ def score(truth_dir, out_dir, ids):
             continue
         t, o = facts(yaml.safe_load(open(tp))), facts(yaml.safe_load(open(op)))
         dp, dr, df = prf(o["diagnoses"], t["diagnoses"])
+        pp, pr, pf, reached, wanted = population_prf(o["diagnoses"], t["diagnoses"])
         gp, gr, gf = prf(o["genes"], t["genes"])
         uns = unsatisfiable(o["matches"])
         ap_, ar_, af_ = prf(o["ages"], t["ages"])
         rows.append({
             "nct_id": nct, "status": "ok",
             "dx_p": dp, "dx_r": dr, "dx_f1": df,
+            "pop_p": pp, "pop_r": pr, "pop_f1": pf,
+            "n_pop_truth": len(wanted), "n_pop_got": len(reached),
+            "pop_missed": sorted(wanted - reached)[:6],
+            "pop_extra": sorted(reached - wanted)[:6],
             "gene_p": gp, "gene_r": gr, "gene_f1": gf,
             "n_dx_truth": len(t["diagnoses"]), "n_dx_got": len(o["diagnoses"]),
             "genes_truth": sorted(t["genes"]), "genes_got": sorted(o["genes"]),
@@ -138,16 +170,17 @@ def score(truth_dir, out_dir, ids):
             "ages_truth": sorted(t["ages"]), "ages_got": sorted(o["ages"]),
             "unsatisfiable": sorted(uns),
         })
-        for k in ("dx_f1", "gene_f1", "age_f1", "dx_p", "dx_r", "gene_p", "gene_r"):
+        for k in ("dx_f1", "gene_f1", "age_f1", "dx_p", "dx_r", "gene_p", "gene_r",
+                  "pop_p", "pop_r", "pop_f1"):
             agg[k].append(rows[-1][k])
     return rows, agg
 
 
-def report(rows, agg):
+def report(rows, agg, diagnoses_only=False):
     ok = [r for r in rows if r["status"] == "ok"]
-    print(f"\n{'trial':<14}{'dx F1':>7}{'dx P':>7}{'dx R':>7}{'gene F1':>9}"
-          f"{'age F1':>8}{'#dx':>6}  flags")
-    print("-" * 82)
+    print(f"\n{'trial':<14}{'dx F1':>7}{'dx P':>7}{'dx R':>7}{'pop P':>7}{'pop R':>7}"
+          f"{'gene F1':>9}{'age F1':>8}{'#dx':>6}  flags")
+    print("-" * 96)
     for r in rows:
         if r["status"] != "ok":
             print(f"{r['nct_id']:<14}{r['status']}")
@@ -156,24 +189,60 @@ def report(rows, agg):
         if r["unsatisfiable"]:
             flags.append("UNSATISFIABLE:" + ",".join(r["unsatisfiable"]))
         missed_bound = [a for a in r["ages_truth"] if a not in r["ages_got"]]
-        if missed_bound:
+        if missed_bound and not diagnoses_only:
             flags.append("age bound missing:" + ",".join(missed_bound))
         if r["n_dx_got"] > 3 * max(r["n_dx_truth"], 1):
             flags.append("dx over-generated")
+        gene_age = (f"{'-':>9}{'-':>8}" if diagnoses_only
+                    else f"{r['gene_f1']:>9.2f}{r['age_f1']:>8.2f}")
         print(f"{r['nct_id']:<14}{r['dx_f1']:>7.2f}{r['dx_p']:>7.2f}{r['dx_r']:>7.2f}"
-              f"{r['gene_f1']:>9.2f}{r['age_f1']:>8.2f}"
+              f"{r['pop_p']:>7.2f}{r['pop_r']:>7.2f}{gene_age}"
               f"{r['n_dx_got']:>4}/{r['n_dx_truth']:<2}  {' '.join(flags)}")
     if ok:
-        print("-" * 82)
-        print(f"{'MEAN':<14}{sum(agg['dx_f1'])/len(ok):>7.2f}"
-              f"{sum(agg['dx_p'])/len(ok):>7.2f}{sum(agg['dx_r'])/len(ok):>7.2f}"
-              f"{sum(agg['gene_f1'])/len(ok):>9.2f}{sum(agg['age_f1'])/len(ok):>8.2f}")
+        mean = lambda k: sum(agg[k]) / len(ok)
+        gene_age = (f"{'-':>9}{'-':>8}" if diagnoses_only
+                    else f"{mean('gene_f1'):>9.2f}{mean('age_f1'):>8.2f}")
+        print("-" * 96)
+        print(f"{'MEAN':<14}{mean('dx_f1'):>7.2f}{mean('dx_p'):>7.2f}{mean('dx_r'):>7.2f}"
+              f"{mean('pop_p'):>7.2f}{mean('pop_r'):>7.2f}{gene_age}")
+        exact = lambda k: sum(1 for r in ok if r[k] == 1.0)
+        print(f"\nexactly right: {exact('dx_f1')} by name, {exact('pop_f1')} by population")
         print(f"\nscored {len(ok)}/{len(rows)} trials")
         bad = [r['nct_id'] for r in ok if r['unsatisfiable']]
         if bad:
             print(f"unsatisfiable trees: {len(bad)}  {bad}")
-    print("\nPer-trial detail is in the JSON report; read the missed and spurious "
-          "diagnosis lists before drawing a conclusion from the means.")
+    print("\nPer-trial detail is in the JSON report; read pop_missed and pop_extra "
+          "before drawing a conclusion from the means.")
+
+
+def write_conditions_baseline(ids, out_dir):
+    """
+    The diagnoses the pipeline reads from a trial's own conditions, written as
+    minimal CTML so the ordinary scorer can read them.
+
+    This is the deterministic half of the diagnosis path: the seed
+    `seed_and_map_diagnosis` hands the model as a floor, and the
+    `_SOLID_`/`_LIQUID_` rule for trials whose conditions name no Oncotree
+    term. What the model adds on top is exactly the gap between this and a
+    full run, so the two together separate a lookup regression from a model
+    one - and this half needs no GPU and has no run-to-run variance.
+    """
+    from loguru import logger
+    logger.remove()
+    import src.clinical_trials_gov as ctg
+    import utils.reference_validation as rv
+    for nct in ids:
+        with open(f"{CACHE_DIR}/{nct}.json") as handle:
+            record = json.load(handle)
+        conditions = (record.get("protocolSection", {}).get("conditionsModule", {})
+                      .get("conditions", []))
+        diagnoses = rv.diagnoses_from_conditions(conditions, nct)
+        if not diagnoses:
+            diagnoses = sorted(ctg.basket_wildcards(conditions, nct))
+        doc = {"nct_id": nct, "treatment_list": {"step": [{"match": [
+            {"or": [{"clinical": {"oncotree_primary_diagnosis": d}} for d in diagnoses]}]}]}}
+        with open(f"{out_dir}/{nct}.yaml", "w") as handle:
+            yaml.safe_dump(doc, handle, sort_keys=False)
 
 
 def main():
@@ -184,7 +253,11 @@ def main():
     ap.add_argument("--score-only", action="store_true")
     ap.add_argument("--limit", type=int)
     ap.add_argument("--json", default="bench/report.json")
+    ap.add_argument("--conditions-only", action="store_true",
+                    help="diagnoses from conditionsModule only; no model, no network")
     args = ap.parse_args()
+    if args.conditions_only and args.out == "bench/output":
+        args.out = "bench/output-conditions"
 
     ids = sorted(f[:-5] for f in os.listdir(args.truth)
                  if f.startswith("NCT") and f.endswith(".yaml"))
@@ -193,7 +266,9 @@ def main():
     os.makedirs(args.out, exist_ok=True)
 
     timings = {}
-    if not args.score_only:
+    if args.conditions_only:
+        write_conditions_baseline(ids, args.out)
+    elif not args.score_only:
         import config
         from loguru import logger
         logger.remove()
@@ -215,7 +290,7 @@ def main():
     rows, agg = score(args.truth, args.out, ids)
     for r in rows:
         r["seconds"] = round(timings.get(r["nct_id"], 0), 1)
-    report(rows, agg)
+    report(rows, agg, diagnoses_only=args.conditions_only)
     with open(args.json, "w") as f:
         json.dump(rows, f, indent=2, default=str)
     print(f"report written to {args.json}")

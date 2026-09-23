@@ -54,22 +54,35 @@ run without spending anything:
 
     ./.venv/bin/python -m bench.benchmark_map --score-only
 
+Score only the deterministic half of the diagnosis path, meaning the terms read
+from the trial's own conditions plus the `_SOLID_`/`_LIQUID_` rule. It needs no
+model and no network, finishes in seconds, and is identical from run to run:
+
+    ./.venv/bin/python -m bench.benchmark_map --conditions-only
+
+Genes and ages are not produced on that path and show as `-`. What a full
+run adds on top of it is what the model contributes.
+
 ## What is scored
 
 | dimension | how |
 |---|---|
-| diagnoses | Oncotree terms, exact set comparison: precision / recall / F1 |
+| diagnoses, by name | Oncotree terms, exact set comparison: `dx_p` / `dx_r` / `dx_f1` |
+| diagnoses, by population | each side expanded to the Oncotree nodes a patient can be coded to, then compared: `pop_p` / `pop_r` |
 | genes | `hugo_symbol` values, exact set comparison |
 | age | `age_numerical` bounds, exact set comparison after normalising `<` to `<=` |
 | structure | genes asserted present *and* absent in the same AND branch - the shape that matches zero patients |
 
 ## Reading the result
 
-The means are a summary, not a verdict. Diagnosis scoring is exact-set, which
-punishes a defensible choice at a different level of the Oncotree hierarchy
-exactly as hard as a wrong answer - `Myeloid Neoplasm` versus the 20 AML
-subtypes beneath it scores 0.0 either way. Read `dx_missed` and `dx_spurious`
-in `bench/report.json` before concluding anything.
+The means are a summary, not a verdict. Scoring by name punishes a
+defensible choice at a different level of the Oncotree hierarchy exactly as
+hard as a wrong answer. `Myeloid Neoplasm` against the 31 AML subtypes
+beneath it scores 0.0 either way. The population columns separate those two
+cases: that example is recall 1.0 with precision 0.31, meaning too broad
+rather than wrong. When the two metrics disagree, trust the population
+columns. Read `pop_missed` and `pop_extra` in `bench/report.json` before
+concluding anything.
 
 `UNSATISFIABLE` is different: it is unambiguous. A trial flagged there matches
 no patient at all, whatever the F1 says.
@@ -86,6 +99,45 @@ So 1.00 means agreement and ~0.05 means chance on diagnoses. The gene floor is
 higher because 26 trials have no genomic criterion, and empty-versus-empty
 scores 1.0; read the gene mean alongside the count of trials that actually
 carry genes, not on its own.
+
+The population metric calibrates to identity 1.00 and shuffled
+**P 0.15 / R 0.15** (F1 0.07). Its chance floor sits above the name metric's
+0.05 because two unrelated trials still share patients when either one is a
+basket. Do not read 0.15 as signal.
+
+## Why diagnoses are scored by population
+
+Name comparison asks whether the output uses the key's words. The question
+that matters is whether a patient's code reaches the trial. The two disagree
+in both directions:
+
+- *Kinder by population*: the key lists `Rhabdomyosarcoma` and its subtypes,
+  the output lists the parent alone. By name that scores 0.40, but both reach
+  the same patients (NCT04625907, NCT06023641).
+- *Harsher by population*: the output names `Diffuse Glioma` (24 nodes)
+  where the key names only one child of it, `Diffuse Midline Glioma, H3
+  K27-Altered`. By name that is one extra term; by population it is every
+  diffuse glioma subtype (NCT04185038: F1 0.88 by name, pop P 0.35).
+- *Graded instead of zero*: the key says `_SOLID_` and the output names two
+  entities. By name that is 0.0, the same as a wrong answer. By population
+  it is recall 0.02, the worst miss in the set (NCT02332668).
+
+Patients are assumed to be coded at the most specific node, as Kispi's
+pipeline does. That is a leaf, or an internal node that has no ", NOS"
+child: Oncotree has no `Osteosarcoma, NOS`, so an osteosarcoma that is not
+subtyped further is coded `Osteosarcoma`. The only nodes a patient is never
+coded to are the 20 parents that have a ", NOS" child; that patient goes to
+the NOS leaf. The rule lives in `utils.build_trial_index.diagnosis_population`.
+
+Read `pop_r` and `pop_p` apart. A recall miss is a patient who never sees a
+trial they qualify for. A precision miss is a clinician rejecting a trial by
+hand. Every codable node counts once, so a rare subtype weighs as much as a
+common one.
+
+Conditions-only baseline, 2026-09-23:
+
+    by name          P 0.90   R 0.65   F1 0.72   20 trials exact
+    by population    P 0.92   R 0.75   F1 0.76   23 trials exact
 
 ## Why age scores the bounds and not the label
 

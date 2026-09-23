@@ -486,6 +486,38 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Benchmark: diagnoses scored by the patients they reach
+
+`bench/benchmark_map.py` compared diagnosis *names*. A trial that matched
+every B-ALL patient scored the same as one that matched none, and the
+correct parent answers on NCT05366218 and NCT05748171 were scored 0.0. The
+fix `doc/open_issues.md` proposed was to expand through the deployed
+MatchMiner mapping file. MatchMiner is no longer the consumer, so expansion
+now runs through our own Oncotree.
+
+- `utils/build_trial_index.diagnosis_population` expands a diagnosis set to
+  the nodes a patient can be coded to. Patients are coded at the most
+  specific node, which is a leaf or an internal node with no ", NOS" child.
+  Only 20 of 170 internal nodes have one; an osteosarcoma that is not
+  subtyped further is coded `Osteosarcoma`. A leaves-only rule would have
+  dropped it. `_SOLID_`/`_LIQUID_` expand as in the index.
+- The report adds `pop_p`, `pop_r`, `pop_f1`, `pop_missed` and `pop_extra`.
+  The name scores are kept so earlier runs stay comparable.
+- `--conditions-only` writes and scores the deterministic diagnosis path
+  (conditions seed plus basket rule) with no model and no network. It is the
+  replay loop `doc/open_issues.md` asked for, for the half of stage 1 that
+  needs no model.
+- `tests/test_population_scoring.py`, 10 cases, each one the name metric got
+  wrong on the curated key.
+
+Calibration: identity 1.00; key shuffled by one P 0.15 / R 0.15. The chance
+floor sits above the name metric's 0.05 because unrelated basket trials share
+patients. Conditions-only baseline on 2026-09-23: by name P 0.90 / R 0.65 /
+F1 0.72 (the 0.684 recorded above is the seed alone, without the basket
+rule, and reproduces exactly); by population P 0.92 / R 0.75 / F1 0.76. The
+population metric also exposes a failure the name metric could not grade:
+two basket trials given specific terms reach 2% and 3% of their patients.
+
 ## Cleanup: upstream leftovers and a suite that could not go green
 
 - `ref/local_trial_info.csv` — emptied to its header. It held 96 rows of

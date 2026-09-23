@@ -112,6 +112,11 @@ because that column scores the bounds rather than the trial-level label.
 
 ### Our OncoTree is newer than the table MatchMiner maps against
 
+*Out of scope since 2026-09-23: the consumer is the flat index
+(`utils/build_trial_index.py`) joined by Kispi's own genomics pipeline, not a
+MatchMiner instance, and both sides of that join use `ref/oncotree_file.txt`.
+Kept because it applies again the moment a MatchMiner instance does.*
+
 `ref/oncotree_file.txt` is `oncotree_2025_10_03`, the current latest stable
 (verified against the OncoTree API: 879 names, zero difference). MatchMiner
 resolves `oncotree_primary_diagnosis` through an `oncotree_mapping.json` -
@@ -222,11 +227,16 @@ same as one that matches none - and on 2026-09-15 it scored the pipeline's
 *correct* parent answers as spurious on NCT05366218 and NCT05748171, marking
 them 0.0. **The benchmark is blind to the only property that matters.**
 
-Fixing the metric properly means scoring through the instance's
-`oncotree_mapping.json`: expand both sides and compare the patient
-populations, not the strings. That makes the benchmark depend on a file from
-the deployment, which is a real cost - but the alternative is a number that
-can improve while matching gets worse.
+**Addressed 2026-09-23**, without the deployment file: MatchMiner is no
+longer the consumer, so expansion runs through our own `ref/oncotree_file.txt`
+(`utils.build_trial_index.diagnosis_population`). The benchmark now reports
+`pop_p` / `pop_r` beside the name scores - see `bench/README.md`. What remains
+open is the coding assumption it rests on: patients are coded at the most
+specific node, which means every node except the 20 parents that have a
+", NOS" child. That is what Kispi's pipeline was stated to do, not something
+measured. And every codable node counts once, so a rare subtype weighs as much
+as B-ALL. Weighting by the lab's own diagnosis frequencies would fix that, and
+needs a list of the codes the lab has actually assigned.
 
 ### A basket trial can get both the wildcard and specific diagnoses
 `map_global_diagnosis_to_oncotree_term` adds condition-derived terms first and
@@ -238,6 +248,14 @@ no wildcard, which is narrower than the trial actually is. The curated keys for
 those two use the wildcards, so the benchmark will now score the difference;
 whether the pipeline should suppress the seed when the broad-basket test fires
 is undecided.
+
+The population metric puts a size on it (2026-09-23, `--conditions-only`):
+NCT02332668 reaches **2%** of the patients its key does, NCT07440290 **3%**.
+By name both scored 0.0, the same as a wrong answer; by population they are
+the two worst recall failures in the set. The opposite shape exists too:
+NCT03838042 and NCT05580562 get `_SOLID_` where the key names specific
+tumours, so precision is 0.02 and 0.04. Both are over-broad rather than
+missing, which costs less.
 
 ### Off-panel fusion partners are dropped, and that is correct
 

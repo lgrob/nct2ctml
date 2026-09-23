@@ -46,6 +46,7 @@ import os
 import re
 import sys
 from datetime import datetime, timezone
+from functools import lru_cache
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -91,6 +92,53 @@ def _basket_members():
     for root in level_1:
         (liquid if root in LIQUID_ROOTS else solid).update(level_1_to_all[root] | {root})
     return solid, liquid
+
+
+@lru_cache(maxsize=1)
+def _population_reference():
+    """(descendants, codable, solid, liquid), read once per process."""
+    parent, _, descendants = get_lineage()
+    has_nos_child = {parent[name] for name in parent if name.endswith(", NOS")}
+    codable = frozenset(name for name in descendants if name not in has_nos_child)
+    solid, liquid = _basket_members()
+    return descendants, codable, frozenset(solid), frozenset(liquid)
+
+
+def diagnosis_population(terms):
+    """
+    The Oncotree nodes a patient can be coded to that a set of trial
+    diagnoses reaches.
+
+    Patients are coded at the most specific node the pathology supports. That
+    is usually a leaf, but not always: only 20 of Oncotree's 170 internal
+    nodes have a ", NOS" child, so an osteosarcoma that is not subtyped further
+    is coded `Osteosarcoma` itself. The one node a patient is never coded to is
+    a parent that has a ", NOS" child - that patient goes to the NOS leaf
+    instead. So the codable nodes are every node except those 20 parents, and
+    the patients a trial reaches are the codable nodes under its diagnoses.
+    Two diagnosis sets that reach the same codable nodes select the same
+    patients, whatever they are called.
+
+    This is narrower than the index's expansion, which emits every descendant
+    so that a join works however a consumer codes its patients. The two agree
+    whenever patients are coded as above. If that stops being true, this is
+    the function to change.
+
+    `_SOLID_` and `_LIQUID_` expand as they do in the index. A term that is not
+    an Oncotree node reaches nothing codable; it is kept as itself, so it still
+    agrees with an identical string and disagrees with everything else.
+    """
+    descendants, codable, solid, liquid = _population_reference()
+    reached = set()
+    for term in terms:
+        if term == "_SOLID_":
+            members = solid
+        elif term == "_LIQUID_":
+            members = liquid
+        else:
+            members = descendants.get(term, {term})
+        reached |= (members & codable) or {term}
+    return reached
 
 
 def _walk(node, on_leaf, arm_code=""):
