@@ -136,7 +136,10 @@ nvidia-smi --query-gpu=name,memory.used,memory.total --format=csv,noheader 2>/de
 # --- 4. run the work -------------------------------------------------------
 case "$MODE" in
   benchmark)
-    echo "[$(date +%T)] benchmarking against the 12 curated trials"
+    # 50, not 12: the key was expanded on 2026-09-14. bench/benchmark_map.py
+    # filters to NCT* ids, so the five curated CTIS trials are NOT scored -
+    # a quarter of the corpus is unmeasured by this run.
+    echo "[$(date +%T)] benchmarking against the 50 curated NCT trials"
     $PY -m bench.benchmark_map
     ;;
   map-all)

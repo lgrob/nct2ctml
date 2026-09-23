@@ -286,7 +286,13 @@ class TrialMapManager:
         gene_synonym_mapping = self.get_gene_synonym_mapping()
         try:
             mapped_ctml = ctis.map_ctis_to_ctml(trial_data, gene_synonym_mapping)
-            tdh.save_to_file(mapped_ctml, ctml_files_path, ct_number, 'yaml')
+            # CTIS bypassed the review queue entirely until 2026-09-21: it saved
+            # straight to the output directory, so a CTIS trial whose diagnosis
+            # could not be determined reached MatchMiner and matched every
+            # patient in the database. The safety net was only ever wired to the
+            # ClinicalTrials.gov path.
+            destination = self._destination_for(mapped_ctml, ctml_files_path, ct_number)
+            tdh.save_to_file(mapped_ctml, destination, ct_number, 'yaml')
             logger.info(f"Successfully mapped and saved {ct_number}")
             return True
         except Exception as ex:

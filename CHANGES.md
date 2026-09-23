@@ -283,6 +283,27 @@ from "Neuroblastoma". `derivedSection.conditionBrowseModule`, which CT.gov
 derives algorithmically from the same conditions, measured +0.006 F1 with
 precision slightly down: one correct addition against three wrong ones.
 
+## Defect fixed: CTIS never got the diagnosis safeguards
+
+`src/ctis.py` called `map_eligibility_criteria_to_oncotree_term` directly with
+no `seed_terms`, so the 331 cached CTIS trials — a quarter of the corpus — had
+no deterministic floor from their own conditions, no branch forcing (the fix
+that stops a wrong level_1 making the right diagnosis unreachable), no
+`_SOLID_`/`_LIQUID_` basket detection, and no warning when the model dropped a
+diagnosis the trial names outright. 61 of the 331 resolve from conditions
+alone and every one was being left to the model.
+
+Worse, `trial_map_manager.map_single_ctis_trial` saved straight to the output
+directory instead of calling `_destination_for`, so a CTIS trial whose
+diagnosis could not be determined bypassed the review queue and reached
+MatchMiner, where it matches every patient in the database. The safety net was
+only ever wired to the ClinicalTrials.gov path.
+
+The shared logic is now `clinical_trials_gov.seed_and_map_diagnosis`, used by
+both registries; only the fallback when it returns nothing differs, since CTIS
+registers neither keywords nor a separate title. `_basket_wildcards` gained a
+public name so CTIS need not reach for a private one.
+
 ## Defect fixed: inferred ", NOS" leaves matched almost nobody
 
 `diagnoses_from_conditions` appends ", NOS" as a last-resort candidate, because

@@ -885,6 +885,51 @@ def _map_global_diagnosis_from_conditions_and_extra_info(trial_data: dict) -> se
 
     return all_possible_diagnoses
 
+def seed_and_map_diagnosis(trial_id: str, conditions_list, eligibility_criteria: str = ""):
+    """
+    The diagnosis path both registries share: read the conditions, then ask
+    the model with them as a floor. Returns (seeded, from_eligibility).
+
+    Factored out because ClinicalTrials.gov and CTIS had drifted apart.
+    src/ctis.py called map_eligibility_criteria_to_oncotree_term directly with
+    no seed, so 331 cached CTIS trials - a quarter of the corpus - got none of
+    this: no deterministic floor, no branch forcing, and no warning when the
+    model failed to return a diagnosis the trial names outright. What differs
+    between the two registries is only the fallback when this returns nothing,
+    so that stays with each caller.
+    """
+    # Read the trial's own condition list first. It costs no tokens, cannot
+    # hallucinate, and on the curated benchmark a plain lookup of these strings
+    # against Oncotree now scores above what the 70B model achieves through
+    # both LLM stages. It is still a floor rather than a replacement: precision
+    # is high but it finds about two thirds of the answers.
+    seeded = rv.diagnoses_from_conditions(conditions_list, trial_id)
+    if seeded:
+        logger.info(f"{trial_id} | Conditions name Oncotree terms directly: {seeded}")
+
+    from_eligibility = []
+    if eligibility_criteria and eligibility_criteria.strip():
+        logger.info(f"{trial_id} | Mapping global diagnosis from eligibility criteria")
+        from_eligibility = map_eligibility_criteria_to_oncotree_term(
+            trial_id, eligibility_criteria, seeded
+        )
+        # Worth seeing. The model disagreeing with a string the trial states
+        # outright is the signature of the branch problem above, and it was
+        # silent until now.
+        overlooked = set(seeded) - set(from_eligibility)
+        if overlooked:
+            logger.warning(
+                f"{trial_id} | Eligibility mapping did not return {sorted(overlooked)}, "
+                f"which the trial's own conditions name outright. Kept from the conditions."
+            )
+    return seeded, from_eligibility
+
+
+def basket_wildcards(conditions_list, trial_id: str = "") -> set:
+    """Public name for the basket rule, so CTIS need not reach for a private one."""
+    return _basket_wildcards(conditions_list, trial_id)
+
+
 def map_global_diagnosis_to_oncotree_term(trial_data: dict, global_eligibility_criteria: str = "") -> list:
     nct_id = get_nct_id(trial_data)
     all_possible_diagnoses = set()
@@ -895,27 +940,10 @@ def map_global_diagnosis_to_oncotree_term(trial_data: dict, global_eligibility_c
     # through both LLM stages. It is a floor, not a replacement: precision is
     # high but it finds only about a third of the answers.
     conditions_list = tdh.safe_get(trial_data, ['protocolSection', 'conditionsModule', 'conditions']) or []
-    seeded = rv.diagnoses_from_conditions(conditions_list)
-    if seeded:
-        logger.info(f"NCTID: {nct_id} | Conditions name Oncotree terms directly: {seeded}")
-        all_possible_diagnoses.update(seeded)
-
-    from_eligibility = []
-    if global_eligibility_criteria and global_eligibility_criteria.strip():
-        logger.info(f"NCTID: {nct_id} | Mapping global diagnosis from eligibility criteria")
-        from_eligibility = map_eligibility_criteria_to_oncotree_term(
-            nct_id, global_eligibility_criteria, seeded
-        )
-        all_possible_diagnoses.update(from_eligibility)
-        # Worth seeing. The model disagreeing with a string the trial states
-        # outright is the signature of the branch problem above, and it was
-        # silent until now.
-        overlooked = set(seeded) - set(from_eligibility)
-        if overlooked:
-            logger.warning(
-                f"NCTID: {nct_id} | Eligibility mapping did not return {sorted(overlooked)}, "
-                f"which the trial's own conditions name outright. Kept from the conditions."
-            )
+    seeded, from_eligibility = seed_and_map_diagnosis(
+        nct_id, conditions_list, global_eligibility_criteria)
+    all_possible_diagnoses.update(seeded)
+    all_possible_diagnoses.update(from_eligibility)
 
     if not from_eligibility:
         logger.info(f"NCTID: {nct_id} | No oncotree diagnosis from eligibility criteria, falling back to conditions and extra info")

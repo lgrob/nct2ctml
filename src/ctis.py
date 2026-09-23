@@ -208,10 +208,37 @@ def map_ctis_to_ctml(trial_data: dict,
     clinical_criteria = {}
 
     logger.info(f"CTIS: {ct} | Mapping diagnosis to oncotree terms")
+    # Seeded from the conditions exactly as the ClinicalTrials.gov path is.
+    # This used to call map_eligibility_criteria_to_oncotree_term directly with
+    # no seed, which left CTIS without the deterministic floor, without the
+    # branch forcing that keeps a wrong level_1 from making the right answer
+    # unreachable, and without any signal when the model dropped a diagnosis
+    # the trial names outright. 61 of the 331 cached CTIS trials resolve from
+    # their conditions alone, and every one of them was being left to the model.
     diagnosis_text = "\n".join(conditions + [criteria])
-    diagnoses = ctg.map_eligibility_criteria_to_oncotree_term(ct, diagnosis_text)
+    seeded, from_eligibility = ctg.seed_and_map_diagnosis(ct, conditions, diagnosis_text)
+    diagnoses = sorted(set(seeded) | set(from_eligibility))
+
+    if not diagnoses:
+        # Same fallback shape as ClinicalTrials.gov, minus the keyword and
+        # title stage: CTIS registers neither. A trial whose conditions say
+        # only "solid tumour" is a basket, and _SOLID_/_LIQUID_ is how CTML
+        # says so - CTIS trials were previously unable to express that at all.
+        diagnoses = sorted(ctg.basket_wildcards(conditions, ct))
+
     if diagnoses:
         clinical_criteria["oncotree_primary_diagnosis"] = diagnoses
+    else:
+        # Not an exception, for the reason given in clinical_trials_gov: a
+        # trial missing from MatchMiner is the one failure a reviewer cannot
+        # see. Mapping continues, and trial_map_manager._destination_for now
+        # routes the result to the review queue - which it did not do for CTIS
+        # until this change.
+        logger.error(
+            f"CTIS: {ct} | NEEDS REVIEW: no Oncotree diagnosis could be determined "
+            f"from the eligibility criteria or the conditions {conditions}. Mapping "
+            f"continues without a diagnosis criterion; a human must supply one."
+        )
 
     age_numerical = map_age_numerical(ct, inclusion_text)
     if age_numerical:
