@@ -1,6 +1,7 @@
 import os
 import sys
 import unittest
+from unittest import mock
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -79,7 +80,8 @@ class TestCandidateListsBecomeEnums(unittest.TestCase):
     def test_a_very_large_candidate_list_drops_the_enum(self):
         # Ollama compiles `format` into a grammar; hundreds of alternatives are
         # slow to build. The shape is still enforced, only the values are not.
-        schema = ai.oncotree_diagnoses_schema([f"Term {i}" for i in range(500)])
+        with mock.patch.object(ai.config, "LLM_PLATFORM", "Ollama"):
+            schema = ai.oncotree_diagnoses_schema([f"Term {i}" for i in range(500)])
         items = schema["properties"]["oncotree_diagnoses"]["items"]
         self.assertNotIn("enum", items)
         self.assertEqual(items["type"], "string")
@@ -88,6 +90,95 @@ class TestCandidateListsBecomeEnums(unittest.TestCase):
         # An empty enum would make every answer invalid.
         items = ai.oncotree_diagnoses_schema([])["properties"]["oncotree_diagnoses"]["items"]
         self.assertNotIn("enum", items)
+
+
+def _items(schema):
+    return schema["properties"]["oncotree_diagnoses"]["items"]
+
+
+class TestEnumCap(unittest.TestCase):
+    """
+    Dropping the enum re-opens off-list answers, so it must never be silent,
+    and the cap depends on whether the backend compiles a grammar at all.
+    """
+
+    def setUp(self):
+        ai.reset_enum_cap_events()
+        self.logs = []
+        self.sink = logger.add(lambda m: self.logs.append(m.record), level="INFO")
+
+    def tearDown(self):
+        logger.remove(self.sink)
+        ai.reset_enum_cap_events()
+
+    def _terms(self, n):
+        return [f"Term {i}" for i in range(n)]
+
+    def _levels(self, level):
+        return [r["message"] for r in self.logs if r["level"].name == level]
+
+    def test_over_the_cap_warns_with_trial_and_size_and_counts(self):
+        with mock.patch.object(ai.config, "LLM_PLATFORM", "Ollama"):
+            items = _items(ai.oncotree_diagnoses_schema(self._terms(438), "NCT02508038"))
+        self.assertNotIn("enum", items)
+        warnings = self._levels("WARNING")
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("NCT02508038", warnings[0])
+        self.assertIn("438", warnings[0])
+        self.assertEqual(ai.ENUM_CAP_EVENTS["dropped"], 1)
+        self.assertEqual(ai.ENUM_CAP_EVENTS["largest"], 438)
+        self.assertIn("1 dropped", ai.enum_cap_summary())
+
+    def test_the_cap_itself_still_gets_an_enum(self):
+        with mock.patch.object(ai.config, "LLM_PLATFORM", "Ollama"):
+            items = _items(ai.oncotree_diagnoses_schema(self._terms(400)))
+        self.assertEqual(len(items["enum"]), 400)
+        self.assertEqual(self._levels("WARNING"), [])
+
+    def test_near_the_cap_is_info_not_warning(self):
+        # 370 is the largest list the Haiku benchmark replay sent (NCT02813135).
+        with mock.patch.object(ai.config, "LLM_PLATFORM", "Ollama"):
+            items = _items(ai.oncotree_diagnoses_schema(self._terms(370), "NCT02813135"))
+        self.assertEqual(len(items["enum"]), 370)
+        self.assertEqual(self._levels("WARNING"), [])
+        self.assertTrue(any("NCT02813135" in m and "370" in m for m in self._levels("INFO")))
+        self.assertEqual(ai.ENUM_CAP_EVENTS["near_cap"], 1)
+
+    def test_a_small_list_logs_nothing(self):
+        with mock.patch.object(ai.config, "LLM_PLATFORM", "Ollama"):
+            ai.oncotree_diagnoses_schema(self._terms(226))
+        self.assertEqual(self.logs, [])
+        self.assertEqual(ai.ENUM_CAP_EVENTS["enum"], 1)
+
+    def test_anthropic_keeps_the_enum_for_the_whole_oncotree(self):
+        # The forced tool call is not strict, so no grammar is compiled; 847 is
+        # every Oncotree descendant, the largest list the diagnosis path builds.
+        with mock.patch.object(ai.config, "LLM_PLATFORM", "Anthropic"):
+            items = _items(ai.oncotree_diagnoses_schema(self._terms(847), "t"))
+        self.assertEqual(len(items["enum"]), 847)
+        self.assertEqual(self._levels("WARNING"), [])
+        self.assertEqual(ai.ENUM_CAP_EVENTS["dropped"], 0)
+
+    def test_the_caps_are_pinned_per_backend(self):
+        caps = ai.config.SCHEMA_ENUM_MAX_VALUES
+        for platform in ("ollama", "local_ai", "vllm", "sglang"):
+            self.assertEqual(caps[platform], 400)
+        self.assertIsNone(caps["anthropic"])
+
+    def test_an_unlisted_platform_falls_back_to_400(self):
+        with mock.patch.object(ai.config, "LLM_PLATFORM", "SomethingNew"):
+            self.assertEqual(ai.max_enum_values(), 400)
+
+    def test_every_diagnosis_builder_names_the_trial(self):
+        big = self._terms(401)
+        with mock.patch.object(ai.config, "LLM_PLATFORM", "Ollama"):
+            ai.get_ai_prompt_level1_for_original_conditions(["c"], big, "T-L1")
+            ai.get_ai_prompt_oncotree_diagnoses_from_trial_info("x", big, "T-S2")
+            ai.get_ai_prompt_child_values("c", big, "T-CH")
+        warnings = " ".join(self._levels("WARNING"))
+        for tid in ("T-L1", "T-S2", "T-CH"):
+            self.assertIn(tid, warnings)
+        self.assertEqual(ai.ENUM_CAP_EVENTS["dropped"], 3)
 
 
 class TestStatusSchemas(unittest.TestCase):

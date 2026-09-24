@@ -16,6 +16,7 @@ from typing import Dict, List
 from loguru import logger
 import src.clinical_trials_gov as ctg
 import src.ctis as ctis
+import utils.ai_helper as ai
 import src.trial_data_helper as tdh
 import utils.reference_validation as rv
 import utils.oncology_scope as scope
@@ -187,6 +188,7 @@ class TrialMapManager:
         skipped_count = 0
         out_of_scope = []
         scope_overrides = scope.load_overrides() if config.SKIP_OUT_OF_SCOPE_AT_MAP else {}
+        ai.reset_enum_cap_events()
         
         for file_name in os.listdir(nct_files_path):
             if os.path.isfile(os.path.join(nct_files_path, file_name)) and file_name.endswith('.json'):
@@ -274,6 +276,8 @@ class TrialMapManager:
             logger.info(f"{len(out_of_scope)} trials out of scope, listed in "
                         f"{config.SCOPE_REPORT_FILE_PATH}")
         logger.info(f"Mapping completed. Processed: {processed_count}, Skipped: {skipped_count}")
+        # How often a candidate list outgrew the schema enum cap this run.
+        logger.info(ai.enum_cap_summary())
         
         return {
             'processed': processed_count,
@@ -285,6 +289,7 @@ class TrialMapManager:
         numbers = sorted(f[:-5] for f in os.listdir(ctis_files_path) if f.endswith('.json'))
         overrides = scope.load_overrides() if config.SKIP_OUT_OF_SCOPE_AT_MAP else {}
         out_of_scope, done, failed = [], 0, 0
+        ai.reset_enum_cap_events()
         for n, ct in enumerate(numbers, 1):
             if config.SKIP_OUT_OF_SCOPE_AT_MAP:
                 try:
@@ -303,6 +308,7 @@ class TrialMapManager:
             print(f"  [{n}/{len(numbers)}] {ct}: {'ok' if ok else 'FAILED'}")
         if config.SKIP_OUT_OF_SCOPE_AT_MAP:
             scope.write_report(out_of_scope, config.SCOPE_REPORT_FILE_PATH, registry="ctis")
+        logger.info(ai.enum_cap_summary())
         return {'processed': done, 'failed': failed, 'skipped': len(out_of_scope)}
 
     def map_single_ctis_trial(self, ct_number: str, ctis_files_path: str, ctml_files_path: str) -> bool:

@@ -486,6 +486,38 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Schema enum cap: visible, counted, set per backend
+
+Roadmap 1.7. Measured 2026-09-24 with no model calls:
+- **Benchmark:** replaying the diagnosis path over the 50 curated NCT trials
+  from both Haiku 4.5 caches, the largest candidate list sent as an enum
+  was 370 (NCT02813135). Stage-2 p95 was 317 and 279, and none exceeded
+  400, so the cap never fired.
+- **Whole corpus:** across all 1,255 cached trials, the seed branch floor
+  alone reaches 438 on NCT02508038, which forces six branches. The floor
+  plus its largest missing level-1 branch exceeds 320 on 33 trials;
+  CNS/Brain adds the most on 27. The four largest branches sum to 406, so a
+  trial with no seed can cross 400 too.
+
+Dropping the enum used to be silent. `utils/ai_helper._one_of` now logs a
+WARNING, with trial id and size, when it drops the enum, and an INFO above
+80% of the cap. It counts both, and `map_all_trials` and
+`map_all_ctis_trials` log the counts at the end of a run.
+
+The cap is now set per backend (`config.SCHEMA_ENUM_MAX_VALUES`). It stays
+at 400 for Ollama, LocalAI, vLLM and SGLang, which compile the schema into a
+generation grammar. It is removed for Anthropic, whose forced tool call is
+not `strict` and so compiles no grammar. The documented grammar limits of
+Anthropic's strict mode fail with a 400 error, not silently. Benchmark
+results are byte-identical before and after.
+
+Found on the way: without `strict` the enum only guides the model on
+Anthropic. The cached answers contain the off-list "Lymphoma" once per
+replicate (NCT02332668). `filter_diagnoses` drops it, since it is not an
+Oncotree name, but an Oncotree name from outside the candidate branch would
+pass. Filtering stage-2 answers against the candidate list in code, or
+switching on strict tool use, is not done yet. 381 tests pass (2 skipped).
+
 ## Benchmark covers CTIS
 
 Roadmap 1.5. `bench/benchmark_map.py` read only the NCT keys, so the 5

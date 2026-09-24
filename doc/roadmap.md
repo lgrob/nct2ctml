@@ -44,8 +44,9 @@ produces, so they go first. None needs the GPU.
 | 1.3 | **Done 2026-09-24.** **Widen the retired-symbol rewrite set** with the measured 4-character floor, so `HIST1H3A`/`HIST2H3C` resolve to panel genes. | DMG trials keep their histone genes; a test pins that `ALL`, `AT`, `ARF`, `H3` are still not rewritten. | - |
 | 1.4 | **Translocation table.** `ref/translocation_fusions.tsv`: unambiguous t()/inv() to gene pair, one reason per row; ambiguous ones (t(X;18)) stay gene-level. Applied deterministically after extraction. | 31 NCT trials stating a translocation are checked by hand against the output; every added pair is one the text supports. | - |
 | 1.5 | **Done 2026-09-24.** **Benchmark covers CTIS.** `bench/benchmark_map.py` reads `cache/ctis` as well, so the 5 curated CTIS keys are scored. | Report has 55 rows; CTIS rows show non-trivial scores. | - |
+| 1.8 | **Candidate lists enforced in code.** On Anthropic the enum only guides the model (the tool is not `strict`). Drop any stage-1/stage-2 answer that is not in that call's candidate list, and log it; or enable strict tool use if the grammar limits allow. Found in 1.7. | Off-list answers counted on the cached runs; 0 reach the CTML. | - |
 | 1.6 | **Answer keys carry fusion partners.** A curator adds partners to the keys of trials whose text names pairs (about 9 reviewed trials), and the scorer compares pairs. | Partner precision/recall is a reported column. | curator time **[D4]** |
-| 1.7 | **Guard against the enum cap.** Log when a stage-2 candidate list approaches `_MAX_ENUM_VALUES` (400), and count occurrences on the full corpus offline. | Count known; cap raised or kept with a reason. | - |
+| 1.7 | **Done 2026-09-24.** **Guard against the enum cap.** Log when a stage-2 candidate list approaches `_MAX_ENUM_VALUES` (400), and count occurrences on the full corpus offline. | Count known; cap raised or kept with a reason. | - |
 
 ## Phase 2 - Finish the stage-2 diagnosis experiment
 

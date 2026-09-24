@@ -72,7 +72,7 @@ def get_level1_diagnosis_from_original_conditions(nct_id:str, original_condition
     original_conditions_list = list(original_conditions)
     level1_oncotree_list = list(level1_oncotree) 
     
-    schema, prompt = get_ai_prompt_level1_for_original_conditions(original_conditions_list, level1_oncotree_list)
+    schema, prompt = get_ai_prompt_level1_for_original_conditions(original_conditions_list, level1_oncotree_list, nct_id)
 
     logger.debug(f"NCTID: {nct_id} | AI Prompt for Level 1 diagnosis from original conditions: {prompt}")
         
@@ -81,14 +81,14 @@ def get_level1_diagnosis_from_original_conditions(nct_id:str, original_condition
     return oncotree_diagnoses_dict
 
 def get_oncotree_diagnoses_from_trial_info(nct_id: str, trial_info, oncotree_values: set) -> dict:
-    schema, prompt = get_ai_prompt_oncotree_diagnoses_from_trial_info(trial_info, list(oncotree_values))
+    schema, prompt = get_ai_prompt_oncotree_diagnoses_from_trial_info(trial_info, list(oncotree_values), nct_id)
     ai_response = send_ai_request(nct_id, prompt, schema)
     return parse_ai_response(ai_response, nct_id)
 
 def get_child_level_diagnoses_from_condition(nct_id:str, child_nodes_oncotree:set, nct_condition: str) -> dict:
     child_nodes_oncotree_list = list(child_nodes_oncotree)
 
-    schema, prompt = get_ai_prompt_child_values(nct_condition, child_nodes_oncotree_list)
+    schema, prompt = get_ai_prompt_child_values(nct_condition, child_nodes_oncotree_list, nct_id)
 
     ai_response = send_ai_request(nct_id, prompt, schema)
     oncotree_diagnoses_dict = parse_ai_response(ai_response, nct_id)   
@@ -332,7 +332,7 @@ def send_ai_request(id, prompt, json_schema=None):
     logger.debug(f"AI response | ID:{id} | {ai_response}")
     return ai_response
 
-def get_ai_prompt_level1_for_original_conditions(original_conditions_list, level1_oncotree_list):
+def get_ai_prompt_level1_for_original_conditions(original_conditions_list, level1_oncotree_list, trial_id=""):
     prompt = f"""Task: Map CancerConditions to the closest cancer type in OncotreeValues.
         CancerConditions: {original_conditions_list}
         OncotreeValues: {level1_oncotree_list}
@@ -345,9 +345,9 @@ def get_ai_prompt_level1_for_original_conditions(original_conditions_list, level
             }}
         ]
         }}"""
-    return level1_diagnoses_schema(level1_oncotree_list), cleandoc(prompt)
+    return level1_diagnoses_schema(level1_oncotree_list, trial_id), cleandoc(prompt)
 
-def get_ai_prompt_oncotree_diagnoses_from_trial_info(trial_info, oncotree_values):
+def get_ai_prompt_oncotree_diagnoses_from_trial_info(trial_info, oncotree_values, trial_id=""):
     prompt = f"""Task: From the TrialInfo, extract OncotreeValues that correspond to medical conditions explicitly mentioned in the text.
         Rules:
         - Only include a diagnosis if the condition or cancer type is explicitly stated in TrialInfo.
@@ -363,9 +363,9 @@ def get_ai_prompt_oncotree_diagnoses_from_trial_info(trial_info, oncotree_values
         "oncotree_diagnoses": []
         }}"""
 
-    return oncotree_diagnoses_schema(oncotree_values), cleandoc(prompt)
+    return oncotree_diagnoses_schema(oncotree_values, trial_id), cleandoc(prompt)
 
-def get_ai_prompt_child_values(nct_condition, child_nodes_oncotree_list):
+def get_ai_prompt_child_values(nct_condition, child_nodes_oncotree_list, trial_id=""):
 
     # cancer_condition: {nct_condition} E.g. -> Colorectal Cancer
     # Oncotree values: {child_nodes_oncotree} # E.g. -> {'Signet Ring Cell Adenocarcinoma of the Colon and Rectum', 'Colon Adenocarcinoma In Situ', 'Small Bowel Well-Differentiated Neuroendocrine Tumor', 'Gastrointestinal Neuroendocrine Tumors', 'Well-Differentiated Neuroendocrine Tumor of the Rectum', 'Small Bowel Cancer', 'Anal Squamous Cell Carcinoma', 'Anorectal Mucosal Melanoma', 'Low-grade Appendiceal Mucinous Neoplasm', 'Medullary Carcinoma of the Colon', 'Goblet Cell Adenocarcinoma of the Appendix', 'Mucinous Adenocarcinoma of the Appendix', 'Appendiceal Adenocarcinoma', 'Small Intestinal Carcinoma', 'Well-Differentiated Neuroendocrine Tumor of the Appendix', 'Signet Ring Cell Type of the Appendix', 'Colorectal Adenocarcinoma', 'High-Grade Neuroendocrine Carcinoma of the Colon and Rectum', 'Colonic Type Adenocarcinoma of the Appendix', 'Anal Gland Adenocarcinoma', 'Rectal Adenocarcinoma', 'Mucinous Adenocarcinoma of the Colon and Rectum', 'Duodenal Adenocarcinoma', 'Colon Adenocarcinoma', 'Tubular Adenoma of the Colon'}
@@ -381,7 +381,7 @@ def get_ai_prompt_child_values(nct_condition, child_nodes_oncotree_list):
         "oncotree_diagnoses": []
         }}
         """
-    return child_values_schema(child_nodes_oncotree_list), cleandoc(prompt)
+    return child_values_schema(child_nodes_oncotree_list, trial_id), cleandoc(prompt)
 
 def get_her2_er_pr_status_prompt(eligibilityCriteria, keywords):
     prompt = f"""
@@ -561,37 +561,94 @@ def get_arm_criteria_mapping_prompt(arm_groups: list, inclusion_criteria: str, e
 # with the commas missing.
 #
 # Where the prompt already restricts the answer to a list of candidates, the
-# schema restricts it too, which makes an off-list answer impossible to emit
-# rather than merely discouraged. "Lymphoma" is not an Oncotree display name
-# and cannot be produced under these schemas at all. MatchMiner's _SOLID_ and
+# schema restricts it too, which on a grammar-compiling backend makes an
+# off-list answer impossible to emit rather than merely discouraged.
+# "Lymphoma" is not an Oncotree display name and cannot be produced there.
+# On Anthropic the tool call is not `strict`, so the enum is guidance: the
+# cached Haiku answers to the 50-trial benchmark contain "Lymphoma" once per
+# replicate (NCT02332668, 1 of 440 and 1 of 426 answers) under a 283-value
+# enum. That one is caught - filter_diagnoses drops terms that are not
+# Oncotree names when the CTML is built - but an Oncotree name from outside
+# the candidate branch would pass. MatchMiner's _SOLID_ and
 # _LIQUID_ wildcards are deliberately absent too: the pipeline derives those
 # from the trial's conditions, and a model should not be invited to guess them.
 
-# Ollama compiles `format` into a generation grammar, and one with several
-# hundred alternatives is slow to build. Above this many candidates the enum is
+# Self-hosted backends compile the schema into a generation grammar, and one
+# with several hundred alternatives is slow to build. Above the cap the enum is
 # dropped and the schema still guarantees well-formed JSON of the right shape.
-# The cap is a guard, not a tuned value - it has not been measured on the GPU.
-_MAX_ENUM_VALUES = 400
+# The cap depends on the backend - config.SCHEMA_ENUM_MAX_VALUES says why - and
+# this is the fallback for a platform it does not list.
+_DEFAULT_MAX_ENUM_VALUES = 400
+
+# How often a candidate list was sent as an enum ("enum"), came near the cap
+# ("near_cap") or was sent without its enum ("dropped"), for the run summary.
+# Module state because the schema builders are plain functions called from
+# deep inside the mapping path; reset_enum_cap_events() starts a new count.
+ENUM_CAP_EVENTS = {"enum": 0, "near_cap": 0, "dropped": 0, "largest": 0}
 
 
-def _one_of(allowed, extra=()):
-    """A string constrained to `allowed`, or an unconstrained one if too many."""
+def max_enum_values():
+    """The enum cap for config.LLM_PLATFORM; None means the enum is never dropped."""
+    caps = getattr(config, "SCHEMA_ENUM_MAX_VALUES", {}) or {}
+    platform = str(getattr(config, "LLM_PLATFORM", "")).lower()
+    return caps.get(platform, _DEFAULT_MAX_ENUM_VALUES)
+
+
+def reset_enum_cap_events():
+    for k in ENUM_CAP_EVENTS:
+        ENUM_CAP_EVENTS[k] = 0
+
+
+def enum_cap_summary() -> str:
+    e = ENUM_CAP_EVENTS
+    return (f"Schema enums: {e['enum']} sent, {e['near_cap']} near the cap, "
+            f"{e['dropped']} dropped over the cap ({max_enum_values()} on "
+            f"{getattr(config, 'LLM_PLATFORM', '?')}); largest list {e['largest']}")
+
+
+def _one_of(allowed, extra=(), trial_id=""):
+    """
+    A string constrained to `allowed`, or an unconstrained one if too many.
+
+    Dropping the enum used to be silent, and it is exactly the failure the
+    enum exists to prevent: an off-list diagnosis becomes sayable again. It
+    now logs a WARNING with the trial and size, and an INFO above
+    config.SCHEMA_ENUM_NEAR_CAP_FRACTION of the cap. Measured 2026-09-24 on
+    the two Haiku replicates of the 50-trial benchmark: the largest list sent
+    was 370 (NCT02813135), p95 226, 2-3 calls above 320 and none above 400;
+    across the 1,255 cached trials the seed floor alone reaches 438.
+    """
     values = sorted({a for a in list(allowed) + list(extra) if a is not None})
-    if values and len(values) <= _MAX_ENUM_VALUES:
-        return {"type": "string", "enum": values}
-    return {"type": "string"}
+    if not values:
+        # An empty enum would make every answer invalid.
+        return {"type": "string"}
+    n = len(values)
+    ENUM_CAP_EVENTS["largest"] = max(ENUM_CAP_EVENTS["largest"], n)
+    cap = max_enum_values()
+    if cap is not None and n > cap:
+        ENUM_CAP_EVENTS["dropped"] += 1
+        logger.warning(f"{trial_id} | {n} candidates exceed the schema enum cap of {cap} "
+                       f"on {config.LLM_PLATFORM}; enum dropped, off-list answers are "
+                       f"possible for this call")
+        return {"type": "string"}
+    ENUM_CAP_EVENTS["enum"] += 1
+    near = getattr(config, "SCHEMA_ENUM_NEAR_CAP_FRACTION", 0.8)
+    if cap is not None and n > near * cap:
+        ENUM_CAP_EVENTS["near_cap"] += 1
+        logger.info(f"{trial_id} | {n} candidates, near the schema enum cap of {cap}")
+    return {"type": "string", "enum": values}
 
 
-def oncotree_diagnoses_schema(allowed):
+def oncotree_diagnoses_schema(allowed, trial_id=""):
     return {
         "type": "object",
         "properties": {"oncotree_diagnoses": {"type": "array",
-                                              "items": _one_of(allowed)}},
+                                              "items": _one_of(allowed, trial_id=trial_id)}},
         "required": ["oncotree_diagnoses"],
     }
 
 
-def level1_diagnoses_schema(allowed):
+def level1_diagnoses_schema(allowed, trial_id=""):
     # "" and "Other" are how the caller is told a condition has no level_1, and
     # clinical_trials_gov skips exactly those two. They must stay sayable, or a
     # constrained model is forced to pick a branch it does not believe in.
@@ -600,19 +657,19 @@ def level1_diagnoses_schema(allowed):
         "properties": {"oncotree_diagnoses": {"type": "array", "items": {
             "type": "object",
             "properties": {"cancer_condition": {"type": "string"},
-                           "oncotree_value": _one_of(allowed, ("", "Other"))},
+                           "oncotree_value": _one_of(allowed, ("", "Other"), trial_id)},
             "required": ["cancer_condition", "oncotree_value"],
         }}},
         "required": ["oncotree_diagnoses"],
     }
 
 
-def child_values_schema(allowed):
+def child_values_schema(allowed, trial_id=""):
     return {
         "type": "object",
         "properties": {"cancer_condition": {"type": "string"},
                        "oncotree_diagnoses": {"type": "array",
-                                              "items": _one_of(allowed)}},
+                                              "items": _one_of(allowed, trial_id=trial_id)}},
         "required": ["oncotree_diagnoses"],
     }
 

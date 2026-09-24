@@ -198,3 +198,36 @@ OLLAMA_NUM_CTX = 32768
 # criteria block for a multi-arm trial legitimately runs longer than that.
 # 8192 at ~40 tok/s is ~205s, inside LLM_REQUEST_TIMEOUT_SECONDS below.
 OLLAMA_NUM_PREDICT = 8192
+# Largest candidate list utils/ai_helper sends as a JSON-schema enum, per
+# LLM_PLATFORM (lower-case key; a platform not listed gets 400). Above it the
+# enum is dropped, the shape is still enforced and off-list answers become
+# possible again, so utils/ai_helper logs a WARNING and counts it.
+#
+# 400 is kept for the self-hosted backends. They compile the schema into a
+# decoding grammar (llama.cpp for Ollama and LocalAI, xgrammar/outlines for
+# vLLM and SGLang), and one with hundreds of alternatives is slow to build.
+# The value is a guard, never measured on the GPU.
+#
+# None (never drop) for Anthropic, for two reasons. The request is a forced
+# tool call without `strict: true`, so no grammar is compiled at all - the
+# enum is guidance the model follows, not a decoding constraint - and the cap
+# guarded against a cost this backend does not pay. Should strict tool use be
+# switched on, Anthropic's structured-outputs documentation (read 2026-09-24)
+# lists no enum-size limit; its limits are 20 strict tools, 24 optional and
+# 16 union-typed parameters, plus internal grammar-size limits, and those
+# fail loudly with a 400 "schema is too complex" rather than silently. The
+# largest list the diagnosis path can build is all 847 Oncotree descendants.
+# Measured 2026-09-24: over the 1,255 cached trials the seed branch floor
+# alone reaches 438 on NCT02508038 (six forced branches), and the floor plus
+# its largest missing level-1 branch exceeds 320 on 33 trials, so 400 was
+# no longer a bound the diagnosis path stays under.
+SCHEMA_ENUM_MAX_VALUES = {
+    "ollama": 400,
+    "local_ai": 400,
+    "vllm": 400,
+    "sglang": 400,
+    "anthropic": None,
+}
+# Lists above this fraction of the cap are logged at INFO, so a run shows the
+# cap being approached before it is crossed.
+SCHEMA_ENUM_NEAR_CAP_FRACTION = 0.8

@@ -381,6 +381,10 @@ See "The rewrite set is narrower than it needs to be" below.
 ## Unmeasured guesses
 
 ### The 400-value enum cap
+
+*Addressed 2026-09-24: the cap is set per backend and logged when it fires
+(CHANGES.md). On the benchmark it never fired (max 370). Open: without
+`strict`, the Anthropic enum is advisory; see roadmap 1.8.*
 `utils/ai_helper._MAX_ENUM_VALUES` drops the enum from a schema above 400
 candidates, on the reasoning that llama.cpp compiles `format` into a grammar
 and hundreds of alternatives are slow to build. The threshold has never been
