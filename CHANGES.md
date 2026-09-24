@@ -486,6 +486,47 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Measured: no stage-2 arm beats production (roadmap 2.1, 2.2, 2.4)
+
+Stage 2 over-generates diagnoses. Four ways of narrowing it were run
+against production on Haiku 4.5 over the 50 curated NCT trials: 3
+replicates, 50/50 trials each, 0 failed calls, at 0652b79. Within a
+replicate, every arm shares one response cache, so the comparison is paired.
+
+- **A_seed:** deterministic, no extra call. Within a seeded branch it keeps
+  the seeds' level-2 subtrees plus the level-2 siblings (roadmap 2.1). The
+  first version dropped the siblings and lost Ganglioneuroblastoma; that no
+  longer happens in any replicate.
+- **A_l2:** an extra call picks level-2 nodes first.
+- **C_verify:** an extra call checks each answer against the text.
+- **A_l2+C:** both.
+
+| arm | pop recall | pop precision | name F1 | diagnoses emitted |
+|---|---|---|---|---|
+| production | 0.934 | 0.784 | 0.724 | 343 |
+| A_seed | 0.935 | 0.809 | 0.738 | 344 |
+| A_l2 | 0.937 | 0.801 | 0.711 | 331 |
+| C_verify | 0.932 | 0.786 | 0.734 | 335 |
+| A_l2+C | 0.932 | 0.811 | 0.721 | 325 |
+
+Production varies by 0.004 or less between replicates, so these differences
+reproduce. They are still small, and they come from a few trials:
+- **Precision:** A_seed and A_l2+C gain about 0.025 in precision, from 4
+  trials. The trial-level 95% interval includes zero.
+- **Recall losses:** every arm loses curated diagnoses that production finds,
+  in all three replicates. A_seed drops diffuse midline glioma H3
+  K27-altered and high-grade glioma on NCT03838042, and glioblastoma
+  IDH-wildtype on NCT05106296. The level-2 arms also drop the germ-cell,
+  mixed-phenotype leukaemia and rhabdomyosarcoma subtypes.
+
+The best name-F1 gain is +0.014, against Sonnet 5's +0.10.
+
+Decision: no arm is adopted. Recall comes first, and every arm trades
+diagnoses a patient needs for precision on four trials. Production stage 2
+is unchanged. The harness is stage2_harness_v2.tar.gz (a replay of the
+production path, patched per arm), with the report and per-trial tables
+alongside, outside the repo.
+
 ## Cytogenetic notation translated to gene pairs, deterministically
 
 Roadmap 1.4. Trials write fusions in ISCN notation as often as in gene

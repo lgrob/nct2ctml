@@ -5,7 +5,7 @@ harness runs the pipeline over the same trials and scores the result, so the
 question "can the LLM curate CTML?" is settled with numbers rather than
 impressions.
 
-50 trials, spanning paediatric leukaemia, lymphoma, CNS tumours,
+55 trials (50 from ClinicalTrials.gov, 5 from CTIS), spanning paediatric leukaemia, lymphoma, CNS tumours,
 neuroblastoma, bone and soft-tissue sarcoma, renal, liver, germ cell,
 retinoblastoma, histiocytosis and tumour-agnostic baskets. 24 of the 50 carry
 a genomic criterion; the other 26 deliberately do not, because the commonest

@@ -102,7 +102,9 @@ of `cache/ctml/`, for both registries, when the mapper could determine no
 Oncotree diagnosis at all (as it stands it would match every patient), or when
 a protein change failed its reference check (the criterion is gene-level until
 a curator resolves it; the stated value is kept as
-`protein_change_unverified`). It is held back but not discarded, because a
+`protein_change_unverified`), or when the model returned a gene the criteria
+text does not support (`gene_unsupported`; see `trial_genomic.tsv`'s
+`gene_check`). It is held back but not discarded, because a
 trial that is absent is one nobody can see is missing.
 
 For local trials not in any registry, a CTML file is written by hand into

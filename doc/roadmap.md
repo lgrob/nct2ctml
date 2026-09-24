@@ -59,10 +59,11 @@ own sub-agent.
 
 | # | Step | Done when | Depends on |
 |---|---|---|---|
-| 2.1 | Fix the seed-subtree arm so its floor includes sibling branches; it lost Ganglioneuroblastoma on neuroblastoma trials. | Offline test on the neuroblastoma trials passes. | - |
-| 2.2 | Complete replicate 1 and run replicates 2 and 3, all arms, all 50 trials, on Haiku. | 3 complete replicates; mean and spread per arm. | 2.1 |
+| 2.1 | **Done 2026-09-24.** Fix the seed-subtree arm so its floor includes sibling branches; it lost Ganglioneuroblastoma on neuroblastoma trials. | Offline test on the neuroblastoma trials passes. | - |
+| 2.2 | **Done 2026-09-24** (3 replicates, 5 arms, 0 failed calls). Complete replicate 1 and run replicates 2 and 3, all arms, all 50 trials, on Haiku. | 3 complete replicates; mean and spread per arm. | 2.1 |
 | 2.3 | ~~Model comparison~~ **Done 2026-09-24** (baseline path, Haiku 4.5 / Sonnet 5 / Opus 5.5, 2 replicates; see CHANGES.md). No model improves diagnosis recall; Sonnet 5 raises diagnosis name F1 by +0.10 at about 2x cost. That +0.10 is the bar for the 2.4 arms on Haiku. Re-run the best arm on Sonnet 5 only if it misses the bar. | Recorded. | - |
-| 2.4 | Choose an arm only if it beats baseline outside the spread, on population recall first and precision second. Ship it with offline tests. | Patch merged, or "no arm wins" recorded with the numbers. | 2.2 |
+| 2.4 | **Done 2026-09-24: no arm wins** (all lose curated diagnoses in all 3 replicates; best precision gain +0.025 from 4 trials; see CHANGES.md). Next option is 2.6. Choose an arm only if it beats baseline outside the spread, on population recall first and precision second. Ship it with offline tests. | Patch merged, or "no arm wins" recorded with the numbers. | 2.2 |
+| 2.6 | Sonnet 5 for the stage-2 call only; Haiku for everything else. Measure on the baseline path, 3 replicates, paired against Haiku. | Recall no worse than Haiku; name F1 gain and cost reported. | 2.4 |
 | 2.5 | Optional: the single-stage run over all 879 Oncotree names (see "wrong-branch problem"). | Precision and recall reported separately. | 2.2 |
 
 ## Phase 3 - Full-corpus mapping run
