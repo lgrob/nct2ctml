@@ -486,6 +486,42 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Dry run of the production map path (roadmap 3.1); H3 HGVS one-letter changes accepted
+
+The production `map` path ran on the 55 benchmark trials with Haiku 4.5,
+sent through the analysis environment's model access because no API key
+is available yet. Nothing was frozen: split, diagnosis stages, genomic
+prompts, enrichment, ages, reference checks and routing all ran as
+production runs them. The run used 752 calls (13.7 per trial), about
+$0.10 per trial at list price without caching.
+- **Diagnosis:** NCT population recall 0.938, precision 0.778, name F1
+  0.726, within the 1.9 baseline (0.942).
+- **Genes and ages (NCT):** gene F1 0.599, age F1 0.919.
+- **CTIS:** diagnosis recall 0.836, gene F1 0.978.
+
+5 trials were routed to review:
+- 2 `diagnosis_off_list`.
+- 2 `gene_unsupported`. Both are false: the text writes NF1 as "NF-1",
+  which the gene scan does not resolve (open).
+- 1 `protein_change_unverified`, a real catch: "IDH2 p.172" in the text
+  became `p.I172` from the model, and the reference has Arg172.
+
+Fixed: `utils/protein_change.py` read every one-letter H3 change as legacy
+(mature) numbering. NCT07110246 writes HGVS numbering with one-letter
+codes (`p.K28M, p.G35R, p.G35V`), which gave 9 false mismatches. Legacy
+still wins whenever it fits the reference, so "G34R" is unchanged (G34 and
+G35 are both glycine). The HGVS reading is used only when legacy fails and
+HGVS fits, and is recorded as `numbering = hgvs`. One-letter "K28M", which
+the old test rejected, is now accepted as HGVS. Dry run: 17 changes
+verified, 1 mismatch (the IDH2 error). The reviewed-trial index is
+byte-identical.
+
+Also found: the mutation and CNV enrichment prompts send no schema and
+parse JSON out of free text. It parsed 15/15 here, but a schema would make
+it structural (roadmap 6.9).
+
+423 tests pass offline; 2 live-model tests are opt-in.
+
 ## Overwritten review copies are kept as backups
 
 The reverse of D6: a run that sent a trial to review again overwrote its

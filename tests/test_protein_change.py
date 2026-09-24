@@ -96,9 +96,12 @@ class TestRejections(unittest.TestCase):
         self.assertEqual(r.hgvs, "")
         self.assertIn("Val601", r.detail)
 
-    def test_h3_hgvs_numbering_written_one_letter_is_caught(self):
-        # "K28M" in one-letter is mature numbering -> residue 29, which is not Lys.
-        self.assertEqual(pc.normalise("H3-3A", "K28M").status, "reference_mismatch")
+    def test_h3_one_letter_fits_neither_numbering(self):
+        # Changed 2026-09-24: "K28M" used to be rejected, since mature
+        # residue 29 is Ser. It fits HGVS numbering (Lys28), which is how
+        # NCT07110246 writes it, so it is now accepted as HGVS; see
+        # TestHistoneNumberingEitherWay. A change fitting neither is still caught.
+        self.assertEqual(pc.normalise("H3-3A", "K29M").status, "reference_mismatch")
 
     def test_out_of_range(self):
         self.assertEqual(pc.normalise("KRAS", "G1200C").status, "position_out_of_range")
@@ -119,6 +122,32 @@ class TestRejections(unittest.TestCase):
 
     def test_empty(self):
         self.assertEqual(pc.normalise("BRAF", "").status, "empty")
+
+
+
+class TestHistoneNumberingEitherWay(unittest.TestCase):
+    """NCT07110246 writes H3 changes in HGVS numbering with one-letter codes."""
+
+    def test_hgvs_one_letter_is_not_shifted_again(self):
+        for stated, want in (("p.K28M", "p.Lys28Met"), ("p.G35R", "p.Gly35Arg"), ("p.G35V", "p.Gly35Val")):
+            r = pc.normalise("H3-3A", stated)
+            self.assertEqual((r.status, r.hgvs, r.numbering), (pc.VERIFIED, want, "hgvs"), stated)
+
+    def test_legacy_still_shifted(self):
+        r = pc.normalise("H3-3A", "K27M")
+        self.assertEqual((r.status, r.hgvs, r.numbering), (pc.VERIFIED, "p.Lys28Met", "histone_mature"))
+
+    def test_legacy_wins_where_both_readings_fit(self):
+        # G34 and G35 are both glycine: "G34R" is the literature G34R.
+        r = pc.normalise("H3-3A", "G34R")
+        self.assertEqual((r.hgvs, r.numbering), ("p.Gly35Arg", "histone_mature"))
+
+    def test_neither_reading_matching_is_a_mismatch(self):
+        self.assertEqual(pc.normalise("H3-3A", "V27M").status, "reference_mismatch")
+
+    def test_an_invented_residue_is_caught(self):
+        # NCT07215910: the text says "IDH2 p.172"; the model wrote p.I172.
+        self.assertEqual(pc.normalise("IDH2", "p.I172K").status, "reference_mismatch")
 
 
 if __name__ == "__main__":

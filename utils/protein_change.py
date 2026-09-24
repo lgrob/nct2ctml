@@ -27,6 +27,15 @@ a list of names, and the shifted position is checked like any other. It is
 recorded in `numbering`, so the renumbering is visible, not silent. A change
 already written in three-letter code is HGVS numbering and is not shifted.
 
+A one-letter H3 change is read in legacy (mature) numbering first, as
+before. Only when that reading does not match the reference and the HGVS
+reading does is the change taken as already in HGVS numbering: trials
+write "p.K28M, p.G35R" (NCT07110246), and mature K28 is serine, G35
+valine. Legacy wins whenever it fits, because both readings fit where
+residues repeat (G34 and G35 are both glycine, so "G34R" fits either) and
+the literature form is then the meaning. If neither fits it is a
+reference_mismatch on the legacy reading.
+
 What is not handled is returned as "unparsed", never guessed: multi-residue
 alternatives ("V600E/K"), exon-level descriptions ("exon 19 deletion"), and
 anything else outside the grammar below.
@@ -257,8 +266,12 @@ def normalise(gene: str, stated: str, reference=None) -> ProteinChange:
     # already numbered from the initiator methionine; only the one-letter
     # literature form is on the mature protein.
     if _is_histone_h3(sequence) and not re.search(r"[A-Z][a-z]{2}\d", stated):
-        parsed.residues = [(aa, pos + 1) for aa, pos in parsed.residues]
-        result.numbering = "histone_mature"
+        def fits(residues):
+            return all(1 <= p <= len(sequence) and sequence[p - 1] == a for a, p in residues)
+        shifted = [(aa, pos + 1) for aa, pos in parsed.residues]
+        if fits(shifted) or not fits(parsed.residues):
+            parsed.residues = shifted
+            result.numbering = "histone_mature"
 
     for aa, pos in parsed.residues:
         if pos < 1 or pos > len(sequence):

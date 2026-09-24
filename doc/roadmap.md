@@ -33,10 +33,10 @@ Standing rules for every step:
 | 0 - Now | 0.3 done. **0.1 (push) is overdue:** 19 commits exist only on this machine. 0.2 and 0.4 open. |
 | 1 - Deterministic fixes | 1.1-1.5, 1.7, 1.8, 1.9 done; 1.4b measured and not adopted. Open: 1.6 (curator time). |
 | 2 - Stage-2 diagnosis | Closed as measured: no narrowing arm (2.4) and no model swap (2.3, 2.6) beats production without losing curated diagnoses. Production stage 2 stays. Open: 2.7 (quote grounding) and optional 2.5. |
-| 3 - Full run | Not started. 3.0 done; needs 0.4 (live smoke test). |
+| 3 - Full run | 3.0 and 3.1 done (3.1 through the analysis environment; diagnosis recall 0.938). 3.2-3.4 need 0.4 (live smoke test with an API key). |
 | 4-7 | Not started. 4.1-4.2 can start on synthetic fixtures at any time. |
 
-The offline suite has 413 tests (2 live-model tests are opt-in). Conditions-only
+The offline suite has 423 tests (2 live-model tests are opt-in). Conditions-only
 benchmark: NCT diagnosis F1 0.74, population P 0.92 / R 0.78; CTIS diagnosis F1
 0.17. Production diagnosis path on Haiku (roadmap 1.9 baseline, 3 runs):
 population recall 0.942, precision 0.798, name F1 0.741.
@@ -106,7 +106,7 @@ the other arms from the part-1 cache).
 | # | Step | Done when | Depends on |
 |---|---|---|---|
 | 3.0 | **Done (D6: keep and report).** The review copy stays published; the index sets `layer_conflict` and writes `layer_conflicts.tsv`. Originally: **Stale review copies.** A trial routed to `ctml/needs-review` in one run and mapped cleanly in a later one keeps its old review copy, and the index publishes it (needs-review overrides mapped). Decide: remove the stale copy on a clean remap (risk: a curator may be editing it), or have the index prefer the newer file, or flag the conflict. | Rule chosen **[D6]**; test pins it; the index reports conflicts. | [D6] |
-| 3.1 | Dry run on the 55 benchmark trials with the final code and backend. | First real `bench/report.json` (replacing the identity calibration); cost and time per trial recorded; diagnosis recall within the 1.9 baseline range (0.942). | 0.4 |
+| 3.1 | **Done 2026-09-24** through the analysis environment's model access (no API key yet): 55/55, NCT diagnosis recall 0.938, gene F1 0.599, age F1 0.919, $0.10/trial at list price; found and fixed the H3 HGVS one-letter rejection. Originally: Dry run on the 55 benchmark trials with the final code and backend. | First real `bench/report.json` (replacing the identity calibration); cost and time per trial recorded; diagnosis recall within the 1.9 baseline range (0.942). | 0.4 |
 | 3.1a | Consider the Message Batches API for 3.2: asynchronous and cheaper per token than live calls, and the run does not need live answers. Needs a batch submit/collect path in `llm_platforms`. | Decision recorded with the cost difference. | 3.1 |
 | 3.2 | Full run: `map --all --source all` over the in-scope corpus (about 1,170 trials). | Every in-scope trial is in `cache/ctml` or `ctml/needs-review`; failures listed; enum-cap and off-list counts from the run log reported. | 3.1 |
 | 3.3 | Build the index from the three layers and tag it as the first release (`index-2026.MM.DD`) with its manifest. | Manifest checksums recorded; review-status counts reported. | 3.2 |
@@ -150,6 +150,8 @@ something a diagnostic lab can defend.
 | 6.6 | **Logging:** replace the `print()` calls in library code with loguru at levels; keep one run log per mapping run with the model id and prompt versions. | No `print` in `src/`/`utils/` library paths; the run log is archived with each release. | - |
 | 6.7 | **Remove upstream leftovers:** MatchMiner-only schema fields, Hong Kong recruitment text, `bulk_convert_yaml_to_json.py` and `ctml/json` (written, read by nothing), and the README's `ctml/pending` hand-authoring path if local trials are not planned. | Leftovers gone, README and workflow diagram updated, tests green. | - |
 | 6.8 | **Harness in the repo:** move the replay harness (`stage2_harness_v3`) into `bench/replay/` with its caches' checksums, so every Phase 2 number can be re-run from the repository. | `python -m bench.replay --arm baseline` reproduces a recorded replicate from its cache exactly. | - |
+
+| 6.9 | Give the mutation and CNV enrichment prompts a JSON schema; resolve "NF-1" to NF1 in the gene scan if it does not collide with the nuclear factor I aliases. | Enrichment answers arrive as tool calls; the 3.1 NF1 false flags disappear with no new rewrite collisions. | - |
 
 ## Phase 7 - Later refinements (take as capacity allows)
 
