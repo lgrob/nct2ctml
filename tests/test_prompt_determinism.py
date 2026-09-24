@@ -56,9 +56,21 @@ class TestPromptList(unittest.TestCase):
     def test_sorted_deduplicated_and_none_free(self):
         self.assertEqual(ai.prompt_list({"b", "a", None, "a"}), ["a", "b"])
 
-    def test_candidate_lists_are_printed_sorted(self):
-        _, p = ai.get_ai_prompt_oncotree_diagnoses_from_trial_info("x", {"Wilms' Tumor", "Ependymoma"}, "T")
-        self.assertIn("['Ependymoma', \"Wilms' Tumor\"]", p)
+    def test_diagnosis_candidates_are_printed_in_the_fixed_shuffle(self):
+        import hashlib
+        names = {"Neuroblastoma", "Ganglioneuroblastoma", "Medulloblastoma", "Ependymoma"}
+        want = sorted(names, key=lambda v: hashlib.sha256(v.encode()).hexdigest())
+        self.assertEqual(ai.diagnosis_prompt_list(names), want)
+        for build in (lambda v: ai.get_ai_prompt_oncotree_diagnoses_from_trial_info("x", v, "T"),
+                      lambda v: ai.get_ai_prompt_child_values("x", v, "T"),
+                      lambda v: ai.get_ai_prompt_level1_for_original_conditions(["x"], v, "T")):
+            self.assertIn(str(want), build(names)[1])
+
+    def test_the_shuffle_does_not_move_existing_names_when_one_is_added(self):
+        names = ["Neuroblastoma", "Ganglioneuroblastoma", "Medulloblastoma", "Ependymoma"]
+        before = ai.diagnosis_prompt_list(names)
+        after = [v for v in ai.diagnosis_prompt_list(names + ["Ganglioneuroma"]) if v != "Ganglioneuroma"]
+        self.assertEqual(before, after)
 
     def test_gene_list_is_printed_sorted(self):
         _, p = ai.get_inclusion_genomic_criteria_prompt({"TP53", "ALK", "BRAF"}, "text")

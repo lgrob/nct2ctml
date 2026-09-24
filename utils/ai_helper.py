@@ -336,6 +336,7 @@ def send_ai_request(id, prompt, json_schema=None):
 def prompt_list(values):
     """
     A list printed into a prompt, in a fixed order: sorted, duplicates removed.
+    Used for gene lists; diagnosis candidates use diagnosis_prompt_list.
 
     Every candidate list and gene list reached the prompts in the order of
     the Python set it was built from, and that order follows PYTHONHASHSEED,
@@ -343,15 +344,44 @@ def prompt_list(values):
     prompts on every run: a full-pipeline check with a stub model found the
     level-1 and both diagnosis prompts differing under seeds 0/1/2 on 7 of
     8 trials, and with only the gene order changed, 16 of 45 Haiku genomic
-    answers changed. Every list printed into a prompt goes through here.
+    answers changed. Every list printed into a prompt goes through here or
+    through diagnosis_prompt_list.
     """
     return sorted({v for v in values if v is not None}, key=str)
+
+
+def diagnosis_prompt_list(values):
+    """
+    Diagnosis candidates in a fixed shuffle: ordered by the SHA-256 of each
+    name. The result is reproducible and independent of PYTHONHASHSEED.
+
+    The order changes what the model answers, so it was measured: Haiku 4.5,
+    the 50-trial diagnosis benchmark, 3 runs per order.
+
+    | order | population recall | population precision | diagnoses |
+    |---|---|---|---|
+    | set order, seeds 0/1/2 | 0.934 / 0.937 / 0.938 | 0.784 / 0.810 / 0.796 | 343 / 309 / 325 |
+    | alphabetical | 0.925 | 0.816 | 292 |
+    | Oncotree tree order | 0.915 | 0.784 | 287 |
+    | SHA-256 shuffle | 0.942 | 0.798 | 312 |
+
+    Alphabetical and tree order lose recall. Both put related names next to
+    each other; that the model then stops early inside a group is a guess,
+    not measured. The shuffle
+    behaves like the random orders every earlier measurement used, and it
+    is no worse than them: recall +0.007 [-0.009, +0.031] paired per trial.
+    Each name's position depends only on the name, so adding an Oncotree
+    node does not reorder the rest.
+    """
+    import hashlib
+    return sorted({v for v in values if v is not None},
+                  key=lambda v: (hashlib.sha256(str(v).encode("utf-8")).hexdigest(), str(v)))
 
 
 def get_ai_prompt_level1_for_original_conditions(original_conditions_list, level1_oncotree_list, trial_id=""):
     # Sorted so the prompt text does not depend on set order (PYTHONHASHSEED);
     # see prompt_list(). Roadmap 1.9.
-    level1_oncotree_list = prompt_list(level1_oncotree_list)
+    level1_oncotree_list = diagnosis_prompt_list(level1_oncotree_list)
     prompt = f"""Task: Map CancerConditions to the closest cancer type in OncotreeValues.
         CancerConditions: {original_conditions_list}
         OncotreeValues: {level1_oncotree_list}
@@ -369,7 +399,7 @@ def get_ai_prompt_level1_for_original_conditions(original_conditions_list, level
 def get_ai_prompt_oncotree_diagnoses_from_trial_info(trial_info, oncotree_values, trial_id=""):
     # Sorted so the prompt text does not depend on set order (PYTHONHASHSEED);
     # see prompt_list(). Roadmap 1.9.
-    oncotree_values = prompt_list(oncotree_values)
+    oncotree_values = diagnosis_prompt_list(oncotree_values)
     prompt = f"""Task: From the TrialInfo, extract OncotreeValues that correspond to medical conditions explicitly mentioned in the text.
         Rules:
         - Only include a diagnosis if the condition or cancer type is explicitly stated in TrialInfo.
@@ -390,7 +420,7 @@ def get_ai_prompt_oncotree_diagnoses_from_trial_info(trial_info, oncotree_values
 def get_ai_prompt_child_values(nct_condition, child_nodes_oncotree_list, trial_id=""):
     # Sorted so the prompt text does not depend on set order (PYTHONHASHSEED);
     # see prompt_list(). Roadmap 1.9.
-    child_nodes_oncotree_list = prompt_list(child_nodes_oncotree_list)
+    child_nodes_oncotree_list = diagnosis_prompt_list(child_nodes_oncotree_list)
 
     # cancer_condition: {nct_condition} E.g. -> Colorectal Cancer
     # Oncotree values: {child_nodes_oncotree} # E.g. -> {'Signet Ring Cell Adenocarcinoma of the Colon and Rectum', 'Colon Adenocarcinoma In Situ', 'Small Bowel Well-Differentiated Neuroendocrine Tumor', 'Gastrointestinal Neuroendocrine Tumors', 'Well-Differentiated Neuroendocrine Tumor of the Rectum', 'Small Bowel Cancer', 'Anal Squamous Cell Carcinoma', 'Anorectal Mucosal Melanoma', 'Low-grade Appendiceal Mucinous Neoplasm', 'Medullary Carcinoma of the Colon', 'Goblet Cell Adenocarcinoma of the Appendix', 'Mucinous Adenocarcinoma of the Appendix', 'Appendiceal Adenocarcinoma', 'Small Intestinal Carcinoma', 'Well-Differentiated Neuroendocrine Tumor of the Appendix', 'Signet Ring Cell Type of the Appendix', 'Colorectal Adenocarcinoma', 'High-Grade Neuroendocrine Carcinoma of the Colon and Rectum', 'Colonic Type Adenocarcinoma of the Appendix', 'Anal Gland Adenocarcinoma', 'Rectal Adenocarcinoma', 'Mucinous Adenocarcinoma of the Colon and Rectum', 'Duodenal Adenocarcinoma', 'Colon Adenocarcinoma', 'Tubular Adenoma of the Colon'}

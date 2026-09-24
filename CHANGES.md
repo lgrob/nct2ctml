@@ -486,6 +486,52 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Prompts no longer depend on the hash seed; diagnosis candidates in a fixed shuffle (roadmap 1.9)
+
+Every candidate list and the gene list were printed into prompts in set
+order, which follows PYTHONHASHSEED; production does not pin it. A
+full-pipeline probe (stub model, 55 reviewed trials), seeds 0 vs 1:
+- every level-1 and diagnosis prompt differed;
+- 67 of 119 genomic prompts differed;
+- the mapped output of 46 trials differed.
+
+After the fix, 0 of 476 prompts and 0 outputs differ;
+`tests/test_prompt_determinism.py` pins this and fails on the old code.
+The drug list and the diagnosis OR are sorted in the CTML.
+
+The order changes the answers, so it was measured: Haiku 4.5, 50 trials,
+3 runs per order.
+
+| order | recall (pop.) | precision (pop.) | name F1 | emitted |
+|---|---|---|---|---|
+| set order, seeds 0 / 1 / 2 | 0.934 / 0.937 / 0.938 | 0.784 / 0.810 / 0.796 | 0.724-0.729 | 343 / 309 / 325 |
+| alphabetical | 0.925 | 0.816 | 0.731 | 292 |
+| OncoTree tree order | 0.915 | 0.784 | 0.728 | 287 |
+| **SHA-256 shuffle (adopted)** | **0.942** | 0.798 | **0.741** | 312 |
+
+- **Alphabetical and tree order lose recall,** below every random order.
+  Alphabetical loses DMG H3 K27-altered and Ewing sarcoma (NCT03838042) and
+  choriocarcinoma and seminoma (NCT03067181) in every run.
+- **The shuffle** (`ai_helper.diagnosis_prompt_list`) is reproducible and
+  no worse than the random orders: recall +0.007 [-0.009, +0.031] paired.
+  It loses Ewing sarcoma on NCT03838042 and gains the paediatric-type HGG
+  H3-/IDH-wildtype on NCT05009992, both in every run. Only one shuffle was
+  tried. A new OncoTree node does not reorder the others.
+- **Gene lists stay alphabetical,** which matches the random order within
+  noise.
+
+**New baseline.** The production code reproduces the shuffle runs exactly
+from their caches under seeds 5 and 7.
+- **Diagnosis:** population recall 0.942, precision 0.798, name F1 0.741,
+  312 emitted, run range 0.009.
+- **Genes:** P 0.661 / R 0.656 / F1 0.650, with the two runs identical.
+- **Ages:** F1 0.899.
+
+Earlier numbers were at seed 0. The previous gene numbers also predate
+roadmap 1.1-1.3.
+
+409 tests pass offline; 2 live-model tests are opt-in.
+
 ## Measured, not adopted: translocations annotated for the model (roadmap 1.4b)
 
 The step annotated each resolved rearrangement in the genomic prompt input
