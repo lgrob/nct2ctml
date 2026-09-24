@@ -318,22 +318,15 @@ were read: each describes a basket. NCT02332668 stays short of 1.00 because
 its rule yields `_SOLID_` alone, and its "lymphoma" arm is covered only by
 the Classical Hodgkin Lymphoma it names.
 
-### The gene scan misses genes written in fusion notation
+### The gene scan misses genes written only as a syndrome or karyotype
 
-`TrialCriteriaToGenes` finds the gene names in a trial's text and hands them
-to the model as the "possible GeneList". On the 55 reviewed trials it misses
-curated genes in 12, most of them written as fusions or in lists: TCF3 and
-KMT2A in NCT05366218, DEK/NUP214/PICALM/MLLT10 in NCT06177067, six AML genes
-in NCT07012447. The model usually recovers them anyway (prompt rule 4 lets it
-go beyond the list). A "the gene must appear in the scan" gate was measured
-on the saved outputs of both prompt versions (claude-haiku-4-5, 55 trials).
-It drops about two wrong genes for every correct one: 28 wrong and 13
-correct on the old prompt, 17 wrong and 11 correct on the new one. Net F1
-barely moves (0.614 -> 0.617 and 0.582 -> 0.587), and recall falls slightly.
-It is not adopted, because the correct genes it drops are real criteria
-lost silently: TCF3, KMT2A, DEK and PICALM in fusion-defined leukaemia
-trials. Fixing the scan's tokenisation of `A-B`, `A::B` and `A/B` would
-remove most of those losses and make the gate worth revisiting.
+*Fusion notation and lists fixed 2026-09-24 (CHANGES.md). The scan now
+misses curated genes in 2 of the 55 reviewed trials instead of 12.* The two
+left are NF1 written only as "NF-1" and RAF1 only as "RAF fusion"
+(NCT04775485), and CBFB and PML written only as the karyotypes inv(16) and
+t(15;17) (NCT07012447). The karyotype cases belong to the translocation
+table below. Genes the model adds without textual support now go to review
+(`gene_unsupported`) instead of being accepted silently.
 
 ### Cytogenetic translocations are not turned into fusion pairs
 

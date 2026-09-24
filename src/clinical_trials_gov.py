@@ -432,9 +432,11 @@ def map_ctml_match_genomic_criteria(trial_id: str, gene_synonym_mapping:Dict[str
             )
             print(f'exclusion_genomic_criteria after enrichment: {exclusion_genomic_criteria}')
 
+        # gene_symbols is passed on so a gene the model returned that the scan
+        # did not find is flagged for review (mcm._flag_unsupported_genes).
         genomic_ctml = mcm.convert_to_ctml_genomic_schema(
             inlcusion_genomic_criteria, exclusion_genomic_criteria,
-            inclusion_text, exclusion_text, nct_id)
+            inclusion_text, exclusion_text, nct_id, scanned_genes=gene_symbols)
         logger.debug(f"genomic criteria as CTML: {genomic_ctml}")
         return genomic_ctml
     else:

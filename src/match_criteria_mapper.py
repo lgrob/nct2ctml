@@ -193,13 +193,68 @@ def _clean_fusion_partners(genomic_criteria: list, trial_id: str = "") -> list:
     return genomic_criteria
 
 
-def _postprocess_genomic_criteria(genomic_criteria: list, trial_id: str = "") -> list:
+def _flag_unsupported_genes(genomic_criteria: list, scanned_genes, criteria_text: str = "",
+                            trial_id: str = "") -> list:
+    """
+    Flag, in place, each gene the model returned that the text scan did not find.
+
+    The scan (TrialCriteriaToGenes) is the list of genes the model was told
+    the text names. A hugo_symbol or fusion_partner outside it is the model's
+    own addition - a gene from a pathway, a disease or its general knowledge
+    rather than from the criteria. It is kept, because some are right (a
+    curator may accept it), but recorded in gene_unsupported, which sends the
+    trial to review (TrialMapManager._destination_for) and shows in the
+    index as gene_check. MYCN on NCT06071897 is the case that prompted it.
+
+    Both sides are compared as current symbols: the scan list is brought up
+    to date with canonical_gene, and by the time this runs the criterion's
+    genes already are. A partner already moved to fusion_partner_unverified
+    is reported by that field and not checked again.
+
+    A symbol written verbatim in criteria_text, as a whole word, is supported
+    too. The scan only knows genes in the synonym table, and fusion partners
+    are often off it: on saved Haiku answers for the 55 reviewed trials, 7
+    of the 12 genes the scan alone would flag per replicate were partners
+    named exactly so in the text (SET in "SET::NUP214", RUNX1T1, DUX4,
+    USP9X, CCNB3, MAML3, ZC3H7B). With the fallback 5 genes in 2 trials
+    are flagged per replicate: FLI1 read from "EWSR1-Fli" (2024-511989-36-00)
+    and the FUS::DDIT3 and EWSR1::DDIT3 fusions of NCT06083883, inferred from
+    "myxoid/round cell liposarcoma" in a text that names no fusion gene.
+    """
+    supported = set()
+    for gene in scanned_genes or []:
+        supported.add(gene)
+        current = rv.canonical_gene(gene)
+        if current:
+            supported.add(current)
+    for alteration in genomic_criteria or []:
+        genomic = alteration.get("genomic") if isinstance(alteration, dict) else None
+        if not isinstance(genomic, dict):
+            continue
+        named = [genomic.get("hugo_symbol"), genomic.get("fusion_partner")]
+        missing = [g for g in named if g and g not in supported
+                   and not re.search(r"(?<![A-Za-z0-9])" + re.escape(g) + r"(?![A-Za-z0-9])",
+                                     criteria_text or "")]
+        if not missing:
+            continue
+        genomic["gene_unsupported"] = ", ".join(missing)
+        logger.warning(f"{trial_id} | {', '.join(missing)} returned by the model but not "
+                       f"found in the criteria text; kept as gene_unsupported for review")
+    return genomic_criteria
+
+
+def _postprocess_genomic_criteria(genomic_criteria: list, trial_id: str = "",
+                                  scanned_genes=None, criteria_text: str = "") -> list:
     """
     Post-process genomic criteria:
 
     - Normalize HUGO symbols.
     - Drop criteria naming a gene that does not exist.
     - Clean protein_change /  fields.
+    - When scanned_genes (the text scan the model was given) is passed, flag
+      a returned gene the scan did not find and criteria_text does not
+      spell out (_flag_unsupported_genes). None skips the check, for
+      callers that have no scan.
     """
     if not genomic_criteria:
         return genomic_criteria
@@ -214,6 +269,9 @@ def _postprocess_genomic_criteria(genomic_criteria: list, trial_id: str = "") ->
     genomic_criteria = filter_genomic_criteria(genomic_criteria, trial_id)
     genomic_criteria = _clean_protein_change_fields(genomic_criteria, trial_id)
     genomic_criteria = _clean_fusion_partners(genomic_criteria, trial_id)
+    if scanned_genes is not None:
+        genomic_criteria = _flag_unsupported_genes(genomic_criteria, scanned_genes,
+                                                   criteria_text, trial_id)
 
     return genomic_criteria
 
@@ -510,14 +568,17 @@ def find_unsatisfiable_genes(match_node) -> list:
 
 def convert_to_ctml_genomic_schema(inclusion_genomic_criteria: list, exclusion_genomic_criteria: list,
                                    inclusion_text: str = "", exclusion_text: str = "",
-                                   trial_id: str = "") -> dict: 
+                                   trial_id: str = "", scanned_genes=None) -> dict:
     inclusions = []
     exclusions = []
+    # The text the scan ran on (clinical_trials_gov.map_ctml_match_genomic_criteria).
+    scanned_text = (inclusion_text or "") + "\n" + (exclusion_text or "")
     print(tdh.get_all_keys(inclusion_genomic_criteria))
     print(tdh.get_all_keys(exclusion_genomic_criteria))
     if inclusion_genomic_criteria and all(key in tdh.get_all_keys(inclusion_genomic_criteria) for key in ["hugo_symbol", "variant_category"]):
         # post processing
-        inclusion_genomic_criteria = _postprocess_genomic_criteria(inclusion_genomic_criteria, trial_id)
+        inclusion_genomic_criteria = _postprocess_genomic_criteria(
+            inclusion_genomic_criteria, trial_id, scanned_genes, scanned_text)
         for alteration in inclusion_genomic_criteria:
             variant_category = alteration["genomic"]["variant_category"]
             # if variant_category begins with !, add alteration to exclusions, without removing !
@@ -530,7 +591,8 @@ def convert_to_ctml_genomic_schema(inclusion_genomic_criteria: list, exclusion_g
     
     if exclusion_genomic_criteria and all(key in tdh.get_all_keys(exclusion_genomic_criteria) for key in ["hugo_symbol", "variant_category"]):
         # post processing
-        exclusion_genomic_criteria = _postprocess_genomic_criteria(exclusion_genomic_criteria, trial_id)
+        exclusion_genomic_criteria = _postprocess_genomic_criteria(
+            exclusion_genomic_criteria, trial_id, scanned_genes, scanned_text)
         for alteration in exclusion_genomic_criteria:
             if alteration not in exclusions:
                 exclusions.append(alteration)

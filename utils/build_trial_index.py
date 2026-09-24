@@ -38,6 +38,9 @@ Consequences worth knowing:
   An empty partner means any fusion of the gene. `fusion_partner_check`
   says why a stated partner was not kept (utils/reference_validation.
   fusion_partner), in which case the row means any fusion of the gene.
+- `gene_check` is "unsupported: <genes>" when the mapper kept a gene the
+  model returned but the text scan did not find (gene_unsupported); such a
+  trial was written to ctml/needs-review.
 - `protein_change` is HGVS three-letter notation on the gene's MANE Select
   protein ("p.Val600Glu"), the notation VEP writes in CSQ_HGVSp after the
   accession. It is filled only when `protein_check` is `verified`, meaning
@@ -110,7 +113,7 @@ GENOMIC_COLUMNS = ["trial_id", "arm_code", "hugo_symbol", "variant_category",
                    "cnv_call", "protein_change", "protein_change_stated",
                    "protein_change_kind", "protein_refseq", "protein_ensembl",
                    "protein_check", "fusion_partner", "fusion", "fusion_partner_check",
-                   "variant_classification", "include"]
+                   "gene_check", "variant_classification", "include"]
 TRIAL_COLUMNS = ["trial_id", "source", "nct_id", "protocol_no", "short_title",
                  "phase", "status", "review_status", "reviewed", "source_file",
                  "age_label", "age_min", "age_min_inclusive",
@@ -316,6 +319,10 @@ def index_trial(trial_id, trial, descendants, solid, liquid, name_to_code):
                 "variant_classification": leaf.get("variant_classification") or "",
                 "include": 0 if category.startswith("!") else 1,
                 **_fusion_fields(leaf),
+                # A gene the mapper could not find in the criteria text; the
+                # row stands but a curator has to confirm it.
+                "gene_check": (f"unsupported: {leaf['gene_unsupported']}"
+                               if leaf.get("gene_unsupported") else ""),
             })
             partner = genomics[-1]["fusion_partner"]
             # The same fusion seen from the partner's side, when the panel

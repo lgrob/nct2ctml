@@ -355,6 +355,10 @@ class TrialMapManager:
           match_criteria_mapper._clean_protein_change_fields). The criterion
           is gene-level until a curator resolves it, so the trial matches
           every variant in that gene.
+        - A gene the model returned that the text scan did not find
+          (gene_unsupported, see match_criteria_mapper._flag_unsupported_genes).
+          It may be the model's own addition, and a wrong gene matches the
+          wrong patients.
 
         Discarding either is worse than queueing it: a trial that is not there
         is a trial nobody can be matched to and nobody can see is missing.
@@ -365,6 +369,8 @@ class TrialMapManager:
             reasons.append("no diagnosis criterion, so as it stands it would match every patient")
         if 'protein_change_unverified' in keys:
             reasons.append("a protein change did not match its reference protein")
+        if 'gene_unsupported' in keys:
+            reasons.append("a gene the model returned is not named in the criteria text")
         if not reasons:
             return ctml_files_path
         import config  # imported here, as elsewhere in this module

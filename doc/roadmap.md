@@ -39,8 +39,8 @@ produces, so they go first. None needs the GPU.
 
 | # | Step | Done when | Depends on |
 |---|---|---|---|
-| 1.1 | **Gene scan tokenisation.** Make `TrialCriteriaToGenes` find genes written as `A-B`, `A::B`, `A/B` and in comma lists. | The 12 reviewed trials whose curated genes the scan misses drop to 2 or fewer; no new false genes on the 55 keys. | - |
-| 1.2 | **Unsupported genes go to review.** A model gene absent from the (fixed) scan is kept but flags the trial for `ctml/needs-review`, rather than being dropped. This is the review-routing form of the gate measured in `open_issues.md`. | The MYCN case (NCT06071897) and the old CD276 case are routed; the number of reviewed trials routed is reported. | 1.1 |
+| 1.1 | **Done 2026-09-24.** **Gene scan tokenisation.** Make `TrialCriteriaToGenes` find genes written as `A-B`, `A::B`, `A/B` and in comma lists. | The 12 reviewed trials whose curated genes the scan misses drop to 2 or fewer; no new false genes on the 55 keys. | - |
+| 1.2 | **Done 2026-09-24.** **Unsupported genes go to review.** A model gene absent from the (fixed) scan is kept but flags the trial for `ctml/needs-review`, rather than being dropped. This is the review-routing form of the gate measured in `open_issues.md`. | The MYCN case (NCT06071897) and the old CD276 case are routed; the number of reviewed trials routed is reported. | 1.1 |
 | 1.3 | **Widen the retired-symbol rewrite set** with the measured 4-character floor, so `HIST1H3A`/`HIST2H3C` resolve to panel genes. | DMG trials keep their histone genes; a test pins that `ALL`, `AT`, `ARF`, `H3` are still not rewritten. | - |
 | 1.4 | **Translocation table.** `ref/translocation_fusions.tsv`: unambiguous t()/inv() to gene pair, one reason per row; ambiguous ones (t(X;18)) stay gene-level. Applied deterministically after extraction. | 31 NCT trials stating a translocation are checked by hand against the output; every added pair is one the text supports. | - |
 | 1.5 | **Benchmark covers CTIS.** `bench/benchmark_map.py` reads `cache/ctis` as well, so the 5 curated CTIS keys are scored. | Report has 55 rows; CTIS rows show non-trivial scores. | - |

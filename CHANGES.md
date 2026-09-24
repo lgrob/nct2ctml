@@ -486,6 +486,51 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Gene scan reads fusion notation; genes the text does not support go to review
+
+Roadmap 1.1 and 1.2. The gene list handed to the model split the criteria
+on whitespace only, so a gene written inside a fusion or an unspaced list was
+invisible. On the 55 reviewed trials, 12 trials lacked a curated gene in the
+scan (25 trial-gene pairs), for example PICALM::MLLT10 and DEK::NUP214
+(NCT06177067), and IDH1/2 and ASXL1/2 (NCT07012447).
+
+- **Splitting:** `TrialCriteriaToGenes` now splits tokens on `::`, `-`, `/`,
+  dashes, comma and semicolon.
+- **Slash shorthand:** IDH1/2, CDKN2A/B, JAK1/2/3 and MYC/N expand only to
+  current symbols. MYC/N gives MYCN, never MYN, an alias of PALLD.
+- **Other forms:** markdown-escaped tokens (`\[ERG\]`) and the lower-case
+  prefix in cCBL are now read.
+- **Short parts:** a part of 3 characters or fewer counts only if it is
+  itself a current symbol, so CAR, AT, ARF, H3, ALL and B7 still do not
+  resolve.
+
+Trials missing a curated gene went 12 -> 2. The two left are NCT04775485
+(NF1 appears only as the syndrome "NF-1", RAF1 only as "RAF fusion") and
+NCT07012447 (CBFB and PML appear only as the karyotypes inv(16) and
+t(15;17)). The scan now finds 63 new trial-gene pairs in 18 trials: 21
+curated, 42 named in the text but not curated, and 0 false. Across all 1,255
+cached trials, every newly resolved alias is a protein name for its gene
+(CD20 -> MS4A1). Known side effects: SHH now also resolves from the
+medulloblastoma subgroup label "SHH-activated", and the older collision
+"TLS" -> FUS is unchanged.
+
+A gene the model returns, as `hugo_symbol` or `fusion_partner`, that the scan
+did not find and the text does not spell out as a whole word is kept but
+marked `gene_unsupported`. The trial goes to `ctml/needs-review`, and
+`trial_genomic.tsv` reports it in `gene_check`. The whole-word fallback is
+needed because fusion partners are often missing from the synonym table
+(SET, RUNX1T1, DUX4, USP9X); without it the rule flags 12 genes in 7 trials
+per replicate, and the 7 extra flags are all correct partners.
+
+Measured on the saved Haiku 4.5 gene answers, two replicates, no new model
+calls: 5 flags in 2 trials in each replicate. Four are real errors,
+FUS::DDIT3 and EWSR1::DDIT3 inferred from "myxoid/round cell liposarcoma"
+on NCT06083883, whose text names no fusion gene. One is a false alarm, FLI1
+from "EWSR1-Fli" on 2024-511989-36-00. The MYCN case from the fusion-prompt
+run (NCT06071897) does not occur in these answers, so it is not tested
+here. `map_ctml_match_genomic_criteria` passes the scanned list it already
+builds, so the scan is not run twice. 351 tests pass (2 skipped).
+
 ## Measured: does a larger Claude model map more correctly?
 
 Haiku 4.5, Sonnet 5 and Opus 5.5 were run on the production diagnosis path
