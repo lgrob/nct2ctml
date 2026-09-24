@@ -1,0 +1,80 @@
+# Aliases canonical_gene must never rewrite to a panel gene, although each
+# is an unambiguous >=4-character alias of one in ref/synonym_to_gene_symbol.tsv.
+# Read only by utils/reference_validation.py; path in config.py.
+#
+# Two sources, both measured 2026-09-24 (roadmap 1.3):
+# - observed: the alias occurs as a whole word in the cached eligibility texts
+#   (cache/nct, cache/ctis; 1,255 trials) and every occurrence means something
+#   other than an alteration of the gene - a disease, a document, a drug, an
+#   antigen measured by IHC. A model copying it into hugo_symbol would get a
+#   silent wrong criterion instead of a visible drop.
+# - english: the alias is a word in /usr/share/dict/words (web2, 234,456
+#   words). None of these occurred in the cached texts with this casing; they
+#   are here because the only thing between them and a rewrite is case.
+#
+# Families, CD antigens, fusion names, punctuation variants of a blocked
+# alias and current symbols of other genes are excluded by rule in code and
+# need no row here.
+#
+# alias	source	reason
+JMML	observed	disease: juvenile myelomonocytic leukaemia (22 cached trials, all disease usage)
+HLRCC	observed	syndrome: hereditary leiomyomatosis and renal cell cancer (NCT04981509)
+WAGR	observed	syndrome: Wilms tumour-aniridia-genitourinary-retardation (NCT06401330)
+ICF1	observed	document: informed consent form 1 (2023-510568-11-00, NCT07243470)
+ARM1	observed	trial arm label (NCT06972641)
+CHOP	observed	institution: Children's Hospital of Philadelphia (NCT02356653); also a chemotherapy regimen
+IL-2	observed	drug: interleukin-2 / aldesleukin as prior therapy (13 cached trials)
+GMCSF	observed	drug: GM-CSF / sargramostim (2 cached trials)
+PD-1	observed	immune checkpoint named as prior-therapy target (24 cached trials, none genomic)
+PD-L2	observed	immune checkpoint named as prior-therapy target (2 cached trials)
+CTLA-4	observed	immune checkpoint named as prior-therapy target (11 cached trials)
+OX40	observed	immune checkpoint agonist class (NCT06375161)
+VEGFR	observed	receptor family, not KDR alone: "VEGFR inhibitor" (9 cached trials)
+B7-H3	observed	antigen measured by IHC (11 cached trials); CD276 is expression-only
+NY-ESO-1	observed	antigen measured by IHC (2 cached trials); CTAG1B is expression-only
+ARIA	english	dictionary word; would resolve to NRG1
+AURA	english	dictionary word; would resolve to AURKA
+AXIL	english	dictionary word; would resolve to AXIN2
+BABS	english	dictionary word; would resolve to ODC1
+BRIGHT	english	dictionary word; would resolve to ARID1B
+BRUCE	english	dictionary word; would resolve to BIRC6
+CAIN	english	dictionary word; would resolve to NUP214
+CARMEN	english	dictionary word; would resolve to BCL10
+CLAP	english	dictionary word; would resolve to BCL10
+CLOVE	english	dictionary word; would resolve to PIK3CA
+CREST	english	dictionary word; would resolve to SS18L1
+DULLARD	english	dictionary word; would resolve to CTDNEP1
+Dicer	english	dictionary word; would resolve to DICER1
+ECAD	english	dictionary word; would resolve to CDH1
+FACE	english	dictionary word; would resolve to FANCE
+FILS	english	dictionary word; would resolve to POLE
+FRAP	english	dictionary word; would resolve to MTOR
+GLOW	english	dictionary word; would resolve to DICER1
+GREMLIN	english	dictionary word; would resolve to GREM1
+HEED	english	dictionary word; would resolve to EED
+IOTA	english	dictionary word; would resolve to PSMA6
+IRIS	english	dictionary word; would resolve to BRCA1
+Lobe	english	dictionary word; would resolve to AKT1S1
+MATINS	english	dictionary word; would resolve to MYH9
+MINOR	english	dictionary word; would resolve to NR4A3
+MIRAGE	english	dictionary word; would resolve to SAMD9
+NUMA	english	dictionary word; would resolve to NUMA1
+OASIS	english	dictionary word; would resolve to CREB3L1
+PINTO	english	dictionary word; would resolve to FOXL2
+PIST	english	dictionary word; would resolve to GOPC
+RITA	english	dictionary word; would resolve to ZNF331
+SHAPY	english	dictionary word; would resolve to CANT1
+SIMP	english	dictionary word; would resolve to FAP
+STING	english	dictionary word; would resolve to STING1
+TOPI	english	dictionary word; would resolve to TOP1
+TRAIL	english	dictionary word; would resolve to TNFSF10
+TUBE	english	dictionary word; would resolve to TUBE1
+WASP	english	dictionary word; would resolve to WAS
+WHIM	english	dictionary word; would resolve to CXCR4
+WISH	english	dictionary word; would resolve to NCKIPSD
+ZETA	english	dictionary word; would resolve to PSMA5
+ZYME	english	dictionary word; would resolve to BMP4
+armadillo	english	dictionary word; would resolve to CTNNB1
+aviD	english	dictionary word; would resolve to DICER1
+eNOS	english	dictionary word; would resolve to NOS3
+pasha	english	dictionary word; would resolve to DGCR8

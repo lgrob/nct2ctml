@@ -486,6 +486,47 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Retired-symbol rewrite widened to the synonym table
+
+Roadmap 1.3. `canonical_gene` rewrote only the 15 renames between
+`genes_kispi.txt` and `genes.txt`, so HIST1H3A (H3C1) and HIST2H3C (H3C14)
+were dropped even though the synonym table maps both. It now also rewrites
+synonym-table aliases that pass deterministic checks, which takes the set
+from 15 to 4,028. Re-measured on the current ref files:
+
+| filter | aliases left |
+|---|---|
+| unambiguous aliases of a panel gene | 4,879 |
+| at least 4 characters | 4,295 |
+| not another gene's current MANE symbol (removes TCF4, PDK1, TTF1, ...) | 4,269 |
+| shape rules (removes 181) | 4,088 |
+| new `ref/gene_rewrite_exclusions.tsv` (removes 61) | 4,027 |
+
+The shape rules remove case- or punctuation-fold ambiguity, CD antigens,
+family stems (PARP, HDAC, VEGF), fusion names (BCR-ABL), and PDL1 as a
+variant of the blocked PD-L1.
+
+The 4-character floor proposed in `open_issues.md` was not enough. Across the
+1,255 cached trials, 15 aliases of 4 or more characters are used as something
+other than a gene: JMML (22 trials), CHOP (the hospital), ICF1 (informed
+consent form), ARM1, PD-1, CTLA-4 and IL-2. And 34 of the 443 four-letter
+candidates are English words, contrary to the earlier estimate. Each
+exclusion row records its source and reason. If the exclusion file is
+missing, the widening is switched off; the check itself stays on.
+
+Effect on current data:
+- 0 of the 68 answer-key symbols and 0 of the 221 scan-path symbols
+  canonicalise differently.
+- 25 trials gain a newly resolving word (HER2 in 12).
+- 2 of those trials gain a gene reached no other way (MEK1 -> MAP2K1).
+
+The intended benefit, rescuing retired symbols the model writes into
+`hugo_symbol`, shows up only in a mapping run and is not yet measured. Side
+finding, not changed: the scan's own synonym table maps PDL1 -> CD274,
+because the `!PD-L1` block covers only the hyphenated spelling. CD274 is
+expression-only, so it does not reach the index as a genomic criterion.
+361 tests pass (2 skipped).
+
 ## Gene scan reads fusion notation; genes the text does not support go to review
 
 Roadmap 1.1 and 1.2. The gene list handed to the model split the criteria

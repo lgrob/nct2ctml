@@ -19,21 +19,22 @@ not overlap - no Oncotree code is also some other node's display name - so the
 rewrite is unambiguous. Case-insensitive rescue is likewise safe: no two
 Oncotree display names differ only by case.
 
-Retired gene symbols are rewritten rather than dropped, but only the fifteen
-that Kispi's own list actually used. ref/genes.txt holds current HGNC symbols;
-ref/genes_kispi.txt is the raw list as supplied, and the difference between the
-two is exactly a set of renames - H3F3B for H3-3B, WHSC1 for NSD2, SEPT9 for
-SEPTIN9. A model answering with one of those is right about the gene and out of
-date about its spelling, so dropping it would discard a correct answer.
+Retired gene symbols and aliases are rewritten rather than dropped. A model
+answering HIST1H3A is right about the gene (H3C1) and out of date about its
+spelling, so dropping it would discard a correct answer. Two sources feed the
+rewrite: the fifteen renames between ref/genes_kispi.txt (the raw list as
+supplied) and ref/genes.txt (current HGNC), always; and the synonym table,
+filtered hard (see `_gene_aliases`).
 
-The full synonym table is deliberately NOT used for this. It is built for
-Aho-Corasick search over criteria text, where a separate blocklist guards the
-short entries, and it contains 584 aliases of three characters or fewer:
-"ALL" resolves to BCR, "AT" to BTK, "ARF" to CDKN2A, "H3" to H3C14. Rewriting
-model output through it would turn a paediatric trial's "ALL" into a BCR
-criterion, which is far worse than dropping an unrecognised symbol - a drop is
-visible in the log, a wrong rewrite is not.
+The synonym table is NOT used as it stands. It is built for Aho-Corasick search
+over criteria text, where a false positive costs one LLM call, and it maps
+"ALL" to BCR, "AT" to BTK, "ARF" to CDKN2A, "H3" to H3C14 - and, at four
+characters and up, "JMML" to PTPN11, "CHOP" to DDIT3, "PD-1" to PDCD1. Rewriting
+model output through that would turn a paediatric trial's disease name into a
+gene criterion, which is far worse than dropping an unrecognised symbol - a
+drop is visible in the log, a wrong rewrite is not.
 """
+import bisect
 import csv
 import re
 from functools import lru_cache
@@ -102,6 +103,12 @@ def _read_synonym_rows():
     Yields officials as written, so a multi-gene row ("RAS" -> KRAS,NRAS,HRAS)
     arrives intact and each caller decides what to do with it.
     """
+    rows, blocked = _synonym_table()
+    return [(a, o) for a, o in rows if a not in blocked]
+
+
+def _synonym_table():
+    """(every (alias, official) row, the set of "!"-blocked aliases)."""
     rows, blocked = [], set()
     for path in (SYNONYM_TSV, SYNONYM_ADDENDUM_TSV):
         try:
@@ -118,7 +125,7 @@ def _read_synonym_rows():
                     blocked.add(alias[1:].strip())
                     continue
                 rows.append((alias, official))
-    return [(a, o) for a, o in rows if a not in blocked]
+    return rows, blocked
 
 
 @lru_cache(maxsize=1)
@@ -147,15 +154,30 @@ def gene_synonym_mapping():
 @lru_cache(maxsize=1)
 def _gene_aliases():
     """
-    Retired symbol -> current symbol, for the renames between the raw Kispi
-    gene list and the current one.
+    Alias or retired symbol -> panel symbol: every rewrite canonical_gene makes.
 
-    Restricting the rewrite to this set is the point. Every entry is a symbol
-    Kispi themselves listed for a gene that is on the panel, so the rewrite can
-    only ever recover a gene the pipeline is entitled to name. Opening it to
-    the whole synonym table would admit "ALL" -> BCR; see the module docstring.
+    The union of the Kispi renames (always, whatever their shape - CARS for
+    CARS1 would fail the family rule below) and the widened synonym set. A
+    rename wins a conflict, since Kispi listed it for exactly that gene.
+
+    Until 2026-09-24 this was the renames alone, fifteen entries. That kept
+    "ALL" out, but on the wrong criterion: HIST1H3B and HIST1H3C were rewritten
+    because genes_kispi.txt happened to spell them that way, while HIST1H3A
+    (H3C1) and HIST2H3C (H3C14) were dropped although the synonym table holds
+    both. The DMG trials, whose literature spelling is the retired one, paid
+    for it. Measured on the current ref files the set is now 4,028.
     """
     genes = _gene_symbols()
+    renames = _legacy_renames(genes)
+    return {**_panel_aliases(genes), **renames}
+
+
+def _legacy_renames(genes):
+    """
+    Retired symbol -> current symbol, for the renames between the raw Kispi
+    gene list and the current one. Every entry is a symbol Kispi themselves
+    listed for a gene on the panel.
+    """
     try:
         with open(LEGACY_GENE_LIST) as f:
             retired = {line.strip() for line in f if line.strip()} - genes
@@ -178,6 +200,128 @@ def _gene_aliases():
                      f"{sorted(unresolved)}")
     return {alias: next(iter(owners)) for alias, owners in claims.items()
             if len(owners) == 1}
+
+
+# Every alias of three characters or fewer is refused. That is where the
+# dangerous ones live - ALL, AT, ARF, H3, CAR, and 664 unambiguous panel
+# aliases in all - and nothing worth rescuing is that short.
+_REWRITE_MIN_LENGTH = 4
+
+# "CD20", "CD117", "CD140a": cluster-of-differentiation names are how a trial
+# states an immunophenotype (flow, IHC), not a sequencing result. Rewritten,
+# "CD20+ lymphoma" becomes a required MS4A1 alteration and matches nobody -
+# the failure trial_config.expression_only_genes exists to stop.
+_CD_ANTIGEN = re.compile(r"^CD\d+[A-Za-z]?$")
+
+
+def _alias_key(alias):
+    """Case and punctuation folded: "PD-L1", "PDL1" and "pd-l1" share a key."""
+    return re.sub(r"[^A-Z0-9]", "", alias.upper())
+
+
+def _panel_aliases(genes):
+    """
+    alias -> panel symbol, for the synonym-table aliases safe to rewrite.
+
+    An alias is kept only if every deterministic test passes. Counts are over
+    the current ref files, applied in order (2026-09-24):
+
+      4,879  unambiguous single-gene aliases of a panel gene that are not
+             themselves a panel symbol in any case
+      4,295  of them are >= _REWRITE_MIN_LENGTH characters
+      4,269  are not the current symbol of another gene with a MANE
+             transcript - TCF4 is a gene in its own right, not TCF7L2, and
+             PDK1 is not PDPK1
+      4,088  survive the four shape rules: no other gene shares the alias
+             once case and punctuation are folded (p100 is NFKB2, P100 is
+             PMEL); not a CD antigen; not the stem of two or more current
+             symbols (PARP, HDAC, VEGF, PTCH - a family, not one gene); not a
+             fusion name whose halves are different genes (BCR-ABL, EWS-FLI1 -
+             the fusion path owns those); not a punctuation variant of an
+             alias the addendum blocks ("PDL1" for "!PD-L1")
+      4,027  are not in config.GENE_REWRITE_EXCLUSION_FILE_PATH, the rows
+             that only measurement could find: aliases seen in the cached
+             trial texts meaning something else (JMML, CHOP, ICF1, PD-1) and
+             English words (FACE, TRAIL)
+
+    Fails closed. Without the exclusion file the rules above would pass JMML
+    to PTPN11, so a missing file disables the widening, not the check.
+    """
+    exclusions = _rewrite_exclusions()
+    if exclusions is None:
+        return {}
+
+    rows, blocked = _synonym_table()
+    blocked_keys = {_alias_key(b) for b in blocked}
+    claims, owners_by_key = {}, {}
+    for alias, official in rows:
+        parts = [p.strip() for p in official.split(",") if p.strip()]
+        claims.setdefault(alias, set()).update(parts)
+        owners_by_key.setdefault(_alias_key(alias), set()).update(parts)
+    for symbol in genes:
+        owners_by_key.setdefault(_alias_key(symbol), set()).add(symbol)
+
+    other_genes = _mane_genes() - genes
+    symbols = sorted(_mane_genes() | genes)
+
+    def is_family_stem(alias):
+        stem = alias.upper()
+        start = bisect.bisect_left(symbols, stem)
+        count = 0
+        for symbol in symbols[start:]:
+            if not symbol.startswith(stem):
+                break
+            count += symbol != stem
+        return count >= 2
+
+    def names_one_gene(part):
+        if part in genes or part in _mane_genes():
+            return part
+        owners = claims.get(part, set()) - {""}
+        return next(iter(owners)) if len(owners) == 1 else None
+
+    def is_fusion_name(alias):
+        halves = [p for p in re.split(r"::|[-/:]", alias) if p]
+        if len(halves) < 2:
+            return False
+        named = [names_one_gene(h) for h in halves]
+        return all(named) and len(set(named)) >= 2
+
+    kept = {}
+    for alias, owners in claims.items():
+        if alias in blocked:
+            continue
+        if len(owners) != 1:
+            continue
+        official = next(iter(owners))
+        if (official not in genes or alias in genes or alias.upper() in genes
+                or len(alias) < _REWRITE_MIN_LENGTH
+                or alias in other_genes or alias.upper() in other_genes):
+            continue
+        key = _alias_key(alias)
+        if (len(owners_by_key.get(key, ())) > 1
+                or _CD_ANTIGEN.match(alias)
+                or is_family_stem(alias)
+                or is_fusion_name(alias)
+                or key in blocked_keys
+                or alias in exclusions):
+            continue
+        kept[alias] = official
+    return kept
+
+
+def _rewrite_exclusions():
+    """Aliases listed in config.GENE_REWRITE_EXCLUSION_FILE_PATH, or None."""
+    path = config.GENE_REWRITE_EXCLUSION_FILE_PATH
+    try:
+        handle = open(path, newline="")
+    except FileNotFoundError:
+        logger.warning(f"no gene rewrite exclusion list at {path}; only the "
+                       f"Kispi renames will be rewritten")
+        return None
+    with handle:
+        return {row[0].strip() for row in csv.reader(handle, delimiter="\t")
+                if row and row[0].strip() and not row[0].lstrip().startswith("#")}
 
 
 # Spelling differences that carry no information. Registries and Oncotree
@@ -328,10 +472,11 @@ def canonical_gene(symbol):
     """
     The HUGO symbol as it appears in the gene list, or None if absent.
 
-    Case is forgiven, and a retired symbol is rewritten to the current one.
-    Nothing upstream does this: update_hugo_symbol rewrites HER2 to ERBB2 and
-    nothing else, and the synonym table is otherwise used only to *find* genes
-    in criteria text, never to normalise what the model answers with.
+    Case is forgiven, and a retired symbol or alias is rewritten to the panel
+    symbol it names, through the filtered set in `_gene_aliases`: HIST1H3A to
+    H3C1, WHSC1 to NSD2, INI1 to SMARCB1. Nothing upstream does this:
+    update_hugo_symbol rewrites HER2 to ERBB2 and nothing else, and the raw
+    synonym table is used only to *find* genes in criteria text.
 
     The alias lookup stays case-sensitive on purpose. WAS, CAN, MET and REST
     are live aliases of other genes, so lower-casing the table would make

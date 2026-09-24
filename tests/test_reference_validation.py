@@ -122,7 +122,7 @@ class TestRetiredGeneSymbols(unittest.TestCase):
         would invent a BCR criterion where the model said a disease name. A
         drop is visible in the log; a wrong rewrite is not.
         """
-        for alias in ("ALL", "AT", "ARF", "AGO", "H3", "AA", "ABL", "AKT"):
+        for alias in ("ALL", "AT", "ARF", "AGO", "H3", "AA", "ABL", "AKT", "CAR"):
             self.assertIsNone(canonical_gene(alias), alias)
 
     def test_multi_gene_aliases_are_not_rewritten(self):
@@ -130,11 +130,128 @@ class TestRetiredGeneSymbols(unittest.TestCase):
         for alias in ("RAS", "KRAS/NRAS/HRAS", "RAS-mutated"):
             self.assertIsNone(canonical_gene(alias), alias)
 
-    def test_the_rewrite_set_stays_small(self):
+    def test_the_rewrite_set_holds_only_safe_shapes(self):
+        """
+        Replaces a cap of 40 entries, which pinned the renames-only set. The
+        set is now ~4,000 synonym-table aliases, so what is pinned is its
+        shape: every target a panel gene, every alias long enough or a Kispi
+        rename, and none of them another gene's current symbol.
+        """
+        from utils.reference_validation import (
+            _gene_aliases, _legacy_renames, _mane_genes, gene_symbols)
+        genes = gene_symbols()
+        renames = _legacy_renames(genes)
+        other_genes = _mane_genes() - genes
+        bad = [(a, g) for a, g in _gene_aliases().items()
+               if g not in genes or a in genes
+               or (a not in renames and (len(a) < 4 or a in other_genes))]
+        self.assertEqual(bad, [])
+
+
+class TestWidenedGeneRewrite(unittest.TestCase):
+    """
+    Roadmap 1.3: canonical_gene now rewrites unambiguous >=4-character aliases
+    of a panel gene, not only the fifteen Kispi renames. Each refusal below is
+    a class of alias measured to be wrong as a rewrite; see _panel_aliases and
+    ref/gene_rewrite_exclusions.tsv.
+    """
+
+    def _clear(self):
         from utils.reference_validation import _gene_aliases
-        self.assertLess(len(_gene_aliases()), 40,
-                        "the rewrite set grew; it should only hold renames "
-                        "between genes.txt and genes_kispi.txt")
+        _gene_aliases.cache_clear()
+        canonical_gene.cache_clear()
+
+    def test_retired_histone_spellings_resolve(self):
+        """The motivating case: dropped before, although the table maps both."""
+        for alias, current in (("HIST1H3A", "H3C1"), ("HIST2H3C", "H3C14"),
+                               ("HIST1H3B", "H3C2"), ("HIST1H3C", "H3C3")):
+            self.assertEqual(canonical_gene(alias), current, alias)
+
+    def test_other_long_aliases_resolve(self):
+        for alias, current in (("INI1", "SMARCB1"), ("CRAF", "RAF1"),
+                               ("MEK1", "MAP2K1"), ("HER-2", "ERBB2")):
+            self.assertEqual(canonical_gene(alias), current, alias)
+
+    def test_the_addendum_blocklist_still_wins(self):
+        """
+        "!PD-L1" vetoes the NCBI row, and "PDL1" - the same alias without the
+        hyphen, in 5 cached trials - must not slip past it to CD274. PD-L1 has
+        its own biomarker path.
+        """
+        for alias in ("PD-L1", "PDL1", "pd-l1"):
+            self.assertIsNone(canonical_gene(alias), alias)
+
+    def test_ambiguous_aliases_never_resolve(self):
+        # Multi-gene rows, and aliases dropped as collisions when the table
+        # was built (ref/synonym_collisions.tsv).
+        for alias in ("RAS", "BRCA", "NTRK", "BRCA1/2", "ALK1", "CDKN2", "FACD"):
+            self.assertIsNone(canonical_gene(alias), alias)
+        # Unambiguous only while case matters: p100 is NFKB2, P100 is PMEL.
+        for alias in ("p100", "P100", "Delta", "DELTA", "Mip1", "MIP1"):
+            self.assertIsNone(canonical_gene(alias), alias)
+
+    def test_another_genes_symbol_is_not_hijacked(self):
+        """TCF4 is a gene in its own right; the table lists it under TCF7L2."""
+        from utils.reference_validation import fusion_partner
+        for symbol in ("TCF4", "PDK1", "TTF1", "MST1", "CAST"):
+            self.assertIsNone(canonical_gene(symbol), symbol)
+        self.assertEqual(fusion_partner("TCF4"), ("TCF4", "off_panel"))
+
+    def test_shape_rules_refuse(self):
+        for alias in ("CD20", "CD117", "CD140a",   # antigens
+                      "PARP", "HDAC", "VEGF", "PTCH", "PSMA",  # family stems
+                      "BCR-ABL", "EWS-FLI1"):      # fusion names
+            self.assertIsNone(canonical_gene(alias), alias)
+
+    def test_observed_non_gene_usage_is_refused(self):
+        """
+        Each occurs in the cached eligibility texts meaning something else:
+        JMML the disease (22 trials), CHOP the Children's Hospital of
+        Philadelphia, ICF1 an informed consent form, ARM1 a trial arm, PD-1
+        and CTLA-4 as prior-therapy targets.
+        """
+        for alias in ("JMML", "CHOP", "ICF1", "ARM1", "HLRCC", "WAGR", "PD-1",
+                      "CTLA-4", "PD-L2", "OX40", "IL-2", "GMCSF", "VEGFR",
+                      "B7-H3", "NY-ESO-1", "FACE", "TRAIL", "IRIS"):
+            self.assertIsNone(canonical_gene(alias), alias)
+
+    def test_every_exclusion_row_is_live(self):
+        """
+        A row the rules already refuse, or that is no longer an alias, is dead
+        weight that misleads the next reader - the same honesty check the
+        diagnosis synonym table has.
+        """
+        from utils.reference_validation import (
+            _panel_aliases, _rewrite_exclusions, gene_symbols)
+        rows = _rewrite_exclusions()
+        with tempfile.NamedTemporaryFile('w', suffix='.tsv', delete=False) as handle:
+            handle.write("# empty\n")
+            path = handle.name
+        try:
+            with patch.object(config, 'GENE_REWRITE_EXCLUSION_FILE_PATH', path):
+                unfiltered = _panel_aliases(gene_symbols())
+        finally:
+            os.unlink(path)
+        self.assertTrue(rows)
+        self.assertEqual(sorted(rows - set(unfiltered)), [])
+
+    def test_a_missing_exclusion_list_fails_closed(self):
+        """Without it JMML would reach PTPN11, so the widening switches off."""
+        with patch.object(config, 'GENE_REWRITE_EXCLUSION_FILE_PATH',
+                          '/nonexistent/gene_rewrite_exclusions.tsv'):
+            self._clear()
+            try:
+                self.assertIsNone(canonical_gene("JMML"))
+                self.assertIsNone(canonical_gene("HIST1H3A"))
+                self.assertEqual(canonical_gene("H3F3A"), "H3-3A")
+            finally:
+                self._clear()
+
+    def test_filter_rewrites_rather_than_drops(self):
+        kept = filter_genomic_criteria(
+            [{"genomic": {"hugo_symbol": "HIST1H3A", "variant_category": "Mutation"}},
+             {"genomic": {"hugo_symbol": "JMML", "variant_category": "Mutation"}}])
+        self.assertEqual([e["genomic"]["hugo_symbol"] for e in kept], ["H3C1"])
 
 
 class TestFilterDiagnoses(unittest.TestCase):
@@ -410,7 +527,8 @@ class TestSingleReader(unittest.TestCase):
             text = open(path).read()
             for literal in ('ref/genes.txt', 'ref/genes_kispi.txt',
                             'ref/synonym_to_gene_symbol.tsv',
-                            'ref/gene_synonym_addendum.tsv'):
+                            'ref/gene_synonym_addendum.tsv',
+                            'ref/gene_rewrite_exclusions.tsv'):
                 if f'"{literal}"' in text or f"'{literal}'" in text:
                     offenders.append(f"{rel}: {literal}")
         self.assertEqual(offenders, [])

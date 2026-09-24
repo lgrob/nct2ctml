@@ -147,6 +147,10 @@ GENE_LIST_FILE_PATH = "ref/genes.txt"
 LEGACY_GENE_LIST_FILE_PATH = "ref/genes_kispi.txt"
 GENE_SYNONYM_FILE_PATH = "ref/synonym_to_gene_symbol.tsv"
 GENE_SYNONYM_ADDENDUM_FILE_PATH = "ref/gene_synonym_addendum.tsv"
+# Aliases the output side (canonical_gene) must never rewrite, although the
+# synonym table maps each unambiguously to a panel gene: JMML, CHOP, PD-1.
+# Only the rewrite reads it; the input-side search is unaffected.
+GENE_REWRITE_EXCLUSION_FILE_PATH = "ref/gene_rewrite_exclusions.tsv"
 # MANE Select protein sequences every trial protein change is checked
 # against (utils/protein_change.py); built by utils/build_protein_reference.py.
 PROTEIN_REFERENCE_FILE_PATH = "ref/mane_select_proteins.tsv"

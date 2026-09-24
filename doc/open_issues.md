@@ -439,6 +439,11 @@ as diligence and was actually a narrower trial than the protocol describes.
 
 ### The rewrite set is narrower than it needs to be
 
+*Addressed 2026-09-24 (CHANGES.md: "Retired-symbol rewrite widened"). The
+proposal below turned out unsafe as stated: JMML, CHOP, PD-1 and 34 English
+words pass a 4-character floor. The implemented set adds shape rules and a
+documented exclusion file. Kept for the reasoning.*
+
 `canonical_gene` rewrites a retired symbol only if it is one of the fifteen
 renames between `ref/genes.txt` and `ref/genes_kispi.txt`. That set exists
 because the full synonym table maps `ALL` to BCR, `AT` to BTK, `ARF` to
