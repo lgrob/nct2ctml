@@ -1,14 +1,15 @@
 # Development roadmap
 
-Written 2026-09-24 at commit `4f87483` (branch `kispi-paediatric`, 10 commits
-ahead of `origin`). Goal: a versioned trial index that Kispi's genomics
-pipeline joins directly, good enough to support trial screening in a clinical
-setting.
+First written 2026-09-24 at commit `4f87483`. Updated 2026-09-24 at `8ecaef7`
+(branch `kispi-paediatric`, 19 commits ahead of `origin`, not pushed). Goal: a
+versioned trial index that Kispi's genomics pipeline joins directly, good
+enough to support trial screening in a clinical setting.
 
 Each step lists what "done" means in measurable terms, so a step is closed by
 a number, not by an impression. Steps within a phase can run in any order
 unless *Depends on* says otherwise. Open decisions are collected at the end;
-the step that needs each one is marked **[D1]** etc.
+the step that needs each one is marked **[D1]** etc. Measurements behind
+every closed step are in `CHANGES.md`.
 
 Standing rules for every step:
 
@@ -18,8 +19,27 @@ Standing rules for every step:
 - **Deterministic first.** Anything that can be checked by code (references,
   vocabularies, notation) is checked by code. The model proposes; code
   verifies; failures go to review, never silently to output.
+- **Recall first.** A change that loses curated diagnoses or genes in every
+  replicate is not adopted for a precision gain, however large.
 - **Commit per step,** with the numbers in the message and a `CHANGES.md`
   section, and the offline suite green on the committed tree.
+
+---
+
+## Status on 2026-09-24
+
+| Phase | State |
+|---|---|
+| 0 - Now | 0.3 done. **0.1 (push) is overdue:** 19 commits exist only on this machine. 0.2 and 0.4 open. |
+| 1 - Deterministic fixes | 1.1, 1.2, 1.3, 1.4, 1.5, 1.7 done. Open: 1.4b and 1.8 (both change output before the full run), and 1.6 (curator time). |
+| 2 - Stage-2 diagnosis | Closed as measured: no narrowing arm (2.4) and no model swap (2.3, 2.6) beats production without losing curated diagnoses. Production stage 2 stays. Open: 2.7 (quote grounding) and optional 2.5. |
+| 3 - Full run | Not started. Unblocked once 0.4, 1.4b and 1.8 are done. |
+| 4-7 | Not started. 4.1-4.2 can start on synthetic fixtures at any time. |
+
+The offline suite has 396 tests (2 live-model tests are opt-in). Conditions-only
+benchmark: NCT diagnosis F1 0.74, population P 0.92 / R 0.78; CTIS diagnosis F1
+0.17. Current production diagnosis path on Haiku, 3 replicates: population
+recall 0.934, population precision 0.784, name F1 0.724.
 
 ---
 
@@ -27,54 +47,70 @@ Standing rules for every step:
 
 | # | Step | Done when |
 |---|---|---|
-| 0.1 | Push `kispi-paediatric` to `origin`. | `git status` shows the branch level with `origin`. |
+| 0.1 | **Push `kispi-paediatric` to `origin`.** Do this first: the branch carries all of the Phase 1 and Phase 2 work. | `git status` shows the branch level with `origin`. |
 | 0.2 | Tag the current state as the pre-run baseline (`v0.1-prerun`). | Tag exists. Later benchmark deltas are quoted against it. |
-| 0.3 | ~~Decide the mapping backend~~ **Done 2026-09-24:** Anthropic API, `claude-haiku-4-5-20251001`, forced-tool JSON, temperature 0, no thinking. | Written in `config.py`; request shape tested offline. |
-| 0.4 | Live smoke test: map 3 benchmark trials with a real `ANTHROPIC_API_KEY` and compare with the benchmark scorer. This is the first live call through `utils/llm_platforms.py` rather than the measurement harness. | 3 trials mapped, no API errors, cost per trial logged. |
+| 0.3 | **Done.** Mapping backend: Anthropic API, `claude-haiku-4-5-20251001`, forced-tool JSON, temperature 0, no thinking. Confirmed by 2.3 and 2.6. | Written in `config.py`; request shape tested offline. |
+| 0.4 | Live smoke test: map 3 benchmark trials with a real `ANTHROPIC_API_KEY` and compare with the benchmark scorer. This is the first live call through `utils/llm_platforms.py`; all measurements so far went through the replay harness. | 3 trials mapped, no API errors, cost per trial logged. |
 
-## Phase 1 - Fixes that change mapping output (before the full run)
+## Phase 1 - Deterministic fixes that change mapping output
 
-These are cheap and deterministic, and each one changes what the full run
-produces, so they go first. None needs the GPU.
+These are cheap, and each one changes what the full run produces, so they go
+before it.
 
-| # | Step | Done when | Depends on |
+| # | Step | Result / done when | Depends on |
 |---|---|---|---|
-| 1.1 | **Done 2026-09-24.** **Gene scan tokenisation.** Make `TrialCriteriaToGenes` find genes written as `A-B`, `A::B`, `A/B` and in comma lists. | The 12 reviewed trials whose curated genes the scan misses drop to 2 or fewer; no new false genes on the 55 keys. | - |
-| 1.2 | **Done 2026-09-24.** **Unsupported genes go to review.** A model gene absent from the (fixed) scan is kept but flags the trial for `ctml/needs-review`, rather than being dropped. This is the review-routing form of the gate measured in `open_issues.md`. | The MYCN case (NCT06071897) and the old CD276 case are routed; the number of reviewed trials routed is reported. | 1.1 |
-| 1.3 | **Done 2026-09-24.** **Widen the retired-symbol rewrite set** with the measured 4-character floor, so `HIST1H3A`/`HIST2H3C` resolve to panel genes. | DMG trials keep their histone genes; a test pins that `ALL`, `AT`, `ARF`, `H3` are still not rewritten. | - |
-| 1.4 | **Done 2026-09-24 (conversion and support evidence; see 1.4b).** **Translocation table.** `ref/translocation_fusions.tsv`: unambiguous t()/inv() to gene pair, one reason per row; ambiguous ones (t(X;18)) stay gene-level. Applied deterministically after extraction. | 31 NCT trials stating a translocation are checked by hand against the output; every added pair is one the text supports. | - |
-| 1.4b | **Translocations reach the model.** Annotate each resolved rearrangement in the text sent to the genomic prompt (`t(15;17) [PML::RARA]`) and rewrite prompt rule 9 to use the annotation; the model still decides whether it is a criterion. Measure on the 11 reviewed trials that mention one, 2 replicates, against the current prompt: gene P/R, and false criteria from risk-group lists. | Recall gain on NCT07012447/NCT03643276 without new false criteria in the other 9. | 1.4 |
-| 1.5 | **Done 2026-09-24.** **Benchmark covers CTIS.** `bench/benchmark_map.py` reads `cache/ctis` as well, so the 5 curated CTIS keys are scored. | Report has 55 rows; CTIS rows show non-trivial scores. | - |
-| 1.8 | **Candidate lists enforced in code.** On Anthropic the enum only guides the model (the tool is not `strict`). Drop any stage-1/stage-2 answer that is not in that call's candidate list, and log it; or enable strict tool use if the grammar limits allow. Found in 1.7. | Off-list answers counted on the cached runs; 0 reach the CTML. | - |
+| 1.1 | **Done.** Gene scan reads fusion notation (`A::B`, `A-B`, `A/B`), lists and slash shorthand. | Trials missing a curated gene: 12 -> 2 of 55; 63 new finds, 0 false. The 2 left are a syndrome name and karyotypes. | - |
+| 1.2 | **Done.** A model gene or partner the text does not support is kept as `gene_unsupported` and routed to `ctml/needs-review`; the index reports it in `gene_check`. | On saved Haiku answers: 1 flag in 1 trial per replicate (a correct reading of "EWSR1-Fli"). The flag has not yet caught a real error; it costs little review. | 1.1 |
+| 1.3 | **Done.** Retired-symbol rewrite widened from 15 to 4,028 aliases with shape rules and `ref/gene_rewrite_exclusions.tsv`. A bare 4-character floor was unsafe (JMML, CHOP, PD-1, 34 English words). | 0 of 68 key symbols change; `ALL`, `AT`, `ARF`, `H3`, `CAR`, `PD-L1` refused (tests). | - |
+| 1.4 | **Done.** `utils/translocations.py` + `ref/translocation_fusions.tsv` (69 curated rows) turn t()/inv() into gene pairs deterministically; bands must match, ambiguous bare forms give only the shared gene or nothing. Used as support evidence, not to create criteria. | 132 cached mentions: 119 pairs, 7 single genes, 6 unresolved. Removed 4 false `gene_unsupported` flags on NCT06083883. | - |
+| 1.4b | **Translocations reach the model.** Annotate each resolved rearrangement in the text sent to the genomic prompt (`t(15;17) [PML::RARA]`) and rewrite prompt rule 9 to use the annotation; the model still decides whether it is a criterion (it is not, in 9 of the 11 reviewed trials that mention one). | Measured on the 11 reviewed trials, 2 replicates, against the current prompt: recall gain on NCT07012447 (CBFB, PML) without new false criteria in the risk-group trials. | 1.4 |
+| 1.5 | **Done.** Benchmark covers CTIS (`--source nct\|ctis\|all`); per-registry means. Also fixed a false positive in the unsatisfiable-tree check. | 55/55 at identity; NCT means unchanged; CTIS conditions-only F1 0.17. | - |
 | 1.6 | **Answer keys carry fusion partners.** A curator adds partners to the keys of trials whose text names pairs (about 9 reviewed trials), and the scorer compares pairs. | Partner precision/recall is a reported column. | curator time **[D4]** |
-| 1.7 | **Done 2026-09-24.** **Guard against the enum cap.** Log when a stage-2 candidate list approaches `_MAX_ENUM_VALUES` (400), and count occurrences on the full corpus offline. | Count known; cap raised or kept with a reason. | - |
+| 1.7 | **Done.** Enum cap logged and counted; set per backend (400 for grammar-compiling backends, none for Anthropic). | Benchmark max 370, cap never fired; 1 corpus trial reaches 438 on the seed floor alone. | - |
+| 1.8 | **Candidate lists enforced in code.** On Anthropic the enum only guides the model (the tool is not `strict`): an Oncotree name from outside the call's candidate list would pass. Drop and log any stage-1/stage-2 answer not in that call's list, or enable strict tool use if its grammar limits allow. | Off-list answers counted on the cached runs; 0 reach the CTML; benchmark unchanged or better. | - |
 
-## Phase 2 - Finish the stage-2 diagnosis experiment
+## Phase 2 - Stage-2 diagnosis over-generation
 
-Stage 2 over-generates diagnoses, which is the largest measured weakness.
-The replay harness exists (`stage2_harness.tar.gz`); one Haiku baseline
-replicate is complete. About 1.8M model tokens are needed per five-arm
-replicate, over the per-session limit of 2.0M, so each replicate runs in its
-own sub-agent.
+Stage 2 emits about 2.2 diagnoses for every curated one. Everything tried so far is
+measured and rejected (details and per-trial losses in `CHANGES.md` and
+`stage2_arms_report.md` / `stage2_sonnet_report.md`, kept outside the repo):
 
-| # | Step | Done when | Depends on |
+- **Narrowing arms (2.4):** the seed subtree, level-2-first, a verify pass, and
+  a combination. Best precision gain +0.025, from 4 trials. Every arm loses
+  curated diagnoses in all 3 replicates.
+- **Sonnet 5 for stage 2 (2.6):** name F1 +0.09 and precision +0.036, but it
+  loses 5 curated diagnoses on 3 trials in every replicate (2 of them named
+  in the text), at 2.1x the diagnosis-path cost.
+- **Named-in-text floor (offline):** adding back every candidate the text
+  names adds about 26 diagnoses per run with 0-1 correct.
+
+The harness is `stage2_harness_v3.tar.gz`: replay of the production path,
+per-arm patches, and `STAGE2_ROUTE` for per-stage model routing. Each
+five-arm Haiku replicate needs close to the 2.0M per-session model-token limit, so
+replicates run in separate sub-agents (part 1: baseline + verify; part 2:
+the other arms from the part-1 cache).
+
+| # | Step | Result / done when | Depends on |
 |---|---|---|---|
-| 2.1 | **Done 2026-09-24.** Fix the seed-subtree arm so its floor includes sibling branches; it lost Ganglioneuroblastoma on neuroblastoma trials. | Offline test on the neuroblastoma trials passes. | - |
-| 2.2 | **Done 2026-09-24** (3 replicates, 5 arms, 0 failed calls). Complete replicate 1 and run replicates 2 and 3, all arms, all 50 trials, on Haiku. | 3 complete replicates; mean and spread per arm. | 2.1 |
-| 2.3 | ~~Model comparison~~ **Done 2026-09-24** (baseline path, Haiku 4.5 / Sonnet 5 / Opus 5.5, 2 replicates; see CHANGES.md). No model improves diagnosis recall; Sonnet 5 raises diagnosis name F1 by +0.10 at about 2x cost. That +0.10 is the bar for the 2.4 arms on Haiku. Re-run the best arm on Sonnet 5 only if it misses the bar. | Recorded. | - |
-| 2.4 | **Done 2026-09-24: no arm wins** (all lose curated diagnoses in all 3 replicates; best precision gain +0.025 from 4 trials; see CHANGES.md). Next option is 2.6. Choose an arm only if it beats baseline outside the spread, on population recall first and precision second. Ship it with offline tests. | Patch merged, or "no arm wins" recorded with the numbers. | 2.2 |
-| 2.6 | **Done 2026-09-24: not adopted.** Name F1 +0.09 and precision +0.036, but DMG H3 K27, GBM IDH-wildtype and germ-cell subtypes are lost in all 3 replicates; the diagnosis path costs 2.1x. A named-in-text floor was tested offline and rejected. Sonnet 5 for the stage-2 call only; Haiku for everything else. Measure on the baseline path, 3 replicates, paired against Haiku. | Recall no worse than Haiku; name F1 gain and cost reported. | 2.4 |
-| 2.5 | Optional: the single-stage run over all 879 Oncotree names (see "wrong-branch problem"). | Precision and recall reported separately. | 2.2 |
+| 2.1 | **Done.** Seed-subtree arm keeps level-2 siblings; Ganglioneuroblastoma no longer lost. | Offline check passed; not lost in any replicate. | - |
+| 2.2 | **Done.** 5 arms x 3 replicates x 50 trials on Haiku, 0 failed calls. | Baseline replicate range <= 0.004 on every metric. | 2.1 |
+| 2.3 | **Done.** Model comparison: Haiku 4.5 / Sonnet 5 / Opus 5.5, 2 replicates. No model improves recall; Sonnet +0.10 name F1 at about 2x; Opus about 4.5x for nothing measurable. | Recorded. | - |
+| 2.4 | **Done: no arm wins.** | Recorded with the numbers. | 2.2 |
+| 2.6 | **Done: not adopted.** Sonnet 5 for stage 2 only. Revisit only if curator time becomes the binding constraint. | Recorded with the numbers. | 2.4 |
+| 2.7 | **Quote-grounded diagnoses.** The model returns, per diagnosis, the words from the text it relied on. Code checks (a) the quote is verbatim in the text after whitespace/markdown normalisation (else the trial goes to review), and (b) how the quote relates to the answer via `canonical_diagnosis` and the Oncotree lineage: *named* (quote names it), *implied* (quote names an ancestor), or *inferred* (neither; flagged). Nothing is dropped. Then test, offline on the recorded quotes, whether collapsing subtypes that are only *implied* by a parent quote to that parent raises precision without losing patients (population metric). The same quote check applies to exclusion criteria (the quote must lie in the exclusion section) and to age bounds (the number must appear in the quote). | First measure: quote failure rate (not verbatim) on Haiku, 50 trials, 1 replicate; stop if above about 10%. Then 3 paired replicates against baseline: recall no worse in any replicate, and the named/implied/inferred split reported for correct vs spurious diagnoses. | 2.2 |
+| 2.5 | Optional: a single-stage run over all 879 Oncotree names (see "wrong-branch problem"). | Precision and recall reported separately. | 2.2 |
 
 ## Phase 3 - Full-corpus mapping run
 
 | # | Step | Done when | Depends on |
 |---|---|---|---|
-| 3.1 | Dry run on the 55 benchmark trials with the final code and backend. | First real `bench/report.json` (replacing the identity calibration); cost and time per trial recorded. | Phase 1, 2.4, 0.4 |
+| 3.1 | Dry run on the 55 benchmark trials with the final code and backend. | First real `bench/report.json` (replacing the identity calibration); cost and time per trial recorded. | 0.4, 1.4b, 1.8 |
 | 3.1a | Consider the Message Batches API for 3.2: asynchronous and cheaper per token than live calls, and the run does not need live answers. Needs a batch submit/collect path in `llm_platforms`. | Decision recorded with the cost difference. | 3.1 |
-| 3.2 | Full run: `map --all --source all` over the in-scope corpus (about 1,170 trials). | Every in-scope trial is in `cache/ctml` or `ctml/needs-review`; failures listed. | 3.1 |
+| 3.2 | Full run: `map --all --source all` over the in-scope corpus (about 1,170 trials). | Every in-scope trial is in `cache/ctml` or `ctml/needs-review`; failures listed; enum-cap and off-list counts from the run log reported. | 3.1 |
 | 3.3 | Build the index from the three layers and tag it as the first release (`index-2026.MM.DD`) with its manifest. | Manifest checksums recorded; review-status counts reported. | 3.2 |
-| 3.4 | Audit the run: count needs-review reasons, unverified protein changes and fusion partners, out-of-scope skips, and spot-check 20 unreviewed trials at random against their text. | Audit note in `doc/`, with an estimated error rate for unreviewed rows. | 3.3 |
+| 3.4 | Audit the run: count needs-review reasons (no diagnosis, unverified protein change, unsupported gene), fusion partners, out-of-scope skips, and spot-check 20 unreviewed trials at random against their text. | Audit note in `doc/`, with an estimated error rate for unreviewed rows. | 3.3 |
+
+If 2.7 lands before 3.2, it goes into the full run; it does not block it.
 
 ## Phase 4 - Consumer: matching from the genomics pipeline
 
@@ -94,7 +130,7 @@ and the per-sample pipeline outputs, and knows nothing about registries.
 | # | Step | Done when | Depends on |
 |---|---|---|---|
 | 5.1 | Review queue ordering: needs-review first, then unreviewed trials that matched real samples, then open-to-accrual trials by Kispi relevance. | Queue script produces the ordered list from the index and match logs. | 3.3, 4.4 |
-| 5.2 | Grow the answer key from 55 to about 100 trials, deliberately including CTIS, basket, fusion-defined and age-edge trials. | New keys curated against full trial text; key changes logged as before. | [D4] |
+| 5.2 | Grow the answer key from 55 to about 100 trials, deliberately including CTIS (only 5 today, conditions-only F1 0.17), basket, fusion-defined, translocation-defined and age-edge trials. | New keys curated against full trial text; key changes logged as before. | [D4] |
 | 5.3 | Frequency-weighted population score from the OncoTree codes Kispi has actually assigned. | `pop_r` reads as "share of our patients". | code list from the lab |
 
 ## Phase 6 - Clinical-grade hardening
@@ -106,11 +142,12 @@ something a diagnostic lab can defend.
 |---|---|---|---|
 | 6.1 | **Intended use statement:** the index is a screening aid; eligibility is decided on the protocol by a clinician. Agree the regulatory framing with QA **[D5]**. | Signed-off one-page document. | [D5] |
 | 6.2 | **Release process:** index releases are tagged and immutable, with a manifest (inputs, reference checksums, code commit, model id, benchmark scores). Reports cite a release. | Script produces a release; one release made. | 3.3 |
-| 6.3 | **Regression gates in CI:** offline suite, the `--conditions-only` benchmark at a floor, `build_trial_index --strict` on reviewed trials. | CI fails on a drop below the recorded floor. | - |
-| 6.4 | **Reference update procedure** for OncoTree, MANE (`build_protein_reference`), the panel and the synonym tables: rebuild, diff, benchmark, release. | Written procedure; one dry run on the next MANE release. | - |
+| 6.3 | **Regression gates in CI:** offline suite, the `--conditions-only` benchmark at a floor (NCT F1 0.74), `build_trial_index --strict` on reviewed trials. | CI fails on a drop below the recorded floor. | - |
+| 6.4 | **Reference update procedure** for OncoTree, MANE (`build_protein_reference`), the panel, the synonym tables, the rewrite exclusions and the translocation table: rebuild, diff, benchmark, release. | Written procedure; one dry run on the next MANE release. | - |
 | 6.5 | **Test coverage** for `src/clinical_trials_gov.py`, `src/ctis.py`, `utils/llm_platforms.py` (mocked model). | Each has tests on its main paths. | - |
 | 6.6 | **Logging:** replace the `print()` calls in library code with loguru at levels; keep one run log per mapping run with the model id and prompt versions. | No `print` in `src/`/`utils/` library paths; the run log is archived with each release. | - |
-| 6.7 | **Remove upstream leftovers:** MatchMiner-only schema fields, Hong Kong recruitment text, `bulk_convert_yaml_to_json.py` if unused. | Leftovers gone, with tests green. | - |
+| 6.7 | **Remove upstream leftovers:** MatchMiner-only schema fields, Hong Kong recruitment text, `bulk_convert_yaml_to_json.py` and `ctml/json` (written, read by nothing), and the README's `ctml/pending` hand-authoring path if local trials are not planned. | Leftovers gone, README and workflow diagram updated, tests green. | - |
+| 6.8 | **Harness in the repo:** move the replay harness (`stage2_harness_v3`) into `bench/replay/` with its caches' checksums, so every Phase 2 number can be re-run from the repository. | `python -m bench.replay --arm baseline` reproduces a recorded replicate from its cache exactly. | - |
 
 ## Phase 7 - Later refinements (take as capacity allows)
 
@@ -118,8 +155,9 @@ something a diagnostic lab can defend.
 |---|---|---|
 | 7.1 | Age judgement cases: neuroblastoma risk-definition ages, site-dependent limits (ALLTogether). | Needs a curation rule first. |
 | 7.2 | Measure the enum cap and grammar build time on the GPU backend. | Only if the backend is llama.cpp/Ollama. |
-| 7.3 | Remaining condition-string variants: word order, plurals, diagnoses with a fusion appended. | See "wrong-branch problem". |
+| 7.3 | Remaining condition-string variants: word order, plurals, diagnoses with a fusion appended; CTIS sentence-style conditions (3 of 5 CTIS keys get no diagnosis from conditions). | See "wrong-branch problem". |
 | 7.4 | Per-arm (cohort) diagnoses in the index and the benchmark. | The benchmark scores only the global match today. |
+| 7.5 | Translocation table: the 4 ALK variant forms and other unresolved notations from the corpus. | 6 of 132 mentions unresolved today. |
 
 ---
 
@@ -127,7 +165,7 @@ something a diagnostic lab can defend.
 
 | id | Decision | Options | Needed by |
 |---|---|---|---|
-| D1 | ~~Mapping backend~~ | **Decided 2026-09-24:** Claude Haiku 4.5 via the Anthropic API (about $200 for the corpus, extrapolated). Sonnet-class is compared in step 2.3 and adopted only on replicated numbers. | done |
+| D1 | ~~Mapping backend~~ | **Decided:** Claude Haiku 4.5 via the Anthropic API. Sonnet 5 (whole path, and stage 2 only) and Opus 5.5 measured and not adopted: none improves recall. | done |
 | D2 | Which SNVs and CNVs count as matchable | For example OncoKB (likely) oncogenic, the lab's own tiering, impact class; amplification threshold relative to ploidy | 4.3 |
 | D3 | Where unreviewed-trial hits may appear | Curator view only, or tumour-board report flagged as unreviewed | 4.4 |
 | D4 | Curator time | Who reviews, and a target review rate | 1.6, 5.2 |
@@ -135,8 +173,12 @@ something a diagnostic lab can defend.
 
 ## Suggested order
 
-0.1-0.4, then Phase 1 (1.1 -> 1.2, others in parallel), Phase 2, then
-Phase 3. Phase 4 can start at 4.1-4.2 at any time on synthetic fixtures;
-4.3-4.5 need [D2], [D3] and a released index. Phase 6 starts now with 6.3
-and 6.6, and 6.1/6.2 must be done before any output is used for a real
-patient.
+1. 0.1 (push) now, then 0.2.
+2. 1.8 and 1.4b, which change the full run's output, in parallel with 0.4
+   (needs the API key).
+3. 3.1 dry run, then 3.2-3.4.
+4. 2.7 alongside 3.1, entering the full run only if it is measured in time.
+5. Phase 4 at 4.1-4.2 at any time on synthetic fixtures; 4.3-4.5 need [D2],
+   [D3] and a released index.
+6. Phase 6 starts with 6.3, 6.6 and 6.8. 6.1 and 6.2 must be done before any
+   output is used for a real patient.
