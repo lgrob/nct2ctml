@@ -343,25 +343,55 @@ class AnthropicPlatform(LLMPlatform):
     def get_endpoint_url(self) -> str:
         return "https://api.anthropic.com/v1/messages"
 
+    # Models on the older API surface: extended thinking with a token budget,
+    # no adaptive thinking, no effort parameter.
+    NO_ADAPTIVE_OR_EFFORT = ("claude-haiku-4-5",)
+    TOOL_NAME = "report"
+
+    def _check_settings(self, thinking, effort):
+        if self.model.startswith(self.NO_ADAPTIVE_OR_EFFORT) and (thinking or effort):
+            raise ValueError(
+                f"{self.model} supports neither adaptive thinking nor the effort parameter; "
+                f"set ANTHROPIC_THINKING and ANTHROPIC_EFFORT to None in config.py")
+
     def get_request_body(self, prompt: str, json_schema: Optional[Dict] = None) -> Dict[str, Any]:
-        """Build the Messages API request kwargs."""
+        """
+        Build the Messages API request kwargs.
+
+        A JSON schema is enforced through a forced tool call whose input is
+        {"result": <the prompt's schema>}. The wrapper is needed because
+        several prompts return a top-level array and a tool input must be an
+        object. This is also the shape every Haiku measurement in CHANGES.md
+        was made with, so production and benchmark send the same request.
+        """
         import config
+
+        thinking = getattr(config, "ANTHROPIC_THINKING", None)
+        effort = getattr(config, "ANTHROPIC_EFFORT", None)
+        self._check_settings(thinking, effort)
 
         body: Dict[str, Any] = {
             "model": self.model,
             "max_tokens": getattr(config, "ANTHROPIC_MAX_TOKENS", 16000),
             "system": self.SYSTEM_PROMPT,
             "messages": [{"role": "user", "content": prompt}],
-            "thinking": {"type": "adaptive"},
         }
-
-        output_config: Dict[str, Any] = {"effort": getattr(config, "ANTHROPIC_EFFORT", "high")}
+        if thinking:
+            body["thinking"] = {"type": thinking}
+        else:
+            body["temperature"] = getattr(config, "ANTHROPIC_TEMPERATURE", 0)
+        if effort:
+            body["output_config"] = {"effort": effort}
         if json_schema:
-            # Every prompt builder in this repo currently returns json_schema=None,
-            # so this branch is untested against the live API.
-            output_config["format"] = {"type": "json_schema", "schema": json_schema}
-        body["output_config"] = output_config
-
+            body["tools"] = [{
+                "name": self.TOOL_NAME,
+                "description": "Report the answer in the required structure.",
+                "input_schema": {"type": "object", "properties": {"result": json_schema},
+                                 "required": ["result"]},
+            }]
+            # A forced tool choice is not allowed together with thinking.
+            body["tool_choice"] = ({"type": "auto"} if thinking
+                                   else {"type": "tool", "name": self.TOOL_NAME})
         return body
 
     def send(self, prompt: str, json_schema: Optional[Dict] = None) -> Dict[str, Any]:
@@ -400,7 +430,14 @@ class AnthropicPlatform(LLMPlatform):
                 f"Anthropic response hit max_tokens ({body['max_tokens']}); JSON is likely truncated."
             )
 
-        text = "".join(block.text for block in response.content if block.type == "text")
+        tool_inputs = [block.input for block in response.content
+                       if block.type == "tool_use" and block.name == self.TOOL_NAME]
+        if tool_inputs:
+            # parse_response expects text; hand it the tool's JSON.
+            result = (tool_inputs[0] or {}).get("result")
+            text = "" if result is None else json.dumps(result)
+        else:
+            text = "".join(block.text for block in response.content if block.type == "text")
         logger.debug(
             f"Anthropic usage | in={response.usage.input_tokens} out={response.usage.output_tokens}"
         )

@@ -38,7 +38,15 @@ class TestEveryPromptIsStructured(unittest.TestCase):
             self.assertIsInstance(prompt, str)
 
     def test_the_schema_reaches_the_request_body(self):
+        # Where the schema goes depends on the platform: Ollama's `format`,
+        # the Anthropic forced tool's input. Either way it must be sent.
         body = ai._llm_platform.get_request_body("p", ai.PDL1_SCHEMA)
+        sent = body.get("format") or body["tools"][0]["input_schema"]["properties"]["result"]
+        self.assertEqual(sent, ai.PDL1_SCHEMA)
+
+    def test_the_ollama_platform_sends_it_as_format(self):
+        from utils.llm_platforms import OllamaPlatform
+        body = OllamaPlatform("llama3.3:70b", "http://127.0.0.1").get_request_body("p", ai.PDL1_SCHEMA)
         self.assertEqual(body.get("format"), ai.PDL1_SCHEMA)
 
 

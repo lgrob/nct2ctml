@@ -188,16 +188,17 @@ case-insensitively.
 
 | `LLM_PLATFORM` | Notes |
 |---|---|
-| `Ollama` | the current default; served at `GPU_SERVER_HOSTNAME`. Context and output limits come from `OLLAMA_NUM_CTX` and `OLLAMA_NUM_PREDICT`. |
+| `Anthropic` | **the production backend.** Hosted Claude API through the `anthropic` package, model pinned to `claude-haiku-4-5-20251001`. Reads the key from `ANTHROPIC_API_KEY` (never put a key in `config.py`); `GPU_SERVER_HOSTNAME` is ignored. A prompt's JSON schema is enforced through a forced tool call, at temperature 0 with no thinking. Haiku 4.5 rejects adaptive thinking and the effort parameter, so the platform refuses `ANTHROPIC_THINKING`/`ANTHROPIC_EFFORT` with it before any call. |
+| `Ollama` | the GPU backend; served at `GPU_SERVER_HOSTNAME`. Context and output limits come from `OLLAMA_NUM_CTX` and `OLLAMA_NUM_PREDICT`. |
 | `SGLang`, `vllm` | self-hosted, OpenAI-style chat endpoint at `GPU_SERVER_HOSTNAME`. |
-| `Anthropic` | hosted Claude API through the `anthropic` package. Reads the key from `ANTHROPIC_API_KEY` (never put a key in `config.py`); `GPU_SERVER_HOSTNAME` is ignored. `ANTHROPIC_EFFORT` and `ANTHROPIC_MAX_TOKENS` tune it. |
 | `Local_ai` | a stub; raises `NotImplementedError`. |
 
 `LLM_REQUEST_TIMEOUT_SECONDS` bounds every request. To run the mapping on a
 Slurm GPU cluster with Ollama under Apptainer, see
 [doc/cluster_setup.md](doc/cluster_setup.md) and
 `scripts/run_ollama_mapping.sh` (`sbatch scripts/run_ollama_mapping.sh benchmark`
-or `... map-all`), which reads the model from `config.py`.
+or `... map-all`), which reads the model from `config.py` and refuses to run
+unless `LLM_PLATFORM` is `Ollama`.
 
 ## Benchmark
 

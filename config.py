@@ -12,13 +12,30 @@
 GPU_SERVER_HOSTNAME = "http://127.0.0.1"
 
 # Options: Local_ai, vllm, SGLang, Ollama, Anthropic
-#LLM_PLATFORM = "Anthropic"
-LLM_PLATFORM = "Ollama"
+LLM_PLATFORM = "Anthropic"
+#LLM_PLATFORM = "Ollama"
 
-# Anthropic (hosted Claude API) settings.
-# Auth comes from the ANTHROPIC_API_KEY environment variable - do not put a key here.
-# Only used when LLM_PLATFORM = "Anthropic"; GPU_SERVER_HOSTNAME is ignored in that case.
-ANTHROPIC_EFFORT = "high"      # low | medium | high | xhigh | max
+# Anthropic (hosted Claude API) settings - the production backend since
+# 2026-09-24 (roadmap D1). Auth comes from the ANTHROPIC_API_KEY environment
+# variable - do not put a key here. GPU_SERVER_HOSTNAME is ignored.
+#
+# Claude Haiku 4.5, pinned to its dated snapshot so a run is reproducible:
+# an alias can move to new weights under the same name. Every prompt
+# measurement in CHANGES.md from 2026-09-23 on (age bounds, fusion partners,
+# the stage-2 baseline) was made on this snapshot, with the request shape
+# utils/llm_platforms.AnthropicPlatform sends: JSON through a forced tool
+# call, no thinking. It is also the cheapest current Claude model ($1/$5 per
+# 1M tokens). Moving to another model is a roadmap step 2.3 decision, taken
+# on replicated benchmark numbers, not a config edit.
+LLM_AI_MODEL = "claude-haiku-4-5-20251001"
+# Thinking and effort. Haiku 4.5 supports neither adaptive thinking nor the
+# effort parameter (the API rejects the request), so both are off; the
+# platform refuses the combination rather than failing mid-run. On models
+# that support them, set ANTHROPIC_THINKING = "adaptive" and an effort level.
+ANTHROPIC_THINKING = None      # None | "adaptive"
+ANTHROPIC_EFFORT = None        # None | low | medium | high | xhigh | max
+# 0 for reproducibility. Ignored when thinking is on (the API requires 1).
+ANTHROPIC_TEMPERATURE = 0
 ANTHROPIC_MAX_TOKENS = 16000
 
 # deepseek library
@@ -48,7 +65,8 @@ ANTHROPIC_MAX_TOKENS = 16000
 # This line is the single source of truth - scripts/run_ollama_mapping.sh
 # reads the model from here, so an uncommitted edit on the cluster means the
 # repo no longer says what is running.
-LLM_AI_MODEL = "llama3.3:70b"
+# The GPU backend: set LLM_PLATFORM = "Ollama" above and uncomment this.
+#LLM_AI_MODEL = "llama3.3:70b"
 #
 # The same weights are also reachable through Ollama's HuggingFace
 # passthrough, which is the form upstream's guide uses. Prefer the tag above:

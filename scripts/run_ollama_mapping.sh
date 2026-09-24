@@ -58,6 +58,15 @@ if [ ! -x "$PY" ]; then
   echo "  python -m venv .venv && ./.venv/bin/pip install -r requirements.txt"
   exit 1
 fi
+# config.py selects the Anthropic API as the production backend. This script
+# is for the GPU backend only: refuse to run rather than ask Ollama to pull a
+# Claude model id, or map with the wrong backend.
+PLATFORM="$($PY -c 'import config; print(config.LLM_PLATFORM)')"
+if [ "$PLATFORM" != "Ollama" ]; then
+    echo "ERROR: config.LLM_PLATFORM is '$PLATFORM'. Set LLM_PLATFORM = \"Ollama\" and an"
+    echo "       Ollama LLM_AI_MODEL in config.py to use this script."
+    exit 1
+fi
 MODEL="${MODEL:-$($PY -c 'import config; print(config.LLM_AI_MODEL)')}"
 NUM_CTX=$($PY -c 'import config; print(getattr(config,"OLLAMA_NUM_CTX",0))')
 
