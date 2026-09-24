@@ -397,6 +397,14 @@ class TrialMapManager:
         if 'diagnosis_off_list' in keys:
             reasons.append("a diagnosis was answered outside the candidate list the model was offered")
         if not reasons:
+            import config
+            stale = os.path.join(getattr(config, 'CTML_REVIEW_PATH', 'ctml/needs-review'), f"{trial_id}.yaml")
+            if os.path.exists(stale):
+                # Decision D6: the review copy is kept (a curator may be editing
+                # it) and still wins in the index, which reports the conflict.
+                logger.warning(f"{trial_id} | mapped cleanly, but {stale} from an earlier run "
+                               f"is kept; the index publishes it and lists the conflict in "
+                               f"layer_conflicts.tsv until a curator resolves it")
             return ctml_files_path
         import config  # imported here, as elsewhere in this module
         review_path = getattr(config, 'CTML_REVIEW_PATH', 'ctml/needs-review')

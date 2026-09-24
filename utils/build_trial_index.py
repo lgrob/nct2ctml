@@ -115,7 +115,7 @@ GENOMIC_COLUMNS = ["trial_id", "arm_code", "hugo_symbol", "variant_category",
                    "protein_check", "fusion_partner", "fusion", "fusion_partner_check",
                    "gene_check", "variant_classification", "include"]
 TRIAL_COLUMNS = ["trial_id", "source", "nct_id", "protocol_no", "short_title",
-                 "phase", "status", "review_status", "reviewed", "source_file",
+                 "phase", "status", "review_status", "reviewed", "source_file", "layer_conflict",
                  "age_label", "age_min", "age_min_inclusive",
                  "age_max", "age_max_inclusive", "n_diagnosis_codes", "n_genes"]
 
@@ -263,16 +263,56 @@ def _layers(source):
     return list(source)
 
 
+CONFLICT_COLUMNS = ["trial_id", "published_file", "published_status", "published_mtime",
+                    "newer_file", "newer_status", "newer_mtime", "conflict"]
+
+
+def _mtime(path):
+    return datetime.fromtimestamp(os.path.getmtime(path), timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def _collect(layers):
-    """{trial_id: (trial, path, status)}: later layers replace earlier ones."""
-    chosen = {}
+    """
+    ({trial_id: (trial, path, status)}, [conflict rows]). Later layers
+    replace earlier ones.
+
+    A trial routed to ctml/needs-review by one run and mapped cleanly by a
+    later one has two copies. The needs-review copy still wins, because it
+    may hold a curator's edits in progress (decision D6, 2026-09-24: keep it
+    and report the conflict, rather than delete it or let the newer file
+    win). The conflict is reported here, not resolved: the trial row gets
+    layer_conflict = newer_mapped_copy, and the pair is listed in
+    layer_conflicts.tsv for a curator to settle.
+
+    "Newer" means a later file modification time. The CTML itself carries
+    no mapping time, and both directories are written only by the mapper
+    and by curators, so the mtime is the only record there is. A copy or
+    sync that resets mtimes can hide a conflict or invent one.
+
+    An older mapped copy under a needs-review copy is the normal case (the
+    last run flagged the trial) and is not reported. Nor is a reviewed copy
+    over newer machine output: curation is expected to lag remapping.
+    """
+    chosen, seen = {}, {}
     for directory, status in layers:
         for trial_id, trial, path in _read_trials(directory):
             if trial_id in chosen:
                 logger.debug(f"{trial_id} | {status} copy in {directory} replaces "
                              f"the {chosen[trial_id][2]} copy")
             chosen[trial_id] = (trial, path, status)
-    return dict(sorted(chosen.items()))
+            seen.setdefault(trial_id, {})[status] = path
+    conflicts = []
+    for trial_id, (_, path, status) in sorted(chosen.items()):
+        mapped = seen[trial_id].get("mapped")
+        if status == "needs_review" and mapped and os.path.getmtime(mapped) > os.path.getmtime(path):
+            conflicts.append({"trial_id": trial_id, "published_file": path, "published_status": status,
+                              "published_mtime": _mtime(path), "newer_file": mapped,
+                              "newer_status": "mapped", "newer_mtime": _mtime(mapped),
+                              "conflict": "newer_mapped_copy"})
+            logger.warning(f"{trial_id} | a newer clean mapping ({mapped}) exists under the "
+                           f"needs-review copy ({path}); the needs-review copy is published, "
+                           f"and the conflict is listed in layer_conflicts.tsv")
+    return dict(sorted(chosen.items())), conflicts
 
 
 def _fusion_fields(leaf):
@@ -419,11 +459,13 @@ def build(source=None, out_dir="index", strict=False):
     name_to_code = _name_to_code()
 
     trial_rows, diagnosis_rows, genomic_rows = [], [], []
-    for trial_id, (trial, path, status) in _collect(layers).items():
+    chosen, conflicts = _collect(layers)
+    conflict_of = {c["trial_id"]: c["conflict"] for c in conflicts}
+    for trial_id, (trial, path, status) in chosen.items():
         trial_row, diagnoses, genomics = index_trial(
             trial_id, trial, descendants, solid, liquid, name_to_code)
         trial_row.update(review_status=status, reviewed=int(status == "reviewed"),
-                         source_file=path)
+                         source_file=path, layer_conflict=conflict_of.get(trial_id, ""))
         if not diagnoses:
             # Mirrors trial_map_manager._destination_for: a trial with no
             # diagnosis would match every sample, so it is indexed but flagged
@@ -443,7 +485,8 @@ def build(source=None, out_dir="index", strict=False):
     written = {}
     for name, columns, rows in (("trials.tsv", TRIAL_COLUMNS, trial_rows),
                                 ("trial_diagnosis.tsv", DIAGNOSIS_COLUMNS, diagnosis_rows),
-                                ("trial_genomic.tsv", GENOMIC_COLUMNS, genomic_rows)):
+                                ("trial_genomic.tsv", GENOMIC_COLUMNS, genomic_rows),
+                                ("layer_conflicts.tsv", CONFLICT_COLUMNS, conflicts)):
         path = os.path.join(out_dir, name)
         with open(path, "w", newline="") as handle:
             writer = csv.DictWriter(handle, fieldnames=columns, delimiter="\t",
@@ -457,6 +500,7 @@ def build(source=None, out_dir="index", strict=False):
         "layers": [{"directory": d, "review_status": s} for d, s in layers],
         "review_status": dict(sorted(Counter(r["review_status"] for r in trial_rows).items())),
         "trials": len(trial_rows),
+        "layer_conflicts": len(conflicts),
         "oncotree_file": config.ONCOTREE_TXT_FILE_PATH,
         "oncotree_sha256": _sha256(config.ONCOTREE_TXT_FILE_PATH),
         "liquid_roots": sorted(LIQUID_ROOTS),
@@ -496,6 +540,7 @@ def main():
         print(f"  {name:22} {info['rows']:>7,} rows")
     print(f"  manifest.json          oncotree {manifest['oncotree_sha256'][:12]}")
     print(f"  protein changes        {manifest['protein_checks'] or 'none'}")
+    print(f"  layer conflicts        {manifest['layer_conflicts']} (see layer_conflicts.tsv)")
 
 
 if __name__ == "__main__":
