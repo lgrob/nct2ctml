@@ -1,10 +1,19 @@
 """
 Benchmark the automated `map` stage against hand-curated CTML.
 
-ctml/reviewed/NCT*.yaml are curated by a human and verified end-to-end in
+ctml/reviewed/*.yaml are curated by a human and verified end-to-end in
 MatchMiner, so they serve as the answer key. This runs the pipeline over the
 same trials and scores the result, so "is the LLM good enough to curate?" is
 answered with numbers instead of impressions.
+
+Both registries are scored: 50 keys are ClinicalTrials.gov trials (NCT ids)
+and 5 are EU CTIS trials (EU CT numbers such as 2025-520982-39-00). Until
+roadmap step 1.5 only the NCT keys were read, so the CTIS mapper - a
+different document shape, its own condition accessor and no keyword or title
+fallback - had no benchmark at all. Each report row carries its registry and
+the summary gives a mean per registry, because 5 CTIS trials averaged into 50
+NCT ones carry 5/55 of the overall mean's weight, so a CTIS regression
+would barely move it.
 
 Scoring is deliberately blunt and reported alongside the raw sets, because no
 single number decides this - a reviewer needs to see what the model actually
@@ -29,16 +38,72 @@ Usage:
         # diagnoses from the trial's own conditions, no model, no network:
         # the deterministic floor, scored in seconds. Genes and ages are not
         # produced on this path and are not scored.
+    python -m bench.benchmark_map --source nct    # one registry: nct | ctis | all
 """
-import argparse, json, os, sys, time, yaml
+import argparse, json, os, re, sys, time, yaml
 from collections import defaultdict
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import config
 from utils.build_trial_index import diagnosis_population
 
-TRUTH_DIR = "ctml/reviewed"
-CACHE_DIR = "cache/nct"
+TRUTH_DIR = config.CTML_REVIEWED_PATH
+CACHE_DIRS = {"nct": config.NCT_CACHE_PATH, "ctis": config.CTIS_CACHE_PATH}
+REGISTRIES = ("nct", "ctis")
+# EU CT number: year, six-digit sequence, two two-digit suffixes.
+_EU_CT_NUMBER = re.compile(r"^\d{4}-\d{6}-\d{2}-\d{2}$")
+
+
+# ---------------------------------------------------------------- registries
+def registry_of(trial_id):
+    """'nct', 'ctis', or None for a file in the key directory that is neither."""
+    if trial_id.startswith("NCT"):
+        return "nct"
+    if _EU_CT_NUMBER.match(trial_id):
+        return "ctis"
+    return None
+
+
+def trial_ids(truth_dir, source="all"):
+    """
+    The curated trial ids to score, NCT first, then CTIS.
+
+    Registry order rather than a plain sort, because a plain sort puts every
+    EU CT number ("2023-...") ahead of every NCT id, and `--limit N` would
+    then silently stop meaning "the first N NCT trials" it meant before CTIS
+    was scored.
+    """
+    ids = []
+    for name in os.listdir(truth_dir):
+        if not name.endswith(".yaml"):
+            continue
+        registry = registry_of(name[:-5])
+        if registry and source in ("all", registry):
+            ids.append(name[:-5])
+    return sorted(ids, key=lambda t: (REGISTRIES.index(registry_of(t)), t))
+
+
+def conditions_of(trial_id, record):
+    """
+    The trial's own condition list, from whichever document shape it has.
+
+    CTIS has no conditionsModule; its conditions are the medicalConditions of
+    authorizedPartI, read by the same accessor src/ctis.map_ctis_to_ctml uses,
+    so the floor scored here is the floor the CTIS mapper hands the model.
+    """
+    if registry_of(trial_id) == "ctis":
+        import src.ctis as ctis
+        return ctis.get_conditions(record)
+    return (record.get("protocolSection", {}).get("conditionsModule", {})
+            .get("conditions", []))
+
+
+def map_trial(mgr, trial_id, out_dir):
+    """Run the registry's own full mapper for one trial; True on success."""
+    if registry_of(trial_id) == "ctis":
+        return mgr.map_single_ctis_trial(trial_id, CACHE_DIRS["ctis"], out_dir)
+    return mgr.map_single_trial(trial_id, CACHE_DIRS["nct"], out_dir)
 
 
 # ---------------------------------------------------------------- extraction
@@ -87,15 +152,34 @@ def facts(doc):
 
 
 def unsatisfiable(matches):
-    """Genes asserted both present and absent inside the same AND branch."""
+    """
+    Genes asserted both present and absent inside the same AND branch.
+
+    Only genes every path through the AND requires count: a gene inside an
+    OR under the AND is one alternative, not a requirement. The Ewing CTIS
+    keys (2023-503322-39-00, 2024-511989-36-00) require an EWSR1 fusion in
+    one alternative and its absence in another, which is satisfiable, and
+    were flagged until 2026-09-24.
+    """
     out = set()
+
+    def required(node):
+        if isinstance(node, dict):
+            if isinstance(node.get("genomic"), dict):
+                yield node["genomic"]
+            for k, v in node.items():
+                if k != "or":
+                    yield from required(v)
+        elif isinstance(node, list):
+            for v in node:
+                yield from required(v)
 
     def check(node):
         if isinstance(node, dict):
             if "and" in node and isinstance(node["and"], list):
                 pos, neg = set(), set()
                 for child in node["and"]:
-                    for g in walk(child, "genomic"):
+                    for g in required(child):
                         sym = g.get("hugo_symbol")
                         vc = str(g.get("variant_category", ""))
                         if not sym:
@@ -145,7 +229,8 @@ def score(truth_dir, out_dir, ids):
     for nct in ids:
         tp, op = f"{truth_dir}/{nct}.yaml", f"{out_dir}/{nct}.yaml"
         if not os.path.exists(op):
-            rows.append({"nct_id": nct, "status": "MISSING OUTPUT"})
+            rows.append({"nct_id": nct, "registry": registry_of(nct),
+                         "status": "MISSING OUTPUT"})
             continue
         t, o = facts(yaml.safe_load(open(tp))), facts(yaml.safe_load(open(op)))
         dp, dr, df = prf(o["diagnoses"], t["diagnoses"])
@@ -154,7 +239,7 @@ def score(truth_dir, out_dir, ids):
         uns = unsatisfiable(o["matches"])
         ap_, ar_, af_ = prf(o["ages"], t["ages"])
         rows.append({
-            "nct_id": nct, "status": "ok",
+            "nct_id": nct, "registry": registry_of(nct), "status": "ok",
             "dx_p": dp, "dx_r": dr, "dx_f1": df,
             "pop_p": pp, "pop_r": pr, "pop_f1": pf,
             "n_pop_truth": len(wanted), "n_pop_got": len(reached),
@@ -176,14 +261,38 @@ def score(truth_dir, out_dir, ids):
     return rows, agg
 
 
+MEAN_KEYS = ("dx_f1", "dx_p", "dx_r", "pop_p", "pop_r", "pop_f1", "gene_f1", "age_f1")
+
+
+def registry_means(rows):
+    """
+    Mean of each score over the scored rows, overall and per registry:
+    {"all": {...}, "nct": {...}, "ctis": {...}}, each with its row count `n`.
+    A registry with no scored row is absent rather than reported as zero.
+    """
+    ok = [r for r in rows if r["status"] == "ok"]
+    groups = {"all": ok}
+    for registry in REGISTRIES:
+        groups[registry] = [r for r in ok if r.get("registry") == registry]
+    out = {}
+    for name, rs in groups.items():
+        if rs:
+            out[name] = {k: sum(r[k] for r in rs) / len(rs) for k in MEAN_KEYS}
+            out[name]["n"] = len(rs)
+            out[name]["exact_dx"] = sum(1 for r in rs if r["dx_f1"] == 1.0)
+            out[name]["exact_pop"] = sum(1 for r in rs if r["pop_f1"] == 1.0)
+    return out
+
+
 def report(rows, agg, diagnoses_only=False):
     ok = [r for r in rows if r["status"] == "ok"]
-    print(f"\n{'trial':<14}{'dx F1':>7}{'dx P':>7}{'dx R':>7}{'pop P':>7}{'pop R':>7}"
+    width = 104
+    print(f"\n{'trial':<19}{'reg':<5}{'dx F1':>7}{'dx P':>7}{'dx R':>7}{'pop P':>7}{'pop R':>7}"
           f"{'gene F1':>9}{'age F1':>8}{'#dx':>6}  flags")
-    print("-" * 96)
+    print("-" * width)
     for r in rows:
         if r["status"] != "ok":
-            print(f"{r['nct_id']:<14}{r['status']}")
+            print(f"{r['nct_id']:<19}{r.get('registry') or '?':<5}{r['status']}")
             continue
         flags = []
         if r["unsatisfiable"]:
@@ -195,18 +304,26 @@ def report(rows, agg, diagnoses_only=False):
             flags.append("dx over-generated")
         gene_age = (f"{'-':>9}{'-':>8}" if diagnoses_only
                     else f"{r['gene_f1']:>9.2f}{r['age_f1']:>8.2f}")
-        print(f"{r['nct_id']:<14}{r['dx_f1']:>7.2f}{r['dx_p']:>7.2f}{r['dx_r']:>7.2f}"
+        print(f"{r['nct_id']:<19}{r['registry']:<5}{r['dx_f1']:>7.2f}{r['dx_p']:>7.2f}{r['dx_r']:>7.2f}"
               f"{r['pop_p']:>7.2f}{r['pop_r']:>7.2f}{gene_age}"
               f"{r['n_dx_got']:>4}/{r['n_dx_truth']:<2}  {' '.join(flags)}")
     if ok:
-        mean = lambda k: sum(agg[k]) / len(ok)
-        gene_age = (f"{'-':>9}{'-':>8}" if diagnoses_only
-                    else f"{mean('gene_f1'):>9.2f}{mean('age_f1'):>8.2f}")
-        print("-" * 96)
-        print(f"{'MEAN':<14}{mean('dx_f1'):>7.2f}{mean('dx_p'):>7.2f}{mean('dx_r'):>7.2f}"
-              f"{mean('pop_p'):>7.2f}{mean('pop_r'):>7.2f}{gene_age}")
-        exact = lambda k: sum(1 for r in ok if r[k] == 1.0)
-        print(f"\nexactly right: {exact('dx_f1')} by name, {exact('pop_f1')} by population")
+        means = registry_means(rows)
+        print("-" * width)
+        for name in ("all",) + REGISTRIES:
+            if name not in means:
+                continue
+            m = means[name]
+            gene_age = (f"{'-':>9}{'-':>8}" if diagnoses_only
+                        else f"{m['gene_f1']:>9.2f}{m['age_f1']:>8.2f}")
+            print(f"{'MEAN':<19}{name:<5}{m['dx_f1']:>7.2f}{m['dx_p']:>7.2f}{m['dx_r']:>7.2f}"
+                  f"{m['pop_p']:>7.2f}{m['pop_r']:>7.2f}{gene_age}{m['n']:>6} trials")
+        print()
+        for name in ("all",) + REGISTRIES:
+            if name in means:
+                m = means[name]
+                print(f"exactly right ({name}): {m['exact_dx']} by name, "
+                      f"{m['exact_pop']} by population, of {m['n']}")
         print(f"\nscored {len(ok)}/{len(rows)} trials")
         bad = [r['nct_id'] for r in ok if r['unsatisfiable']]
         if bad:
@@ -226,15 +343,19 @@ def write_conditions_baseline(ids, out_dir):
     term. What the model adds on top is exactly the gap between this and a
     full run, so the two together separate a lookup regression from a model
     one - and this half needs no GPU and has no run-to-run variance.
+
+    Both registries go through the same seed_and_map_diagnosis and the same
+    basket fallback; only where the conditions are read from differs (see
+    conditions_of). That is also what src/ctis.map_ctis_to_ctml does, since
+    CTIS registers no keywords or titles for the NCT path's later fallbacks.
     """
     from loguru import logger
     logger.remove()
     import src.clinical_trials_gov as ctg
     for nct in ids:
-        with open(f"{CACHE_DIR}/{nct}.json") as handle:
+        with open(f"{CACHE_DIRS[registry_of(nct)]}/{nct}.json") as handle:
             record = json.load(handle)
-        conditions = (record.get("protocolSection", {}).get("conditionsModule", {})
-                      .get("conditions", []))
+        conditions = conditions_of(nct, record)
         # The pipeline's own function with no eligibility text, so the model
         # is never called: whatever the seed and basket rules decide is exactly
         # what reaches the full run as its floor.
@@ -256,13 +377,14 @@ def main():
     ap.add_argument("--limit", type=int)
     ap.add_argument("--json", default="bench/report.json")
     ap.add_argument("--conditions-only", action="store_true",
-                    help="diagnoses from conditionsModule only; no model, no network")
+                    help="diagnoses from the registry's condition list only; no model, no network")
+    ap.add_argument("--source", choices=("all",) + REGISTRIES, default="all",
+                    help="which registry's curated trials to run and score (default: all)")
     args = ap.parse_args()
     if args.conditions_only and args.out == "bench/output":
         args.out = "bench/output-conditions"
 
-    ids = sorted(f[:-5] for f in os.listdir(args.truth)
-                 if f.startswith("NCT") and f.endswith(".yaml"))
+    ids = trial_ids(args.truth, args.source)
     if args.limit:
         ids = ids[:args.limit]
     os.makedirs(args.out, exist_ok=True)
@@ -271,7 +393,6 @@ def main():
     if args.conditions_only:
         write_conditions_baseline(ids, args.out)
     elif not args.score_only:
-        import config
         from loguru import logger
         logger.remove()
         logger.add(sys.stderr, level="WARNING")
@@ -282,7 +403,7 @@ def main():
         for n, nct in enumerate(ids, 1):
             t0 = time.time()
             try:
-                ok = mgr.map_single_trial(nct, CACHE_DIR, args.out)
+                ok = map_trial(mgr, nct, args.out)
                 status = "ok" if ok else "FAILED"
             except Exception as e:
                 status = f"CRASH {type(e).__name__}: {str(e)[:60]}"

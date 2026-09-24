@@ -486,6 +486,35 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Benchmark covers CTIS
+
+Roadmap 1.5. `bench/benchmark_map.py` read only the NCT keys, so the 5
+curated CTIS keys were never scored and the CTIS mapper had no benchmark.
+All three modes now run both registries:
+- **Full mapping:** EU CT numbers go to
+  `TrialMapManager.map_single_ctis_trial`.
+- **`--conditions-only`:** CTIS conditions are read through
+  `src.ctis.get_conditions` and go into the same `seed_and_map_diagnosis`
+  and basket fallback as NCT.
+- **Restricting a run:** `--source nct|ctis|all` selects a registry. Report
+  rows carry their registry, and the summary gives a mean per registry.
+- **Ordering:** NCT trials come first, so `--limit N` means the same as
+  before.
+- **Config:** the cache paths are now in config (`NCT_CACHE_PATH`,
+  `CTIS_CACHE_PATH`).
+
+Identity calibration: 55/55 at 1.00 (was 50/50). Conditions-only, NCT: dx
+F1 0.74, pop P 0.92, pop R 0.78. These are identical to the previous run;
+the 50 rows match. Conditions-only, CTIS: dx F1 0.17, pop P 0.40, pop R
+0.27. Three of the five get no diagnosis, because CTIS writes its
+conditions as sentences, and none gets a wrong one.
+
+Adding CTIS exposed a false positive in `unsatisfiable()`. It collected every
+gene under an AND, including genes inside OR alternatives, and so flagged
+the two Ewing CTIS keys, which require an EWSR1 fusion in one alternative
+and its absence in another. It now counts only genes that every path
+through the AND requires. 373 tests pass (2 skipped).
+
 ## Retired-symbol rewrite widened to the synonym table
 
 Roadmap 1.3. `canonical_gene` rewrote only the 15 renames between

@@ -63,6 +63,15 @@ model and no network, finishes in seconds, and is identical from run to run:
 Genes and ages are not produced on that path and show as `-`. What a full
 run adds on top of it is what the model contributes.
 
+Every mode covers both registries: the 50 curated ClinicalTrials.gov keys and
+the 5 CTIS keys (EU CT numbers). `--source nct|ctis|all` (default `all`)
+restricts a run to one registry. Each report row carries its registry, and
+the summary gives a mean for each, because 5 CTIS trials barely move the
+overall mean. Conditions-only on 2026-09-24: NCT dx F1 0.74 (pop P 0.92,
+R 0.78); CTIS dx F1 0.17 (pop P 0.40, R 0.27). CTIS writes conditions as
+sentences ("Relapsed Acute Lymphoblastic Leukemia (ALL)"), so 3 of the 5
+get no diagnosis from them. None gets a wrong one.
+
 ## What is scored
 
 | dimension | how |

@@ -128,6 +128,11 @@ CTML_REVIEW_PATH = "ctml/needs-review"
 # layer replaces an earlier one for the same trial (utils/build_trial_index.py).
 CTML_MAPPED_PATH = "cache/ctml"
 CTML_REVIEWED_PATH = "ctml/reviewed"
+# Where the pull stage caches raw registry records, one JSON per trial, keyed
+# by NCT id or EU CT number. The benchmark reads both, because 5 of the 55
+# curated keys in ctml/reviewed are CTIS trials.
+NCT_CACHE_PATH = "cache/nct"
+CTIS_CACHE_PATH = "cache/ctis"
 # Bulk mapping skips trials with no oncology term (utils/oncology_scope.py).
 # Mapping a single trial by id never skips. Per-trial decisions go in the
 # overrides file; the skipped trials are listed, with reasons, in the report.
