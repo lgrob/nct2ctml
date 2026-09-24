@@ -30,7 +30,7 @@ Standing rules for every step:
 
 | Phase | State |
 |---|---|
-| 0 - Now | 0.3 done. **0.1 (push) is overdue:** 19 commits exist only on this machine. 0.2 and 0.4 open. |
+| 0 - Now | 0.3 done. **0.1 (push) is overdue:** 28 commits exist only on this machine. 0.2 and 0.4 open. |
 | 1 - Deterministic fixes | 1.1-1.5, 1.7, 1.8, 1.9 done; 1.4b measured and not adopted. Open: 1.6 (curator time). |
 | 2 - Stage-2 diagnosis | Closed as measured: no narrowing arm (2.4) and no model swap (2.3, 2.6) beats production without losing curated diagnoses. Production stage 2 stays. Open: 2.7 (quote grounding) and optional 2.5. |
 | 3 - Full run | 3.0 and 3.1 done (3.1 through the analysis environment; diagnosis recall 0.938). 3.2-3.4 need 0.4 (live smoke test with an API key). |
