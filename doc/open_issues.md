@@ -330,6 +330,10 @@ table below. Genes the model adds without textual support now go to review
 
 ### Cytogenetic translocations are not turned into fusion pairs
 
+*Conversion done 2026-09-24 (utils/translocations.py, 69 curated rows; see
+CHANGES.md). Open: the resolved pair does not yet reach the model (roadmap
+1.4b).*
+
 Prompt rule 9 tells the model not to derive genes from notation such as
 t(9;22), and it does not. 31 of 924 cached NCT trials state a translocation,
 most often t(9;22), t(1;19), t(4;11) and t(17;19). A curated table

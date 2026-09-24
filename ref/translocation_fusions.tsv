@@ -1,0 +1,80 @@
+# Cytogenetic rearrangements -> the gene pair they create. Read only by
+# utils/translocations.py. One row per rearrangement; `bands` empty means the
+# row is the conventional reading of the bare form (no bands given), used only
+# when it is the single bare row for that notation. Bands are compared at arm +
+# major band (q34.1 -> q34). gene_b empty = gene-level only (partner varies or
+# no fusion gene). 5' gene first, HGNC symbols; locus partners (IGH, TRA, ...)
+# are allowed as in reference_validation.FUSION_PARTNER_LOCI.
+# Sources: WHO Classification of Haematolymphoid Tumours 5th ed. (2022), WHO
+# Soft Tissue and Bone Tumours 5th ed. (2020), Mitelman database; every row
+# also occurs in, or is the counterpart of, a cached trial text (2026-09-24).
+notation	bands	gene_a	gene_b	reason
+t(9;22)	q34;q11	BCR	ABL1	Philadelphia chromosome.
+t(9;22)		BCR	ABL1	Bare t(9;22) in oncology is the Philadelphia translocation; no other recurrent 9;22 fusion.
+t(1;19)	q23;p13	TCF3	PBX1	B-ALL, WHO 5th ed.
+t(1;19)		TCF3	PBX1	Bare t(1;19) in ALL trials; the only recurrent 1;19 fusion in paediatric leukaemia.
+t(17;19)	q22;p13	TCF3	HLF	B-ALL, WHO 5th ed.
+t(17;19)		TCF3	HLF	Bare form; only recurrent 17;19 fusion.
+t(4;11)	q21;q23	KMT2A	AFF1	KMT2A-rearranged ALL.
+t(4;11)		KMT2A	AFF1	Bare form; only recurrent 4;11 fusion.
+t(12;21)	p13;q22	ETV6	RUNX1	B-ALL.
+t(12;21)		ETV6	RUNX1	Bare form.
+t(9;11)	p21;q23	KMT2A	MLLT3	AML; bands p21-22 written variously.
+t(9;11)	p22;q23	KMT2A	MLLT3	AML.
+t(9;11)		KMT2A	MLLT3	Bare form; only recurrent 9;11 fusion.
+t(10;11)	p13;q14	PICALM	MLLT10	CALM-AF10.
+t(10;11)	p12;q23	KMT2A	MLLT10	MLL-AF10. Bare t(10;11) is ambiguous between this and PICALM::MLLT10; shared gene MLLT10.
+t(15;17)	q24;q21	PML	RARA	Acute promyelocytic leukaemia.
+t(15;17)	q22;q21	PML	RARA	Older band nomenclature.
+t(15;17)		PML	RARA	Bare form.
+t(8;21)	q22;q22	RUNX1	RUNX1T1	Core-binding factor AML.
+t(8;21)		RUNX1	RUNX1T1	Bare form.
+inv(16)	p13;q22	CBFB	MYH11	Core-binding factor AML; written p13.1q22.
+inv(16)		CBFB	MYH11	Bare inv(16) in AML is CBFB::MYH11 by convention.
+inv(16)	p13;q24	CBFA2T3	GLIS2	Paediatric acute megakaryoblastic leukaemia; written p13.3q24.3. Needs bands.
+t(16;16)	p13;q22	CBFB	MYH11	Variant of inv(16).
+t(16;16)		CBFB	MYH11	Bare form.
+t(6;9)	p23;q34	DEK	NUP214	AML.
+t(6;9)		DEK	NUP214	Bare form.
+t(1;22)	p13;q13	RBM15	MRTFA	Acute megakaryoblastic leukaemia (RBM15::MKL1).
+t(1;22)		RBM15	MRTFA	Bare form.
+t(7;12)	q36;p13	MNX1	ETV6	Infant AML.
+t(7;12)		MNX1	ETV6	Bare form.
+t(8;16)	p11;p13	KAT6A	CREBBP	AML.
+t(8;16)		KAT6A	CREBBP	Bare form.
+t(5;11)	q35;p15	NUP98	NSD1	AML.
+t(5;11)		NUP98	NSD1	Bare form.
+t(11;12)	p15;p13	NUP98	KDM5A	Paediatric AML.
+t(3;5)	q25;q34	NPM1	MLF1	AML.
+t(3;5)		NPM1	MLF1	Bare form.
+t(9;9)	q34;q34	SET	NUP214	T-ALL/AML; needs bands (other 9;9 events exist).
+t(3;21)	q26;q22	RUNX1	MECOM	RUNX1-EVI1.
+t(12;13)	p13;q12	ETV6	CDX2	AML.
+inv(3)	q21;q26	MECOM		GATA2 enhancer repositioned to MECOM; no fusion gene, so gene-level only.
+inv(3)		MECOM		Bare form; as above.
+t(3;3)	q21;q26	MECOM		Same mechanism as inv(3); gene-level only.
+t(3;3)		MECOM		Bare form.
+t(12;22)	q13;q12	EWSR1	DDIT3	Myxoid liposarcoma variant.
+t(12;22)	p13;q12	MN1	ETV6	AML. Bare t(12;22) is ambiguous between the two rows; no shared gene.
+t(12;16)	q13;p11	FUS	DDIT3	Myxoid liposarcoma.
+t(12;16)		FUS	DDIT3	Bare form; only recurrent 12;16 fusion.
+t(X;18)	p11;q11	SS18		Synovial sarcoma; partner is SSX1, SSX2 or SSX4, so gene-level only.
+t(X;18)		SS18		Bare form; as above.
+t(11;22)	q24;q12	EWSR1	FLI1	Ewing sarcoma. Bare t(11;22) is ambiguous (DSRCT, constitutional t(11;22)(q23;q11)); needs bands.
+t(11;22)	p13;q12	EWSR1	WT1	Desmoplastic small round cell tumour.
+t(21;22)	q22;q12	EWSR1	ERG	Ewing sarcoma.
+t(2;13)	q36;q14	PAX3	FOXO1	Alveolar rhabdomyosarcoma.
+t(2;13)	q35;q14	PAX3	FOXO1	Older band nomenclature.
+t(2;13)		PAX3	FOXO1	Bare form.
+t(1;13)	p36;q14	PAX7	FOXO1	Alveolar rhabdomyosarcoma.
+t(1;13)		PAX7	FOXO1	Bare form.
+t(2;5)	p23;q35	NPM1	ALK	Anaplastic large cell lymphoma.
+t(2;5)		NPM1	ALK	Bare form.
+t(8;14)	q24;q32	IGH	MYC	Burkitt lymphoma.
+t(8;14)	q24;q11	TRA	MYC	T-ALL. Bare t(8;14) is ambiguous between IGH and TRA; shared gene MYC.
+t(2;8)	p12;q24	IGK	MYC	Burkitt variant.
+t(2;8)		IGK	MYC	Bare form.
+t(8;22)	q24;q11	MYC	IGL	Burkitt variant.
+t(8;22)		MYC	IGL	Bare form.
+t(7;19)	q34;p13	TRB	LYL1	T-ALL.
+t(7;19)		TRB	LYL1	Bare form.

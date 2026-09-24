@@ -14,6 +14,7 @@ import utils.aho_corasick as ac
 import src.trial_data_helper as tdh
 import utils.protein_change as pc
 import utils.reference_validation as rv
+import utils.translocations as translocations
 from utils.reference_validation import filter_diagnoses, filter_genomic_criteria
 
 
@@ -216,12 +217,18 @@ def _flag_unsupported_genes(genomic_criteria: list, scanned_genes, criteria_text
     are often off it: on saved Haiku answers for the 55 reviewed trials, 7
     of the 12 genes the scan alone would flag per replicate were partners
     named exactly so in the text (SET in "SET::NUP214", RUNX1T1, DUX4,
-    USP9X, CCNB3, MAML3, ZC3H7B). With the fallback 5 genes in 2 trials
-    are flagged per replicate: FLI1 read from "EWSR1-Fli" (2024-511989-36-00)
-    and the FUS::DDIT3 and EWSR1::DDIT3 fusions of NCT06083883, inferred from
-    "myxoid/round cell liposarcoma" in a text that names no fusion gene.
+    USP9X, CCNB3, MAML3, ZC3H7B).
+
+    A gene named only in cytogenetic notation is supported as well, through
+    the curated table in utils/translocations.py: "t(12;16)(q13;p11)" names
+    FUS and DDIT3. Without it, NCT06083883's FUS::DDIT3 and EWSR1::DDIT3,
+    which its text states as t(12;16)(q13;p11) and t(12;22)(q13;q12), were
+    flagged although the model read them correctly. With the fallback and the
+    table, 1 gene in 1 trial is flagged per replicate on the saved Haiku
+    answers: FLI1 read from "EWSR1-Fli" (2024-511989-36-00), a correct
+    reading of a truncated symbol.
     """
-    supported = set()
+    supported = set(translocations.genes_in(criteria_text))
     for gene in scanned_genes or []:
         supported.add(gene)
         current = rv.canonical_gene(gene)

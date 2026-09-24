@@ -159,6 +159,9 @@ GENE_REWRITE_EXCLUSION_FILE_PATH = "ref/gene_rewrite_exclusions.tsv"
 # MANE Select protein sequences every trial protein change is checked
 # against (utils/protein_change.py); built by utils/build_protein_reference.py.
 PROTEIN_REFERENCE_FILE_PATH = "ref/mane_select_proteins.tsv"
+# Cytogenetic rearrangement -> gene pair, curated with a reason per row;
+# read only by utils/translocations.py.
+TRANSLOCATION_TABLE_FILE_PATH = "ref/translocation_fusions.tsv"
 # Every gene with a MANE Select transcript, symbol and HGNC id. Not an
 # accept-list for hugo_symbol (that is the panel); it validates fusion
 # partners, which are often off-panel (RUNX1T1, SET) yet reported by the

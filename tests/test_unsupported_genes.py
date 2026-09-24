@@ -3,10 +3,13 @@ A gene the model returned that the trial's text does not name is kept, flagged
 gene_unsupported, routed to review and reported in the index as gene_check.
 
 The answers and text below are real: the Haiku 4.5 inclusion-genomic answer
-for NCT06083883 (a synovial sarcoma / myxoid liposarcoma TCR trial whose text
-names SSX1/2/4 and NY-ESO-1 but no fusion gene), and eligibility text from
-NCT06177067. On the saved answers for all 55 reviewed trials the flag fell on
-5 genes in 2 trials per replicate, none of them in the curated key.
+for NCT06083883 (a synovial sarcoma / myxoid liposarcoma TCR trial) and
+eligibility text from NCT06177067. NCT06083883 names its liposarcoma fusions
+only in cytogenetic notation, t(12;16)(q13;p11) and t(12; 22) (q13;q12). With
+that sentence the model's FUS::DDIT3 and EWSR1::DDIT3 are supported through
+utils/translocations.py; without it they would be flagged. On the saved
+answers for all 55 reviewed trials the flag falls on 1 gene in 1 trial per
+replicate (FLI1 read from "EWSR1-Fli").
 """
 import copy
 import csv
@@ -30,13 +33,18 @@ from utils.build_trial_index import build
 
 logger.remove()
 
-# NCT06083883, inclusion criterion 2 (abridged to the sentences that name genes).
+# NCT06083883, inclusion criterion 2 without criterion 19a, i.e. a text that
+# does not state the liposarcoma translocations.
 NCT06083883_TEXT = (
     "2. Patients with histologically confirmed synovial sarcoma (cohort 1) or myxoid/round "
     "cell liposarcoma (cohort 2), with an HLA-A\\*02:01, HLA-A\\*02:05 or HLA-A\\*02:06 "
     "positive and a positive expression of NY-ESO-1 (\\>/= 50% tumor cells 2+ or 3+ by IHC). "
     "Diagnosis of synovial sarcoma with a confirmation by the presence of a translocation "
     "between SYT on the X chromosome and SSX1, SSX2 or SSX4")
+# Criterion 19a, verbatim.
+NCT06083883_19A = ("a. Patients must have histologically confirmed myxoid/round cell liposarcoma "
+                   "with a confirmation by the presence of the reciprocal chromosomal translocation "
+                   "t(12;16)(q13;p11) or t(12; 22) (q13;q12).")
 NCT06083883_ANSWER = [
     {"genomic": {"hugo_symbol": "FUS", "variant_category": "Structural Variation",
                  "fusion_partner": "DDIT3"}},
@@ -52,7 +60,13 @@ def _scan(text):
 
 class TestFlag(unittest.TestCase):
 
-    def test_genes_from_the_disease_not_the_text_are_flagged(self):
+    def test_fusions_stated_as_translocations_are_supported(self):
+        text = NCT06083883_TEXT + "\n" + NCT06083883_19A
+        crit = _postprocess_genomic_criteria(copy.deepcopy(NCT06083883_ANSWER), "NCT06083883",
+                                             _scan(text), text)
+        self.assertEqual([c["genomic"].get("gene_unsupported") for c in crit], [None, None])
+
+    def test_genes_the_text_does_not_state_are_flagged(self):
         crit = _postprocess_genomic_criteria(copy.deepcopy(NCT06083883_ANSWER), "NCT06083883",
                                              _scan(NCT06083883_TEXT), NCT06083883_TEXT)
         self.assertEqual([c["genomic"].get("gene_unsupported") for c in crit],

@@ -486,6 +486,46 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Cytogenetic notation translated to gene pairs, deterministically
+
+Roadmap 1.4. Trials write fusions in ISCN notation as often as in gene
+names: 132 mentions in 44 cached trials, in 34 forms, 52 of them with bands.
+`utils/translocations.py` parses t() and inv(), with their spacing, colon
+and comma variants and with or without bands. It resolves each rearrangement
+against `ref/translocation_fusions.tsv`, 69 curated rows with a reason each,
+by these rules:
+
+1. **Bands given:** they must match a row at arm + major band. If none
+   matches, the result is unresolved.
+2. **No bands, one conventional row:** that row is used (inv(16) ->
+   CBFB::MYH11).
+3. **No bands, several rows:** only the gene every candidate shares is
+   returned (t(8;14) -> MYC). If none is shared, the result is unresolved
+   (t(12;22) is EWSR1::DDIT3 or MN1::ETV6).
+
+Bands matter: inv(16)(p13.3q24.3) in one trial is CBFA2T3::GLIS2, not
+CBFB::MYH11. No model is involved.
+
+Of the 132 mentions, 119 resolve to a pair and 7 to one gene. 6 are
+unresolved: 2 whose written bands contradict the standard ones,
+t(1;19)(q21;p13) and t(4;11)(q11;q23), which the code does not correct; and
+4 ALK variant forms not in the table.
+
+What the table does not decide is whether a rearrangement is a criterion. In
+9 of the 11 reviewed trials that mention one, the curator made no gene
+criterion of it, because they are risk-group definitions or lists of
+examples. So the table supplies evidence and does not add criteria. It is
+used in one place now: the unsupported-gene check (1.2) counts a gene named
+in cytogenetic form as supported. That removed the 4 false flags on
+NCT06083883, and on the saved Haiku answers 1 flag in 1 trial remains per
+replicate.
+
+The table also resolves NCT07012447's inv(16) and t(15;17) to CBFB and PML,
+the two genes the gene scan still missed. They do not yet reach the model:
+prompt rule 9 tells it not to derive genes from cytogenetic notation. That
+step, annotating the text with the resolved pair so the model reads it, is
+roadmap 1.4b and needs a model measurement. 396 tests pass (2 skipped).
+
 ## Schema enum cap: visible, counted, set per backend
 
 Roadmap 1.7. Measured 2026-09-24 with no model calls:
@@ -625,10 +665,15 @@ needed because fusion partners are often missing from the synonym table
 per replicate, and the 7 extra flags are all correct partners.
 
 Measured on the saved Haiku 4.5 gene answers, two replicates, no new model
-calls: 5 flags in 2 trials in each replicate. Four are real errors,
-FUS::DDIT3 and EWSR1::DDIT3 inferred from "myxoid/round cell liposarcoma"
-on NCT06083883, whose text names no fusion gene. One is a false alarm, FLI1
-from "EWSR1-Fli" on 2024-511989-36-00. The MYCN case from the fusion-prompt
+calls: 5 flags in 2 trials in each replicate. *Corrected the same day:* four
+of them, FUS::DDIT3 and EWSR1::DDIT3 on NCT06083883, were first reported
+here as model errors. They are correct: the text states them as
+t(12;16)(q13;p11) and t(12; 22) (q13;q12), which the scan could not read. With
+the translocation table (next section) they are supported, and 1 flag in 1
+trial remains per replicate: FLI1 from "EWSR1-Fli" (2024-511989-36-00),
+also a correct reading. On these answers the rule has not yet caught a real
+error. It is kept because it costs little review and targets the MYCN
+case. The MYCN case from the fusion-prompt
 run (NCT06071897) does not occur in these answers, so it is not tested
 here. `map_ctml_match_genomic_criteria` passes the scanned list it already
 builds, so the scan is not run twice. 351 tests pass (2 skipped).
