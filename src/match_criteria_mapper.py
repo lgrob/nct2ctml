@@ -343,7 +343,10 @@ def _convert_clinical_block(clinical_critera, trial_id: str = "") -> dict:
         # tree. If that empties the list, fall through to the no-diagnosis path
         # below rather than emitting a clinical block keyed on a string that can
         # never match a patient.
-        diagnoses = filter_diagnoses(raw_diagnoses, trial_id)
+        # Sorted: callers build the list from sets, and the OR's order
+        # carries no meaning, so a fixed order keeps the CTML reproducible
+        # (roadmap 1.9).
+        diagnoses = sorted(dict.fromkeys(filter_diagnoses(raw_diagnoses, trial_id)))
 
     if diagnoses:
         if len(diagnoses) > 1:  # incase of multiple diagnoses, put the result under 'or' operator

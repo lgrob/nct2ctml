@@ -196,4 +196,6 @@ class TrialCriteriaToGenes:
                         if norm:
                             found.add(norm)
 
-        return list[str](found)
+        # Sorted: a set's order follows PYTHONHASHSEED, and this list is
+        # printed into the genomic prompts (roadmap 1.9).
+        return sorted(found)

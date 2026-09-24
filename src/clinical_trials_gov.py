@@ -382,7 +382,8 @@ def map_ctml_general_fields(trial_schema, trial_data) -> dict:
                     })
                     dose_level_code = dose_level_code + 1
             arm_internal_id = arm_internal_id + 1
-        trial_schema['drug_list']['drug'] =[{'drug_name': drug} for drug in drug_list]
+        # Sorted so the CTML does not depend on set order (roadmap 1.9).
+        trial_schema['drug_list']['drug'] =[{'drug_name': drug} for drug in sorted(drug_list)]
     except KeyError as ke:
         logger.error(f"Key {ke} not found in NCT study {nct_id}")
         raise
@@ -789,7 +790,7 @@ def map_eligibility_criteria_to_oncotree_term(nct_id: str, eligibility_criteria:
     oncotree_diagnoses_result = ai.get_oncotree_diagnoses_from_trial_info(nct_id, eligibility_criteria, all_level_oncotree_values)
     if oncotree_diagnoses_result and 'oncotree_diagnoses' in oncotree_diagnoses_result.keys():
         all_possible_diagnoses.update(oncotree_diagnoses_result['oncotree_diagnoses'])   
-    return list(all_possible_diagnoses)
+    return sorted(all_possible_diagnoses)
 
 # How many umbrella conditions mean "any malignancy qualifies" rather than
 # "here is a heading for my list". See _basket_wildcards.
@@ -1023,7 +1024,7 @@ def map_global_diagnosis_to_oncotree_term(trial_data: dict, global_eligibility_c
             f"keywords or the title. Mapping continues without a diagnosis "
             f"criterion; a human must supply one."
         )
-    return list(all_possible_diagnoses)
+    return sorted(all_possible_diagnoses)
 
 def map_prior_treatment_requirements(trial_schema, trial_data) -> dict:
     """

@@ -333,7 +333,25 @@ def send_ai_request(id, prompt, json_schema=None):
     logger.debug(f"AI response | ID:{id} | {ai_response}")
     return ai_response
 
+def prompt_list(values):
+    """
+    A list printed into a prompt, in a fixed order: sorted, duplicates removed.
+
+    Every candidate list and gene list reached the prompts in the order of
+    the Python set it was built from, and that order follows PYTHONHASHSEED,
+    which production does not pin. So one trial got differently ordered
+    prompts on every run: a full-pipeline check with a stub model found the
+    level-1 and both diagnosis prompts differing under seeds 0/1/2 on 7 of
+    8 trials, and with only the gene order changed, 16 of 45 Haiku genomic
+    answers changed. Every list printed into a prompt goes through here.
+    """
+    return sorted({v for v in values if v is not None}, key=str)
+
+
 def get_ai_prompt_level1_for_original_conditions(original_conditions_list, level1_oncotree_list, trial_id=""):
+    # Sorted so the prompt text does not depend on set order (PYTHONHASHSEED);
+    # see prompt_list(). Roadmap 1.9.
+    level1_oncotree_list = prompt_list(level1_oncotree_list)
     prompt = f"""Task: Map CancerConditions to the closest cancer type in OncotreeValues.
         CancerConditions: {original_conditions_list}
         OncotreeValues: {level1_oncotree_list}
@@ -349,6 +367,9 @@ def get_ai_prompt_level1_for_original_conditions(original_conditions_list, level
     return level1_diagnoses_schema(level1_oncotree_list, trial_id), cleandoc(prompt)
 
 def get_ai_prompt_oncotree_diagnoses_from_trial_info(trial_info, oncotree_values, trial_id=""):
+    # Sorted so the prompt text does not depend on set order (PYTHONHASHSEED);
+    # see prompt_list(). Roadmap 1.9.
+    oncotree_values = prompt_list(oncotree_values)
     prompt = f"""Task: From the TrialInfo, extract OncotreeValues that correspond to medical conditions explicitly mentioned in the text.
         Rules:
         - Only include a diagnosis if the condition or cancer type is explicitly stated in TrialInfo.
@@ -367,6 +388,9 @@ def get_ai_prompt_oncotree_diagnoses_from_trial_info(trial_info, oncotree_values
     return oncotree_diagnoses_schema(oncotree_values, trial_id), cleandoc(prompt)
 
 def get_ai_prompt_child_values(nct_condition, child_nodes_oncotree_list, trial_id=""):
+    # Sorted so the prompt text does not depend on set order (PYTHONHASHSEED);
+    # see prompt_list(). Roadmap 1.9.
+    child_nodes_oncotree_list = prompt_list(child_nodes_oncotree_list)
 
     # cancer_condition: {nct_condition} E.g. -> Colorectal Cancer
     # Oncotree values: {child_nodes_oncotree} # E.g. -> {'Signet Ring Cell Adenocarcinoma of the Colon and Rectum', 'Colon Adenocarcinoma In Situ', 'Small Bowel Well-Differentiated Neuroendocrine Tumor', 'Gastrointestinal Neuroendocrine Tumors', 'Well-Differentiated Neuroendocrine Tumor of the Rectum', 'Small Bowel Cancer', 'Anal Squamous Cell Carcinoma', 'Anorectal Mucosal Melanoma', 'Low-grade Appendiceal Mucinous Neoplasm', 'Medullary Carcinoma of the Colon', 'Goblet Cell Adenocarcinoma of the Appendix', 'Mucinous Adenocarcinoma of the Appendix', 'Appendiceal Adenocarcinoma', 'Small Intestinal Carcinoma', 'Well-Differentiated Neuroendocrine Tumor of the Appendix', 'Signet Ring Cell Type of the Appendix', 'Colorectal Adenocarcinoma', 'High-Grade Neuroendocrine Carcinoma of the Colon and Rectum', 'Colonic Type Adenocarcinoma of the Appendix', 'Anal Gland Adenocarcinoma', 'Rectal Adenocarcinoma', 'Mucinous Adenocarcinoma of the Colon and Rectum', 'Duodenal Adenocarcinoma', 'Colon Adenocarcinoma', 'Tubular Adenoma of the Colon'}
@@ -906,6 +930,9 @@ GENOMIC_CRITERIA_SCHEMA = {
 
 
 def get_inclusion_genomic_criteria_prompt(genes, inclusion_criteria):
+    # Sorted so the prompt text does not depend on set order (PYTHONHASHSEED);
+    # see prompt_list(). Roadmap 1.9.
+    genes = prompt_list(genes)
     prompt = f"""Task: Evaluate the clinical trial criteria to return a JSON-formatted eligibility criteria involving genetic variants in any genes such as those in the GeneList.
     EligibilityCritieria: {inclusion_criteria}
     Possible GeneList: {genes}
@@ -971,6 +998,9 @@ def get_inclusion_genomic_criteria_prompt(genes, inclusion_criteria):
     return GENOMIC_CRITERIA_SCHEMA, cleandoc(prompt)
 
 def get_exclusion_genomic_criteria_prompt(genes, exclusion_criteria):
+    # Sorted so the prompt text does not depend on set order (PYTHONHASHSEED);
+    # see prompt_list(). Roadmap 1.9.
+    genes = prompt_list(genes)
     prompt = f"""Task: Evaluate the clinical trial exclusion criteria to return a JSON-formatted eligibility criteria involving genetic 
     variants in any genes such as those in the GeneList.
     EligibilityCritieria: {exclusion_criteria}
