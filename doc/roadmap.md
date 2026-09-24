@@ -59,7 +59,7 @@ own sub-agent.
 |---|---|---|---|
 | 2.1 | Fix the seed-subtree arm so its floor includes sibling branches; it lost Ganglioneuroblastoma on neuroblastoma trials. | Offline test on the neuroblastoma trials passes. | - |
 | 2.2 | Complete replicate 1 and run replicates 2 and 3, all arms, all 50 trials, on Haiku. | 3 complete replicates; mean and spread per arm. | 2.1 |
-| 2.3 | Run baseline plus the best arm on the Sonnet-class model. | Model effect separated from arm effect. | 2.2 |
+| 2.3 | ~~Model comparison~~ **Done 2026-09-24** (baseline path, Haiku 4.5 / Sonnet 5 / Opus 5.5, 2 replicates; see CHANGES.md). No model improves diagnosis recall; Sonnet 5 raises diagnosis name F1 by +0.10 at about 2x cost. That +0.10 is the bar for the 2.4 arms on Haiku. Re-run the best arm on Sonnet 5 only if it misses the bar. | Recorded. | - |
 | 2.4 | Choose an arm only if it beats baseline outside the spread, on population recall first and precision second. Ship it with offline tests. | Patch merged, or "no arm wins" recorded with the numbers. | 2.2 |
 | 2.5 | Optional: the single-stage run over all 879 Oncotree names (see "wrong-branch problem"). | Precision and recall reported separately. | 2.2 |
 
