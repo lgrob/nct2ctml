@@ -11,6 +11,7 @@ This module handles the mapping of NCT trial data to CTML format.
 
 import csv
 import os
+import yaml
 from datetime import datetime
 from typing import Dict, List
 from loguru import logger
@@ -267,7 +268,7 @@ class TrialMapManager:
                     # ctml_files_path directly, so `map --all` never routed an
                     # NCT trial to review; single-trial and CTIS mapping did.
                     destination = self._destination_for(mapped_ctml, ctml_files_path, nct_id)
-                    tdh.save_to_file(mapped_ctml, destination, nct_id, 'yaml')
+                    self._save(mapped_ctml, destination, nct_id)
 
                     processed_count += 1
                     logger.info(f"Successfully mapped and saved {nct_id} to {destination}")
@@ -344,12 +345,46 @@ class TrialMapManager:
             # patient in the database. The safety net was only ever wired to the
             # ClinicalTrials.gov path.
             destination = self._destination_for(mapped_ctml, ctml_files_path, ct_number)
-            tdh.save_to_file(mapped_ctml, destination, ct_number, 'yaml')
+            self._save(mapped_ctml, destination, ct_number)
             logger.info(f"Successfully mapped and saved {ct_number}")
             return True
         except Exception as ex:
             logger.exception(f"ct_number: {ct_number} | Unexpected error while mapping: {ex}")
             return False
+
+    @staticmethod
+    def _save(mapped_ctml: dict, destination: str, trial_id: str) -> str:
+        """
+        Write the CTML to `destination`. An existing copy in the review
+        queue that differs from the new one is kept as a backup first.
+
+        A curator may have edited a trial's copy in ctml/needs-review, and
+        a later run that routes the trial to review again used to overwrite
+        it. Now the old copy is renamed to <trial>.yaml.prev before the new
+        one is written; if that backup already exists, the next free
+        .prev.1, .prev.2, ... is used, so no backup is ever overwritten. An
+        identical copy gets no backup. The index ignores these files
+        (it reads .yaml/.yml/.json only) and lists them in its manifest.
+        Copies outside the review queue are overwritten as before: they
+        are machine output nobody edits.
+        """
+        import config
+        target = os.path.join(destination, f"{trial_id}.yaml")
+        review = os.path.realpath(getattr(config, 'CTML_REVIEW_PATH', 'ctml/needs-review'))
+        if os.path.realpath(destination) == review and os.path.exists(target):
+            new = yaml.dump(mapped_ctml, sort_keys=False)
+            with open(target) as handle:
+                old = handle.read()
+            if old != new:
+                backup, n = f"{target}.prev", 0
+                while os.path.exists(backup):
+                    n += 1
+                    backup = f"{target}.prev.{n}"
+                os.replace(target, backup)
+                logger.warning(f"{trial_id} | the review copy differs from the new mapping; "
+                               f"kept as {backup} before writing the new one")
+        tdh.save_to_file(mapped_ctml, destination, trial_id, 'yaml')
+        return target
 
     @staticmethod
     def _record_off_list(mapped_ctml: dict, trial_id: str) -> None:
@@ -442,7 +477,7 @@ class TrialMapManager:
 
             # Save CTML file
             destination = self._destination_for(mapped_ctml, ctml_files_path, nct_id)
-            tdh.save_to_file(mapped_ctml, destination, nct_id, 'yaml')
+            self._save(mapped_ctml, destination, nct_id)
 
             logger.info(f"Successfully mapped and saved {nct_id} to {destination}")
             return True

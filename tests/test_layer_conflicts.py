@@ -89,5 +89,50 @@ class TestMapperWarns(unittest.TestCase):
         self.assertTrue(any("layer_conflicts.tsv" in m for m in seen))
 
 
+class TestReviewCopyBackups(unittest.TestCase):
+    """A re-run that sends a trial to review again keeps the old review copy."""
+
+    def setUp(self):
+        self.review = tempfile.mkdtemp()
+        self.patch = mock.patch.object(config, "CTML_REVIEW_PATH", self.review)
+        self.patch.start()
+        self.addCleanup(self.patch.stop)
+
+    def _files(self):
+        return sorted(os.listdir(self.review))
+
+    def test_a_differing_review_copy_is_kept_as_prev(self):
+        open(os.path.join(self.review, "NCT1.yaml"), "w").write("curator: edits\n")
+        TrialMapManager._save({"nct_id": "NCT1"}, self.review, "NCT1")
+        self.assertEqual(self._files(), ["NCT1.yaml", "NCT1.yaml.prev"])
+        self.assertEqual(open(os.path.join(self.review, "NCT1.yaml.prev")).read(), "curator: edits\n")
+
+    def test_backups_are_never_overwritten(self):
+        open(os.path.join(self.review, "NCT1.yaml"), "w").write("first\n")
+        TrialMapManager._save({"v": 2}, self.review, "NCT1")
+        TrialMapManager._save({"v": 3}, self.review, "NCT1")
+        self.assertEqual(self._files(), ["NCT1.yaml", "NCT1.yaml.prev", "NCT1.yaml.prev.1"])
+        self.assertEqual(open(os.path.join(self.review, "NCT1.yaml.prev")).read(), "first\n")
+
+    def test_an_identical_copy_gets_no_backup(self):
+        TrialMapManager._save({"v": 1}, self.review, "NCT1")
+        TrialMapManager._save({"v": 1}, self.review, "NCT1")
+        self.assertEqual(self._files(), ["NCT1.yaml"])
+
+    def test_the_mapped_output_is_overwritten_without_backup(self):
+        mapped = tempfile.mkdtemp()
+        open(os.path.join(mapped, "NCT1.yaml"), "w").write("old\n")
+        TrialMapManager._save({"v": 2}, mapped, "NCT1")
+        self.assertEqual(sorted(os.listdir(mapped)), ["NCT1.yaml"])
+
+    @unittest.skipUnless(os.path.exists(SRC), "reviewed trial not present")
+    def test_the_index_ignores_backups_and_lists_them(self):
+        shutil.copy(SRC, os.path.join(self.review, f"{TRIAL}.yaml"))
+        shutil.copy(SRC, os.path.join(self.review, f"{TRIAL}.yaml.prev"))
+        manifest, trials, _ = _build([(tempfile.mkdtemp(), "mapped"), (self.review, "needs_review")])
+        self.assertEqual([t["trial_id"] for t in trials], [TRIAL])
+        self.assertEqual(manifest["review_backups"], [os.path.join(self.review, f"{TRIAL}.yaml.prev")])
+
+
 if __name__ == "__main__":
     unittest.main()

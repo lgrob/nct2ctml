@@ -144,6 +144,12 @@ be editing it. The index still publishes the review copy, sets
 the curated file to `ctml/reviewed/`. "Newer" is judged by file modification
 time, so a copy that resets times can hide a conflict.
 
+When a later run sends a trial to review again and its new mapping differs
+from the copy already in `ctml/needs-review`, the old copy is kept as
+`<trial>.yaml.prev` (then `.prev.1`, `.prev.2`, ...; a backup is never
+overwritten) before the new one is written. The index skips these files and
+lists them under `review_backups` in `manifest.json`.
+
 Outputs:
 
 | File | One row per | Key columns |
@@ -152,7 +158,7 @@ Outputs:
 | `trial_diagnosis.tsv` | trial, arm, Oncotree node | `oncotree_code`, `oncotree_name`, `source_term`, `from_basket`, `include` |
 | `trial_genomic.tsv` | trial, arm, gene criterion | `hugo_symbol`, `variant_category`, `cnv_call`, `protein_change`, `protein_change_stated`, `protein_change_kind`, `protein_refseq`, `protein_ensembl`, `protein_check`, `fusion_partner`, `fusion`, `fusion_partner_check`, `variant_classification`, `include` |
 | `layer_conflicts.tsv` | trial | trials whose published `ctml/needs-review` copy is older than a clean mapping in `cache/ctml`: both files and their modification times |
-| `manifest.json` | - | row counts, SHA-256 of each output and of `ref/oncotree_file.txt`, `layer_conflicts` count |
+| `manifest.json` | - | row counts, SHA-256 of each output and of `ref/oncotree_file.txt`, `layer_conflicts` count, `review_backups` list |
 
 Join samples on `oncotree_code` and `hugo_symbol`. Diagnosis subtrees and the
 `_SOLID_`/`_LIQUID_` wildcards are expanded at build time, so a consumer needs

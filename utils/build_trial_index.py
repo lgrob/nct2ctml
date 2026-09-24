@@ -267,6 +267,15 @@ CONFLICT_COLUMNS = ["trial_id", "published_file", "published_status", "published
                     "newer_file", "newer_status", "newer_mtime", "conflict"]
 
 
+def _review_backups(layers):
+    """Backups the mapper kept of overwritten review copies (<trial>.yaml.prev[.N])."""
+    found = []
+    for directory, status in layers:
+        if status == "needs_review" and os.path.isdir(directory):
+            found += sorted(os.path.join(directory, f) for f in os.listdir(directory) if ".yaml.prev" in f)
+    return found
+
+
 def _mtime(path):
     return datetime.fromtimestamp(os.path.getmtime(path), timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -501,6 +510,7 @@ def build(source=None, out_dir="index", strict=False):
         "review_status": dict(sorted(Counter(r["review_status"] for r in trial_rows).items())),
         "trials": len(trial_rows),
         "layer_conflicts": len(conflicts),
+        "review_backups": _review_backups(layers),
         "oncotree_file": config.ONCOTREE_TXT_FILE_PATH,
         "oncotree_sha256": _sha256(config.ONCOTREE_TXT_FILE_PATH),
         "liquid_roots": sorted(LIQUID_ROOTS),
@@ -541,6 +551,7 @@ def main():
     print(f"  manifest.json          oncotree {manifest['oncotree_sha256'][:12]}")
     print(f"  protein changes        {manifest['protein_checks'] or 'none'}")
     print(f"  layer conflicts        {manifest['layer_conflicts']} (see layer_conflicts.tsv)")
+    print(f"  review backups         {len(manifest['review_backups'])} (.yaml.prev files in the review queue)")
 
 
 if __name__ == "__main__":

@@ -486,6 +486,23 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Overwritten review copies are kept as backups
+
+The reverse of D6: a run that sent a trial to review again overwrote its
+existing `ctml/needs-review` copy, including any curator edits. The user's
+choice: back it up first. `TrialMapManager._save` now works as follows:
+- **Backup:** before writing into the review queue, a differing existing
+  copy is renamed to `<trial>.yaml.prev`, then `.prev.1`, `.prev.2`, ...,
+  so no backup is ever overwritten.
+- **No backup when unchanged:** an identical copy is left alone, so
+  re-runs do not pile up backups.
+- **Mapped output:** `cache/ctml` is overwritten as before, since nobody
+  edits it.
+
+The index skips the backups and lists them in the manifest under
+`review_backups`. All three save paths use it (bulk NCT, single NCT,
+CTIS). 418 tests pass offline; 2 live-model tests are opt-in.
+
 ## Stale review copies are kept and reported (roadmap 3.0, decision D6)
 
 A trial routed to `ctml/needs-review` by one run and mapped cleanly by a
