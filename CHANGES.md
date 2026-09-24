@@ -486,6 +486,45 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Measured: Sonnet 5 for stage 2 only is more precise but loses curated diagnoses (roadmap 2.6)
+
+Child-level diagnosis calls were sent to Sonnet 5, and everything else was
+answered from the matching Haiku run, so stage 1 is identical and the
+comparison is paired. The run covered the 50 curated NCT trials, 3
+replicates, 0 failed calls.
+
+|  | Haiku stage 2 | Sonnet stage 2 |
+|---|---|---|
+| population recall | 0.934 | 0.930 |
+| population precision | 0.784 | 0.821 |
+| name F1 | 0.724 | 0.816 |
+| diagnoses emitted | 343 | 290 |
+
+Paired against Haiku, with 95% intervals:
+- **Name F1:** +0.092 [0.037, 0.154].
+- **Population precision:** +0.036 [0.010, 0.068].
+- **Population recall:** -0.004 [-0.035, +0.019].
+
+In all three replicates Sonnet loses curated diagnoses that Haiku finds.
+- **Named in the text:** Glioblastoma, IDH-wildtype on NCT04655404
+  ("glioblastoma") and DMG H3 K27-altered on NCT03838042 ("including DIPG").
+- **Implied only by a broader term:** Ewing sarcoma on NCT03838042 ("small
+  round blue cell tumors including ... sarcoma"), and choriocarcinoma and
+  yolk sac tumour on NCT03067181 ("germ cell tumor").
+
+It gains pleomorphic xanthoastrocytoma on NCT04775485. The diagnosis path
+costs 2.1x (one replicate 2.8x), not the estimated 1.3-1.5x, because the
+stage-2 calls carry the long candidate lists.
+
+Tested and rejected, offline on all six runs: deterministically adding back
+every candidate the text names. It adds about 26 diagnoses per run, 0-1 of
+them correct, and precision falls to about 0.65. Text mentions are noisy:
+"midline shift", exclusion lists and prior history all match.
+
+Decision: not adopted, and Haiku stays. The rule is the same as for 2.4,
+recall first. The precision gain is real and is recorded in case curator
+time becomes the constraint.
+
 ## Measured: no stage-2 arm beats production (roadmap 2.1, 2.2, 2.4)
 
 Stage 2 over-generates diagnoses. Four ways of narrowing it were run
