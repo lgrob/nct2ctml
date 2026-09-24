@@ -223,7 +223,9 @@ class TrialMapManager:
                     logger.info("-----------------------")
                     
                     # Map to CTML format
+                    ai.OFF_LIST_BY_TRIAL.pop(nct_id, None)
                     mapped_ctml = ctg.map_nct_to_ctml(trial_data, gene_synonym_mapping)
+                    self._record_off_list(mapped_ctml, nct_id)
                     
                     # Add local trial info if available
                     if nct_id in local_trial_dict:
@@ -261,12 +263,14 @@ class TrialMapManager:
                         # Fall back to reading from file for this specific trial
                         self._add_local_trial_info(mapped_ctml, nct_id)
                     
-                    # Save CTML files
-                    tdh.save_to_file(mapped_ctml, ctml_files_path, nct_id, 'yaml')
-                    #tdh.save_to_file(mapped_ctml, ctml_files_path, nct_id, 'json')
-                    
+                    # Save CTML files. Until 2026-09-24 this path wrote to
+                    # ctml_files_path directly, so `map --all` never routed an
+                    # NCT trial to review; single-trial and CTIS mapping did.
+                    destination = self._destination_for(mapped_ctml, ctml_files_path, nct_id)
+                    tdh.save_to_file(mapped_ctml, destination, nct_id, 'yaml')
+
                     processed_count += 1
-                    logger.info(f"Successfully mapped and saved {nct_id}")
+                    logger.info(f"Successfully mapped and saved {nct_id} to {destination}")
                     
                 except Exception as ex:
                     logger.error(f"nct_id: {nct_id} | Unexpected {ex=}, {type(ex)=}")
@@ -331,7 +335,9 @@ class TrialMapManager:
 
         gene_synonym_mapping = self.get_gene_synonym_mapping()
         try:
+            ai.OFF_LIST_BY_TRIAL.pop(ct_number, None)
             mapped_ctml = ctis.map_ctis_to_ctml(trial_data, gene_synonym_mapping)
+            self._record_off_list(mapped_ctml, ct_number)
             # CTIS bypassed the review queue entirely until 2026-09-21: it saved
             # straight to the output directory, so a CTIS trial whose diagnosis
             # could not be determined reached MatchMiner and matched every
@@ -344,6 +350,13 @@ class TrialMapManager:
         except Exception as ex:
             logger.exception(f"ct_number: {ct_number} | Unexpected error while mapping: {ex}")
             return False
+
+    @staticmethod
+    def _record_off_list(mapped_ctml: dict, trial_id: str) -> None:
+        """Write diagnoses answered outside their candidate list into the CTML."""
+        terms = ai.OFF_LIST_BY_TRIAL.pop(trial_id, None)
+        if terms and isinstance(mapped_ctml, dict):
+            mapped_ctml["diagnosis_off_list"] = "; ".join(sorted(terms))
 
     @staticmethod
     def _destination_for(mapped_ctml: dict, ctml_files_path: str, trial_id: str) -> str:
@@ -365,6 +378,10 @@ class TrialMapManager:
           (gene_unsupported, see match_criteria_mapper._flag_unsupported_genes).
           It may be the model's own addition, and a wrong gene matches the
           wrong patients.
+        - An Oncotree diagnosis answered outside the candidate list its call
+          offered (diagnosis_off_list, see ai_helper.keep_candidates). It
+          may be right when stage 1 missed the branch, or a wrong-branch
+          answer; a curator decides.
 
         Discarding either is worse than queueing it: a trial that is not there
         is a trial nobody can be matched to and nobody can see is missing.
@@ -377,6 +394,8 @@ class TrialMapManager:
             reasons.append("a protein change did not match its reference protein")
         if 'gene_unsupported' in keys:
             reasons.append("a gene the model returned is not named in the criteria text")
+        if 'diagnosis_off_list' in keys:
+            reasons.append("a diagnosis was answered outside the candidate list the model was offered")
         if not reasons:
             return ctml_files_path
         import config  # imported here, as elsewhere in this module
@@ -406,7 +425,9 @@ class TrialMapManager:
         gene_synonym_mapping = self.get_gene_synonym_mapping()
         try:
             # Map to CTML format
+            ai.OFF_LIST_BY_TRIAL.pop(nct_id, None)
             mapped_ctml = ctg.map_nct_to_ctml(trial_data, gene_synonym_mapping)
+            self._record_off_list(mapped_ctml, nct_id)
             
             # Add local trial info if available
             self._add_local_trial_info(mapped_ctml, nct_id)

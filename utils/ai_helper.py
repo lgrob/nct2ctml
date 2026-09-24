@@ -78,12 +78,13 @@ def get_level1_diagnosis_from_original_conditions(nct_id:str, original_condition
         
     ai_response = send_ai_request(nct_id, prompt, schema)
     oncotree_diagnoses_dict = parse_ai_response(ai_response, nct_id)
-    return oncotree_diagnoses_dict
+    return keep_candidates(oncotree_diagnoses_dict, level1_oncotree_list, nct_id, extra=("", "Other"),
+                           keep_valid=False)
 
 def get_oncotree_diagnoses_from_trial_info(nct_id: str, trial_info, oncotree_values: set) -> dict:
     schema, prompt = get_ai_prompt_oncotree_diagnoses_from_trial_info(trial_info, list(oncotree_values), nct_id)
     ai_response = send_ai_request(nct_id, prompt, schema)
-    return parse_ai_response(ai_response, nct_id)
+    return keep_candidates(parse_ai_response(ai_response, nct_id), oncotree_values, nct_id)
 
 def get_child_level_diagnoses_from_condition(nct_id:str, child_nodes_oncotree:set, nct_condition: str) -> dict:
     child_nodes_oncotree_list = list(child_nodes_oncotree)
@@ -91,8 +92,8 @@ def get_child_level_diagnoses_from_condition(nct_id:str, child_nodes_oncotree:se
     schema, prompt = get_ai_prompt_child_values(nct_condition, child_nodes_oncotree_list, nct_id)
 
     ai_response = send_ai_request(nct_id, prompt, schema)
-    oncotree_diagnoses_dict = parse_ai_response(ai_response, nct_id)   
-    return oncotree_diagnoses_dict
+    oncotree_diagnoses_dict = parse_ai_response(ai_response, nct_id)
+    return keep_candidates(oncotree_diagnoses_dict, child_nodes_oncotree_list, nct_id)
 
 def get_her2_er_pr_status(nct_id:str, eligibilityCriteria: str, keywords: list)-> dict:
     schema, prompt = get_her2_er_pr_status_prompt(eligibilityCriteria, keywords)
@@ -597,13 +598,94 @@ def max_enum_values():
 def reset_enum_cap_events():
     for k in ENUM_CAP_EVENTS:
         ENUM_CAP_EVENTS[k] = 0
+    for k in OFF_LIST_EVENTS:
+        OFF_LIST_EVENTS[k] = 0
+
+
+# Answers checked against, and dropped from, their call's candidate list;
+# see keep_candidates.
+OFF_LIST_EVENTS = {"checked": 0, "recased": 0, "kept_for_review": 0, "dropped": 0}
+# trial id -> Oncotree names answered off-list; read and cleared by
+# TrialMapManager, which records them as diagnosis_off_list and routes the
+# trial to review.
+OFF_LIST_BY_TRIAL = {}
+
+
+def keep_candidates(result, allowed, trial_id="", extra=(), keep_valid=True):
+    """
+    Keep only diagnosis answers that were on the call's candidate list.
+
+    The enum in the schema is what makes an off-list answer impossible on a
+    grammar-compiling backend. On Anthropic the forced tool call is not
+    `strict`, so the enum only guides the model, and an off-list answer
+    reaches the pipeline. filter_diagnoses later drops a term that is not an
+    Oncotree name ("Lymphoma", once per replicate on NCT02332668). But an
+    Oncotree name from outside the branch the call offered passes it, and
+    that is the wrong-branch error the candidate list exists to prevent. So
+    the check is repeated here, in code, against exactly the list that was
+    sent, whatever the backend.
+
+    What happens to an off-list answer:
+    - **Differs only in letter case:** rewritten to the candidate.
+    - **Not an Oncotree name:** dropped.
+    - **Valid Oncotree name from outside the offered list:** kept, recorded in
+      OFF_LIST_BY_TRIAL, and the trial goes to review. Replaying the saved
+      Haiku and Sonnet stage-2 runs (2,585 answers) found 4 off-list
+      answers. Three were "Lymphoma", which is not an Oncotree name. The one
+      Oncotree name was "Neuroblastoma" on NCT03838042, which the text
+      lists and the answer key holds; stage 1 had failed to offer its
+      branch. Dropping such answers would remove correct diagnoses; review
+      lets a curator decide.
+    - **Level-1 calls (keep_valid=False):** an off-list answer is dropped even
+      if it is a valid name, because the caller uses the answer as a branch
+      key.
+
+    Items are strings, or {"oncotree_value": ...} objects for the level-1
+    schema. `extra` holds the values that schema also permits ("", "Other").
+    """
+    if not isinstance(result, dict) or not isinstance(result.get("oncotree_diagnoses"), list):
+        return result
+    permitted = {a for a in list(allowed) + list(extra) if a is not None}
+    by_case = {}
+    for a in permitted:
+        by_case.setdefault(str(a).casefold(), []).append(a)
+    kept = []
+    for item in result["oncotree_diagnoses"]:
+        value = item.get("oncotree_value") if isinstance(item, dict) else item
+        OFF_LIST_EVENTS["checked"] += 1
+        if value in permitted:
+            kept.append(item)
+            continue
+        same = by_case.get(str(value).casefold(), []) if isinstance(value, str) else []
+        if len(same) == 1:
+            OFF_LIST_EVENTS["recased"] += 1
+            logger.info(f"{trial_id} | diagnosis answer {value!r} recased to candidate {same[0]!r}")
+            kept.append(dict(item, oncotree_value=same[0]) if isinstance(item, dict) else same[0])
+            continue
+        from utils.reference_validation import canonical_diagnosis
+        name = canonical_diagnosis(value) if keep_valid and isinstance(value, str) else None
+        if name:
+            OFF_LIST_EVENTS["kept_for_review"] += 1
+            OFF_LIST_BY_TRIAL.setdefault(trial_id, set()).add(name)
+            logger.warning(f"{trial_id} | diagnosis answer {value!r} was not among the "
+                           f"{len(permitted)} candidates offered; kept, trial goes to review")
+            kept.append(item)
+            continue
+        OFF_LIST_EVENTS["dropped"] += 1
+        logger.warning(f"{trial_id} | diagnosis answer {value!r} was not among the "
+                       f"{len(permitted)} candidates offered; dropped")
+    return dict(result, oncotree_diagnoses=kept)
 
 
 def enum_cap_summary() -> str:
     e = ENUM_CAP_EVENTS
     return (f"Schema enums: {e['enum']} sent, {e['near_cap']} near the cap, "
             f"{e['dropped']} dropped over the cap ({max_enum_values()} on "
-            f"{getattr(config, 'LLM_PLATFORM', '?')}); largest list {e['largest']}")
+            f"{getattr(config, 'LLM_PLATFORM', '?')}); largest list {e['largest']}. "
+            f"Diagnosis answers: {OFF_LIST_EVENTS['checked']} checked against their "
+            f"candidate list, {OFF_LIST_EVENTS['recased']} recased, "
+            f"{OFF_LIST_EVENTS['kept_for_review']} off-list kept for review, "
+            f"{OFF_LIST_EVENTS['dropped']} dropped")
 
 
 def _one_of(allowed, extra=(), trial_id=""):

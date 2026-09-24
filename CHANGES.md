@@ -486,6 +486,44 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Diagnosis answers checked against their candidate list; bulk NCT mapping routes to review
+
+Roadmap 1.8. On Anthropic the forced tool call is not `strict`, so the
+schema enum only guides the model. `filter_diagnoses` caught answers that
+are not Oncotree names, but an Oncotree name from outside the branch a call
+offered passed. `ai_helper.keep_candidates` now checks every diagnosis
+answer, in code, against exactly the list its call sent:
+- **Case-only difference:** recased to the candidate.
+- **Not an Oncotree name:** dropped.
+- **Valid Oncotree name from outside the offered list:** kept, written to
+  the CTML as `diagnosis_off_list`, and the trial goes to
+  `ctml/needs-review`.
+- **Level-1 answers:** off-list ones are always dropped, because the caller
+  uses them as branch keys. Before this change a valid but off-list level-1
+  name would have raised a KeyError.
+
+Run logs report the counts.
+
+Replaying the six saved stage-2 runs (3 Haiku, 3 Sonnet; 2,585 answers)
+found 4 off-list answers, all on Haiku:
+- 3x "Lymphoma" (NCT02332668), dropped.
+- 1x "Neuroblastoma" (NCT03838042, 1 of 3 replicates). It is named in the
+  text and in the key, but stage 1 had not offered its branch.
+
+A hard drop, as first planned, would have removed that correct answer, so a
+valid off-list name goes to review instead. Benchmark scores are identical
+on every trial of all six runs. On Haiku the rule sends 1 trial to review in
+150 trial-runs.
+
+Found on the way, and fixed: `map_all_trials`, the NCT path behind
+`map --all`, saved every trial to `cache/ctml` without calling
+`_destination_for`. A bulk run therefore never routed an NCT trial to
+review for no diagnosis, an unverified protein change or an unsupported
+gene. Single-trial and CTIS mapping did route. A test now pins the bulk
+path. Still open (roadmap 3.0): nothing removes a trial's older copy in
+`ctml/needs-review` when a later run maps it cleanly, and the index layers
+let needs-review win. 404 tests pass (2 skipped).
+
 ## Measured: Sonnet 5 for stage 2 only is more precise but loses curated diagnoses (roadmap 2.6)
 
 Child-level diagnosis calls were sent to Sonnet 5, and everything else was

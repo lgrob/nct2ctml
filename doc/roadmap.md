@@ -31,12 +31,12 @@ Standing rules for every step:
 | Phase | State |
 |---|---|
 | 0 - Now | 0.3 done. **0.1 (push) is overdue:** 19 commits exist only on this machine. 0.2 and 0.4 open. |
-| 1 - Deterministic fixes | 1.1, 1.2, 1.3, 1.4, 1.5, 1.7 done. Open: 1.4b and 1.8 (both change output before the full run), and 1.6 (curator time). |
+| 1 - Deterministic fixes | 1.1-1.5, 1.7, 1.8 done. Open: 1.4b (in progress) and 1.6 (curator time). |
 | 2 - Stage-2 diagnosis | Closed as measured: no narrowing arm (2.4) and no model swap (2.3, 2.6) beats production without losing curated diagnoses. Production stage 2 stays. Open: 2.7 (quote grounding) and optional 2.5. |
-| 3 - Full run | Not started. Unblocked once 0.4, 1.4b and 1.8 are done. |
+| 3 - Full run | Not started. Needs 0.4, 1.4b and the stale-review-copy decision (3.0). |
 | 4-7 | Not started. 4.1-4.2 can start on synthetic fixtures at any time. |
 
-The offline suite has 396 tests (2 live-model tests are opt-in). Conditions-only
+The offline suite has 404 tests (2 live-model tests are opt-in). Conditions-only
 benchmark: NCT diagnosis F1 0.74, population P 0.92 / R 0.78; CTIS diagnosis F1
 0.17. Current production diagnosis path on Haiku, 3 replicates: population
 recall 0.934, population precision 0.784, name F1 0.724.
@@ -63,11 +63,11 @@ before it.
 | 1.2 | **Done.** A model gene or partner the text does not support is kept as `gene_unsupported` and routed to `ctml/needs-review`; the index reports it in `gene_check`. | On saved Haiku answers: 1 flag in 1 trial per replicate (a correct reading of "EWSR1-Fli"). The flag has not yet caught a real error; it costs little review. | 1.1 |
 | 1.3 | **Done.** Retired-symbol rewrite widened from 15 to 4,028 aliases with shape rules and `ref/gene_rewrite_exclusions.tsv`. A bare 4-character floor was unsafe (JMML, CHOP, PD-1, 34 English words). | 0 of 68 key symbols change; `ALL`, `AT`, `ARF`, `H3`, `CAR`, `PD-L1` refused (tests). | - |
 | 1.4 | **Done.** `utils/translocations.py` + `ref/translocation_fusions.tsv` (69 curated rows) turn t()/inv() into gene pairs deterministically; bands must match, ambiguous bare forms give only the shared gene or nothing. Used as support evidence, not to create criteria. | 132 cached mentions: 119 pairs, 7 single genes, 6 unresolved. Removed 4 false `gene_unsupported` flags on NCT06083883. | - |
-| 1.4b | **Translocations reach the model.** Annotate each resolved rearrangement in the text sent to the genomic prompt (`t(15;17) [PML::RARA]`) and rewrite prompt rule 9 to use the annotation; the model still decides whether it is a criterion (it is not, in 9 of the 11 reviewed trials that mention one). | Measured on the 11 reviewed trials, 2 replicates, against the current prompt: recall gain on NCT07012447 (CBFB, PML) without new false criteria in the risk-group trials. | 1.4 |
+| 1.4b | **Translocations reach the model.** Annotate each resolved rearrangement in the text sent to the genomic prompt (`t(15;17) [PML::RARA]`) and rewrite prompt rule 9 to use the annotation; the model still decides whether it is a criterion (the parser finds rearrangements in 7 reviewed trials; in 5 the key has none of the translocation genes). | Measured on the 7 trials and all 55, 2 replicates, against the current prompt: recall gain on NCT07012447 (CBFB, PML) or NCT03643276 without new false criteria in the other 5. | 1.4 |
 | 1.5 | **Done.** Benchmark covers CTIS (`--source nct\|ctis\|all`); per-registry means. Also fixed a false positive in the unsatisfiable-tree check. | 55/55 at identity; NCT means unchanged; CTIS conditions-only F1 0.17. | - |
 | 1.6 | **Answer keys carry fusion partners.** A curator adds partners to the keys of trials whose text names pairs (about 9 reviewed trials), and the scorer compares pairs. | Partner precision/recall is a reported column. | curator time **[D4]** |
 | 1.7 | **Done.** Enum cap logged and counted; set per backend (400 for grammar-compiling backends, none for Anthropic). | Benchmark max 370, cap never fired; 1 corpus trial reaches 438 on the seed floor alone. | - |
-| 1.8 | **Candidate lists enforced in code.** On Anthropic the enum only guides the model (the tool is not `strict`): an Oncotree name from outside the call's candidate list would pass. Drop and log any stage-1/stage-2 answer not in that call's list, or enable strict tool use if its grammar limits allow. | Off-list answers counted on the cached runs; 0 reach the CTML; benchmark unchanged or better. | - |
+| 1.8 | **Done.** **Candidate lists enforced in code.** Result: 4 off-list answers in 2,585 on the six saved runs; the one valid name (Neuroblastoma, NCT03838042) was correct, so valid off-list names go to review instead of being dropped; scores unchanged. Also fixed: bulk `map --all` never routed NCT trials to review. On Anthropic the enum only guides the model (the tool is not `strict`): an Oncotree name from outside the call's candidate list would pass. Drop and log any stage-1/stage-2 answer not in that call's list, or enable strict tool use if its grammar limits allow. | Off-list answers counted on the cached runs; 0 reach the CTML; benchmark unchanged or better. | - |
 
 ## Phase 2 - Stage-2 diagnosis over-generation
 
@@ -104,7 +104,8 @@ the other arms from the part-1 cache).
 
 | # | Step | Done when | Depends on |
 |---|---|---|---|
-| 3.1 | Dry run on the 55 benchmark trials with the final code and backend. | First real `bench/report.json` (replacing the identity calibration); cost and time per trial recorded. | 0.4, 1.4b, 1.8 |
+| 3.0 | **Stale review copies.** A trial routed to `ctml/needs-review` in one run and mapped cleanly in a later one keeps its old review copy, and the index publishes it (needs-review overrides mapped). Decide: remove the stale copy on a clean remap (risk: a curator may be editing it), or have the index prefer the newer file, or flag the conflict. | Rule chosen **[D6]**; test pins it; the index reports conflicts. | [D6] |
+| 3.1 | Dry run on the 55 benchmark trials with the final code and backend. | First real `bench/report.json` (replacing the identity calibration); cost and time per trial recorded. | 0.4, 1.4b, 3.0 |
 | 3.1a | Consider the Message Batches API for 3.2: asynchronous and cheaper per token than live calls, and the run does not need live answers. Needs a batch submit/collect path in `llm_platforms`. | Decision recorded with the cost difference. | 3.1 |
 | 3.2 | Full run: `map --all --source all` over the in-scope corpus (about 1,170 trials). | Every in-scope trial is in `cache/ctml` or `ctml/needs-review`; failures listed; enum-cap and off-list counts from the run log reported. | 3.1 |
 | 3.3 | Build the index from the three layers and tag it as the first release (`index-2026.MM.DD`) with its manifest. | Manifest checksums recorded; review-status counts reported. | 3.2 |
@@ -170,11 +171,12 @@ something a diagnostic lab can defend.
 | D3 | Where unreviewed-trial hits may appear | Curator view only, or tumour-board report flagged as unreviewed | 4.4 |
 | D4 | Curator time | Who reviews, and a target review rate | 1.6, 5.2 |
 | D5 | Regulatory framing | Agreed with QA/regulatory for the intended setting | 6.1 |
+| D6 | What happens to a stale `ctml/needs-review` copy after a clean remap | Delete it; keep it but let the newer file win in the index; keep it and report the conflict | 3.0 |
 
 ## Suggested order
 
 1. 0.1 (push) now, then 0.2.
-2. 1.8 and 1.4b, which change the full run's output, in parallel with 0.4
+2. 1.4b (changes the full run's output) and 3.0 [D6], in parallel with 0.4
    (needs the API key).
 3. 3.1 dry run, then 3.2-3.4.
 4. 2.7 alongside 3.1, entering the full run only if it is measured in time.
