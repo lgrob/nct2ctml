@@ -486,6 +486,40 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Measured, not adopted: translocations annotated for the model (roadmap 1.4b)
+
+The step annotated each resolved rearrangement in the genomic prompt input
+(`t(15;17) [PML::RARA]`) and let inclusion rule 9 use the bracket. It was
+measured on Haiku 4.5 on the 55 reviewed trials. The session model-token
+limit cut the design down:
+- old and v1 prompts: 55 trials x 1 replicate, plus a second replicate on
+  the 7 trials with a rearrangement.
+- v2 prompt: 39 trials x 1 replicate.
+Everything outside the 7 is therefore provisional.
+
+- **No recall gain, because the premise was wrong.** The target genes
+  (CBFB and PML on NCT07012447, BCR and ABL1 on NCT03643276) are
+  exclusion-side. The exclusion prompt never had rule 9's ban, and the old
+  prompts already returned those genes in 2 of 2 replicates. Gene recall on
+  the 7 is 0.286 before and after.
+- **No false inclusion criterion** was created from a bracket on any of the 7.
+- **What it does change is pairing:** PML::RARA, CBFB::MYH11 and
+  RUNX1::RUNX1T1 replace loose single-gene exclusions, and BCR becomes
+  BCR::ABL1. This is narrower and closer to the text, but the keys hold no
+  partners (roadmap 1.6), so it cannot be scored yet. It also creates a
+  duplicate in both orientations that post-processing does not merge.
+
+The patch is kept outside the repo (`step_1_4b.patch`, with the
+measurement caches) for when 1.6 lands.
+
+**Found:** prompts depend on Python's hash seed. The Possible GeneList
+comes from a set, and the diagnosis prompts print their candidate lists
+(level 1, stage 1, stage 2) from sets as well. Production does not pin
+PYTHONHASHSEED, so two runs of the same code on the same trial send
+differently ordered prompts. With the gene order alone changed, 16 of 45
+genomic answers changed. The measurement harnesses pinned the seed to 0, so
+every benchmark number so far is for that one ordering. This is roadmap 1.9.
+
 ## Diagnosis answers checked against their candidate list; bulk NCT mapping routes to review
 
 Roadmap 1.8. On Anthropic the forced tool call is not `strict`, so the
