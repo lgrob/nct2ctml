@@ -216,7 +216,7 @@ def get_arm_criteria_blocks_for_trial(
     downstream mapping code.
     """
     nct_id = trial_data["protocolSection"]["identificationModule"]["nctId"]
-    arm_groups = trial_data["protocolSection"]["armsInterventionsModule"]["armGroups"]
+    arm_groups = tdh.safe_get(trial_data, ["protocolSection", "armsInterventionsModule", "armGroups"]) or []
     inclusion_text, exclusion_text = split_inclusion_exclusion_criteria(trial_data)
 
     arm_mapping = ai.get_arm_criteria_mapping(
@@ -359,7 +359,9 @@ def map_ctml_general_fields(trial_schema, trial_data) -> dict:
         # Populate arms and drug_list
         drug_list = set()
         arm_internal_id = 0
-        for trial_data_arm in trial_data['protocolSection']['armsInterventionsModule']['armGroups']:
+        # A registry record may have interventions but no arm groups
+        # (NCT06383338); the KeyError lost the trial in the full run.
+        for trial_data_arm in tdh.safe_get(trial_data, ['protocolSection', 'armsInterventionsModule', 'armGroups']) or []:
             arm_description = tdh.safe_get(trial_data_arm, ['description'])
             schema_arm = {
                     'arm_code': trial_data_arm['label'],

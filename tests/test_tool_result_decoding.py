@@ -68,5 +68,24 @@ class TestEmptyDiagnosisRoutesToReview(unittest.TestCase):
         self.assertTrue(M._has_diagnosis(full))
 
 
+
+class TestRecordWithoutArmGroups(unittest.TestCase):
+
+    def test_general_fields_map_without_arm_groups(self):
+        # NCT06383338 (full run 2026-09-25) has interventions but no armGroups.
+        import copy, json
+        import src.clinical_trials_gov as ctg
+        import src.ctml_schema as cs
+        root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        path = os.path.join(root, "cache", "nct", "NCT04732065.json")
+        if not os.path.exists(path):
+            self.skipTest("cached record not present")
+        record = json.load(open(path))
+        record = copy.deepcopy(record)
+        record["protocolSection"]["armsInterventionsModule"].pop("armGroups", None)
+        schema = ctg.map_ctml_general_fields(cs.get_ctml_schema(), record)
+        self.assertEqual(schema["treatment_list"]["step"][0]["arm"], [])
+
+
 if __name__ == "__main__":
     unittest.main()
