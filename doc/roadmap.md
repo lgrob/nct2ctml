@@ -48,7 +48,7 @@ population recall 0.942, precision 0.798, name F1 0.741.
 | # | Step | Done when |
 |---|---|---|
 | 0.1 | **Push `kispi-paediatric` to `origin`.** Do this first: the branch carries all of the Phase 1 and Phase 2 work. | `git status` shows the branch level with `origin`. |
-| 0.2 | Tag the current state as the pre-run baseline (`v0.1-prerun`). | Tag exists. Later benchmark deltas are quoted against it. |
+| 0.2 | **Done 2026-09-25.** Annotated tag `v0.1-prerun` on `cd51dd0`, with the 1.9 and 3.1 baseline numbers in the tag message. | Tag exists. Later benchmark deltas are quoted against it. |
 | 0.3 | **Done.** Mapping backend: Anthropic API, `claude-haiku-4-5-20251001`, forced-tool JSON, temperature 0, no thinking. Confirmed by 2.3 and 2.6. | Written in `config.py`; request shape tested offline. |
 | 0.4 | Live smoke test: map 3 benchmark trials with a real `ANTHROPIC_API_KEY` and compare with the benchmark scorer. This is the first live call through `utils/llm_platforms.py`; all measurements so far went through the replay harness. | 3 trials mapped, no API errors, cost per trial logged. |
 
@@ -110,7 +110,7 @@ the other arms from the part-1 cache).
 | 3.1a | Consider the Message Batches API for 3.2: asynchronous and cheaper per token than live calls, and the run does not need live answers. Needs a batch submit/collect path in `llm_platforms`. | Decision recorded with the cost difference. | 3.1 |
 | 3.2 | Full run: `map --all --source all` over the in-scope corpus (about 1,170 trials). | Every in-scope trial is in `cache/ctml` or `ctml/needs-review`; failures listed; enum-cap and off-list counts from the run log reported. | 3.1 |
 | 3.3 | Build the index from the three layers and tag it as the first release (`index-2026.MM.DD`) with its manifest. | Manifest checksums recorded; review-status counts reported. | 3.2 |
-| 3.4 | Audit the run: count needs-review reasons (no diagnosis, unverified protein change, unsupported gene), fusion partners, out-of-scope skips, and spot-check 20 unreviewed trials at random against their text. | Audit note in `doc/`, with an estimated error rate for unreviewed rows. | 3.3 |
+| 3.4 | Audit the run: count needs-review reasons (no diagnosis, unverified protein change, unsupported gene), fusion partners, out-of-scope skips, and spot-check **60** unreviewed trials at random against their text (decided 2026-09-25: 0 errors in 20 still allows up to ~14% at 95%, 0 in 60 about 5%). A first pass flags disagreements with the text; a curator decides each one. | Audit note in `doc/`, with an estimated error rate and its 95% interval for unreviewed rows. | 3.3 |
 
 If 2.7 lands before 3.2, it goes into the full run; it does not block it.
 
