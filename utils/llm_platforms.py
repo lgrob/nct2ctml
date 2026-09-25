@@ -314,6 +314,59 @@ def create_llm_platform(platform_name: str, model: str, hostname: str) -> LLMPla
 
 
 
+def decode_tool_result(result, stop_reason=None, trial_id=""):
+    """
+    The tool's `result` as JSON data.
+
+    Normally the API hands back an object. When the model's tool input is
+    not valid JSON the API passes it through as a string instead. In the
+    first full run (2026-09-25) that happened on 4 of 7,818 answers, all
+    child-level diagnosis calls, and every time the only fault was a missing
+    closing brace: the list itself was complete and closed. The string then
+    reached the mapper, which called .keys() on it, and the trial was lost
+    with no output at all.
+
+    A string is decoded. If that fails and the only fault is missing closing
+    brackets, they are appended - but only when the call did not stop on
+    max_tokens, because then the content itself may be cut short. Anything
+    else is treated as no answer (None), and the trial goes through the
+    normal routing, to review if nothing else supplies a diagnosis.
+    """
+    if not isinstance(result, str):
+        return result
+    try:
+        return json.loads(result, strict=False)
+    except json.JSONDecodeError:
+        pass
+    if stop_reason != "max_tokens":
+        closers, in_str, esc = [], False, False
+        for ch in result:
+            if in_str:
+                esc = (ch == "\\") and not esc
+                if ch == '"' and not esc:
+                    in_str = False
+                continue
+            if ch == '"':
+                in_str = True
+            elif ch in "{[":
+                closers.append("}" if ch == "{" else "]")
+            elif ch in "}]":
+                if not closers or closers.pop() != ch:
+                    closers = None
+                    break
+        if closers and not in_str:
+            try:
+                repaired = json.loads(result + "".join(reversed(closers)), strict=False)
+                logger.warning(f"{trial_id or 'unknown trial'}: tool answer was missing "
+                               f"{''.join(reversed(closers))!r}; closed and decoded")
+                return repaired
+            except json.JSONDecodeError:
+                pass
+    logger.error(f"{trial_id or 'unknown trial'}: tool answer is not valid JSON; treated as no answer "
+                 f"| {result[:300]}")
+    return None
+
+
 class AnthropicPlatform(LLMPlatform):
     """
     Anthropic (Claude) platform implementation.
@@ -434,7 +487,7 @@ class AnthropicPlatform(LLMPlatform):
                        if block.type == "tool_use" and block.name == self.TOOL_NAME]
         if tool_inputs:
             # parse_response expects text; hand it the tool's JSON.
-            result = (tool_inputs[0] or {}).get("result")
+            result = decode_tool_result((tool_inputs[0] or {}).get("result"), response.stop_reason)
             text = "" if result is None else json.dumps(result)
         else:
             text = "".join(block.text for block in response.content if block.type == "text")

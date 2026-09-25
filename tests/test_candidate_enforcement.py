@@ -61,9 +61,11 @@ class TestKeepCandidates(unittest.TestCase):
         self.assertEqual([i["oncotree_value"] for i in r["oncotree_diagnoses"]], ["Other"])
         self.assertEqual(ai.OFF_LIST_BY_TRIAL, {})
 
-    def test_malformed_results_pass_through(self):
-        self.assertEqual(ai.keep_candidates({}, {"A"}, "T"), {})
-        self.assertIsNone(ai.keep_candidates(None, {"A"}, "T"))
+    def test_malformed_results_become_no_diagnosis(self):
+        # Changed 2026-09-25: passing malformed results through lost 4 trials
+        # of the full run to exceptions in the callers.
+        for bad in ({}, None, "text", {"oncotree_diagnoses": "x"}):
+            self.assertEqual(ai.keep_candidates(bad, {"A"}, "T")["oncotree_diagnoses"], [], bad)
 
 
 class TestOffListRouting(unittest.TestCase):

@@ -667,6 +667,11 @@ OFF_LIST_BY_TRIAL = {}
 
 def keep_candidates(result, allowed, trial_id="", extra=(), keep_valid=True):
     """
+    A result that is not an object with an oncotree_diagnoses list (a
+    malformed answer, or {} from text that did not parse) becomes
+    {"oncotree_diagnoses": []}: no diagnosis from this call, rather than an
+    exception downstream that loses the trial (full run 2026-09-25).
+
     Keep only diagnosis answers that were on the call's candidate list.
 
     The enum in the schema is what makes an off-list answer impossible on a
@@ -698,7 +703,9 @@ def keep_candidates(result, allowed, trial_id="", extra=(), keep_valid=True):
     schema. `extra` holds the values that schema also permits ("", "Other").
     """
     if not isinstance(result, dict) or not isinstance(result.get("oncotree_diagnoses"), list):
-        return result
+        # Callers index ["oncotree_diagnoses"] directly (the level-1 caller
+        # does), so a malformed or empty answer must still have the key.
+        return {**(result if isinstance(result, dict) else {}), "oncotree_diagnoses": []}
     permitted = {a for a in list(allowed) + list(extra) if a is not None}
     by_case = {}
     for a in permitted:
