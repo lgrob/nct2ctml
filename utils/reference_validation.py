@@ -129,6 +129,30 @@ def _synonym_table():
 
 
 @lru_cache(maxsize=1)
+def curated_aliases():
+    """
+    {official symbol: [aliases]} from the hand-curated addendum only, for
+    single-gene rows. The NCBI table is left out on purpose: it carries short
+    and ambiguous aliases (CAR, AT, ARF) that would make a text match mean
+    nothing. Used where code asks "does the text write this gene?" (roadmap
+    6.9: "NF-1" for NF1).
+    """
+    out = {}
+    try:
+        handle = open(SYNONYM_ADDENDUM_TSV, newline="")
+    except FileNotFoundError:
+        return {}
+    with handle:
+        for row in csv.reader(handle, delimiter="\t"):
+            if len(row) < 2 or row[0].strip().startswith(("!", "#")):
+                continue
+            alias, official = row[0].strip(), row[1].strip()
+            if "," not in official and alias != official:
+                out.setdefault(official, []).append(alias)
+    return out
+
+
+@lru_cache(maxsize=1)
 def gene_synonym_mapping():
     """
     alias -> [official symbols], for finding genes named in criteria text.

@@ -402,11 +402,16 @@ def _text_mentions_gene(text: str, gene: str) -> bool:
     Boundaries are non-alphanumeric rather than \b so that a symbol inside a
     fusion name still counts - ABL1 in "BCR-ABL1" is a mention - while short
     symbols do not match inside ordinary words (AR in "are", MET in "metastatic").
+    The curated addendum aliases count as the symbol (roadmap 6.9): without
+    them "NF-1" in an exclusion was not a mention of NF1, so an invented NF1
+    inclusion on NCT04775485 beat the stated exclusion.
     """
     if not text or not gene:
         return False
-    return re.search(rf"(?<![A-Za-z0-9]){re.escape(gene)}(?![A-Za-z0-9])",
-                     text, re.IGNORECASE) is not None
+    for name in [gene] + rv.curated_aliases().get(gene, []):
+        if re.search(rf"(?<![A-Za-z0-9]){re.escape(name)}(?![A-Za-z0-9])", text, re.IGNORECASE):
+            return True
+    return False
 
 
 def resolve_contradictory_genes(inclusions: list, exclusions: list,

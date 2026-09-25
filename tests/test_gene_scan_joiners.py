@@ -91,12 +91,20 @@ class TestGeneScanJoiners(unittest.TestCase):
             "PTPN11, MAP2K1, MP2K1 hotspot mutations, cCBL; NF1 del, as detected"))
 
     def test_what_the_scan_still_cannot_see(self):
-        # NCT07012447 curates CBFB and PML from karyotypes; NCT04775485 curates
-        # NF1 from "NF-1" (the syndrome) and RAF1 from "RAF fusion". Neither is
-        # a gene symbol in the text, and resolving them would need rules the
-        # scan deliberately does not have.
+        # NCT07012447 curates CBFB and PML from karyotypes; the scan does not
+        # read them (utils/translocations.py supplies them as evidence only).
         self.assertEqual(self.scan("such as t(8;21), t(15;17), inv(16)/t(16;16) leukemia"), [])
-        self.assertEqual(self.scan("neurofibromatosis type 1 (NF-1) via genetic testing"), [])
+
+    def test_nf1_and_nf2_written_with_a_hyphen(self):
+        # Roadmap 6.9. "NF-1"/"NF-2" were in neither synonym table, so the
+        # scan missed them and the unsupported-gene check flagged a correct
+        # NF1 criterion (3.1 dry run: NCT04775485, NCT07110246; the key for
+        # NCT04775485 curates NF1 from "NF-1"). Added to the addendum on
+        # evidence: all 15 mentions in the cached corpus (11 trials) refer to
+        # neurofibromatosis, and NCBI Gene resolves "NF-1" only to NF1 and
+        # "NF-2" only to NF2, not to the nuclear factor I genes (NFIA/B/C/X).
+        self.assertEqual(self.scan("neurofibromatosis type 1 (NF-1) via genetic testing"), ["NF1"])
+        self.assertEqual(self.scan("clinical criteria for the diagnosis of NF-2"), ["NF2"])
 
 
 if __name__ == '__main__':

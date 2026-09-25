@@ -886,6 +886,41 @@ DISEASE_STATUS_SCHEMA = {
     "required": ["disease_status"],
 }
 
+# Roadmap 6.9: the enrichment prompts had no schema, so the answer was JSON
+# found in free text (the 3.1 dry run saw replies that open with prose). The
+# allowed values are also enforced in merge_enriched_criteria, because the
+# tool call is not strict and a schema enum only guides the model.
+VARIANT_CLASSIFICATIONS = ("In_Frame_Del", "In_Frame_Ins", "Splice_Site", "Missense_Mutation",
+                           "Nonsense_Mutation", "Frame_Shift_Del", "Frame_Shift_Ins")
+CNV_CALLS = ("High Amplification", "Low Amplification", "Homozygous Deletion", "Heterozygous Deletion")
+
+MUTATION_ENRICHMENT_SCHEMA = {
+    "type": "object",
+    "properties": {"enriched_mutations": {"type": "array", "items": {
+        "type": "object",
+        "properties": {
+            "index": {"type": "integer"},
+            "variant_classification": {"enum": list(VARIANT_CLASSIFICATIONS) + [None]},
+            "exon": {"type": ["integer", "null"]},
+        },
+        "required": ["index", "variant_classification", "exon"],
+    }}},
+    "required": ["enriched_mutations"],
+}
+
+CNV_ENRICHMENT_SCHEMA = {
+    "type": "object",
+    "properties": {"enriched_cnvs": {"type": "array", "items": {
+        "type": "object",
+        "properties": {
+            "index": {"type": "integer"},
+            "cnv_call": {"enum": list(CNV_CALLS) + [None]},
+        },
+        "required": ["index", "cnv_call"],
+    }}},
+    "required": ["enriched_cnvs"],
+}
+
 _AGE_BOUND_SCHEMA = {
     "type": "object",
     "properties": {
@@ -1157,8 +1192,7 @@ def get_mutation_detail_enrichment_prompt(genes_with_mutations: list, criteria_t
       ]
     }}
     """
-    json_schema = None
-    return json_schema, cleandoc(prompt)
+    return MUTATION_ENRICHMENT_SCHEMA, cleandoc(prompt)
 
 
 def get_cnv_detail_enrichment_prompt(genes_with_cnv: list, criteria_text: str, existing_criteria: list) -> tuple:
@@ -1215,8 +1249,10 @@ def get_cnv_detail_enrichment_prompt(genes_with_cnv: list, criteria_text: str, e
       ]
     }}
     """
-    json_schema = None
-    return json_schema, cleandoc(prompt)
+    return CNV_ENRICHMENT_SCHEMA, cleandoc(prompt)
+
+
+ENRICHMENT_REJECTED = []   # (field, value) the check refused, for measurement
 
 
 def merge_enriched_criteria(original: list, enriched: list, enrichment_type: str = "mutation") -> list:
@@ -1267,20 +1303,32 @@ def merge_enriched_criteria(original: list, enriched: list, enrichment_type: str
         # Merge fields based on enrichment type
         if enrichment_type == "mutation":
             # Merge variant_classification if present and not null
+            # Only values from the allowed lists are merged (roadmap 6.9): the
+            # schema enum is advisory on a non-strict tool call.
             variant_classification = enrichment_data.get("variant_classification")
-            if variant_classification is not None:
+            if variant_classification in VARIANT_CLASSIFICATIONS:
                 genomic["variant_classification"] = variant_classification
-            
-            # Merge exon if present and not null
+            elif variant_classification is not None:
+                ENRICHMENT_REJECTED.append(("variant_classification", variant_classification))
+                logger.warning(f"enrichment: variant_classification {variant_classification!r} "
+                               f"is not an allowed value; not merged")
+
+            # Merge exon if it is a positive whole number
             exon = enrichment_data.get("exon")
-            if exon is not None:
+            if isinstance(exon, int) and not isinstance(exon, bool) and exon > 0:
                 genomic["exon"] = exon
+            elif exon is not None:
+                ENRICHMENT_REJECTED.append(("exon", exon))
+                logger.warning(f"enrichment: exon {exon!r} is not a positive integer; not merged")
                 
         elif enrichment_type == "cnv":
             # Merge cnv_call if present and not null
             cnv_call = enrichment_data.get("cnv_call")
-            if cnv_call is not None:
+            if cnv_call in CNV_CALLS:
                 genomic["cnv_call"] = cnv_call
+            elif cnv_call is not None:
+                ENRICHMENT_REJECTED.append(("cnv_call", cnv_call))
+                logger.warning(f"enrichment: cnv_call {cnv_call!r} is not an allowed value; not merged")
     
     return original
 

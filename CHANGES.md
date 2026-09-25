@@ -486,6 +486,45 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Enrichment prompts get a schema; "NF-1" and "NF-2" resolve (roadmap 6.9)
+
+The mutation and CNV enrichment prompts sent no schema, so their answers were
+JSON pulled out of free text. They now send MUTATION_ENRICHMENT_SCHEMA and
+CNV_ENRICHMENT_SCHEMA, and merge_enriched_criteria merges only allowed values:
+a variant_classification or cnv_call from the lists the prompts give, and an
+exon that is a positive whole number. On a non-strict tool call the enum only
+guides the model, so the check is in code, and refusals are recorded in
+ENRICHMENT_REJECTED.
+
+"NF-1" and "NF-2" were in neither synonym table. All 15 mentions in the
+cached corpus (11 trials) refer to neurofibromatosis. NCBI Gene resolves
+"NF-1" only to NF1 and "NF-2" only to NF2, not to the nuclear factor I genes.
+Both are added to the addendum. The scan now finds NF1 or NF2 in 9 of those
+11 trials. The gene-info gate was already open for all 11, so the model is
+called no more often; it just sees the gene.
+
+Found on the way: with NF1 now offered, the inclusion prompt invented an NF1
+inclusion on NCT04775485, whose text names NF-1 only as an exclusion.
+resolve_contradictory_genes drops an invented inclusion only when the
+exclusion text names the gene, and "NF-1" did not count as naming NF1.
+`_text_mentions_gene` now also accepts the curated addendum aliases
+(`reference_validation.curated_aliases`), but not the full NCBI table, whose
+short aliases would make any text match. The NF1 exclusion now stands, as in
+the text and the key.
+
+Dry run 3.1 replayed with 19 new calls, all answered as tool calls, 0 failed.
+3 trials changed:
+- NCT04775485 and NCT07110246 leave the review queue: the false NF1 flags
+  are gone, and on NCT07110246 the H3 changes now verify.
+- NCT05745714 gains Missense_Mutation on IL7R and JAK3. The text says
+  "missense or in-frame indel", and a single classification cannot hold
+  both, so an in-frame indel patient would no longer match (roadmap 7.6).
+Benchmark scores are unchanged. The reviewed index is byte-identical.
+
+431 tests pass offline; 2 live-model tests and 1 needing jsonschema are
+skipped (the schemas were validated against the 2020-12 metaschema outside
+the repo venv).
+
 ## Dry run of the production map path (roadmap 3.1); H3 HGVS one-letter changes accepted
 
 The production `map` path ran on the 55 benchmark trials with Haiku 4.5,

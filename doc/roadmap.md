@@ -36,7 +36,7 @@ Standing rules for every step:
 | 3 - Full run | 3.0 and 3.1 done (3.1 through the analysis environment; diagnosis recall 0.938). 3.2-3.4 need 0.4 (live smoke test with an API key). |
 | 4-7 | Not started. 4.1-4.2 can start on synthetic fixtures at any time. |
 
-The offline suite has 423 tests (2 live-model tests are opt-in). Conditions-only
+The offline suite has 431 tests (2 live-model tests are opt-in). Conditions-only
 benchmark: NCT diagnosis F1 0.74, population P 0.92 / R 0.78; CTIS diagnosis F1
 0.17. Production diagnosis path on Haiku (roadmap 1.9 baseline, 3 runs):
 population recall 0.942, precision 0.798, name F1 0.741.
@@ -151,7 +151,7 @@ something a diagnostic lab can defend.
 | 6.7 | **Remove upstream leftovers:** MatchMiner-only schema fields, Hong Kong recruitment text, `bulk_convert_yaml_to_json.py` and `ctml/json` (written, read by nothing), and the README's `ctml/pending` hand-authoring path if local trials are not planned. | Leftovers gone, README and workflow diagram updated, tests green. | - |
 | 6.8 | **Harness in the repo:** move the replay harness (`stage2_harness_v3`) into `bench/replay/` with its caches' checksums, so every Phase 2 number can be re-run from the repository. | `python -m bench.replay --arm baseline` reproduces a recorded replicate from its cache exactly. | - |
 
-| 6.9 | Give the mutation and CNV enrichment prompts a JSON schema; resolve "NF-1" to NF1 in the gene scan if it does not collide with the nuclear factor I aliases. | Enrichment answers arrive as tool calls; the 3.1 NF1 false flags disappear with no new rewrite collisions. | - |
+| 6.9 | **Done 2026-09-25.** Enrichment prompts send a schema and merged values are checked in code; "NF-1"/"NF-2" resolve to NF1/NF2 (NCBI Gene, no collision); contradiction resolver accepts curated aliases. Dry run: 19 new calls all tool answers; the two false NF1 flags gone. | Recorded. | - |
 
 ## Phase 7 - Later refinements (take as capacity allows)
 
@@ -162,6 +162,7 @@ something a diagnostic lab can defend.
 | 7.3 | Remaining condition-string variants: word order, plurals, diagnoses with a fusion appended; CTIS sentence-style conditions (3 of 5 CTIS keys get no diagnosis from conditions). | See "wrong-branch problem". |
 | 7.4 | Per-arm (cohort) diagnoses in the index and the benchmark. | The benchmark scores only the global match today. |
 | 7.5 | Translocation table: the 4 ALK variant forms and other unresolved notations from the corpus. | 6 of 132 mentions unresolved today. |
+| 7.6 | A single `variant_classification` cannot express "missense or in-frame indel" (NCT05745714, IL7R/JAK3): the enrichment narrows the criterion and an in-frame indel patient no longer matches. Keep the classification only when the text names one type, or allow a list. | No criterion narrower than its text on the benchmark trials. | 4.3 [D2] |
 
 ---
 
