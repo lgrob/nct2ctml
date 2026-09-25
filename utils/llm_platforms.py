@@ -321,13 +321,14 @@ def decode_tool_result(result, stop_reason=None, trial_id=""):
     Normally the API hands back an object. When the model's tool input is
     not valid JSON the API passes it through as a string instead. In the
     first full run (2026-09-25) that happened on 4 of 7,818 answers, all
-    child-level diagnosis calls, and every time the only fault was a missing
-    closing brace: the list itself was complete and closed. The string then
-    reached the mapper, which called .keys() on it, and the trial was lost
-    with no output at all.
+    child-level diagnosis calls. In 3 the only fault was a missing closing
+    brace (the list itself complete and closed); in 1 a complete object was
+    followed by stray tool-call markup. The string then reached the mapper,
+    which called .keys() on it, and the trial was lost with no output at all.
 
-    A string is decoded. If that fails and the only fault is missing closing
-    brackets, they are appended - but only when the call did not stop on
+    A string is decoded. A complete object followed by stray text is kept.
+    If decoding fails and the only fault is missing closing brackets, they
+    are appended - but only when the call did not stop on
     max_tokens, because then the content itself may be cut short. Anything
     else is treated as no answer (None), and the trial goes through the
     normal routing, to review if nothing else supplies a diagnosis.
@@ -336,6 +337,16 @@ def decode_tool_result(result, stop_reason=None, trial_id=""):
         return result
     try:
         return json.loads(result, strict=False)
+    except json.JSONDecodeError:
+        pass
+    # A complete object followed by stray text (NCT07662369: tool-call markup
+    # after the closing brace). The object itself is whole, so keep it.
+    try:
+        value, end = json.JSONDecoder(strict=False).raw_decode(result.lstrip())
+        if isinstance(value, (dict, list)):
+            logger.warning(f"{trial_id or 'unknown trial'}: tool answer had "
+                           f"{len(result.lstrip()) - end} characters after the JSON; ignored them")
+            return value
     except json.JSONDecodeError:
         pass
     if stop_reason != "max_tokens":

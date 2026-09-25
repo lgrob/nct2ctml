@@ -394,6 +394,22 @@ class TrialMapManager:
             mapped_ctml["diagnosis_off_list"] = "; ".join(sorted(terms))
 
     @staticmethod
+    def _has_diagnosis(node) -> bool:
+        """
+        Is there a non-empty oncotree_primary_diagnosis anywhere in the tree?
+        Until 2026-09-25 routing only checked that the key was present, so a
+        trial with `oncotree_primary_diagnosis: []` - no diagnosis, matching
+        every patient - was published as mapped (NCT07662369, full run).
+        """
+        if isinstance(node, dict):
+            if node.get("oncotree_primary_diagnosis"):
+                return True
+            return any(TrialMapManager._has_diagnosis(v) for v in node.values())
+        if isinstance(node, list):
+            return any(TrialMapManager._has_diagnosis(v) for v in node)
+        return False
+
+    @staticmethod
     def _destination_for(mapped_ctml: dict, ctml_files_path: str, trial_id: str) -> str:
         """
         Where this trial should be written: the normal output, or the review
@@ -423,7 +439,7 @@ class TrialMapManager:
         """
         keys = tdh.get_all_keys(mapped_ctml)
         reasons = []
-        if 'oncotree_primary_diagnosis' not in keys:
+        if not TrialMapManager._has_diagnosis(mapped_ctml):
             reasons.append("no diagnosis criterion, so as it stands it would match every patient")
         if 'protein_change_unverified' in keys:
             reasons.append("a protein change did not match its reference protein")

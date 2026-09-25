@@ -40,6 +40,11 @@ class TestDecodeToolResult(unittest.TestCase):
     def test_brackets_inside_strings_are_not_counted(self):
         self.assertEqual(decode_tool_result('{"a": "x [y {z"', "tool_use"), {"a": "x [y {z"})
 
+    def test_trailing_text_after_a_complete_object_is_ignored(self):
+        # NCT07662369: a closed object followed by tool-call markup.
+        out = decode_tool_result('{"oncotree_diagnoses": ["Hodgkin Lymphoma"]}\nantml:parameter>\n</invoke>', "tool_use")
+        self.assertEqual(out, {"oncotree_diagnoses": ["Hodgkin Lymphoma"]})
+
     def test_other_damage_is_no_answer(self):
         for bad in ('{"a": 1]', '{"a": ', "not json at all", '{"a": "unterminated'):
             self.assertIsNone(decode_tool_result(bad, "tool_use"), bad)
@@ -50,6 +55,17 @@ class TestDiagnosisGuard(unittest.TestCase):
     def test_a_non_object_answer_becomes_no_diagnosis(self):
         for bad in (MISSING_BRACE, None, {}):
             self.assertEqual(ai.keep_candidates(bad, ["Mycosis Fungoides"], "T"), {"oncotree_diagnoses": []})
+
+
+
+class TestEmptyDiagnosisRoutesToReview(unittest.TestCase):
+
+    def test_an_empty_diagnosis_list_is_no_diagnosis(self):
+        from src.trial_map_manager import TrialMapManager as M
+        empty = {"treatment_list": {"step": [{"match": [{"and": [{"clinical": {"oncotree_primary_diagnosis": []}}]}]}]}}
+        full = {"treatment_list": {"step": [{"match": [{"or": [{"clinical": {"oncotree_primary_diagnosis": "Hodgkin Lymphoma"}}]}]}]}}
+        self.assertFalse(M._has_diagnosis(empty))
+        self.assertTrue(M._has_diagnosis(full))
 
 
 if __name__ == "__main__":
