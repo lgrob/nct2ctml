@@ -486,6 +486,19 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Full run (roadmap 3.2), 2026-09-25
+
+All 1,171 in-scope trials from the 2026-09-10 cache were mapped with Haiku
+4.5, through the analysis environment's model access. 11,959 calls, 0
+failed, about $85 at list price. 1,072 trials were mapped and 99 went to
+review. The index has 1,021 mapped, 95 needs-review and 55 reviewed
+trials, and 0 layer conflicts. No unverified protein change is published.
+On the 55 benchmark trials: NCT diagnosis recall 0.951, gene F1 0.593, age
+F1 0.899 (one run). The run found three defects: string tool answers, an
+empty diagnosis list routed to mapped, and a record without arm groups. They
+are fixed in 6de4430, 9d7ed31 and 2104df7, and every output was regenerated
+at 2104df7 from the saved answers. Details: doc/run_2026-09-25.md.
+
 ## Enrichment prompts get a schema; "NF-1" and "NF-2" resolve (roadmap 6.9)
 
 The mutation and CNV enrichment prompts sent no schema, so their answers were
