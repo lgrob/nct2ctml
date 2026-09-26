@@ -486,6 +486,30 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Contradictory genomic trees go to review; fusion partners count as required
+
+Reported by the user on 2023-508129-28-00 (asciminib, paediatric CML). The
+mapping required BCR::ABL1 and, beside it, "no ABL1 variation", so it matched
+nobody. It also put the excluded T315I on BCR. The deterministic protein
+check caught that one: BCR has Ser315, while ABL1 isoform 1a (NP_005148.2,
+MANE Select) has Thr315.
+
+find_unsatisfiable_genes had two faults:
+- **Partners ignored:** it ignored fusion partners, so this contradiction was
+  invisible.
+- **OR alternatives merged:** it merged the alternatives of an OR as if all
+  were required. As a result, two reviewed trials ("EWSR1 fusion, or round
+  cell sarcoma without one") were reported as contradictions.
+
+It now walks only nested ANDs and counts a partner as required. It was also
+only logged, and the trial was published regardless. The mapper now sets
+genomic_contradiction and routes the trial to review, and `accept` refuses a
+contradictory tree. On the current output: 1 real contradiction (this trial)
+and 0 false ones, down from 2 false ones and 0 real ones before the fix.
+
+The review sheet now says when an unverified protein change fits another gene
+of the same trial ("fits ABL1: probably put on the wrong gene").
+
 ## Scope filter: follow-on studies are out of scope, as the policy says
 
 Reported by the user: 2023-507041-28-00 is Kite's long-term follow-up of

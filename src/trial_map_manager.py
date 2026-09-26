@@ -16,6 +16,7 @@ from datetime import datetime
 from typing import Dict, List
 from loguru import logger
 import src.clinical_trials_gov as ctg
+import src.match_criteria_mapper as mcm
 import src.ctis as ctis
 import utils.ai_helper as ai
 import src.trial_data_helper as tdh
@@ -228,6 +229,7 @@ class TrialMapManager:
                     mapped_ctml = ctg.map_nct_to_ctml(trial_data, gene_synonym_mapping)
                     self._record_off_list(mapped_ctml, nct_id)
                     self._flag_excluded_diagnoses(mapped_ctml, trial_data, "nct", nct_id)
+                    self._flag_contradictions(mapped_ctml, nct_id)
                     
                     # Add local trial info if available
                     if nct_id in local_trial_dict:
@@ -341,6 +343,7 @@ class TrialMapManager:
             mapped_ctml = ctis.map_ctis_to_ctml(trial_data, gene_synonym_mapping)
             self._record_off_list(mapped_ctml, ct_number)
             self._flag_excluded_diagnoses(mapped_ctml, trial_data, "ctis", ct_number)
+            self._flag_contradictions(mapped_ctml, ct_number)
             # CTIS bypassed the review queue entirely until 2026-09-21: it saved
             # straight to the output directory, so a CTIS trial whose diagnosis
             # could not be determined reached MatchMiner and matched every
@@ -387,6 +390,21 @@ class TrialMapManager:
                                f"kept as {backup} before writing the new one")
         tdh.save_to_file(mapped_ctml, destination, trial_id, 'yaml')
         return target
+
+    @staticmethod
+    def _flag_contradictions(mapped_ctml: dict, trial_id: str) -> None:
+        """
+        Write genes the match tree both requires and forbids under one 'and'
+        into the CTML as genomic_contradiction, which routes the trial to
+        review. Until 2026-09-26 match_criteria_mapper.find_unsatisfiable_genes
+        only logged it, and the trial was published matching nobody.
+        """
+        if not isinstance(mapped_ctml, dict):
+            return
+        found = mcm.find_unsatisfiable_genes(mapped_ctml.get("treatment_list"))
+        if found:
+            mapped_ctml["genomic_contradiction"] = "; ".join(found)
+            logger.warning(f"{trial_id} | match tree requires and forbids {', '.join(found)}: matches nobody")
 
     @staticmethod
     def _flag_excluded_diagnoses(mapped_ctml: dict, trial_data: dict, registry: str, trial_id: str) -> None:
@@ -481,6 +499,8 @@ class TrialMapManager:
             reasons.append("a gene the model returned is not named in the criteria text")
         if 'diagnosis_off_list' in keys:
             reasons.append("a diagnosis was answered outside the candidate list the model was offered")
+        if 'genomic_contradiction' in keys:
+            reasons.append("the match tree requires and forbids the same gene, so it matches nobody")
         if 'diagnosis_excluded' in keys:
             reasons.append("a diagnosis is named only in the exclusion criteria")
         if not reasons:
@@ -524,6 +544,7 @@ class TrialMapManager:
             mapped_ctml = ctg.map_nct_to_ctml(trial_data, gene_synonym_mapping)
             self._record_off_list(mapped_ctml, nct_id)
             self._flag_excluded_diagnoses(mapped_ctml, trial_data, "nct", nct_id)
+            self._flag_contradictions(mapped_ctml, nct_id)
             
             # Add local trial info if available
             self._add_local_trial_info(mapped_ctml, nct_id)

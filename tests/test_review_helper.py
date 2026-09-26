@@ -189,6 +189,45 @@ class TestDiagnosesOnlyInExclusions(unittest.TestCase):
         self.assertEqual(rh._as_set(["A"]), {"A"})
 
 
+class TestContradictions(unittest.TestCase):
+    """2023-508129-28-00: BCR::ABL1 required, 'no ABL1 variation' forbidden, T315I put on BCR."""
+
+    FUSION = {"genomic": {"hugo_symbol": "BCR", "variant_category": "Structural Variation", "fusion_partner": "ABL1"}}
+
+    def _tree(self, *leaves):
+        return {"treatment_list": {"step": [{"match": [{"and": list(leaves)}]}]}}
+
+    def test_a_forbidden_fusion_partner_is_a_contradiction(self):
+        import src.match_criteria_mapper as mcm
+        t = self._tree(self.FUSION, {"genomic": {"hugo_symbol": "ABL1", "variant_category": "!Any Variation"}})
+        self.assertEqual(mcm.find_unsatisfiable_genes(t["treatment_list"]), ["ABL1"])
+
+    def test_excluding_one_variant_of_the_partner_is_fine(self):
+        import src.match_criteria_mapper as mcm
+        t = self._tree(self.FUSION, {"genomic": {"hugo_symbol": "ABL1", "variant_category": "!Mutation",
+                                                 "protein_change": "p.T315I"}})
+        self.assertEqual(mcm.find_unsatisfiable_genes(t["treatment_list"]), [])
+
+    def test_or_alternatives_are_not_a_contradiction(self):
+        # 2023-503322-39-00: EWSR1 fusion, or round cell sarcoma without one.
+        import src.match_criteria_mapper as mcm
+        t = {"and": [{"or": [{"genomic": {"hugo_symbol": "EWSR1", "variant_category": "Structural Variation"}},
+                             {"and": [{"genomic": {"hugo_symbol": "EWSR1", "variant_category": "!Structural Variation"}}]}]}]}
+        self.assertEqual(mcm.find_unsatisfiable_genes(t), [])
+
+    def test_the_mapper_flags_and_routes_it(self):
+        from src.trial_map_manager import TrialMapManager as M
+        t = self._tree(self.FUSION, {"genomic": {"hugo_symbol": "ABL1", "variant_category": "!Any Variation"}})
+        M._flag_contradictions(t, "T")
+        self.assertEqual(t.get("genomic_contradiction"), "ABL1")
+        self.assertNotEqual(M._destination_for(t, "cache/ctml", "T"), "cache/ctml")
+
+    def test_accept_refuses_a_contradiction_even_without_the_flag(self):
+        t = self._tree({"clinical": {"oncotree_primary_diagnosis": "Chronic Myeloid Leukemia, BCR-ABL1+"}},
+                       self.FUSION, {"genomic": {"hugo_symbol": "ABL1", "variant_category": "!Any Variation"}})
+        self.assertIn("requires and forbids ABL1 under one AND: matches nobody", rh.problems(t, ""))
+
+
 class TestAudit(_Layers):
 
     def test_the_sample_is_reproducible_and_skips_other_layers(self):

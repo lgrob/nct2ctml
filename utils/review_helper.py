@@ -70,7 +70,8 @@ LOG_COLUMNS = ["date", "trial_id", "reviewer", "from_layer", "flags_resolved", "
 # Keys the mapper writes to mark an item for review. `accept` refuses a file
 # that still holds any of them: deleting the key is how a curator confirms
 # the item, deleting the item is how they reject it.
-FLAG_KEYS = ("gene_unsupported", "diagnosis_off_list", "diagnosis_excluded", "protein_change_unverified",
+FLAG_KEYS = ("gene_unsupported", "diagnosis_off_list", "diagnosis_excluded", "genomic_contradiction",
+             "protein_change_unverified",
              "protein_change_check", "fusion_partner_unverified")
 
 WILDCARDS = {"_SOLID_", "_LIQUID_"}
@@ -92,6 +93,10 @@ ADVICE = {
                           "match tree, or, when a broader diagnosis the trial enrols contains it, add it as "
                           "`oncotree_primary_diagnosis: '!Name'` (quoted) beside that diagnosis. Then delete "
                           "the top-level `diagnosis_excluded:` line.",
+    "genomic_contradiction": "The match tree requires and forbids the same gene under one AND, so it matches "
+                             "nobody. Often an exclusion written for the whole gene ('!Any Variation') where the "
+                             "text excludes one variant, or a gene also required as a fusion partner. Narrow or "
+                             "remove the exclusion, then delete the top-level `genomic_contradiction:` line.",
     "protein_change_unverified": "The stated protein change does not match the reference protein. Write the "
                                  "correct change as `protein_change:` (it is re-checked), or drop it; then "
                                  "delete `protein_change_unverified:` and `protein_change_check:`.",
@@ -468,9 +473,19 @@ def analyse(trial_id, ref):
         stated = g.get("protein_change_unverified") or g.get("protein_change_stated") or g.get("protein_change")
         if stated:
             r = protein_change.normalise(sym, str(stated))
+            note = f"{r.status}: {r.hgvs or r.detail}"
+            if not r.verified:
+                # Often the change is right and the gene is wrong: T315I put
+                # on BCR instead of ABL1 (2023-508129-28-00).
+                others = sorted({str(x.get(k)) for x in got["genomic"] for k in ("hugo_symbol", "fusion_partner")
+                                 if x.get(k) and str(x.get(k)) != sym})
+                fits = [o for o in others if protein_change.normalise(o, str(stated)).verified]
+                if fits:
+                    note += f" - but it fits {', '.join(fits)} ({protein_change.normalise(fits[0], str(stated)).hgvs}): " \
+                            f"probably put on the wrong gene"
             items.append(Item("protein", f"{sym} {stated}", side=side,
                               flag="protein_change_unverified" if g.get("protein_change_unverified") else "",
-                              note=f"{r.status}: {r.hgvs or r.detail}",
+                              note=note,
                               evidence=evidence(sections, {str(stated).replace("p.", "")}, limit=3)))
 
     # Ages.
@@ -593,6 +608,9 @@ def problems(ctml, raw):
     for k in FLAG_KEYS:
         if re.search(rf"^\s*{k}\s*:", raw, re.M):
             out.append(f"still flagged: {k}")
+    import src.match_criteria_mapper as mcm
+    for gene in mcm.find_unsatisfiable_genes(ctml.get("treatment_list", ctml)):
+        out.append(f"requires and forbids {gene} under one AND: matches nobody")
     if not TrialMapManager._has_diagnosis(ctml):
         out.append("no diagnosis")
     ref_names = set(get_lineage()[2]) | WILDCARDS

@@ -552,6 +552,12 @@ def find_unsatisfiable_genes(match_node) -> list:
             if "and" in node and isinstance(node["and"], list):
                 positive, negative = {}, {}
                 def collect(n):
+                    # Only through nested 'and': the branches of an 'or' are
+                    # alternatives, so "EWSR1 fusion, or round cell sarcoma
+                    # without one" is not a contradiction (2023-503322-39-00).
+                    # A fusion partner is required as much as hugo_symbol:
+                    # BCR::ABL1 plus "no ABL1 variation" matches nobody
+                    # (2023-508129-28-00, 2026-09-26).
                     if isinstance(n, dict):
                         if "genomic" in n and isinstance(n["genomic"], dict):
                             g = n["genomic"].get("hugo_symbol")
@@ -559,10 +565,12 @@ def find_unsatisfiable_genes(match_node) -> list:
                             if g:
                                 (negative if _negated(c) else positive).setdefault(
                                     g, set()).add(_base_category(c))
-                        for k in ("and", "or"):
-                            if isinstance(n.get(k), list):
-                                for child in n[k]:
-                                    collect(child)
+                            partner = n["genomic"].get("fusion_partner")
+                            if partner and not _negated(c):
+                                positive.setdefault(partner, set()).add(_base_category(c))
+                        if isinstance(n.get("and"), list):
+                            for child in n["and"]:
+                                collect(child)
                 for branch in node["and"]:
                     collect(branch)
                 for gene, neg_cats in negative.items():
