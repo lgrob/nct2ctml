@@ -249,6 +249,8 @@ def flag_exclusions(apply=False):
     mapped trial is moved to the review queue, as the mapper now does.
     """
     ref = _shared_reference()
+    import utils.oncology_scope as scope
+    out_of_scope = set(scope.load_report()) | {t for t, (dec, _) in scope.load_overrides().items() if dec == "skip"}
     found = []
     for d, layer in ((MAPPED_DIR, "mapped"), (REVIEW_DIR, "needs_review")):
         if not os.path.isdir(d):
@@ -257,6 +259,10 @@ def flag_exclusions(apply=False):
             if not f.endswith(".yaml"):
                 continue
             t = f[:-5]
+            if t in out_of_scope:
+                continue    # not in the index; no point queueing it
+            if os.path.exists(os.path.join(REVIEWED_DIR, f)):
+                continue    # a curated copy exists and is what the index publishes
             path = os.path.join(d, f)
             raw = open(path).read()
             ctml = yaml.safe_load(raw)
@@ -724,13 +730,23 @@ def _flags_at_entry(trial_id):
 
 # --------------------------------------------------------------------- CLI
 
+def _not_in_index():
+    """Trials the index leaves out: out of scope per the report, or a skip override."""
+    import utils.oncology_scope as scope
+    return set(scope.load_report()) | {t for t, (dec, _) in scope.load_overrides().items() if dec == "skip"}
+
+
 def _queue_ids():
-    return sorted(f[:-5] for f in os.listdir(REVIEW_DIR) if f.endswith(".yaml"))
+    """The review queue as the index sees it: no out-of-scope trials, none already reviewed."""
+    gone = _not_in_index()
+    reviewed = {f[:-5] for f in os.listdir(REVIEWED_DIR)} if os.path.isdir(REVIEWED_DIR) else set()
+    return sorted(f[:-5] for f in os.listdir(REVIEW_DIR)
+                  if f.endswith(".yaml") and f[:-5] not in gone and f[:-5] not in reviewed)
 
 
 def audit_sample(n, seed):
     """n random mapped trials that are neither reviewed nor in the queue (roadmap 3.4)."""
-    skip = {f[:-5] for d in (REVIEWED_DIR, REVIEW_DIR) if os.path.isdir(d) for f in os.listdir(d)}
+    skip = {f[:-5] for d in (REVIEWED_DIR, REVIEW_DIR) if os.path.isdir(d) for f in os.listdir(d)} | _not_in_index()
     pool = sorted(f[:-5] for f in os.listdir(MAPPED_DIR) if f.endswith(".yaml") and f[:-5] not in skip)
     return sorted(random.Random(seed).sample(pool, min(n, len(pool)))), len(pool)
 
