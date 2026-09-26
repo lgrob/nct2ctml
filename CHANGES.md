@@ -486,6 +486,32 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Scope filter: six trials in scope through phrases that name no tumour
+
+Reported by the user: 2023-504226-18-00 is an autoimmune encephalitis trial
+(satralizumab). It was in scope because the filter found "Glioma" in the
+antigen name "Leucine-Rich Glioma-Inactivated 1". Listing every trial
+whose conditions hold no oncology term (29) found five more such phrases:
+- "tumor necrosis factor" in two juvenile idiopathic arthritis trials;
+- "Memorial Sloan Kettering Cancer Center" in the keywords of a sickle cell
+  trial and an aplastic anaemia trial;
+- "myelom" (the myeloma stem) inside "myelomeningocele" in a spina bifida
+  trial.
+
+These phrases are now masked before the vocabulary is matched. Exactly those 6
+trials change decision (1,171 -> 1,165 in scope); no other trial moves.
+
+The index build now also drops trials listed in ctml/out-of-scope.tsv, so a
+filter fix takes effect without deleting an earlier run's output. The
+exception is a trial in ctml/reviewed: only a skip row in
+ref/scope_overrides.tsv removes a reviewed trial. The index now holds 1,165
+trials: 1,019 mapped, 91 needs-review, 55 reviewed.
+
+About 12 of the 29 are oncology-adjacent: supportive care, cancer
+prevention, and follow-up after gene therapy. The filter's documented policy
+puts these out of scope, but the vocabulary cannot tell them apart; they are
+left for a curator to exclude. 457 tests pass offline.
+
 ## Excluding a trial from scope takes one step
 
 A skip row in ref/scope_overrides.tsv stopped map --all from mapping the

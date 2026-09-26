@@ -472,12 +472,27 @@ def build(source=None, out_dir="index", strict=False):
     # A "skip" row in ref/scope_overrides.tsv removes a trial from the index
     # whatever layer holds it. map --all already skips it, but a copy written
     # before the row was added would otherwise stay published.
-    from utils.oncology_scope import load_overrides
+    #
+    # Trials the scope filter rejects (ctml/out-of-scope.tsv, rewritten by
+    # map --all and `python -m utils.oncology_scope`) are dropped as well, so
+    # a filter fix takes effect without deleting the outputs of an earlier
+    # run - except a trial a curator has moved to ctml/reviewed: an automatic
+    # decision does not overrule that, only a skip row does.
+    from utils.oncology_scope import load_overrides, load_report
     excluded = {t: why for t, (decision, why) in load_overrides().items() if decision == "skip" and t in chosen}
-    for t, why in excluded.items():
-        logger.info(f"{t} | excluded by ref/scope_overrides.tsv: {why}")
+    out_of_scope = {}
+    for t, why in load_report().items():
+        if t in chosen and t not in excluded:
+            if chosen[t][2] == "reviewed":
+                logger.warning(f"{t} | out of scope per the filter ({why}) but reviewed; kept. "
+                               f"Add a skip or map row to ref/scope_overrides.tsv to settle it")
+            else:
+                out_of_scope[t] = why
+    for t, why in list(excluded.items()) + list(out_of_scope.items()):
+        logger.info(f"{t} | excluded from the index: {why}")
         del chosen[t]
-    conflicts = [c for c in conflicts if c["trial_id"] not in excluded]
+    excluded_all = {**excluded, **out_of_scope}
+    conflicts = [c for c in conflicts if c["trial_id"] not in excluded_all]
     conflict_of = {c["trial_id"]: c["conflict"] for c in conflicts}
     for trial_id, (trial, path, status) in chosen.items():
         trial_row, diagnoses, genomics = index_trial(
@@ -520,6 +535,7 @@ def build(source=None, out_dir="index", strict=False):
         "trials": len(trial_rows),
         "layer_conflicts": len(conflicts),
         "excluded_by_scope_override": dict(sorted(excluded.items())),
+        "excluded_out_of_scope": dict(sorted(out_of_scope.items())),
         "review_backups": _review_backups(layers),
         "oncotree_file": config.ONCOTREE_TXT_FILE_PATH,
         "oncotree_sha256": _sha256(config.ONCOTREE_TXT_FILE_PATH),
@@ -562,7 +578,8 @@ def main():
     print(f"  protein changes        {manifest['protein_checks'] or 'none'}")
     print(f"  layer conflicts        {manifest['layer_conflicts']} (see layer_conflicts.tsv)")
     print(f"  review backups         {len(manifest['review_backups'])} (.yaml.prev files in the review queue)")
-    print(f"  excluded (scope)       {len(manifest['excluded_by_scope_override'])} (ref/scope_overrides.tsv skip rows)")
+    print(f"  excluded (scope)       {len(manifest['excluded_by_scope_override'])} skip rows in ref/scope_overrides.tsv, "
+          f"{len(manifest['excluded_out_of_scope'])} out of scope per ctml/out-of-scope.tsv")
 
 
 if __name__ == "__main__":

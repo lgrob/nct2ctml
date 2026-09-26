@@ -108,5 +108,23 @@ class TestCuratedTrialsAreInScope(unittest.TestCase):
             self.assertTrue(in_scope, f"{trial_id}: {why}")
 
 
+
+class TestPhrasesThatNameNoTumour(unittest.TestCase):
+    """Full run 2026-09-25: six trials were in scope only through these phrases."""
+
+    def test_masked_phrases_do_not_count(self):
+        from utils.oncology_scope import matched_terms
+        for text in ("Anti-Leucine-Rich Glioma-Inactivated 1 (LGI1) Encephalitis",
+                     "patients starting tumour necrosis factor inhibitors", "tumor necrosis factor",
+                     "Memorial Sloan Kettering Cancer Center", "Spina Bifida | Myelomeningocele"):
+            self.assertEqual(matched_terms([text]), [], text)
+
+    def test_the_rest_of_the_text_still_counts(self):
+        from utils.oncology_scope import matched_terms
+        self.assertTrue(matched_terms(["Glioma-Inactivated 1 and low-grade glioma"]))
+        self.assertTrue(matched_terms(["Multiple myeloma"]))
+        self.assertTrue(matched_terms(["Cancer Center trial in Wilms tumour"]))
+
+
 if __name__ == "__main__":
     unittest.main()

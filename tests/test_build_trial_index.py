@@ -208,6 +208,21 @@ class TestBuildOutputs(unittest.TestCase):
         with open(os.path.join(out, "trials.tsv")) as handle:
             self.assertNotIn(first, {r["trial_id"] for r in csv.DictReader(handle, delimiter="\t")})
 
+    def test_the_out_of_scope_report_drops_machine_output_but_not_reviewed_trials(self):
+        import utils.oncology_scope as scope
+        first = sorted(f for f in os.listdir(REVIEWED) if f.endswith(".yaml"))[0][:-5]
+        mapped_dir = tempfile.mkdtemp()
+        with open(os.path.join(REVIEWED, first + ".yaml")) as src, open(os.path.join(mapped_dir, "NCT0SCOPE.yaml"), "w") as dst:
+            dst.write(src.read().replace(first, "NCT0SCOPE"))
+        kept_report, kept_overrides = scope.load_report, scope.load_overrides
+        scope.load_report = lambda path=None: {first: "filter says no", "NCT0SCOPE": "filter says no"}
+        scope.load_overrides = lambda path=None: {}
+        try:
+            manifest = build([(mapped_dir, "mapped"), (REVIEWED, "reviewed")], tempfile.mkdtemp())
+        finally:
+            scope.load_report, scope.load_overrides = kept_report, kept_overrides
+        self.assertEqual(manifest["excluded_out_of_scope"], {"NCT0SCOPE": "filter says no"})
+
     def test_every_diagnosis_row_points_at_an_indexed_trial(self):
         out = tempfile.mkdtemp()
         build(REVIEWED, out)

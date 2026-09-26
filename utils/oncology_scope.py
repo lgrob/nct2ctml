@@ -62,6 +62,26 @@ _ABBREVIATIONS = (
     "DIPG", "DMG", "HGG", "LGG", "GBM", "NHL", "HL", "LCH", "MPNST", "ATRT",
 )
 _STEM_RX = re.compile("|".join(_STEMS), re.I)
+
+# Phrases that contain a stem but name no tumour. Masked before the
+# vocabulary is matched, so they cannot put a trial in scope; the rest of
+# the text still can. Each was a trial wrongly in scope in the first full
+# run (2026-09-25), found by listing every trial whose conditions hold no
+# oncology term:
+# - an antigen: anti-Leucine-rich Glioma-Inactivated 1 (LGI1) encephalitis,
+#   2023-504226-18-00;
+# - a cytokine: tumor necrosis factor inhibitors in juvenile idiopathic
+#   arthritis, 2023-510118-21-00 and 2024-513017-12-00;
+# - an institution: "Memorial Sloan Kettering Cancer Center" in the keywords of
+#   sickle cell and aplastic anaemia trials, NCT05736419 and NCT06430788;
+# - a malformation: "myelom" (myeloma) inside "myelomeningocele", spina
+#   bifida, NCT05491525.
+_NOT_A_TUMOUR = re.compile(
+    r"glioma[\s-]+inactivated"
+    r"|tumou?r[\s-]+necrosis[\s-]+factor"
+    r"|cancer\s+(?:center|centre|institute|research|society|hospital)"
+    r"|myelomeningocele",
+    re.I)
 _ABBR_RX = re.compile(r"\b(?:" + "|".join(_ABBREVIATIONS) + r")\b")
 
 OVERRIDES = getattr(config, "SCOPE_OVERRIDES_FILE_PATH", "ref/scope_overrides.tsv")
@@ -70,10 +90,19 @@ REPORT = getattr(config, "SCOPE_REPORT_FILE_PATH", "ctml/out-of-scope.tsv")
 
 def matched_terms(texts):
     """The vocabulary terms found in `texts`, in order of first appearance."""
-    text = " | ".join(t for t in texts if t)
+    text = _NOT_A_TUMOUR.sub(" ", " | ".join(t for t in texts if t))
     found = [m.group(0) for m in _STEM_RX.finditer(text)]
     found += [m.group(0) for m in _ABBR_RX.finditer(text)]
     return list(dict.fromkeys(found))
+
+
+def load_report(path=None):
+    """trial_id -> reason from the out-of-scope report. Missing file means none."""
+    path = path or REPORT
+    if not os.path.exists(path):
+        return {}
+    with open(path, newline="") as handle:
+        return {row["trial_id"]: row.get("reason", "") for row in csv.DictReader(handle, delimiter="\t")}
 
 
 def load_overrides(path=OVERRIDES):
