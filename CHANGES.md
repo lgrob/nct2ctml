@@ -486,6 +486,22 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Review helper (utils/review_helper.py)
+
+HTML review sheets for ctml/needs-review and for the 3.4 audit sample, plus
+a checked, logged `accept` into ctml/reviewed. No model calls. On the 99
+queued trials of the full run, the 100 flagged genes break down as follows:
+- 70 are not named anywhere in the trial text;
+- 19 are named in the trial text but not in the arm's criteria, which is
+  what the mapper checks;
+- 10 are named only by an ambiguous NCBI alias (ALL/CML for BCR, ROS for
+  ROS1), which the sheet shows but never counts as support;
+- 1 is a near-miss spelling ("KTM2A", 2023-504694-20-00).
+
+Of the 19 off-list diagnoses, 15 are named in the text. `accept` refuses
+remaining flags, no diagnosis, unknown genes or OncoTree names, and protein
+changes that fail the reference check. 451 tests pass offline.
+
 ## Full run (roadmap 3.2), 2026-09-25
 
 All 1,171 in-scope trials from the 2026-09-10 cache were mapped with Haiku

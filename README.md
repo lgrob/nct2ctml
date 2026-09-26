@@ -116,6 +116,38 @@ kept apart deliberately: `ctml/needs-review` is machine output awaiting a fix,
 
 Mapping details are in [doc/nct_to_ctml_mapping_guide.md](doc/nct_to_ctml_mapping_guide.md).
 
+## Reviewing flagged trials
+
+`utils/review_helper.py` puts the evidence for each flag next to the flag and
+makes accepting a reviewed trial a checked, logged step. It reads the same
+reference data as the mapper and never calls a model.
+
+```
+python -m utils.review_helper queue                      # ctml/needs-review with reasons
+python -m utils.review_helper sheets                     # one HTML sheet per queued trial
+python -m utils.review_helper audit --n 60               # random mapped trials (roadmap 3.4)
+python -m utils.review_helper check NCT05843253          # what accept would still refuse
+python -m utils.review_helper accept NCT05843253 --reviewer <name> [--note "..."]
+```
+
+Open `review_sheets/index.html` (git-ignored). Each sheet lists every flag with
+what resolves it and the passages that mention the item. For a flagged gene
+the sheet says which of these applies: named in the trial text but not in the
+arm's criteria (the mapper checks each arm's own text), only an ambiguous NCBI
+alias (such as ALL for BCR, shown but never counted as support), only a
+near-miss spelling (KTM2A), or not named at all. Diagnoses are marked as named
+in the text, parent named, or not named. Protein changes show the residue the
+reference protein carries.
+
+To resolve a trial, edit its YAML in `ctml/needs-review/`: delete a flag key
+to confirm its item, or delete the item. Then run `accept`. It refuses a file
+that still carries a flag, has no diagnosis, names a gene or diagnosis outside
+the reference data, or has a protein change that fails its reference check.
+On success it stamps `curated_on`, moves the file to `ctml/reviewed/` and
+appends a line to `ctml/review_log.tsv`: date, trial, reviewer, the flags
+resolved and the file's SHA-256. The audit command writes
+`ctml/audit_<date>.tsv` for the verdicts, and sheets to `review_sheets/audit/`.
+
 ## Flat query index
 
 CTML is a nested boolean tree, and "does this tree match sample X" cannot be

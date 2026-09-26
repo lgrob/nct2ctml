@@ -52,3 +52,6 @@ bench/output*/
 
 # Regenerated from the (untracked) cache by utils/oncology_scope.py and map --all.
 ctml/out-of-scope.tsv
+
+# HTML review sheets (utils/review_helper.py). Regenerated on demand.
+review_sheets/
