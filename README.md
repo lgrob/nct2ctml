@@ -120,7 +120,10 @@ Mapping details are in [doc/nct_to_ctml_mapping_guide.md](doc/nct_to_ctml_mappin
 
 `utils/review_helper.py` puts the evidence for each flag next to the flag and
 makes accepting a reviewed trial a checked, logged step. It reads the same
-reference data as the mapper and never calls a model.
+reference data as the mapper and never calls a model. Run it from the repo
+root with the repo's environment (`source .venv/bin/activate`, or call
+`./.venv/bin/python` directly); a Python without the repo's requirements
+fails with `No module named 'loguru'`.
 
 ```
 python -m utils.review_helper queue                      # ctml/needs-review with reasons
