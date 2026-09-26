@@ -486,6 +486,19 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Excluding a trial from scope takes one step
+
+A skip row in ref/scope_overrides.tsv stopped map --all from mapping the
+trial, but a copy already in cache/ctml or ctml/needs-review stayed in the
+index. The index build now drops every trial with a skip row, from any
+layer, and lists them in manifest.json (excluded_by_scope_override).
+`review_helper exclude <trial> --reviewer --reason` adds the row and logs the
+decision. With no skip rows the index is byte-identical. The scope filter
+checks for oncology terms, not age: 23 mapped trials in the index are
+adult-only (minimum age 18 or more). The age criteria already keep them from
+matching a paediatric patient, so they are harmless in the index; exclude
+them only if they should not be listed at all. 454 tests pass offline.
+
 ## Review helper (utils/review_helper.py)
 
 HTML review sheets for ctml/needs-review and for the 3.4 audit sample, plus

@@ -33,6 +33,7 @@ resolved, and the file's SHA-256.
     python -m utils.review_helper audit --n 60            # random mapped trials for roadmap 3.4
     python -m utils.review_helper check NCT05843253       # what accept would refuse, without moving
     python -m utils.review_helper accept NCT05843253 --reviewer lgrob [--note "..."]
+    python -m utils.review_helper exclude NCT05843253 --reviewer lgrob --reason "adult-only, not oncology"
 
 Sheets go to review_sheets/ (git-ignored); open review_sheets/index.html.
 """
@@ -543,6 +544,38 @@ def accept(trial_id, reviewer, note="", replace=False, today=None):
     return target
 
 
+def exclude(trial_id, reviewer, reason, today=None):
+    """
+    Take a trial out of scope: a "skip" row in ref/scope_overrides.tsv, which
+    map --all and the index build both honour, and a line in the review log.
+    The trial's YAML files are left in place; the index ignores them.
+    """
+    import utils.oncology_scope as scope
+    OVERRIDES = scope.OVERRIDES
+    if not reviewer.strip() or not reason.strip():
+        raise SystemExit("--reviewer and --reason are required")
+    if re.search(r"[\t\n]", reason):
+        raise SystemExit("--reason must be one line without tabs")
+    current = scope.load_overrides(OVERRIDES).get(trial_id)
+    if current and current[0] == "skip":
+        raise SystemExit(f"{trial_id} is already excluded: {current[1]}")
+    if current:
+        raise SystemExit(f"{trial_id} has a 'map' override ({current[1]}); edit {OVERRIDES} by hand")
+    layers = [layer for d, layer in ((REVIEW_DIR, "needs_review"), (MAPPED_DIR, "mapped"), (REVIEWED_DIR, "reviewed"))
+              if os.path.exists(os.path.join(d, f"{trial_id}.yaml"))]
+    today = today or datetime.date.today().isoformat()
+    text = open(OVERRIDES).read() if os.path.exists(OVERRIDES) else "trial_id\tdecision\treason\n"
+    with open(OVERRIDES, "w") as fh:
+        fh.write(text + ("" if text.endswith("\n") else "\n") + f"{trial_id}\tskip\t{reason} ({reviewer}, {today})\n")
+    new_log = not os.path.exists(LOG_FILE)
+    with open(LOG_FILE, "a", newline="") as fh:
+        w = csv.writer(fh, delimiter="\t")
+        if new_log:
+            w.writerow(LOG_COLUMNS)
+        w.writerow([today, trial_id, reviewer, ",".join(layers) or "none", "excluded", "", reason])
+    return layers
+
+
 def _flags_at_entry(trial_id):
     """The flags the mapper originally set, from its own copy (for the log)."""
     for d in (MAPPED_DIR, REVIEW_DIR):
@@ -577,6 +610,8 @@ def main(argv=None):
     c = sub.add_parser("check"); c.add_argument("trial")
     ac = sub.add_parser("accept"); ac.add_argument("trial"); ac.add_argument("--reviewer", required=True)
     ac.add_argument("--note", default=""); ac.add_argument("--replace", action="store_true")
+    ex = sub.add_parser("exclude"); ex.add_argument("trial"); ex.add_argument("--reviewer", required=True)
+    ex.add_argument("--reason", required=True)
     args = ap.parse_args(argv)
 
     if args.cmd == "queue":
@@ -605,6 +640,10 @@ def main(argv=None):
         print(f"{args.trial} ({layer}): " + ("ready to accept" if not found else "\n  - " + "\n  - ".join(found)))
     elif args.cmd == "accept":
         print(f"accepted -> {accept(args.trial, args.reviewer, args.note, args.replace)}; logged in {LOG_FILE}")
+    elif args.cmd == "exclude":
+        layers = exclude(args.trial, args.reviewer, args.reason)
+        print(f"{args.trial} excluded (ref/scope_overrides.tsv; logged in {LOG_FILE}); "
+              f"its copies in {', '.join(layers) or 'no layer'} are left in place and dropped at the next index build")
 
 
 if __name__ == "__main__":

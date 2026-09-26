@@ -88,6 +88,36 @@ class TestAccept(_Layers):
             rh.accept("NCT0TEST", "lgrob")
 
 
+class TestExclude(_Layers):
+
+    def setUp(self):
+        super().setUp()
+        import utils.oncology_scope as scope
+        self.scope = scope
+        self.saved_overrides = scope.OVERRIDES
+        scope.OVERRIDES = os.path.join(self.tmp, "scope_overrides.tsv")
+        with open(scope.OVERRIDES, "w") as fh:
+            fh.write("# comment\ntrial_id\tdecision\treason\n")
+
+    def tearDown(self):
+        self.scope.OVERRIDES = self.saved_overrides
+        super().tearDown()
+
+    def test_exclude_writes_a_skip_row_and_logs(self):
+        self.put(CTML.format(change="p.F1174L", extra=""), "mapped")
+        self.assertEqual(rh.exclude("NCT0TEST", "lgrob", "adult-only trial", today="2026-09-26"), ["mapped"])
+        o = self.scope.load_overrides(self.scope.OVERRIDES)
+        self.assertEqual(o["NCT0TEST"], ("skip", "adult-only trial (lgrob, 2026-09-26)"))
+        rows = list(csv.DictReader(open(rh.LOG_FILE), delimiter="\t"))
+        self.assertEqual((rows[0]["flags_resolved"], rows[0]["from_layer"]), ("excluded", "mapped"))
+        with self.assertRaises(SystemExit):
+            rh.exclude("NCT0TEST", "lgrob", "again")
+
+    def test_a_reason_is_required(self):
+        with self.assertRaises(SystemExit):
+            rh.exclude("NCT0TEST", "lgrob", " ")
+
+
 class TestEvidence(unittest.TestCase):
 
     def test_british_spelling_and_hyphens(self):

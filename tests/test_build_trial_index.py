@@ -194,6 +194,20 @@ class TestBuildOutputs(unittest.TestCase):
         with open(os.path.join(out, "manifest.json")) as handle:
             self.assertEqual(json.load(handle)["trials"], manifest["trials"])
 
+    def test_a_skip_override_removes_the_trial_from_the_index(self):
+        import utils.oncology_scope as scope
+        kept = scope.load_overrides
+        first = sorted(f for f in os.listdir(REVIEWED) if f.endswith(".yaml"))[0][:-5]
+        scope.load_overrides = lambda path=None: {first: ("skip", "not paediatric oncology")}
+        try:
+            out = tempfile.mkdtemp()
+            manifest = build(REVIEWED, out)
+        finally:
+            scope.load_overrides = kept
+        self.assertEqual(manifest["excluded_by_scope_override"], {first: "not paediatric oncology"})
+        with open(os.path.join(out, "trials.tsv")) as handle:
+            self.assertNotIn(first, {r["trial_id"] for r in csv.DictReader(handle, delimiter="\t")})
+
     def test_every_diagnosis_row_points_at_an_indexed_trial(self):
         out = tempfile.mkdtemp()
         build(REVIEWED, out)

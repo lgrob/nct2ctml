@@ -469,6 +469,15 @@ def build(source=None, out_dir="index", strict=False):
 
     trial_rows, diagnosis_rows, genomic_rows = [], [], []
     chosen, conflicts = _collect(layers)
+    # A "skip" row in ref/scope_overrides.tsv removes a trial from the index
+    # whatever layer holds it. map --all already skips it, but a copy written
+    # before the row was added would otherwise stay published.
+    from utils.oncology_scope import load_overrides
+    excluded = {t: why for t, (decision, why) in load_overrides().items() if decision == "skip" and t in chosen}
+    for t, why in excluded.items():
+        logger.info(f"{t} | excluded by ref/scope_overrides.tsv: {why}")
+        del chosen[t]
+    conflicts = [c for c in conflicts if c["trial_id"] not in excluded]
     conflict_of = {c["trial_id"]: c["conflict"] for c in conflicts}
     for trial_id, (trial, path, status) in chosen.items():
         trial_row, diagnoses, genomics = index_trial(
@@ -510,6 +519,7 @@ def build(source=None, out_dir="index", strict=False):
         "review_status": dict(sorted(Counter(r["review_status"] for r in trial_rows).items())),
         "trials": len(trial_rows),
         "layer_conflicts": len(conflicts),
+        "excluded_by_scope_override": dict(sorted(excluded.items())),
         "review_backups": _review_backups(layers),
         "oncotree_file": config.ONCOTREE_TXT_FILE_PATH,
         "oncotree_sha256": _sha256(config.ONCOTREE_TXT_FILE_PATH),
@@ -552,6 +562,7 @@ def main():
     print(f"  protein changes        {manifest['protein_checks'] or 'none'}")
     print(f"  layer conflicts        {manifest['layer_conflicts']} (see layer_conflicts.tsv)")
     print(f"  review backups         {len(manifest['review_backups'])} (.yaml.prev files in the review queue)")
+    print(f"  excluded (scope)       {len(manifest['excluded_by_scope_override'])} (ref/scope_overrides.tsv skip rows)")
 
 
 if __name__ == "__main__":

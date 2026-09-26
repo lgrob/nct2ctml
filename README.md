@@ -131,7 +131,14 @@ python -m utils.review_helper sheets                     # one HTML sheet per qu
 python -m utils.review_helper audit --n 60               # random mapped trials (roadmap 3.4)
 python -m utils.review_helper check NCT05843253          # what accept would still refuse
 python -m utils.review_helper accept NCT05843253 --reviewer <name> [--note "..."]
+python -m utils.review_helper exclude NCT05843253 --reviewer <name> --reason "..."
 ```
+
+`exclude` takes a trial out of scope: it adds a `skip` row with the reason to
+`ref/scope_overrides.tsv` and logs it in `ctml/review_log.tsv`. `map --all`
+then no longer maps the trial, and the index build drops it from every layer
+(listed under `excluded_by_scope_override` in `manifest.json`). Its YAML files
+stay where they are. Rebuild the index to apply it.
 
 Open `review_sheets/index.html` (git-ignored). Each sheet lists every flag with
 what resolves it and the passages that mention the item. For a flagged gene
