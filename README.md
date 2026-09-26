@@ -132,7 +132,21 @@ python -m utils.review_helper audit --n 60               # random mapped trials 
 python -m utils.review_helper check NCT05843253          # what accept would still refuse
 python -m utils.review_helper accept NCT05843253 --reviewer <name> [--note "..."]
 python -m utils.review_helper exclude NCT05843253 --reviewer <name> --reason "..."
+python -m utils.review_helper flag-exclusions [--apply]  # see below
 ```
+
+**Excluded diagnoses.** Write `oncotree_primary_diagnosis: '!Name'` (quoted:
+a bare leading `!` is a YAML tag) beside the diagnosis a trial enrols to
+exclude a subtype, e.g. AML without APL. The index publishes the excluded node
+and its descendants with `include = 0` and leaves them out of the eligible
+rows. `accept` refuses a trial whose only diagnoses are excluded ones.
+
+**Diagnoses named only in the exclusion criteria** (`diagnosis_excluded`).
+The mapper flags a diagnosis that the exclusion criteria name and that the
+inclusion criteria, title and conditions do not, and routes the trial to
+review. `flag-exclusions` applies the same check to CTML already written;
+with `--apply` it adds the flag and moves mapped trials to the review queue.
+`ctml/reviewed` is never touched.
 
 `exclude` takes a trial out of scope: it adds a `skip` row with the reason to
 `ref/scope_overrides.tsv` and logs it in `ctml/review_log.tsv`. `map --all`

@@ -486,6 +486,39 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Diagnoses named only in exclusion criteria; excluded diagnoses in the index
+
+Reported by the user on 2023-504999-25-00 (CHIP-AML22): APL, myeloid
+leukaemia of Down syndrome, MDS and JMML are that trial's exclusion
+criteria, and the mapper had published them as eligible diagnoses. A
+deterministic check (review_helper.diagnoses_only_in_exclusions) flags a
+diagnosis named in the exclusion criteria and nowhere in the inclusion
+criteria, title or conditions.
+- **Scale:** on the full run's 1,171 trials it finds 113 diagnoses in 75
+  trials, 69 of them published as mapped.
+- **Accuracy:** in a sample of 10 flags, 10 are real errors.
+- **Mapping:** the mapper now sets diagnosis_excluded, which routes the
+  trial to review.
+- **Existing output:** `review_helper flag-exclusions --apply` does the same
+  for CTML already written.
+
+Excluded diagnoses ("!Name") were not supported. build_trial_index looked the
+term up as a name, found nothing, and would have published an eligible
+diagnosis called "!Name". No curated trial used one until now. The excluded
+node and its subtree are now removed from the eligible rows and published
+with include = 0. The review helper's collect() stripped the "!" as well, so
+an excluded diagnosis read as an eligible one.
+
+Also:
+- a diagnosis_off_list value holding several names ("A; B") now marks
+  each name;
+- the benchmark tests read the size of the answer key from ctml/reviewed
+  rather than fixing it at 55, because accepted trials extend the key;
+- review_log.tsv is written with \n line endings, and the log records the
+  mapper's original flags even after the curator has deleted them.
+
+464 tests pass offline.
+
 ## Scope filter: six trials in scope through phrases that name no tumour
 
 Reported by the user: 2023-504226-18-00 is an autoimmune encephalitis trial

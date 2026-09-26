@@ -390,8 +390,21 @@ def index_trial(trial_id, trial, descendants, solid, liquid, name_to_code):
                 _walk(arm["match"], on_leaf, arm.get("arm_code") or "")
     _walk(trial.get("match"), on_leaf)
 
+    # An excluded diagnosis ("!APL with PML-RARA") removes that node and its
+    # descendants from the arm's eligible codes and is published as rows with
+    # include = 0. Before 2026-09-26 the "!" term was looked up as a name,
+    # found nothing, and was published as an eligible diagnosis called
+    # "!APL with PML-RARA" (none of the curated trials used one yet).
+    excluded_by_arm = {}
+    for arm_code, term in diagnoses:
+        if str(term).startswith("!"):
+            name = str(term)[1:]
+            excluded_by_arm.setdefault(arm_code, {}).update(
+                {m: str(term) for m in descendants.get(name, {name})})
     diagnosis_rows, seen = [], set()
     for arm_code, term in diagnoses:
+        if str(term).startswith("!"):
+            continue
         if term == "_SOLID_":
             members, basket = solid, 1
         elif term == "_LIQUID_":
@@ -400,13 +413,20 @@ def index_trial(trial_id, trial, descendants, solid, liquid, name_to_code):
             members, basket = descendants.get(term, {term}), 0
         for name in sorted(members):
             key = (arm_code, name)
-            if key in seen:
+            if key in seen or name in excluded_by_arm.get(arm_code, {}) or name in excluded_by_arm.get("", {}):
                 continue
             seen.add(key)
             diagnosis_rows.append({
                 "trial_id": trial_id, "arm_code": arm_code,
                 "oncotree_code": name_to_code.get(name, ""), "oncotree_name": name,
                 "source_term": term, "from_basket": basket, "include": 1,
+            })
+    for arm_code, members in excluded_by_arm.items():
+        for name, term in sorted(members.items()):
+            diagnosis_rows.append({
+                "trial_id": trial_id, "arm_code": arm_code,
+                "oncotree_code": name_to_code.get(name, ""), "oncotree_name": name,
+                "source_term": term, "from_basket": 0, "include": 0,
             })
 
     genomic_rows, seen_genomic = [], set()

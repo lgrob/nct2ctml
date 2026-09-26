@@ -70,7 +70,7 @@ LOG_COLUMNS = ["date", "trial_id", "reviewer", "from_layer", "flags_resolved", "
 # Keys the mapper writes to mark an item for review. `accept` refuses a file
 # that still holds any of them: deleting the key is how a curator confirms
 # the item, deleting the item is how they reject it.
-FLAG_KEYS = ("gene_unsupported", "diagnosis_off_list", "protein_change_unverified",
+FLAG_KEYS = ("gene_unsupported", "diagnosis_off_list", "diagnosis_excluded", "protein_change_unverified",
              "protein_change_check", "fusion_partner_unverified")
 
 WILDCARDS = {"_SOLID_", "_LIQUID_"}
@@ -87,6 +87,11 @@ ADVICE = {
     "diagnosis_off_list": "A diagnosis was answered outside the candidate list the model was offered. "
                           "Keep or remove that diagnosis in the match tree, then delete the top-level "
                           "`diagnosis_off_list:` line.",
+    "diagnosis_excluded": "This diagnosis is named in the exclusion criteria and nowhere in the inclusion "
+                          "criteria, title or conditions: the trial probably excludes it. Delete it from the "
+                          "match tree, or, when a broader diagnosis the trial enrols contains it, add it as "
+                          "`oncotree_primary_diagnosis: '!Name'` (quoted) beside that diagnosis. Then delete "
+                          "the top-level `diagnosis_excluded:` line.",
     "protein_change_unverified": "The stated protein change does not match the reference protein. Write the "
                                  "correct change as `protein_change:` (it is re-checked), or drop it; then "
                                  "delete `protein_change_unverified:` and `protein_change_check:`.",
@@ -148,7 +153,7 @@ def _walk(node, out, include=None):
         dx = clinical.get("oncotree_primary_diagnosis")
         for d in (dx if isinstance(dx, list) else [dx]):
             if d:
-                out["diagnoses"].append(str(d).lstrip("!"))
+                out["diagnoses"].append(str(d))   # "!Name" kept: an excluded diagnosis
         if clinical.get("age_numerical"):
             out["ages"].append(str(clinical["age_numerical"]))
     genomic = node.get("genomic")
@@ -186,6 +191,100 @@ def _term_pattern(term):
             p = p.replace(us, either)
         parts.append(p)
     return r"(?<![A-Za-z0-9])" + r"[\s\-/,]+".join(parts) + r"(?![A-Za-z0-9])"
+
+
+def _as_set(value):
+    """A flag value as a set of names: a list, or a string joined with '; '."""
+    if isinstance(value, list):
+        return {str(v) for v in value}
+    return {v.strip() for v in str(value).split(";") if v.strip()} if value else set()
+
+
+def diagnoses_only_in_exclusions(diagnoses, inclusion, exclusion, context=(), ref=None):
+    """
+    Diagnoses named (by name or synonym) in the exclusion criteria and nowhere
+    in the inclusion criteria or the context texts (title, conditions).
+
+    The mapper reads the whole eligibility text and can turn "Exclusion: JMML,
+    APL, Down syndrome leukaemia" into eligible diagnoses (2023-504999-25-00,
+    reported 2026-09-26). On the first full run's 1,171 trials this found 113
+    diagnoses in 75 trials, 69 of them published as mapped; 10 of 10 sampled
+    were real errors. A diagnosis the text does not name at all is not
+    reported: that is the normal case for a subtype (see
+    doc/open_issues.md on text support).
+    """
+    ref = ref or _shared_reference()
+    other = " ".join([inclusion or ""] + [t for t in context if t])
+    out = []
+    for d in dict.fromkeys(diagnoses or []):
+        d = str(d)
+        if d.startswith(("!", "_")) or d not in ref.names:
+            continue
+        terms = ref.dx_terms(d)
+        if find_mentions(exclusion or "", terms) and not find_mentions(other, terms):
+            out.append(d)
+    return out
+
+
+_SHARED = []
+
+
+def _shared_reference():
+    """One Reference per process, so the mapper does not reload it per trial."""
+    if not _SHARED:
+        _SHARED.append(Reference())
+    return _SHARED[0]
+
+
+def flag_exclusions(apply=False):
+    """
+    Apply the diagnosis_excluded check to CTML already written (mapped and
+    review layers; ctml/reviewed is never touched). Returns
+    [(trial_id, layer, [diagnoses])]. With apply=True, the key is added and a
+    mapped trial is moved to the review queue, as the mapper now does.
+    """
+    ref = _shared_reference()
+    found = []
+    for d, layer in ((MAPPED_DIR, "mapped"), (REVIEW_DIR, "needs_review")):
+        if not os.path.isdir(d):
+            continue
+        for f in sorted(os.listdir(d)):
+            if not f.endswith(".yaml"):
+                continue
+            t = f[:-5]
+            path = os.path.join(d, f)
+            raw = open(path).read()
+            ctml = yaml.safe_load(raw)
+            if not isinstance(ctml, dict) or ctml.get("diagnosis_excluded"):
+                continue
+            try:
+                inc, exc, data = eligibility_text(t)
+            except (OSError, ValueError, KeyError):
+                continue
+            context = [str(ctml.get("long_title") or ""), str(ctml.get("short_title") or "")] + _conditions(t, data)
+            hit = diagnoses_only_in_exclusions(collect(ctml)["diagnoses"], inc, exc, context, ref)
+            if not hit:
+                continue
+            found.append((t, layer, hit))
+            if apply:
+                target = os.path.join(REVIEW_DIR, f)
+                if layer == "mapped" and os.path.exists(target):
+                    continue    # a review copy exists and wins; leave both for the curator
+                text = raw.rstrip("\n") + "\n" + yaml.safe_dump({"diagnosis_excluded": "; ".join(hit)},
+                                                                 allow_unicode=True, width=1000)
+                os.makedirs(REVIEW_DIR, exist_ok=True)
+                with open(target, "w") as fh:
+                    fh.write(text)
+                if layer == "mapped":
+                    os.remove(path)
+    return found
+
+
+def _conditions(trial_id, data):
+    if trial_id.startswith("NCT"):
+        return list(data.get("protocolSection", {}).get("conditionsModule", {}).get("conditions") or [])
+    import src.ctis as ctis
+    return list(ctis.get_conditions(data)) + list(ctis.get_titles(data))
 
 
 def find_mentions(text, terms, case_sensitive_short=True):
@@ -297,16 +396,24 @@ def analyse(trial_id, ref):
     items = []
 
     # Diagnoses.
-    off_list = ctml.get("diagnosis_off_list")
-    off_list = set(off_list if isinstance(off_list, list) else [off_list] if off_list else [])
+    off_list = _as_set(ctml.get("diagnosis_off_list"))
+    excluded_flag = _as_set(ctml.get("diagnosis_excluded"))
+    only_excluded = set(diagnoses_only_in_exclusions(got["diagnoses"], sections[0][1], sections[1][1],
+                                                     [t for _, t in sections_with_title[2:]], ref))
     real = [d for d in dict.fromkeys(got["diagnoses"]) if d not in WILDCARDS]
     if not real and not (set(got["diagnoses"]) & WILDCARDS):
         items.append(Item("no_diagnosis", "(none)", flag="no_diagnosis",
                           evidence=[(n, html.escape(t)) for n, t in sections_with_title[2:] if t]))
     for d in dict.fromkeys(got["diagnoses"]):
-        it = Item("diagnosis", d, flag="diagnosis_off_list" if d in off_list else "")
+        it = Item("diagnosis", d, flag="diagnosis_off_list" if d in off_list else
+                  "diagnosis_excluded" if d in excluded_flag else "")
         if d in WILDCARDS:
             it.note = "basket wildcard"
+        elif str(d).startswith("!"):
+            it.note = "excluded diagnosis (with its subtypes)"
+        elif d in only_excluded:
+            it.evidence = evidence(sections_with_title[1:2], ref.dx_terms(d), limit=2)
+            it.note = "only named in the exclusion criteria: probably an exclusion, not a diagnosis"
         elif d not in ref.names:
             it.note = "NOT an OncoTree name"
         else:
@@ -491,8 +598,12 @@ def problems(ctml, raw):
     ref_names = set(get_lineage()[2]) | WILDCARDS
     got = collect(ctml)
     for d in got["diagnoses"]:
-        if d not in ref_names:
+        # "!Name" excludes that diagnosis and its subtypes (quote it in YAML:
+        # a bare leading ! is a YAML tag).
+        if str(d).lstrip("!") not in ref_names:
             out.append(f"not an OncoTree name: {d!r}")
+    if got["diagnoses"] and all(str(d).startswith("!") for d in got["diagnoses"]):
+        out.append("only excluded diagnoses: add the diagnosis the trial enrols")
     for g in got["genomic"]:
         sym = str(g.get("hugo_symbol", ""))
         if not rv.canonical_gene(sym):
@@ -536,7 +647,7 @@ def accept(trial_id, reviewer, note="", replace=False, today=None):
         os.remove(path)
     new_log = not os.path.exists(LOG_FILE)
     with open(LOG_FILE, "a", newline="") as fh:
-        w = csv.writer(fh, delimiter="\t")
+        w = csv.writer(fh, delimiter="\t", lineterminator="\n")
         if new_log:
             w.writerow(LOG_COLUMNS)
         w.writerow([today, trial_id, reviewer, layer, ",".join(resolved),
@@ -569,7 +680,7 @@ def exclude(trial_id, reviewer, reason, today=None):
         fh.write(text + ("" if text.endswith("\n") else "\n") + f"{trial_id}\tskip\t{reason} ({reviewer}, {today})\n")
     new_log = not os.path.exists(LOG_FILE)
     with open(LOG_FILE, "a", newline="") as fh:
-        w = csv.writer(fh, delimiter="\t")
+        w = csv.writer(fh, delimiter="\t", lineterminator="\n")
         if new_log:
             w.writerow(LOG_COLUMNS)
         w.writerow([today, trial_id, reviewer, ",".join(layers) or "none", "excluded", "", reason])
@@ -577,9 +688,16 @@ def exclude(trial_id, reviewer, reason, today=None):
 
 
 def _flags_at_entry(trial_id):
-    """The flags the mapper originally set, from its own copy (for the log)."""
-    for d in (MAPPED_DIR, REVIEW_DIR):
-        p = os.path.join(d, f"{trial_id}.yaml")
+    """
+    The flags the mapper originally set (for the log). The curator's copy has
+    them deleted by the time accept runs, so read the mapper's own output:
+    the review copy's .prev backup(s), then the mapped copy, then the file
+    as it stands. Also the reason for no diagnosis.
+    """
+    backups = sorted((f for f in os.listdir(REVIEW_DIR) if f.startswith(f"{trial_id}.yaml.prev")),
+                     key=lambda f: (len(f), f)) if os.path.isdir(REVIEW_DIR) else []
+    for p in ([os.path.join(REVIEW_DIR, backups[0])] if backups else []) + [
+            os.path.join(MAPPED_DIR, f"{trial_id}.yaml"), os.path.join(REVIEW_DIR, f"{trial_id}.yaml")]:
         if os.path.exists(p):
             raw = open(p).read()
             return [k for k in FLAG_KEYS if re.search(rf"^\s*{k}\s*:", raw, re.M)]
@@ -610,6 +728,8 @@ def main(argv=None):
     c = sub.add_parser("check"); c.add_argument("trial")
     ac = sub.add_parser("accept"); ac.add_argument("trial"); ac.add_argument("--reviewer", required=True)
     ac.add_argument("--note", default=""); ac.add_argument("--replace", action="store_true")
+    fx = sub.add_parser("flag-exclusions", help="flag diagnoses named only in exclusion criteria in existing CTML")
+    fx.add_argument("--apply", action="store_true", help="write the flag and move mapped trials to review")
     ex = sub.add_parser("exclude"); ex.add_argument("trial"); ex.add_argument("--reviewer", required=True)
     ex.add_argument("--reason", required=True)
     args = ap.parse_args(argv)
@@ -626,7 +746,7 @@ def main(argv=None):
         ids, pool = audit_sample(args.n, args.seed)
         out = f"ctml/audit_{datetime.date.today():%Y-%m-%d}.tsv"
         with open(out, "w", newline="") as fh:
-            w = csv.writer(fh, delimiter="\t")
+            w = csv.writer(fh, delimiter="\t", lineterminator="\n")
             w.writerow(["trial_id", "verdict", "error_type", "note"])
             for t in ids:
                 w.writerow([t, "", "", ""])
@@ -640,6 +760,13 @@ def main(argv=None):
         print(f"{args.trial} ({layer}): " + ("ready to accept" if not found else "\n  - " + "\n  - ".join(found)))
     elif args.cmd == "accept":
         print(f"accepted -> {accept(args.trial, args.reviewer, args.note, args.replace)}; logged in {LOG_FILE}")
+    elif args.cmd == "flag-exclusions":
+        found = flag_exclusions(apply=args.apply)
+        for t, layer, hit in found:
+            print(f"{t}\t{layer}\t{'; '.join(hit)}")
+        moved = sum(1 for _, layer, _ in found if layer == "mapped")
+        print(f"{len(found)} trials ({moved} mapped)" + (" flagged; mapped ones moved to the review queue"
+              if args.apply else " would be flagged; run with --apply to write"))
     elif args.cmd == "exclude":
         layers = exclude(args.trial, args.reviewer, args.reason)
         print(f"{args.trial} excluded (ref/scope_overrides.tsv; logged in {LOG_FILE}); "

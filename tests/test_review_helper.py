@@ -140,6 +140,55 @@ class TestEvidence(unittest.TestCase):
         self.assertIn("ALL", ref.weak_gene_terms("BCR"))
 
 
+class TestDiagnosesOnlyInExclusions(unittest.TestCase):
+    """2023-504999-25-00 (CHIP-AML22): APL, MLDS, MDS and JMML were mapped as diagnoses."""
+
+    INC = "1. Newly diagnosed AML. The origin of AML must be de novo."
+    EXC = ("2. Myelodysplastic syndrome (MDS). 3. Juvenile Myelomonocytic Leukemia (JMML). "
+           "15. Acute promyelocytic leukemia (APL).")
+
+    def test_exclusion_only_diagnoses_are_found(self):
+        got = rh.diagnoses_only_in_exclusions(
+            ["Acute Myeloid Leukemia", "Juvenile Myelomonocytic Leukemia", "Myelodysplastic Syndromes"],
+            self.INC, self.EXC, ["Acute Myeloid Leukemia"])
+        self.assertIn("Juvenile Myelomonocytic Leukemia", got)
+        self.assertNotIn("Acute Myeloid Leukemia", got)
+
+    def test_named_in_inclusion_or_title_is_not_reported(self):
+        self.assertEqual(rh.diagnoses_only_in_exclusions(
+            ["Juvenile Myelomonocytic Leukemia"], "", self.EXC, ["A study in juvenile myelomonocytic leukaemia"]), [])
+
+    def test_excluded_and_unnamed_diagnoses_are_ignored(self):
+        self.assertEqual(rh.diagnoses_only_in_exclusions(
+            ["!Juvenile Myelomonocytic Leukemia", "Osteosarcoma", "_LIQUID_"], self.INC, self.EXC), [])
+
+    def test_the_mapper_flags_and_routes_to_review(self):
+        from src.trial_map_manager import TrialMapManager as M
+        ctml = {"treatment_list": {"step": [{"match": [{"or": [
+            {"clinical": {"oncotree_primary_diagnosis": "Acute Myeloid Leukemia"}},
+            {"clinical": {"oncotree_primary_diagnosis": "Juvenile Myelomonocytic Leukemia"}}]}]}]}}
+        record = {"protocolSection": {"identificationModule": {"briefTitle": "AML trial"},
+                                      "conditionsModule": {"conditions": ["Acute Myeloid Leukemia"]},
+                                      "eligibilityModule": {"eligibilityCriteria":
+                                          "Inclusion Criteria:\n" + self.INC + "\nExclusion Criteria:\n" + self.EXC}}}
+        M._flag_excluded_diagnoses(ctml, record, "nct", "NCT0TEST")
+        self.assertEqual(ctml.get("diagnosis_excluded"), "Juvenile Myelomonocytic Leukemia")
+        self.assertNotEqual(M._destination_for(ctml, "cache/ctml", "NCT0TEST"), "cache/ctml")
+
+    def test_accept_takes_quoted_excluded_diagnoses(self):
+        ctml = {"treatment_list": {"step": [{"match": [{"and": [
+            {"clinical": {"oncotree_primary_diagnosis": "Acute Myeloid Leukemia"}},
+            {"clinical": {"oncotree_primary_diagnosis": "!APL with PML-RARA"}}]}]}]}}
+        self.assertEqual([p for p in rh.problems(ctml, "") if "OncoTree" in p or "excluded" in p], [])
+        only_neg = {"treatment_list": {"step": [{"match": [{"and": [
+            {"clinical": {"oncotree_primary_diagnosis": "!APL with PML-RARA"}}]}]}]}}
+        self.assertIn("only excluded diagnoses: add the diagnosis the trial enrols", rh.problems(only_neg, ""))
+
+    def test_off_list_flag_with_several_names(self):
+        self.assertEqual(rh._as_set("A; B"), {"A", "B"})
+        self.assertEqual(rh._as_set(["A"]), {"A"})
+
+
 class TestAudit(_Layers):
 
     def test_the_sample_is_reproducible_and_skips_other_layers(self):

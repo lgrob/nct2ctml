@@ -223,6 +223,24 @@ class TestBuildOutputs(unittest.TestCase):
             scope.load_report, scope.load_overrides = kept_report, kept_overrides
         self.assertEqual(manifest["excluded_out_of_scope"], {"NCT0SCOPE": "filter says no"})
 
+    def test_an_excluded_diagnosis_removes_its_subtree_and_is_published_as_include_0(self):
+        trial = {"nct_id": "NCT0NEG", "treatment_list": {"step": [{"arm": [], "match": [{"and": [
+            {"clinical": {"oncotree_primary_diagnosis": "Acute Myeloid Leukemia"}},
+            {"clinical": {"oncotree_primary_diagnosis": "!APL with PML-RARA"}}]}]}]}}
+        import yaml
+        src = tempfile.mkdtemp()
+        with open(os.path.join(src, "NCT0NEG.yaml"), "w") as fh:
+            yaml.safe_dump(trial, fh)
+        out = tempfile.mkdtemp()
+        build(src, out)
+        with open(os.path.join(out, "trial_diagnosis.tsv")) as handle:
+            rows = [r for r in csv.DictReader(handle, delimiter="\t")]
+        by = {r["oncotree_name"]: r["include"] for r in rows}
+        self.assertEqual(by["APL with PML-RARA"], "0")
+        self.assertEqual(by["Acute Myeloid Leukemia"], "1")
+        self.assertNotIn("!APL with PML-RARA", by)
+        self.assertEqual(sum(1 for r in rows if r["oncotree_name"] == "APL with PML-RARA"), 1)
+
     def test_every_diagnosis_row_points_at_an_indexed_trial(self):
         out = tempfile.mkdtemp()
         build(REVIEWED, out)

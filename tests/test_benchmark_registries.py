@@ -27,6 +27,15 @@ import src.clinical_trials_gov as ctg
 logger.remove()
 
 CTIS_ID = "2023-505575-69-01"   # conditions: ["Osteosarcoma"]
+
+# The answer key grows as curators accept trials (review_helper accept moves
+# them into ctml/reviewed), so the expected counts are read from it rather
+# than fixed: 50 NCT + 5 CTIS when these tests were written.
+_KEY = sorted(f[:-5] for f in os.listdir(os.path.join(os.path.dirname(__file__), "..", "ctml", "reviewed"))
+              if f.endswith(".yaml"))
+N_NCT = sum(t.startswith("NCT") for t in _KEY)
+N_CTIS = len(_KEY) - N_NCT
+N_ALL = len(_KEY)
 NCT_ID = "NCT07440290"
 
 
@@ -65,14 +74,14 @@ class TestTrialIds(unittest.TestCase):
     def test_curated_key_holds_both_registries_nct_first(self):
         ids = bm.trial_ids(os.path.join(ROOT, bm.TRUTH_DIR))
         regs = [bm.registry_of(t) for t in ids]
-        self.assertEqual((len(ids), regs.count("nct"), regs.count("ctis")), (55, 50, 5))
+        self.assertEqual((len(ids), regs.count("nct"), regs.count("ctis")), (N_ALL, N_NCT, N_CTIS))
         # --limit N keeps meaning "the first N NCT trials".
         self.assertEqual(regs, sorted(regs, key=bm.REGISTRIES.index))
 
     def test_source_restricts_to_one_registry(self):
         truth = os.path.join(ROOT, bm.TRUTH_DIR)
         self.assertEqual({bm.registry_of(t) for t in bm.trial_ids(truth, "ctis")}, {"ctis"})
-        self.assertEqual(len(bm.trial_ids(truth, "nct")), 50)
+        self.assertEqual(len(bm.trial_ids(truth, "nct")), N_NCT)
 
 
 @unittest.skipUnless(_have_cache(), "registry cache not present")
@@ -102,18 +111,18 @@ class TestConditionsOnly(unittest.TestCase):
 
     def test_conditions_only_scores_every_trial_of_both_registries(self):
         rows = _run_main("--conditions-only", "--out", tempfile.mkdtemp())
-        self.assertEqual(len(rows), 55)
+        self.assertEqual(len(rows), N_ALL)
         self.assertTrue(all(r["status"] == "ok" for r in rows))
-        self.assertEqual(sum(r["registry"] == "ctis" for r in rows), 5)
+        self.assertEqual(sum(r["registry"] == "ctis" for r in rows), N_CTIS)
 
 
 class TestScoreOnlyIdentity(unittest.TestCase):
 
     def test_key_scored_against_itself_is_perfect_in_both_registries(self):
         rows = _run_main("--score-only", "--out", bm.TRUTH_DIR)
-        self.assertEqual(len(rows), 55)
+        self.assertEqual(len(rows), N_ALL)
         means = bm.registry_means(rows)
-        self.assertEqual((means["nct"]["n"], means["ctis"]["n"]), (50, 5))
+        self.assertEqual((means["nct"]["n"], means["ctis"]["n"]), (N_NCT, N_CTIS))
         for name in ("all", "nct", "ctis"):
             for key in ("dx_f1", "pop_f1", "gene_f1", "age_f1"):
                 self.assertEqual(means[name][key], 1.0, (name, key))
@@ -146,9 +155,9 @@ class TestFullMappingDispatch(unittest.TestCase):
         mgr.map_single_ctis_trial.side_effect = fake_map
         with patch("src.trial_map_manager.TrialMapManager", return_value=mgr):
             rows = _run_main("--source", "ctis", "--out", out)
-        self.assertEqual(mgr.map_single_ctis_trial.call_count, 5)
+        self.assertEqual(mgr.map_single_ctis_trial.call_count, N_CTIS)
         mgr.map_single_trial.assert_not_called()
-        self.assertEqual([r["registry"] for r in rows], ["ctis"] * 5)
+        self.assertEqual([r["registry"] for r in rows], ["ctis"] * N_CTIS)
         self.assertTrue(all(r["dx_f1"] == 1.0 for r in rows))
 
 

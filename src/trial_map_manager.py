@@ -227,6 +227,7 @@ class TrialMapManager:
                     ai.OFF_LIST_BY_TRIAL.pop(nct_id, None)
                     mapped_ctml = ctg.map_nct_to_ctml(trial_data, gene_synonym_mapping)
                     self._record_off_list(mapped_ctml, nct_id)
+                    self._flag_excluded_diagnoses(mapped_ctml, trial_data, "nct", nct_id)
                     
                     # Add local trial info if available
                     if nct_id in local_trial_dict:
@@ -339,6 +340,7 @@ class TrialMapManager:
             ai.OFF_LIST_BY_TRIAL.pop(ct_number, None)
             mapped_ctml = ctis.map_ctis_to_ctml(trial_data, gene_synonym_mapping)
             self._record_off_list(mapped_ctml, ct_number)
+            self._flag_excluded_diagnoses(mapped_ctml, trial_data, "ctis", ct_number)
             # CTIS bypassed the review queue entirely until 2026-09-21: it saved
             # straight to the output directory, so a CTIS trial whose diagnosis
             # could not be determined reached MatchMiner and matched every
@@ -385,6 +387,38 @@ class TrialMapManager:
                                f"kept as {backup} before writing the new one")
         tdh.save_to_file(mapped_ctml, destination, trial_id, 'yaml')
         return target
+
+    @staticmethod
+    def _flag_excluded_diagnoses(mapped_ctml: dict, trial_data: dict, registry: str, trial_id: str) -> None:
+        """
+        Write diagnoses named only in the exclusion criteria into the CTML as
+        diagnosis_excluded, which routes the trial to review. Deterministic:
+        no model call (utils.review_helper.diagnoses_only_in_exclusions).
+        """
+        if not isinstance(mapped_ctml, dict):
+            return
+        from utils import review_helper as rh
+        try:
+            TrialMapManager._flag_excluded_diagnoses_inner(mapped_ctml, trial_data, registry, trial_id, rh)
+        except Exception as e:   # a check must never lose the trial
+            logger.warning(f"{trial_id} | exclusion check skipped: {type(e).__name__}: {e}")
+
+    @staticmethod
+    def _flag_excluded_diagnoses_inner(mapped_ctml, trial_data, registry, trial_id, rh):
+        if registry == "ctis":
+            import src.ctis as ctis
+            inc, exc = ctis.split_inclusion_exclusion_criteria(trial_data)
+            context = list(ctis.get_titles(trial_data)) + list(ctis.get_conditions(trial_data))
+        else:
+            inc, exc = ctg.split_inclusion_exclusion_criteria(trial_data)
+            ps = trial_data.get("protocolSection", {})
+            im = ps.get("identificationModule", {})
+            context = [im.get("briefTitle") or "", im.get("officialTitle") or ""] + \
+                list(ps.get("conditionsModule", {}).get("conditions") or [])
+        found = rh.diagnoses_only_in_exclusions(rh.collect(mapped_ctml)["diagnoses"], inc, exc, context)
+        if found:
+            mapped_ctml["diagnosis_excluded"] = "; ".join(found)
+            logger.warning(f"{trial_id} | diagnoses named only in the exclusion criteria: {', '.join(found)}")
 
     @staticmethod
     def _record_off_list(mapped_ctml: dict, trial_id: str) -> None:
@@ -447,6 +481,8 @@ class TrialMapManager:
             reasons.append("a gene the model returned is not named in the criteria text")
         if 'diagnosis_off_list' in keys:
             reasons.append("a diagnosis was answered outside the candidate list the model was offered")
+        if 'diagnosis_excluded' in keys:
+            reasons.append("a diagnosis is named only in the exclusion criteria")
         if not reasons:
             import config
             stale = os.path.join(getattr(config, 'CTML_REVIEW_PATH', 'ctml/needs-review'), f"{trial_id}.yaml")
@@ -487,6 +523,7 @@ class TrialMapManager:
             ai.OFF_LIST_BY_TRIAL.pop(nct_id, None)
             mapped_ctml = ctg.map_nct_to_ctml(trial_data, gene_synonym_mapping)
             self._record_off_list(mapped_ctml, nct_id)
+            self._flag_excluded_diagnoses(mapped_ctml, trial_data, "nct", nct_id)
             
             # Add local trial info if available
             self._add_local_trial_info(mapped_ctml, nct_id)
