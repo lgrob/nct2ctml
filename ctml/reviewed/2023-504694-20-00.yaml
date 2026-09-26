@@ -1,0 +1,279 @@
+nct_id: 2023-504694-20-00
+age: Children
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-09-26'
+study_start_date: '2017-01-13'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: BESPONSA 1 mg powder for concentrate for solution for infusion
+long_title: A phase I/II study of Inotuzumab Ozogamicin as a single agent and in combination
+  with chemotherapy for pediatric CD22-positive relapsed/refractory Acute Lymphoblastic
+  Leukemia
+last_updated: '2026-07-07'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: NA
+principal_investigator: NA
+principal_investigator_institution: Erasmus Universitair Medisch Centrum Rotterdam
+  (Erasmus MC)
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids:
+- 2023-504694-20-00
+protocol_no: ''
+protocol_target_accrual: 16
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- "1. Age (for all patients) \u2022 Patients must be \u2265 1 and < 18 years of age\
+  \ at the time of enrollment. Additional criteria for limited to Stratum 1A and 1B\
+  \ only: \u2022 The first 3 BCP-ALL patients on dose level 1 must be aged 6 years\
+  \ to less than 18 years. \u2022 Then at least 2 additional patients must be enrolled\
+  \ from age 1 year to less than 6 years at the same dose level. \u2022 After this\
+  \ requirement is met, subsequent dose levels may enroll patients aged 1 year to\
+  \ less than 18 years. \u2022 In case 2 younger patients are not yet recruited, patients\
+  \ aged 6 years up to less than 18 years may continue to be enrolled at dose level\
+  \ 1 until a maximum of 6 patients are enrolled."
+- "10. Stratum 4: Patients must have either: \u2022 2nd or greater CD22 positive BCP-ALL\
+  \ relapse; \u2022 1st VHR CD22 positive BCP-ALL relapse defined as isolated bone\
+  \ marrow or combined relapse occurring less than 18 months from initial diagnosis\
+  \ and/or with cytogenetic-high risk characteristics, including KTM2A/AF4, E2A/TCF3-PBX1\
+  \ t(1;19), E2A/TCF3-HLF t(17;19), hypodiploidy (less than 40 chromosomes), TP53\
+  \ mutation and/or deletion. Acceptable laboratory techniques to confirm these cytogenetic\
+  \ abnormalities include chromosome banding analysis (CBA), fluorescence in situ\
+  \ hybridization (FISH), polymerase chain reaction (PCR), and/or Next Generation\
+  \ Sequencing (based on local laboratory results); \u2022 Any relapse of BCP-ALL\
+  \ post HSCT; \u2022 Refractory disease, defined as newly diagnosed patients who\
+  \ are induction failures after at least 2 previous regimens without attainment of\
+  \ remission, or patients with refractory first relapse after 1 previous reinduction\
+  \ regimen without attainment of remission. AND must meet the following criteria:\
+  \ \u2022 Patients must have M2 or M3 marrow status (\u2265 5% blasts by morphology).\
+  \ \u2022 The malignant clone must be CD22 surface antigen positive (in either bone\
+  \ marrow or peripheral blood) by institutional standards as determined by the local\
+  \ immunophenotyping laboratory. \u2022 For 1st VHR BCP-ALL relapse evidence of prior\
+  \ fusion gene abnormalities is acceptable as they tend to be stable during the course\
+  \ of the disease. Laboratory techniques acceptable to test the presence of the cytogenetic-high\
+  \ risk characteristics are chromosome banding analysis (CBA), FISH, PCR and/or Next\
+  \ Generation Sequencing (inclusion is based on local laboratory results)."
+- "2. Stratum 1A, Phase 2 and Stratum 1B/1B-ASP: Diagnosis Patients must have either\
+  \ \u2022 First relapse of BCP-ALL post allogeneic HSCT \u2022 Second or greater\
+  \ relapsed or refractory BCP-ALL \u2022 Refractory disease, defined as newly diagnosed\
+  \ patients who are induction failures after at least 2 previous regimens without\
+  \ attainment of remission, or patients with refractory first relapse after 1 previous\
+  \ reinduction regimen without attainment of remission. AND must meet the following\
+  \ criteria: \u2022 Patients must have M2 or M3 marrow status (\u2265 5% blasts by\
+  \ morphology) \u2022 The malignant clone needs to be CD22 surface antigen positive\
+  \ (in either the bone marrow or peripheral blood) by institutional standards as\
+  \ determined by the local immunophenotyping laboratory. \u2022 The first 6 patients\
+  \ (Stratum 1A only) must have M3 marrow status (\u2265 25% blasts by morphology)."
+- "3. Stratum 2: Diagnosis Patients must have second or greater relapsed or refractory\
+  \ CD22-positive B-cell malignancy including but not limited to diffuse large B-cell\
+  \ lymphoma (DLBCL), primary mediastinal large B-cell lymphoma (PMBCL), Burkitt lymphoma,\
+  \ Burkitt leukemia or B-cell precursor lymphoblastic lymphoma: \u2022 There must\
+  \ be histologic verification of disease at original diagnosis or subsequent relapse.\
+  \ \u2022 Patient must have evaluable or measurable disease documented by radiographic\
+  \ criteria or bone marrow disease present at study entry. \u2022 The malignant cells\
+  \ need to be CD22 surface antigen positive (in either biopsy material, the bone\
+  \ marrow or peripheral blood) by institutional standards as determined by the local\
+  \ immunophenotyping laboratory."
+- "4. Stratum 3: Diagnosis; Patients must have: \u2022 First BM or combined relapse\
+  \ of CD22+ VHR BCP-ALL defined as any relapse <18 months from initial diagnosis\
+  \ and/or cytogenetic-high risk characteristics: KTM2A/AF4, E2A/TCF3-PBX1 t(1;19)\
+  \ or E2A/TCF3-HLF t(17;19), hypodiploidy (less than 40 chromosomes), TP53 mutation\
+  \ and/or deletion, as also shown in Table 2 (excluding patients who received a HSCT\
+  \ in 1st CR). AND must meet the following criteria: \u2022 Patients must have M2\
+  \ or M3 marrow status (\u2265 5% blasts by morphology) \u2022 The malignant clone\
+  \ needs to be CD22 surface antigen positive (in either the bone marrow or peripheral\
+  \ blood) by institutional standards as determined by the local immunophenotyping\
+  \ laboratory. \u2022 Evidence of prior fusion gene abnormalities is acceptable as\
+  \ they tend to be stable during the course of the disease. \u2022 Laboratory techniques\
+  \ acceptable to test the presence of the above mentioned cytogenetic-high risk characteristics\
+  \ are chromosome banding analysis (CBA), FISH, PCR and/or Next Generation Sequencing\
+  \ (inclusion is based on local laboratory results)."
+- "5. For all patients Performance Level and Life Expectancy \u2022 Karnofsky > 60%\
+  \ for patients > 16 years of age and Lansky > 60% for patients \u2264 16 years of\
+  \ age. (See Appendix I for Performance Scales). \u2022 Patient must have a life\
+  \ expectancy of at least 6 weeks."
+- "6. For all patients Prior Therapy Patients must have fully recovered from the acute\
+  \ toxic effects of all prior chemotherapy, immunotherapy, or radiotherapy defined\
+  \ as resolution of all such non-hematologic toxicities to \u2264 Grade 2 per the\
+  \ CTCAE 4.03 prior to entering this study, with the exception of the authorized\
+  \ laboratory abnormalities as defined in the inclusion/exclusion criteria. a. Chemotherapy:\
+  \ At least 7 days must have elapsed since the completion of cytotoxic therapy, with\
+  \ the exception of hydroxyurea, 6-mercaptopurine and steroids which are permitted\
+  \ up until 48 hours prior to initiating protocol therapy. Patients may have received\
+  \ intrathecal therapy at any time prior to study entry. Patients who relapse while\
+  \ receiving maintenance chemotherapy will not be required to have a waiting period\
+  \ before enrollment onto this study. b. Radiotherapy: At least 28 days must have\
+  \ elapsed since any prior radiation therapy. c. Hematopoietic Stem Cell Transplant:\
+  \ At least 90 days must have elapsed since previous allo-HSCT. Patient must have\
+  \ no evidence of active graft vs. host disease. Patient must not be receiving GVHD\
+  \ prophylaxis or treatment. d. Hematopoietic growth factors: At least 7 days must\
+  \ have elapsed since the completion of therapy with GCSF or other growth factors\
+  \ at the time of enrollment. At least 14 days must have elapsed since the completion\
+  \ of therapy with pegfilgrastim (Neulasta\xAE). e. Immunotherapy: At least 42 days\
+  \ must have elapsed after the completion of any type of immunotherapy, e.g. chimeric\
+  \ antigen receptor T cell (CART) therapy. Patients may not have received prior CD22-\
+  \ targeted therapy (immunotoxin or CART therapy). f. Monoclonal antibodies: At least\
+  \ 3 half-lives of the antibody must have elapsed after the last dose of a monoclonal\
+  \ antibody (ie: Rituximab = 66 days, Epratuzumab = 69 days), with the exclusion\
+  \ of blinatumomab. Patients must have been off blinatumomab infusion for at least\
+  \ 14 days and all drug-related toxicity must have resolved to grade 2 or lower as\
+  \ outlined in the inclusion and exclusion criteria. g. Investigational drugs: At\
+  \ least 7 days or 5 drug half-lives (whichever is longer) must have elapsed since\
+  \ prior treatment with any experimental drug (with the exception of monoclonal antibodies)\
+  \ under investigation. No residual toxicities should be observed following previous\
+  \ treatment. An experimental drug is defined as any drug that is not approved and\
+  \ licensed for sale by the FDA for institutions in the United States, by the EMA\
+  \ for institutions in Europe, by Health Canada for institutions in Canada and by\
+  \ The Therapeutic Goods Administration for institutions in Australia. h. Prior calicheamicin\
+  \ exposure: Patient has not received prior treatment with a calicheamicin-conjugated\
+  \ antibody (e.g. gemtuzumab ozogamicin)."
+- "7. For all patients Renal and Hepatic Function \u2022 Patient\u2019s serum creatinine\
+  \ must be \u2264 1.5 x institutional upper limit of normal (ULN) according to age.\
+  \ If the serum creatinine is greater than 1.5 x institutional ULN, the patient must\
+  \ have a GFR \u2265 70mL/min/1.73 m2 estimated based on serum creatinine and/or\
+  \ cystatin C levels (e.g. Bedside Schwartz formula). \u2022 AST and ALT must be\
+  \ \u2264 5 x institutional ULN. (stratum 3 & 4) \u2022 Patient\u2019s total total\
+  \ bilirubin must be \u2264 1.5 x institutional ULN unless the patient has documented\
+  \ Gilbert syndrome, in which case the AST and ALT must be \u2264 5 x ULN. (stratum\
+  \ 3 & 4)"
+- "8. For all patients Cardiac Function \u2022 Patient must have a shortening fraction\
+  \ \u2265 30% by echocardiogram or an ejection fraction > 50% by MUGA."
+- "9. For all patients Reproductive Function \u2022 Female patients of childbearing\
+  \ potential must have a negative urine or serum pregnancy test confirmed prior to\
+  \ enrollment. \u2022 Female patients with infants must agree not to breastfeed their\
+  \ infants while on this study. \u2022 Male and female patients of child-bearing\
+  \ potential must agree to use a highly effective method of contraception approved\
+  \ by the investigator during the study, following the CTFG recommendations, and\
+  \ for at least 8 months for females and for at least 5 months for males after the\
+  \ last dose of InO. \u2022 Highly effective methods of contraception include (but\
+  \ not exclusively) the following contraceptive methods: \u2022 combined (estrogen-\
+  \ and progestogen-containing) hormonal contraception associated with inhibition\
+  \ of ovulation \u2022 progestogen-only hormonal contraception associated with inhibition\
+  \ of ovulation \u2022 intrauterine device (IUD) \u2022 intrauterine hormone-releasing\
+  \ system (IUS) \u2022 sexual abstinence."
+- "Exclude - 1. Isolated extramedullary relapse \u2022 Patients with isolated extramedullary\
+  \ disease are excluded (not applicable to lymphoma patients except for isolated\
+  \ CNS-relapse)"
+- "Exclude - 2. VOD/SOS \u2022 Patients with any history of prior or ongoing VOD/SOS\
+  \ per the modified Seattle criteria are excluded, as specified in Appendix 3, or\
+  \ prior liver-failure [defined as severe acute liver injury with encephalopathy\
+  \ and impaired synthetic function (INR of \u22651.5)]."
+- "Exclude - 3. Infection \u2022 Patients will be excluded if they have a systemic\
+  \ fungal, bacterial, viral or other infection that is exhibiting ongoing signs/symptoms\
+  \ related to the infection without improvement despite appropriate antibiotics or\
+  \ other treatment. \u2022 The patient may not have: \u2022 A requirement for vasopressors;\
+  \ \u2022 Positive blood culture within 48 hours of study enrollment; \u2022 Fever\
+  \ above 38.2 degrees Celsius within 48 hours of study enrollment with clinical signs\
+  \ of infection. Fever that is determined to be due to tumor burden is allowed if\
+  \ patients have documented negative blood cultures for at least 48 hours prior to\
+  \ enrollment and no concurrent signs or symptoms of active infection or hemodynamic\
+  \ instability. \u2022 A positive fungal culture within 30 days of study enrollment.\
+  \ \u2022 Active fungal, viral, bacterial, or protozoal infection requiring IV or\
+  \ oral treatment. Chronic prophylaxis therapy to prevent infections is allowed."
+- "Exclude - 4. Other anti-cancer therapy \u2022 Patients will be excluded if there\
+  \ is a plan to administer non-protocol anti-cancer therapy including but not limited\
+  \ to chemotherapy, radiation therapy, or immunotherapy during the study period.\
+  \ \u2022 Patients will be excluded if they have received prior treatment with anti-tumor\
+  \ vaccines."
+- "Exclude - 5. Allergic reaction \u2022 Patients with prior Grade 3/4 allergic reaction\
+  \ to a monoclonal antibody are excluded."
+- "Exclude - 6. Concurrent disease \u2022 Patients will be excluded if they have significant\
+  \ concurrent disease, illness, psychiatric disorder or social issue that would compromise\
+  \ patient safety or compliance with protocol therapy, interfere with consent, study\
+  \ participation, follow up, or interpretation of study results. \u2022 Children\
+  \ with Down syndrome are excluded from participation in the dose finding parts (stratum\
+  \ 1A and 1B), but not in the single-agent phase 2, stratum 3 and stratum 4."
+- "Exclude - 7. Additional exclusion criteria for Stratum 1B \u2022 Patients with\
+  \ grade 3-4 peripheral neuropathy (as defined in the Delphi consensus of acute toxic\
+  \ effects for childhood ALL by Schmiegelow et al.12). \u2022 Patients with prior\
+  \ history of thrombosis during steroid and/or asparaginase are eligible provided\
+  \ they use adequate anti-coagulant prophylaxis, according to institutional guidelines.\
+  \ \u2022 Patients in whom prior experience suggests that a timely delivery of therapy\
+  \ is unlikely or associated with an undue risk because of intolerance."
+- "Exclude - 8. Additional exclusion criteria for Stratum 1B-ASP cohort only \u2022\
+  \ Patients with any history of PEG-asparaginase intolerance due to allergic reactions\
+  \ or silent inactivation during prior treatment. \u2022 Patients with any history\
+  \ of prior asparaginase-associated acute pancreatitis (any grade as defined in the\
+  \ Delphi consensus12. Patients who are excluded from Stratum 1B-ASP may potentially\
+  \ be enrolled in Stratum 1B expansion cohort."
+- "Exclude - 9. Additional exclusion criteria for Stratum 3 (VHR cohort) only \u2022\
+  \ Patients who are transplanted in CR1 (such patients are eligible for the phase\
+  \ 1B cohort)."
+short_title: Inotuzumab ozogamicin for Acute Lymphoblastic Leukemia
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Erasmus Universitair Medisch Centrum Rotterdam (Erasmus MC)
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: "STRATUM 1  \nStratum 1A: \nTo establish the MTD or the RP2D of single agent\
+  \ InO when administered in children with CD22-positive relapsed/refractory BCP-ALL\
+  \ (completed).  \nNote that:  \no if the MTD is not reached at the highest tested\
+  \ dose, no further dose-escalation will be performed. \no to establish the RP2D\
+  \ for further study in the Phase 2 cohort, additional modelling will be performed\
+  \ regarding cumulative toxicity (as described in Section 9) \n\nPhase 2 Cohort:\
+  \ \nTo establish the preliminary clinical activity (efficacy) activity with respect\
+  \ to ORR of single agent InO when administered in children with CD22-positive relapsed/refractory\
+  \ BCP-ALL. (completed) \n\nStratum 1B (and 1B-ASP): \nTo determine the RP2D of InO\
+  \ in children with CD22-positive relapsed/refractory BCP-ALL in combination with\
+  \ a modified UKALL-R3 based re-induction regimen. (completed)\n\nSTRATUM 2 (EXPLORATORY)\
+  \  \nTo explore th"
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: Registration
+      arm_internal_id: 0
+      arm_description: 'CTIS record: no per-arm eligibility published.'
+      arm_suspended: N
+      dose_level: []
+    match:
+    - and:
+      - and:
+        - or:
+          - clinical:
+              oncotree_primary_diagnosis: B-Lymphoblastic Leukemia/Lymphoma
+          - clinical:
+              oncotree_primary_diagnosis: B-Lymphoblastic Leukemia/Lymphoma with Hypodiploidy
+          - clinical:
+              oncotree_primary_diagnosis: B-Lymphoblastic Leukemia/Lymphoma with t(1;19)(q23;p13.3);TCF3-PBX1
+          - clinical:
+              oncotree_primary_diagnosis: Burkitt Lymphoma
+          - clinical:
+              oncotree_primary_diagnosis: Diffuse Large B-Cell Lymphoma, NOS
+          - clinical:
+              oncotree_primary_diagnosis: Primary Mediastinal (Thymic) Large B-Cell
+                Lymphoma
+        - clinical:
+            age_numerical: '>=1'
+        - clinical:
+            age_numerical: <18
+      # Curator note (2026-09-26): genomic block removed. In the protocol the
+      # cytogenetic high-risk features (KMT2A::AFF1, TCF3::PBX1, TCF3::HLF,
+      # hypodiploidy <40, TP53 mutation/deletion) are one of several routes into
+      # Stratum 4 only (1st VHR relapse); early, 2nd+, post-HSCT relapse and
+      # refractory disease qualify without them, and strata 1A/1B have no genomic
+      # criterion. As a required AND they would drop most eligible patients.
+      # Lab notes for Stratum 4 if used: KMT2A partner must be identified (not
+      # break-apart FISH alone); TCF3::HLF is missed by PBX1-only RT-PCR panels;
+      # masked hypodiploidy needs allele-level (BAF/CN-LOH) data; TP53 origin
+      # (germline vs somatic), VAF and CN definition are not specified.
