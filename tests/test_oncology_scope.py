@@ -126,5 +126,34 @@ class TestPhrasesThatNameNoTumour(unittest.TestCase):
         self.assertTrue(matched_terms(["Cancer Center trial in Wilms tumour"]))
 
 
+
+class TestFollowOnStudies(unittest.TestCase):
+    """2023-507041-28-00 (reported 2026-09-26): a follow-up study for patients already treated."""
+
+    def _nct(self, brief, official="", conditions=("Leukemia",)):
+        return {"protocolSection": {"identificationModule": {"briefTitle": brief, "officialTitle": official},
+                                    "conditionsModule": {"conditions": list(conditions)}}}
+
+    def test_follow_up_and_rollover_titles_are_out_of_scope(self):
+        from utils.oncology_scope import assess
+        for title in ("Long-term Follow-up Study for Participants Treated With Gene-Modified Cells",
+                      "Asciminib Roll-over Study", "A Rollover Study for Participants Previously Enrolled",
+                      "Long-Term Follow-Up (LTFU) of Participants Treated with Adoptive Cell Therapies",
+                      "A study of continued treatment with regorafenib"):
+            ok, why = assess("NCT0", self._nct(title), "nct", {})
+            self.assertFalse(ok, title)
+            self.assertIn("follow-on study", why)
+
+    def test_follow_up_as_an_endpoint_does_not_count(self):
+        from utils.oncology_scope import assess
+        ok, _ = assess("NCT0", self._nct("Blinatumomab in B-ALL with 5-year follow-up"), "nct", {})
+        self.assertTrue(ok)
+
+    def test_a_map_override_still_wins(self):
+        from utils.oncology_scope import assess
+        ok, why = assess("NCT0", self._nct("Asciminib Roll-over Study"), "nct", {"NCT0": ("map", "curator")})
+        self.assertTrue(ok)
+
+
 if __name__ == "__main__":
     unittest.main()

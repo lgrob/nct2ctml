@@ -486,6 +486,22 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Scope filter: follow-on studies are out of scope, as the policy says
+
+Reported by the user: 2023-507041-28-00 is Kite's long-term follow-up of
+patients already treated with gene-modified cells. Its only condition is
+"Solid and Hematological Malignancies", and its match tree was empty. The
+documented scope policy (2026-09-23) already puts CAR-T long-term follow-up
+and drug rollover studies out of scope, because no new patient can enter
+them. The filter only looked for cancer words, so it let them through.
+
+A follow-on phrase in the titles or keywords now puts a trial out of scope:
+long-term follow-up, LTFU, roll-over/rollover, continued access or
+treatment, extension or continuation study. The inclusion criteria are not
+used, because "prior to any study procedure" is too common. Exactly 18
+in-scope trials move out, all follow-up or rollover studies; 1,147 remain in
+scope. A "map" override still wins.
+
 ## Diagnoses named only in exclusion criteria; excluded diagnoses in the index
 
 Reported by the user on 2023-504999-25-00 (CHIP-AML22): APL, myeloid

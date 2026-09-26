@@ -63,6 +63,18 @@ _ABBREVIATIONS = (
 )
 _STEM_RX = re.compile("|".join(_STEMS), re.I)
 
+# Studies that enrol only patients from an earlier study - long-term
+# follow-up after cell or gene therapy, drug rollover, continued access. The
+# policy above puts them out of scope (no new patient can enter them), but
+# they name cancers, so the vocabulary let 18 through in the first full run
+# (reported by the user on 2023-507041-28-00, a Kite follow-up study whose
+# only condition is "Solid and Hematological Malignancies"). Matched in the
+# titles and keywords only: inclusion criteria say "prior to any study
+# procedure" far too often to be used.
+_FOLLOW_ON_RX = re.compile(
+    r"long[\s-]*term[\s-]+follow[\s-]*up|\bLTFU\b|roll[\s-]*over|continued\s+(?:access|treatment)"
+    r"|extension\s+study|continuation\s+study", re.I)
+
 # Phrases that contain a stem but name no tumour. Masked before the
 # vocabulary is matched, so they cannot put a trial in scope; the rest of
 # the text still can. Each was a trial wrongly in scope in the first full
@@ -147,6 +159,10 @@ def assess(trial_id, trial_data, registry, overrides=None):
 
     import utils.reference_validation as rv
     import src.clinical_trials_gov as ctg
+    follow_on = _FOLLOW_ON_RX.search(" | ".join(t for t in other if t))
+    if follow_on:
+        return False, f"follow-on study ('{follow_on.group(0)}'): enrols only patients from an earlier study"
+
     oncotree = rv.diagnoses_from_conditions(conditions, trial_id)
     if oncotree:
         return True, f"conditions name {sorted(oncotree)[:3]}"
