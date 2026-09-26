@@ -1,3 +1,4 @@
+import os
 # Modified by Kinderspital Zurich (Kispi) from the original
 # nct2ctml, Copyright 2026 The University of Hong Kong, Apache-2.0.
 # Retargeted from adult oncology in Hong Kong to paediatric oncology.
@@ -36,6 +37,19 @@ ANTHROPIC_THINKING = None      # None | "adaptive"
 ANTHROPIC_EFFORT = None        # None | low | medium | high | xhigh | max
 # 0 for reproducibility. Ignored when thinking is on (the API requires 1).
 ANTHROPIC_TEMPERATURE = 0
+
+# What text the diagnosis step is given (roadmap 2.8, 2026-09-26). The model
+# was handed exclusion criteria alongside inclusion criteria - for CTIS with
+# no labels at all - and returned excluded diagnoses as eligible ones (75
+# trials in the first full run).
+#   legacy          - as before: NCT "Inclusion Criteria: ... Exclusion
+#                     Criteria: ...", CTIS conditions + both sections unlabelled
+#   labelled        - both sections labelled for both registries, and the
+#                     prompt says exclusion diagnoses are exclusions
+#   inclusion_only  - title, conditions and inclusion criteria only (arm
+#                     level: the arm's inclusion criteria)
+# NCT2CTML_DIAGNOSIS_INPUT overrides it (used by the measurement harness).
+DIAGNOSIS_INPUT = os.environ.get("NCT2CTML_DIAGNOSIS_INPUT", "legacy")
 ANTHROPIC_MAX_TOKENS = 16000
 
 # deepseek library

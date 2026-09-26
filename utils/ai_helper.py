@@ -400,12 +400,17 @@ def get_ai_prompt_oncotree_diagnoses_from_trial_info(trial_info, oncotree_values
     # Sorted so the prompt text does not depend on set order (PYTHONHASHSEED);
     # see prompt_list(). Roadmap 1.9.
     oncotree_values = diagnosis_prompt_list(oncotree_values)
+    import config
+    # Roadmap 2.8: only in "labelled" mode, so legacy prompts stay byte-identical.
+    exclusion_rule = ("\n        - Conditions named under Exclusion Criteria are excluded from the trial: do not "
+                      "return them, unless the Inclusion Criteria (or the Title or Conditions) also name them."
+                      if getattr(config, "DIAGNOSIS_INPUT", "legacy") == "labelled" else "")
     prompt = f"""Task: From the TrialInfo, extract OncotreeValues that correspond to medical conditions explicitly mentioned in the text.
         Rules:
         - Only include a diagnosis if the condition or cancer type is explicitly stated in TrialInfo.
         - Do not infer diagnoses from drug names, treatment regimens, parent studies, or other indirect clues.
         - If no condition or cancer type is explicitly mentioned, return an empty list.
-        - Choose only from the provided OncotreeValues.
+        - Choose only from the provided OncotreeValues.{exclusion_rule}
 
         TrialInfo: {trial_info}
         OncotreeValues: {oncotree_values}

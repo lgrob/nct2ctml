@@ -203,7 +203,15 @@ def map_ctis_to_ctml(trial_data: dict,
     # unreachable, and without any signal when the model dropped a diagnosis
     # the trial names outright. 61 of the 331 cached CTIS trials resolve from
     # their conditions alone, and every one of them was being left to the model.
-    diagnosis_text = "\n".join(conditions + [criteria])
+    # CTIS used to hand the model conditions, inclusion and exclusion joined
+    # with no labels, so it could not tell an excluded diagnosis from an
+    # eligible one (config.DIAGNOSIS_INPUT).
+    import config
+    mode = getattr(config, "DIAGNOSIS_INPUT", "legacy")
+    diagnosis_text = ctg.diagnosis_text(
+        inclusion_text, exclusion_text,
+        title=(get_titles(trial_data)[1] or get_titles(trial_data)[0]) if mode == "inclusion_only" else "",
+        conditions=conditions, legacy="\n".join(conditions + [criteria]))
     seeded, from_eligibility = ctg.seed_and_map_diagnosis(ct, conditions, diagnosis_text)
     diagnoses = sorted(set(seeded) | set(from_eligibility))
 

@@ -79,7 +79,18 @@ def map_nct_to_clinical_and_genomic_criteria(trial_data: dict,
     mapped_global_clinical_critera = {}
 
     logger.info(f"NCTID: {nct_id} | Mapping global diagnosis to oncotree terms")
-    oncotree_diagnoses_list = map_global_diagnosis_to_oncotree_term(trial_data, global_nct_criteria)
+    import config
+    mode = getattr(config, "DIAGNOSIS_INPUT", "legacy")
+    ident = tdh.safe_get(trial_data, ['protocolSection', 'identificationModule']) or {}
+    global_dx_text = diagnosis_text(
+        global_inclusion_text, global_exclusion_text,
+        # labelled keeps the NCT text as it was apart from the prompt rule:
+        # these sections were already labelled.
+        title=(ident.get("officialTitle") or ident.get("briefTitle") or "") if mode == "inclusion_only" else "",
+        conditions=(tdh.safe_get(trial_data, ['protocolSection', 'conditionsModule', 'conditions']) or [])
+        if mode == "inclusion_only" else (),
+        legacy=global_nct_criteria)
+    oncotree_diagnoses_list = map_global_diagnosis_to_oncotree_term(trial_data, global_dx_text)
     mapped_global_clinical_critera['oncotree_primary_diagnosis'] = oncotree_diagnoses_list
 
     # A list, because a trial can bound age at both ends. The converter emits
@@ -175,7 +186,7 @@ def _map_arm_level_matches(
             f"NCTID: {nct_id} | Mapping arm level diagnosis to oncotree terms for arm {level_code}"
         )
         oncotree_diagnoses_list = map_eligibility_criteria_to_oncotree_term(
-            nct_id, arm_eligibility_criteria
+            nct_id, diagnosis_text(arm_inclusion_text, arm_exclusion_text, legacy=arm_eligibility_criteria)
         )
         if oncotree_diagnoses_list and len(oncotree_diagnoses_list) > 0:
             mapped_arm_clinical_critera["oncotree_primary_diagnosis"] = oncotree_diagnoses_list
@@ -926,6 +937,33 @@ def _map_global_diagnosis_from_conditions_and_extra_info(trial_data: dict) -> se
                         all_possible_diagnoses.update(oncotree_diagnoses_result['oncotree_diagnoses'])
 
     return all_possible_diagnoses
+
+def diagnosis_text(inclusion: str, exclusion: str, title: str = "", conditions=(), legacy: str = "") -> str:
+    """
+    The text the diagnosis step is given, per config.DIAGNOSIS_INPUT, for
+    both registries and for arm-level criteria. `legacy` is the caller's
+    old text, returned unchanged in legacy mode so its prompts (and cached
+    answers) stay byte-identical.
+    """
+    import config
+    mode = getattr(config, "DIAGNOSIS_INPUT", "legacy")
+    head = []
+    if title:
+        head.append(f"Title: {title}")
+    if conditions:
+        head.append("Conditions: " + "; ".join(c for c in conditions if c))
+    if mode == "inclusion_only":
+        parts = head + ([f"Inclusion Criteria: {inclusion.strip()}"] if (inclusion or "").strip() else [])
+        return "\n".join(parts).strip()
+    if mode == "labelled":
+        parts = head
+        if (inclusion or "").strip():
+            parts = parts + [f"Inclusion Criteria: {inclusion.strip()}"]
+        if (exclusion or "").strip():
+            parts = parts + [f"Exclusion Criteria: {exclusion.strip()}"]
+        return "\n".join(parts).strip()
+    return legacy
+
 
 def seed_and_map_diagnosis(trial_id: str, conditions_list, eligibility_criteria: str = ""):
     """
