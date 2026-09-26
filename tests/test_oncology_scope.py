@@ -116,7 +116,8 @@ class TestPhrasesThatNameNoTumour(unittest.TestCase):
         from utils.oncology_scope import matched_terms
         for text in ("Anti-Leucine-Rich Glioma-Inactivated 1 (LGI1) Encephalitis",
                      "patients starting tumour necrosis factor inhibitors", "tumor necrosis factor",
-                     "Memorial Sloan Kettering Cancer Center", "Spina Bifida | Myelomeningocele"):
+                     "Memorial Sloan Kettering Cancer Center", "Spina Bifida | Myelomeningocele",
+                     "Monitor the Risk of Malignancy Due to Insertional Oncogenesis"):
             self.assertEqual(matched_terms([text]), [], text)
 
     def test_the_rest_of_the_text_still_counts(self):

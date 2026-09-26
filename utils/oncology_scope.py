@@ -92,7 +92,11 @@ _NOT_A_TUMOUR = re.compile(
     r"glioma[\s-]+inactivated"
     r"|tumou?r[\s-]+necrosis[\s-]+factor"
     r"|cancer\s+(?:center|centre|institute|research|society|hospital)"
-    r"|myelomeningocele",
+    r"|myelomeningocele"
+    # - safety monitoring after gene therapy: "Risk of Malignancy Due to
+    #   Insertional Oncogenesis" in metachromatic leukodystrophy,
+    #   2025-522275-28-00 (reported by the user, 2026-09-26).
+    r"|risk\s+of\s+(?:secondary\s+)?malignanc\w*|insertional\s+oncogenesis",
     re.I)
 _ABBR_RX = re.compile(r"\b(?:" + "|".join(_ABBREVIATIONS) + r")\b")
 

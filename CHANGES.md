@@ -486,6 +486,14 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Scope filter: gene-therapy malignancy monitoring is not an oncology trial
+
+Reported by the user: 2025-522275-28-00 collects samples from children with
+metachromatic leukodystrophy, treated with OTL-200 gene therapy, to monitor
+the "Risk of Malignancy Due to Insertional Oncogenesis". Its "malignancy"
+was the only oncology term. "Risk of (secondary) malignancy" and "insertional
+oncogenesis" are now masked. Exactly this trial changes; 1,146 remain in scope.
+
 ## Existing output checked for exclusion-only diagnoses (2026-09-26)
 
 `review_helper flag-exclusions --apply` was run at the user's request: 62
