@@ -1,3 +1,4 @@
 date	trial_id	reviewer	from_layer	flags_resolved	sha256	note
 2026-09-26	2023-504694-20-00	lgrob	needs_review	gene_unsupported,fusion_partner_unverified	04766260c504aa7d9beb4938ceae560b7d6314e9440f7dd9b70e5ee5b876e8dc	genomic block removed: optional Stratum 4 route only
 
+2026-09-27	NCT06904235	lgrob	needs_review	excluded		supportive care (chemotherapy-induced nausea and vomiting); no tumour criterion

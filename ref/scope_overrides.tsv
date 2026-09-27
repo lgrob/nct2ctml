@@ -3,3 +3,4 @@
 # "skip" (do not map it even though one was). Give the reason; it is shown in
 # the log and in ctml/out-of-scope.tsv.
 trial_id	decision	reason
+NCT06904235	skip	supportive care (chemotherapy-induced nausea and vomiting); no tumour criterion (lgrob, 2026-09-27)
