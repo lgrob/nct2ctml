@@ -417,6 +417,110 @@ def clear_stale_gene_flags(apply=False):
     return out
 
 
+B_ALL = "B-Lymphoblastic Leukemia/Lymphoma"
+T_ALL = "T-Lymphoblastic Leukemia/Lymphoma"
+_ALL_FULL = re.compile(r"acute\s+lymph(?:oblastic|ocytic|oid)\s+leuka?emia", re.I)
+_ALL_ABBR = re.compile(r"(?<![A-Za-z-])ALL(?![A-Za-z-])")   # capitals only: not the word "all"
+_B_LINEAGE = re.compile(r"\bB[\s-]*(?:cell\s*)?(?:ALL|acute|precursor|lineage|lymphoblastic|LBL)|\bBCP\b|CD19|CD22|CD20|\bPh\s*\+|"
+                        r"Philadelphia|BCR[\s:-]*ABL|pre-?B|blinatumomab|inotuzumab|tisagenlecleucel|brexucabtagene|"
+                        r"obecabtagene|KMT2A-r|infant", re.I)
+_T_LINEAGE = re.compile(r"\bT[\s-]*(?:cell\s*)?(?:ALL|acute\s+lymphoblastic|lymphoblastic|LBL)\b|T-lineage", re.I)
+
+
+def all_lineage_unspecified(diagnoses, inclusion, exclusion, context=()):
+    """
+    True when a trial names acute lymphoblastic leukaemia without a lineage
+    and the mapping has B-ALL but not T-ALL.
+
+    ref/diagnosis_synonyms.tsv maps unqualified ALL to B-ALL (Oncotree has
+    no lineage-free ALL node), so a T-ALL patient did not match a trial for
+    "ALL". Not reported when any B- or T-lineage wording appears (CD19, Ph+,
+    B-cell, blinatumomab, T-ALL named or excluded) or the trial already has
+    T-ALL or _LIQUID_. Measured 2026-09-27: 20 indexed trials.
+    """
+    dx = {str(d) for d in diagnoses or []}
+    if B_ALL not in dx or T_ALL in dx or "!" + T_ALL in dx or "_LIQUID_" in dx:
+        return False
+    ctx = " ".join(c for c in context if c)
+    named = _ALL_FULL.search(inclusion or "") or _ALL_ABBR.search(inclusion or "") or _ALL_FULL.search(ctx)
+    if not named:
+        return False
+    both = " ".join([inclusion or "", ctx])
+    return not (_B_LINEAGE.search(both) or _T_LINEAGE.search(both) or _T_LINEAGE.search(exclusion or ""))
+
+
+def add_sibling_diagnosis(tree, existing, new):
+    """
+    Add `new` as an alternative wherever `existing` is an eligible diagnosis:
+    beside it in an OR list, or by wrapping a lone node in an OR. The copy
+    keeps the node's other clinical fields (age, sex). Returns the count.
+    """
+    import copy
+    count = 0
+
+    def is_it(n):
+        return isinstance(n, dict) and isinstance(n.get("clinical"), dict) and \
+            n["clinical"].get("oncotree_primary_diagnosis") == existing
+
+    def twin(n):
+        c = copy.deepcopy(n)
+        c["clinical"]["oncotree_primary_diagnosis"] = new
+        return c
+
+    def walk(node, parent_key=None):
+        nonlocal count
+        if isinstance(node, dict):
+            for k, v in node.items():
+                walk(v, k)
+        elif isinstance(node, list):
+            i = 0
+            while i < len(node):
+                n = node[i]
+                if is_it(n):
+                    count += 1
+                    if parent_key == "or":
+                        node.insert(i + 1, twin(n)); i += 1
+                    else:
+                        node[i] = {"or": [n, twin(n)]}
+                else:
+                    walk(n, parent_key)
+                i += 1
+    walk(tree)
+    return count
+
+
+def fix_all_lineage(apply=False):
+    """Apply all_lineage_unspecified to CTML already written (mapped and review layers)."""
+    import utils.oncology_scope as scope
+    out_of_scope = set(scope.load_report()) | {t for t, (d, _) in scope.load_overrides().items() if d == "skip"}
+    found = []
+    for d, layer in ((MAPPED_DIR, "mapped"), (REVIEW_DIR, "needs_review")):
+        for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
+            if not f.endswith(".yaml"):
+                continue
+            t, path = f[:-5], os.path.join(d, f)
+            if t in out_of_scope or os.path.exists(os.path.join(REVIEWED_DIR, f)) or \
+                    (layer == "mapped" and os.path.exists(os.path.join(REVIEW_DIR, f))):
+                continue
+            raw = open(path).read()
+            ctml = yaml.safe_load(raw)
+            if not isinstance(ctml, dict) or re.search(r"^\s*#", raw, re.M):
+                continue   # curator-edited files are left to the curator
+            try:
+                inc, exc, data = eligibility_text(t)
+            except (OSError, ValueError, KeyError):
+                continue
+            ctx = [str(c) for c in _conditions(t, data)] + list(_arm_and_title_text(t, data))
+            if not all_lineage_unspecified(collect(ctml)["diagnoses"], inc, exc, ctx):
+                continue
+            n = add_sibling_diagnosis(ctml.get("treatment_list"), B_ALL, T_ALL)
+            found.append((t, layer, n))
+            if apply and n:
+                with open(path, "w") as fh:
+                    fh.write(yaml.dump(ctml, sort_keys=False))
+    return found
+
+
 def flag_gene_status(apply=False):
     """
     Apply gene_status_contradictions to CTML already written (mapped and
@@ -1102,6 +1206,8 @@ def main(argv=None):
     fx.add_argument("--apply", action="store_true", help="write the flag and move mapped trials to review")
     sub.add_parser("clear-stale-gene-flags", help="drop gene_unsupported where a single-arm trial names the gene").add_argument(
         "--apply", action="store_true")
+    sub.add_parser("fix-all-lineage", help="add T-ALL where a trial names ALL without lineage").add_argument(
+        "--apply", action="store_true")
     fs = sub.add_parser("flag-gene-status", help="genes required although the text says absent or irrelevant")
     fs.add_argument("--apply", action="store_true", help="write the flag and move mapped trials to review")
     fg = sub.add_parser("flag-unsupported-genes", help="re-run the unsupported-gene check on existing CTML")
@@ -1148,6 +1254,11 @@ def main(argv=None):
         for t, genes, moved in found:
             print(f"{t}\t{','.join(genes)}\t{'-> mapped' if moved else 'stays in review'}")
         print(f"{len(found)} trials, {sum(len(g) for _, g, _ in found)} flags" + (" cleared" if args.apply else " would be cleared; --apply to write"))
+    elif args.cmd == "fix-all-lineage":
+        found = fix_all_lineage(apply=args.apply)
+        for t, layer, n in found:
+            print(f"{t}\t{layer}\t{n} B-ALL node(s) given a T-ALL alternative")
+        print(f"{len(found)} trials" + (" updated" if args.apply else " would be updated; --apply to write"))
     elif args.cmd == "flag-gene-status":
         found = flag_gene_status(apply=args.apply)
         for t, layer, hit, action in found:

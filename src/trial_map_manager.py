@@ -230,6 +230,7 @@ class TrialMapManager:
                     self._record_off_list(mapped_ctml, nct_id)
                     self._flag_excluded_diagnoses(mapped_ctml, trial_data, "nct", nct_id)
                     self._flag_contradictions(mapped_ctml, nct_id)
+                    self._add_unspecified_all_lineage(mapped_ctml, trial_data, "nct", nct_id)
                     self._flag_gene_status(mapped_ctml, trial_data, "nct", nct_id)
                     
                     # Add local trial info if available
@@ -345,6 +346,7 @@ class TrialMapManager:
             self._record_off_list(mapped_ctml, ct_number)
             self._flag_excluded_diagnoses(mapped_ctml, trial_data, "ctis", ct_number)
             self._flag_contradictions(mapped_ctml, ct_number)
+            self._add_unspecified_all_lineage(mapped_ctml, trial_data, "ctis", ct_number)
             self._flag_gene_status(mapped_ctml, trial_data, "ctis", ct_number)
             # CTIS bypassed the review queue entirely until 2026-09-21: it saved
             # straight to the output directory, so a CTIS trial whose diagnosis
@@ -407,6 +409,33 @@ class TrialMapManager:
         if found:
             mapped_ctml["genomic_contradiction"] = "; ".join(found)
             logger.warning(f"{trial_id} | match tree requires and forbids {', '.join(found)}: matches nobody")
+
+    @staticmethod
+    def _add_unspecified_all_lineage(mapped_ctml: dict, trial_data: dict, registry: str, trial_id: str) -> None:
+        """
+        A trial for "acute lymphoblastic leukaemia" with no lineage wording
+        gets T-ALL beside B-ALL (utils.review_helper.all_lineage_unspecified):
+        the synonym table maps unqualified ALL to B-ALL only. Never loses the trial.
+        """
+        if not isinstance(mapped_ctml, dict):
+            return
+        try:
+            from utils import review_helper as rh
+            if registry == "ctis":
+                import src.ctis as ctis
+                inc, exc = ctis.split_inclusion_exclusion_criteria(trial_data)
+                context = list(ctis.get_titles(trial_data)) + list(ctis.get_conditions(trial_data))
+            else:
+                inc, exc = ctg.split_inclusion_exclusion_criteria(trial_data)
+                ps = trial_data.get("protocolSection", {})
+                im = ps.get("identificationModule", {})
+                context = [im.get("briefTitle") or "", im.get("officialTitle") or ""] + \
+                    list(ps.get("conditionsModule", {}).get("conditions") or [])
+            if rh.all_lineage_unspecified(rh.collect(mapped_ctml)["diagnoses"], inc, exc, context):
+                n = rh.add_sibling_diagnosis(mapped_ctml.get("treatment_list"), rh.B_ALL, rh.T_ALL)
+                logger.info(f"{trial_id} | ALL named without lineage: T-ALL added beside B-ALL ({n})")
+        except Exception as e:   # a check must never lose the trial
+            logger.warning(f"{trial_id} | ALL-lineage rule skipped: {type(e).__name__}: {e}")
 
     @staticmethod
     def _flag_gene_status(mapped_ctml: dict, trial_data: dict, registry: str, trial_id: str) -> None:
@@ -574,6 +603,7 @@ class TrialMapManager:
             self._record_off_list(mapped_ctml, nct_id)
             self._flag_excluded_diagnoses(mapped_ctml, trial_data, "nct", nct_id)
             self._flag_contradictions(mapped_ctml, nct_id)
+            self._add_unspecified_all_lineage(mapped_ctml, trial_data, "nct", nct_id)
             self._flag_gene_status(mapped_ctml, trial_data, "nct", nct_id)
             
             # Add local trial info if available
