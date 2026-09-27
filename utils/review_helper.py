@@ -72,7 +72,7 @@ LOG_COLUMNS = ["date", "trial_id", "reviewer", "from_layer", "flags_resolved", "
 # that still holds any of them: deleting the key is how a curator confirms
 # the item, deleting the item is how they reject it.
 FLAG_KEYS = ("gene_unsupported", "diagnosis_off_list", "diagnosis_excluded", "genomic_contradiction",
-             "remap_dropped_diagnoses",
+             "remap_dropped_diagnoses", "gene_status_contradiction",
              "protein_change_unverified",
              "protein_change_check", "fusion_partner_unverified")
 
@@ -95,6 +95,10 @@ ADVICE = {
                           "match tree, or, when a broader diagnosis the trial enrols contains it, add it as "
                           "`oncotree_primary_diagnosis: '!Name'` (quoted) beside that diagnosis. Then delete "
                           "the top-level `diagnosis_excluded:` line.",
+    "gene_status_contradiction": "The match tree requires an alteration in a gene that the inclusion text says "
+                                 "must be absent (wild type, negative, 'no ... mutation') or does not matter "
+                                 "('with or without'). Remove or negate the criterion, then delete the top-level "
+                                 "`gene_status_contradiction:` line.",
     "remap_dropped_diagnoses": "A re-map (2026-09-27) dropped these diagnoses, and the exclusion text does not "
                                "explain it, so patients who matched before would no longer match. The previous "
                                "version is kept as <trial>.yaml.prev. Add back the ones the trial enrols, then "
@@ -211,6 +215,61 @@ def _as_set(value):
     return {v.strip() for v in str(value).split(";") if v.strip()} if value else set()
 
 
+_ALTERATION = (r"(?:mutations?|mutated|mutant|alterations?|fusions?|rearrangements?|amplification|"
+               r"translocation|variants?|positiv\w*|deletion)")
+
+
+def _gene_status_patterns(term):
+    t = re.escape(term)
+    irrelevant = [rf"with\s*(?:or|/)\s*without\s+(?:an?\s+)?{t}\b",
+                  rf"(?:mutant|mutated|positive)\s+or\s+(?:wild[\s-]*type|negative)\s+{t}",
+                  rf"(?<![A-Za-z0-9]){t}\b[^.;]{{0,40}}(?:mutant|mutated|positive)\s+or\s+(?:wild[\s-]*type|negative)"]
+    negative = [rf"wild[\s-]*type\s+(?:for\s+)?{t}\b", rf"(?<![A-Za-z0-9]){t}[\s-]*wild[\s-]*type",
+                rf"(?<![A-Za-z0-9]){t}[\s-]*(?:wt|WT)\b", rf"(?<![A-Za-z0-9]){t}[\s-]*negative",
+                rf"(?:without|no|absence of|lack of|not harbou?ring|negative for)\s+(?:an?\s+|any\s+|known\s+|the\s+)?{t}\b"]
+    positive = [rf"(?<![A-Za-z0-9]){t}[\s-]*{_ALTERATION}", rf"(?:with|harbou?ring|positive for|carrying)\s+(?:an?\s+)?{t}\b",
+                rf"(?<![A-Za-z0-9]){t}\s*\+"]
+    return irrelevant, negative, positive
+
+
+def gene_status_contradictions(ctml, inclusion, ref=None):
+    """
+    Genes the match tree requires although the inclusion text says they must
+    be absent or do not matter: "wild type FLT-ITD" read as an FLT3 mutation
+    (NCT05805605, reported 2026-09-27), "no known EGFR ... mutations", "HER2
+    negative", "with or without NPM1 mutation", "either mutant or wild-type
+    B-RAF". A gene the text also states positively (two routes, e.g. MYCN
+    amplified or not) is not reported. Deterministic, no model call.
+
+    Returns {gene: sentence fragment}. Measured over all indexed trials on
+    2026-09-27: 7 trials flagged, all 7 real errors; 2 false alarms among 56
+    reviewed trials (Ewing-like sarcoma "negative for EWSR1 rearrangement",
+    where the EWSR1-positive route is only implied).
+    """
+    ref = ref or _shared_reference()
+    text = (inclusion or "").replace("\\[", "[").replace("\\]", "]")
+    def negated(g):
+        return any(str(g.get(k, "")).startswith("!") for k in ("variant_category", "cnv_call", "protein_change"))
+    required = sorted({g.get("hugo_symbol") for g in _genomic_nodes((ctml or {}).get("treatment_list"))
+                       if g.get("hugo_symbol") and not negated(g)})
+    out = {}
+    for gene in required:
+        terms = [x for x in ref.gene_terms(gene) if len(x) >= 3] + (["FLT3-ITD", "FLT-ITD"] if gene == "FLT3" else [])
+        irr, neg, pos = [], [], []
+        for x in terms:
+            i_p, n_p, p_p = _gene_status_patterns(x)
+            irr += [m for p in i_p for m in re.finditer(p, text, re.I)]
+            neg += [m for p in n_p for m in re.finditer(p, text, re.I)]
+            pos += [m for p in p_p for m in re.finditer(p, text, re.I)]
+        neg = [m for m in neg if not any(i.start() <= m.start() <= i.end() for i in irr)
+               and not re.search(r"with\s*(?:or|/)\s*$", text[max(0, m.start() - 9):m.start()], re.I)]
+        pos = [m for m in pos if not any(n.start() <= m.start() < n.end() + 5 for n in neg + irr)]
+        hit = irr[0] if irr else (neg[0] if neg and not pos else None)
+        if hit:
+            out[gene] = " ".join(text[max(0, hit.start() - 60): hit.end() + 40].split())
+    return out
+
+
 def diagnoses_only_in_exclusions(diagnoses, inclusion, exclusion, context=(), ref=None):
     """
     Diagnoses named (by name or synonym) in the exclusion criteria and nowhere
@@ -291,6 +350,52 @@ def flag_exclusions(apply=False):
                                                                  allow_unicode=True, width=1000)
                 os.makedirs(REVIEW_DIR, exist_ok=True)
                 with open(target, "w") as fh:
+                    fh.write(text)
+                if layer == "mapped":
+                    os.remove(path)
+    return found
+
+
+def flag_gene_status(apply=False):
+    """
+    Apply gene_status_contradictions to CTML already written (mapped and
+    review layers; never ctml/reviewed or out-of-scope trials). Returns
+    [(trial_id, layer, {gene: fragment}, action)]. With apply=True the
+    top-level key is added (text append, so curator comments survive) and a
+    mapped trial moves to the review queue.
+    """
+    import utils.oncology_scope as scope
+    ref = _shared_reference()
+    out_of_scope = set(scope.load_report()) | {t for t, (d, _) in scope.load_overrides().items() if d == "skip"}
+    found = []
+    for d, layer in ((MAPPED_DIR, "mapped"), (REVIEW_DIR, "needs_review")):
+        if not os.path.isdir(d):
+            continue
+        for f in sorted(os.listdir(d)):
+            if not f.endswith(".yaml"):
+                continue
+            t = f[:-5]
+            if t in out_of_scope or os.path.exists(os.path.join(REVIEWED_DIR, f)):
+                continue
+            if layer == "mapped" and os.path.exists(os.path.join(REVIEW_DIR, f)):
+                continue    # the review copy is what the index publishes
+            path = os.path.join(d, f)
+            raw = open(path).read()
+            ctml = yaml.safe_load(raw)
+            if not isinstance(ctml, dict) or ctml.get("gene_status_contradiction"):
+                continue
+            try:
+                inc, _, _ = eligibility_text(t)
+            except (OSError, ValueError, KeyError):
+                continue
+            hit = gene_status_contradictions(ctml, inc, ref)
+            if not hit:
+                continue
+            found.append((t, layer, hit, "moved to review" if layer == "mapped" else "flagged"))
+            if apply:
+                text = raw.rstrip("\n") + "\n" + yaml.safe_dump({"gene_status_contradiction": "; ".join(sorted(hit))},
+                                                                 allow_unicode=True, width=1000)
+                with open(os.path.join(REVIEW_DIR, f), "w") as fh:
                     fh.write(text)
                 if layer == "mapped":
                     os.remove(path)
@@ -573,6 +678,15 @@ def analyse(trial_id, ref):
                 if named:
                     it.evidence = evidence(sections_with_title, ref.dx_terms(named), limit=2)
         items.append(it)
+
+    # Genes required although the text says absent / irrelevant.
+    if ctml.get("gene_status_contradiction"):
+        live = gene_status_contradictions(ctml, inc, ref)
+        for gname in _as_set(ctml.get("gene_status_contradiction")):
+            items.append(Item("gene", f"{gname} (required, but the text says absent or irrelevant)",
+                              flag="gene_status_contradiction",
+                              evidence=[("inclusion", html.escape(live[gname]))] if gname in live else [],
+                              note="the tree requires an alteration here; the text does not"))
 
     # Genomic criteria.
     for g in got["genomic"]:
@@ -900,6 +1014,8 @@ def main(argv=None):
     ac.add_argument("--note", default=""); ac.add_argument("--replace", action="store_true")
     fx = sub.add_parser("flag-exclusions", help="flag diagnoses named only in exclusion criteria in existing CTML")
     fx.add_argument("--apply", action="store_true", help="write the flag and move mapped trials to review")
+    fs = sub.add_parser("flag-gene-status", help="genes required although the text says absent or irrelevant")
+    fs.add_argument("--apply", action="store_true", help="write the flag and move mapped trials to review")
     fg = sub.add_parser("flag-unsupported-genes", help="re-run the unsupported-gene check on existing CTML")
     fg.add_argument("--apply", action="store_true", help="write the flag and move mapped trials to review")
     ex = sub.add_parser("exclude"); ex.add_argument("trial"); ex.add_argument("--reviewer", required=True)
@@ -937,6 +1053,13 @@ def main(argv=None):
         for t, layer, hit in found:
             print(f"{t}\t{layer}\t{'; '.join(hit)}")
         moved = sum(1 for _, layer, _ in found if layer == "mapped")
+        print(f"{len(found)} trials ({moved} mapped)" + (" flagged; mapped ones moved to the review queue"
+              if args.apply else " would be flagged; run with --apply to write"))
+    elif args.cmd == "flag-gene-status":
+        found = flag_gene_status(apply=args.apply)
+        for t, layer, hit, action in found:
+            print(f"{t}\t{layer}\t{action}\t" + " | ".join(f"{g}: {frag}" for g, frag in sorted(hit.items())))
+        moved = sum(1 for *_, a in found if a == "moved to review")
         print(f"{len(found)} trials ({moved} mapped)" + (" flagged; mapped ones moved to the review queue"
               if args.apply else " would be flagged; run with --apply to write"))
     elif args.cmd == "flag-unsupported-genes":

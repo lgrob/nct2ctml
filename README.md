@@ -133,6 +133,7 @@ python -m utils.review_helper check NCT05843253          # what accept would sti
 python -m utils.review_helper accept NCT05843253 --reviewer <name> [--note "..."]
 python -m utils.review_helper exclude NCT05843253 --reviewer <name> --reason "..."
 python -m utils.review_helper flag-exclusions [--apply]  # see below
+python -m utils.review_helper flag-gene-status [--apply] # genes required although the text says absent
 ```
 
 **Excluded diagnoses.** Write `oncotree_primary_diagnosis: '!Name'` (quoted:

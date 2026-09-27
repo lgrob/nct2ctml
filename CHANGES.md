@@ -514,6 +514,37 @@ BRCA1/2) now count as mentions in _text_mentions_gene and on the review
 sheet, which changes the contradiction resolver's input for 16 gene pairs
 in 5 trials. All 16 are real family mentions in exclusion text.
 
+## Genes required although the text says absent or irrelevant
+
+The user reported NCT05805605: "mutated NPM1 and wild type FLT-ITD", which
+defines favourable-risk AML, was mapped as "FLT3 mutation" among the
+qualifying alterations. That reads the gene backwards.
+
+`review_helper.gene_status_contradictions` flags a gene whose alteration
+the match tree requires while the inclusion text says the gene must be
+absent or does not matter. Absent means "wild type X", "X-negative", "no X"
+or "without X"; does not matter means "with or without X" or "mutant or
+wild-type X". A gene the text also states positively (two routes, e.g.
+MYCN amplified or not) is not flagged, and a negated criterion
+('!Mutation', '!Homozygous Deletion') is not a requirement. The mapper
+writes gene_status_contradiction and routes the trial to review; the review
+sheet shows the sentence, and accept refuses the flag.
+`review_helper flag-gene-status [--apply]` applies it to existing output.
+
+Measured on all indexed trials: 7 trials flagged, and all 7 are real errors
+when checked against the text:
+- BRAF p.V600E required where "either mutant or wild-type B-RAF" is allowed;
+- GATA1 required for all, where children up to 4 years are eligible
+  "with/without GATA1 mutation";
+- EGFR, twice, and HER2, where the text says negative;
+- NPM1 and NOTCH1 as qualifying alterations where the text says "with or
+  without".
+The check also catches the original NCT05805605. There are 2 false alarms
+among the 56 reviewed trials: two Ewing trials where "negative for EWSR1
+rearrangement" sits beside an EWSR1-positive route that is only implied.
+Applied at the user's go-ahead: 6 mapped trials moved to review and 1 was
+flagged in review. Index: 957 mapped, 123 needs-review, 56 reviewed.
+
 ## Targeted re-map of the review queue (2026-09-27)
 
 At the user's request the review queue was re-mapped at b3d0c9c, so it

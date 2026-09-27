@@ -230,6 +230,7 @@ class TrialMapManager:
                     self._record_off_list(mapped_ctml, nct_id)
                     self._flag_excluded_diagnoses(mapped_ctml, trial_data, "nct", nct_id)
                     self._flag_contradictions(mapped_ctml, nct_id)
+                    self._flag_gene_status(mapped_ctml, trial_data, "nct", nct_id)
                     
                     # Add local trial info if available
                     if nct_id in local_trial_dict:
@@ -344,6 +345,7 @@ class TrialMapManager:
             self._record_off_list(mapped_ctml, ct_number)
             self._flag_excluded_diagnoses(mapped_ctml, trial_data, "ctis", ct_number)
             self._flag_contradictions(mapped_ctml, ct_number)
+            self._flag_gene_status(mapped_ctml, trial_data, "ctis", ct_number)
             # CTIS bypassed the review queue entirely until 2026-09-21: it saved
             # straight to the output directory, so a CTIS trial whose diagnosis
             # could not be determined reached MatchMiner and matched every
@@ -405,6 +407,31 @@ class TrialMapManager:
         if found:
             mapped_ctml["genomic_contradiction"] = "; ".join(found)
             logger.warning(f"{trial_id} | match tree requires and forbids {', '.join(found)}: matches nobody")
+
+    @staticmethod
+    def _flag_gene_status(mapped_ctml: dict, trial_data: dict, registry: str, trial_id: str) -> None:
+        """
+        Write genes the tree requires although the inclusion text says they
+        must be absent or do not matter into the CTML as
+        gene_status_contradiction, which routes the trial to review
+        (utils.review_helper.gene_status_contradictions; NCT05805605's
+        "wild type FLT-ITD" read as an FLT3 mutation). Never loses the trial.
+        """
+        if not isinstance(mapped_ctml, dict):
+            return
+        try:
+            from utils import review_helper as rh
+            if registry == "ctis":
+                import src.ctis as ctis
+                inc, _ = ctis.split_inclusion_exclusion_criteria(trial_data)
+            else:
+                inc, _ = ctg.split_inclusion_exclusion_criteria(trial_data)
+            found = rh.gene_status_contradictions(mapped_ctml, inc)
+            if found:
+                mapped_ctml["gene_status_contradiction"] = "; ".join(sorted(found))
+                logger.warning(f"{trial_id} | genes required although the text says absent or irrelevant: {', '.join(sorted(found))}")
+        except Exception as e:   # a check must never lose the trial
+            logger.warning(f"{trial_id} | gene-status check skipped: {type(e).__name__}: {e}")
 
     @staticmethod
     def _flag_excluded_diagnoses(mapped_ctml: dict, trial_data: dict, registry: str, trial_id: str) -> None:
@@ -503,6 +530,8 @@ class TrialMapManager:
             reasons.append("the match tree requires and forbids the same gene, so it matches nobody")
         if 'diagnosis_excluded' in keys:
             reasons.append("a diagnosis is named only in the exclusion criteria")
+        if 'gene_status_contradiction' in keys:
+            reasons.append("a gene is required although the text says it must be absent or does not matter")
         if not reasons:
             import config
             stale = os.path.join(getattr(config, 'CTML_REVIEW_PATH', 'ctml/needs-review'), f"{trial_id}.yaml")
@@ -545,6 +574,7 @@ class TrialMapManager:
             self._record_off_list(mapped_ctml, nct_id)
             self._flag_excluded_diagnoses(mapped_ctml, trial_data, "nct", nct_id)
             self._flag_contradictions(mapped_ctml, nct_id)
+            self._flag_gene_status(mapped_ctml, trial_data, "nct", nct_id)
             
             # Add local trial info if available
             self._add_local_trial_info(mapped_ctml, nct_id)
