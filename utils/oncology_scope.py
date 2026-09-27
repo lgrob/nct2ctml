@@ -54,6 +54,10 @@ _STEMS = (
     "hemangioendotheliom", "haemangioendotheliom", "langerhans", "hodgkin",
     "waldenstr", "macroglobulin", "plasmacyt", "chemotherap", "radiotherap",
     "insulinom",
+    # Post-transplant lymphoproliferative disease is a lymphoid neoplasm
+    # (NCT03394365, EBV-PTLD T-cell therapy); without the stem its conditions
+    # named no tumour (2026-09-27).
+    "lymphoprolif",
 )
 # Abbreviations, matched case-sensitively as whole words: "ALL" is acute
 # lymphoblastic leukaemia, "all" is not.
@@ -88,6 +92,22 @@ _FOLLOW_ON_RX = re.compile(
 #   sickle cell and aplastic anaemia trials, NCT05736419 and NCT06430788;
 # - a malformation: "myelom" (myeloma) inside "myelomeningocele", spina
 #   bifida, NCT05491525.
+# Supportive care, which the scope policy puts out of scope: a trial whose
+# registry conditions name no tumour and whose titles or keywords name a
+# complication of cancer treatment. Reported by the user on NCT06904235
+# (chemotherapy-induced nausea and vomiting), 2026-09-27. Checked only when
+# the conditions name no tumour, so a treatment trial that also mentions
+# neutropenia or pain is unaffected. Measured over the 1,255 cached trials:
+# exactly 7 trials leave scope, all supportive care.
+_SUPPORTIVE_RX = re.compile(
+    r"nause|vomit|emesis|antiemet|\bCINV\b|graft[\s-]+versus[\s-]+host|\bGv?HD\b|cardiotox|cardioprotect"
+    r"|mucositis|stomatitis|neutropeni|febrile|infection|sepsis|antivir|antifung|cytomegalovirus|\bCMV\b"
+    r"|\bEBV\b|adenovir|\bpain\b|analges|fatigue|an(?:a)?emi|thrombocytopeni|transfusion|ototox"
+    r"|hearing loss|nephrotox|hepatotox|sinusoidal obstruction|veno-occlusive|\bVOD\b|pancreatitis"
+    r"|hypothyroid|osteonecrosis|osteoradionecrosis|fertility|psycholog|quality of life|anxiety|distress"
+    r"|nutrition|exercise|physical activity|neurocognit|survivorship|late effects|delirium|sedation"
+    r"|anesthe|anaesthe", re.I)
+
 _NOT_A_TUMOUR = re.compile(
     r"glioma[\s-]+inactivated"
     r"|tumou?r[\s-]+necrosis[\s-]+factor"
@@ -172,6 +192,14 @@ def assess(trial_id, trial_data, registry, overrides=None):
         return True, f"conditions name {sorted(oncotree)[:3]}"
     if ctg.basket_wildcards(conditions, trial_id):
         return True, "conditions describe a basket"
+    # "Chemotherapy-induced nausea" names a treatment, not a tumour
+    # (NCT06904235), so treatment stems do not count here.
+    tumour_in_conditions = [m for m in matched_terms(list(conditions))
+                            if not m.lower().startswith(("chemotherap", "radiotherap"))]
+    if not tumour_in_conditions:
+        supportive = _SUPPORTIVE_RX.search(" | ".join(t for t in list(conditions) + list(other) if t))
+        if supportive:
+            return False, f"supportive care ('{supportive.group(0)}'): conditions name no tumour"
     terms = matched_terms(list(conditions) + list(other))
     if terms:
         return True, f"mentions {terms[:3]}"

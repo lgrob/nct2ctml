@@ -486,6 +486,34 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Scope filter: supportive-care trials are out of scope; PTLD is a tumour
+
+The user reported NCT06904235, which prevents chemotherapy-induced nausea and
+vomiting in children with cancer. The documented policy puts supportive care
+out of scope, but its condition "Chemotherapy-Induced Nausea" matched the
+oncology vocabulary.
+
+A trial is now out of scope when its registry conditions name no tumour and
+its conditions, titles or keywords name a complication of cancer treatment.
+Examples: nausea, GvHD, cardiotoxicity, mucositis, neutropenia, infection,
+sepsis, pancreatitis, hypothyroidism, osteoradionecrosis. "Chemotherapy" and
+"radiotherapy" in the conditions do not count as naming a tumour.
+"Lymphoproliferative" is now a tumour stem, because a draft of the rule
+excluded NCT03394365 (EBV post-transplant lymphoproliferative disease).
+
+Measured over the 1,255 cached trials. Exactly 9 in-scope trials leave
+scope, all supportive care:
+- GvHD: NCT03818334, NCT05436418
+- other treatment complications: NCT04195347 (pancreatitis), NCT05316922
+  (hypothyroidism), NCT06055257 (osteoradionecrosis), NCT06853951
+  (cardiotoxicity), NCT06857292 (neutropenia), 2025-524541-27-00 (sepsis)
+- 2024-514321-39-00, the CTIS record of the nausea trial
+
+Also covered: NCT06904235, already excluded by override. PTLD stays in
+scope, and so do the lenvatinib sarcoma trial (NCT05617859, conditions
+"Effectiveness; Sexuality") and HPV vaccination in healthy adolescents
+(NCT06650956); the latter is a prevention question left to the curator.
+
 ## Diagnosis input: labelled sections and an exclusion rule (roadmap 2.8)
 
 The diagnosis step was given the exclusion criteria alongside the inclusion

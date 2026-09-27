@@ -156,5 +156,36 @@ class TestFollowOnStudies(unittest.TestCase):
         self.assertTrue(ok)
 
 
+
+class TestSupportiveCare(unittest.TestCase):
+    """NCT06904235 (reported 2026-09-27): supportive-care trials without a tumour condition."""
+
+    def _nct(self, conditions, brief="", official=""):
+        return {"protocolSection": {"identificationModule": {"briefTitle": brief, "officialTitle": official},
+                                    "conditionsModule": {"conditions": list(conditions)}}}
+
+    def test_supportive_care_without_tumour_conditions_is_out(self):
+        from utils.oncology_scope import assess
+        for conds, title in ((["Nausea and Vomiting Chemotherapy-Induced"], "IV NEPA in Paediatric Cancer Patients"),
+                             (["Graft Versus Host Disease"], "Post-transplant cyclophosphamide in haematological malignancies"),
+                             (["Cardiotoxicity"], "Cardioprotection on Chemotherapy-Induced Cardiotoxicity in Childhood Cancer"),
+                             (["Chemotherapy-Induced Neutropenia"], "Telpegfilgrastim in Pediatric Cancer Patients")):
+            ok, why = assess("NCT0", self._nct(conds, title), "nct", {})
+            self.assertFalse(ok, conds)
+            self.assertIn("supportive care", why)
+
+    def test_a_tumour_condition_keeps_the_trial_in(self):
+        from utils.oncology_scope import assess
+        ok, _ = assess("NCT0", self._nct(["Acute Lymphoblastic Leukemia"], "Febrile neutropenia during ALL therapy"), "nct", {})
+        self.assertTrue(ok)
+
+    def test_ptld_is_a_tumour(self):
+        # NCT03394365: EBV-associated post-transplant lymphoproliferative disease.
+        from utils.oncology_scope import assess
+        ok, _ = assess("NCT0", self._nct(["Epstein-Barr Virus+ Associated Post-transplant Lymphoproliferative Disease"],
+                                         "EBV-specific T cells for EBV lymphoproliferative disease"), "nct", {})
+        self.assertTrue(ok)
+
+
 if __name__ == "__main__":
     unittest.main()
