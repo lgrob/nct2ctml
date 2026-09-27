@@ -1,3 +1,4 @@
+import re
 # Modified by Kinderspital Zurich (Kispi) from the original
 # nct2ctml, Copyright 2026 The University of Hong Kong, Apache-2.0.
 # Retargeted from adult oncology in Hong Kong to paediatric oncology.
@@ -1101,8 +1102,34 @@ def split_inclusion_exclusion_criteria(trial_data: dict) -> tuple[str, str]:
     Splits the eligibility criteria into inclusion and exclusion parts
     """
     eligibility_criteria = get_full_nct_eligibility_criteria(trial_data)
-    inclusion_criteria, exclusion_criteria = tdh.split_with_find(eligibility_criteria, ["exclusion criteria", "exclusion"])    
+    index = exclusion_heading(eligibility_criteria)
+    if index is not None:
+        return eligibility_criteria[:index], eligibility_criteria[index + len("exclusion criteria"):]
+    inclusion_criteria, exclusion_criteria = tdh.split_with_find(eligibility_criteria, ["exclusion criteria", "exclusion"])
     return inclusion_criteria, exclusion_criteria
+
+
+# "exclusion criteria" in running text rather than as the heading: "meet the
+# following inclusion and exclusion criteria" (NCT05278208), "drug-specific
+# inclusion/exclusion criteria", "any of the exclusion criteria below". Until
+# 2026-09-27 the split cut at the first occurrence, so in 18 in-scope trials
+# the real inclusion text was read, and labelled for the model, as exclusions.
+_NOT_A_HEADING = re.compile(
+    r"(?:inclusion\s*(?:and|or|/|&)\s*|enrol(?:l)?ment\s*/\s*|(?:the|any|all|other|these|those|following|"
+    r"specific|of)\s+|-\s*specific\s+)$", re.I)
+
+
+def exclusion_heading(text: str):
+    """
+    Index of the "Exclusion Criteria" heading, or None if there is none.
+    The first occurrence not preceded by words that make it a phrase in
+    running text (see _NOT_A_HEADING) is the heading.
+    """
+    for m in re.finditer(r"exclusion criteria", text, re.I):
+        before = text[max(0, m.start() - 40):m.start()]
+        if not _NOT_A_HEADING.search(before):
+            return m.start()
+    return None
 
 
  
