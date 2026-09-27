@@ -228,6 +228,45 @@ class TestContradictions(unittest.TestCase):
         self.assertIn("requires and forbids ABL1 under one AND: matches nobody", rh.problems(t, ""))
 
 
+class TestFlagUnsupportedGenes(_Layers):
+    """2026-09-27: 'ICF' (informed consent form) had supported DNMT3B in published trials."""
+
+    MAPPED = ("nct_id: NCT0TEST\ntreatment_list:\n  step:\n  - match:\n    - and:\n"
+              "      - clinical:\n          oncotree_primary_diagnosis: Neuroblastoma\n"
+              "      - genomic:\n          hugo_symbol: {gene}\n          variant_category: Any Variation\n")
+
+    def _run(self, gene, inc, apply=False, comment=""):
+        from unittest import mock
+        self.put(comment + self.MAPPED.format(gene=gene), layer="mapped")
+        with mock.patch.object(rh, "eligibility_text", lambda t: (inc, "", {})), \
+             mock.patch("utils.oncology_scope.load_report", lambda *a, **k: {}), \
+             mock.patch("utils.oncology_scope.load_overrides", lambda *a, **k: {}):
+            return rh.flag_unsupported_genes(apply=apply)
+
+    def test_a_gene_supported_only_by_a_blocked_alias_is_flagged_and_moved(self):
+        found = self._run("DNMT3B", "Must sign the Informed Consent Form (ICF). Neuroblastoma.", apply=True)
+        self.assertEqual([(t, l, g) for t, l, g, _ in found], [("NCT0TEST", "mapped", ["DNMT3B"])])
+        self.assertFalse(os.path.exists(os.path.join(rh.MAPPED_DIR, "NCT0TEST.yaml")))
+        moved = open(os.path.join(rh.REVIEW_DIR, "NCT0TEST.yaml")).read()
+        self.assertIn("gene_unsupported: DNMT3B", moved)
+
+    def test_a_named_gene_is_not_flagged(self):
+        self.assertEqual(self._run("ALK", "Neuroblastoma with an ALK mutation."), [])
+
+    def test_expression_only_gene_is_flagged(self):
+        found = self._run("MS4A1", "CD20-positive disease by flow cytometry.")
+        self.assertEqual(found[0][2], ["MS4A1 (expression-only)"])
+
+    def test_the_dry_run_writes_nothing(self):
+        self._run("DNMT3B", "sign the ICF")
+        self.assertTrue(os.path.exists(os.path.join(rh.MAPPED_DIR, "NCT0TEST.yaml")))
+
+    def test_a_file_with_curator_comments_is_never_rewritten(self):
+        found = self._run("DNMT3B", "sign the ICF", apply=True, comment="# curator note\n")
+        self.assertEqual(found[0][3], "edited: check by hand")
+        self.assertTrue(os.path.exists(os.path.join(rh.MAPPED_DIR, "NCT0TEST.yaml")))
+
+
 class TestAudit(_Layers):
 
     def test_the_sample_is_reproducible_and_skips_other_layers(self):

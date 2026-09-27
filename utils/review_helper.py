@@ -292,6 +292,109 @@ def flag_exclusions(apply=False):
     return found
 
 
+def _genomic_nodes(node):
+    if isinstance(node, dict):
+        if isinstance(node.get("genomic"), dict):
+            yield node["genomic"]
+        for v in node.values():
+            yield from _genomic_nodes(v)
+    elif isinstance(node, list):
+        for v in node:
+            yield from _genomic_nodes(v)
+
+
+def flag_unsupported_genes(apply=False):
+    """
+    Re-run the mapper's unsupported-gene check (match_criteria_mapper.
+    _flag_unsupported_genes, same scan and support rules) on CTML already
+    written, against the trial's whole inclusion+exclusion text. Added
+    2026-09-27 after 15 short aliases were blocked: criteria the text
+    supported only through such a word ("ICF" -> DNMT3B) had passed. An
+    expression-only gene (src/trial_config.expression_only_genes) in a
+    genomic block is flagged too.
+
+    Mapped and review layers only; ctml/reviewed is never touched, nor are
+    out-of-scope trials. Returns [(trial_id, layer, [genes], action)].
+    With apply=True the flag is written beside the gene as the mapper writes
+    it, and a mapped trial moves to the review queue. A file with curator
+    comments is never rewritten (yaml would drop them); it is reported as
+    "edited: check by hand".
+    """
+    import copy
+    import src.match_criteria_mapper as mcm
+    import src.trial_criteria_to_genes as tcg
+    from src import trial_config
+    import utils.oncology_scope as scope
+    expression_only = set(getattr(trial_config, "expression_only_genes", []))
+    syn = rv.gene_synonym_mapping()
+    out_of_scope = set(scope.load_report()) | {t for t, (dec, _) in scope.load_overrides().items() if dec == "skip"}
+    found = []
+    for d, layer in ((MAPPED_DIR, "mapped"), (REVIEW_DIR, "needs_review")):
+        if not os.path.isdir(d):
+            continue
+        for f in sorted(os.listdir(d)):
+            if not f.endswith(".yaml"):
+                continue
+            t = f[:-5]
+            if t in out_of_scope or os.path.exists(os.path.join(REVIEWED_DIR, f)):
+                continue
+            path = os.path.join(d, f)
+            raw = open(path).read()
+            ctml = yaml.safe_load(raw)
+            if not isinstance(ctml, dict):
+                continue
+            try:
+                inc, exc, data = eligibility_text(t)
+            except (OSError, ValueError, KeyError):
+                continue
+            # The mapper's arm text includes arm descriptions and the title
+            # (NCT06265545 names IDH1/FLT3 only in its arms); registry markdown
+            # escapes brackets ("\\[MLL\\]", NCT02727803).
+            text = "\n".join([inc, exc] + _arm_and_title_text(t, data)).replace("\\[", "[").replace("\\]", "]")
+            scanned = tcg.TrialCriteriaToGenes(trial_criteria=text, synonym_to_symbol=syn).extract_official_gene_symbols()
+            new = []
+            nodes = [g for g in _genomic_nodes(ctml.get("treatment_list")) if not g.get("gene_unsupported")]
+            for g in nodes:
+                probe = [{"genomic": copy.deepcopy(g)}]
+                mcm._flag_unsupported_genes(probe, scanned, text, t)
+                missing = probe[0]["genomic"].get("gene_unsupported")
+                expr = [x for x in (g.get("hugo_symbol"), g.get("fusion_partner")) if x in expression_only]
+                if expr:
+                    missing = ", ".join(filter(None, [missing] + [f"{x} (expression-only)" for x in expr]))
+                if missing:
+                    new.append((g, missing))
+            if not new:
+                continue
+            edited = bool(re.search(r"^\s*#", raw, re.M))
+            action = "edited: check by hand" if edited else ("moved to review" if layer == "mapped" else "flagged")
+            found.append((t, layer, [m for _, m in new], action))
+            if apply and not edited:
+                target = os.path.join(REVIEW_DIR, f)
+                if layer == "mapped" and os.path.exists(target):
+                    continue
+                for g, missing in new:
+                    g["gene_unsupported"] = missing
+                os.makedirs(REVIEW_DIR, exist_ok=True)
+                with open(target, "w") as fh:
+                    fh.write(yaml.dump(ctml, sort_keys=False))
+                if layer == "mapped":
+                    os.remove(path)
+    return found
+
+
+def _arm_and_title_text(trial_id, data):
+    if trial_id.startswith("NCT"):
+        ps = data.get("protocolSection", {})
+        ident = ps.get("identificationModule", {})
+        arms = ps.get("armsInterventionsModule", {})
+        out = [ident.get("briefTitle") or "", ident.get("officialTitle") or ""]
+        out += [" ".join(str(a.get(k) or "") for k in ("label", "description")) for a in arms.get("armGroups") or []]
+        out += [" ".join(str(i.get(k) or "") for k in ("name", "description")) for i in arms.get("interventions") or []]
+        return out
+    import src.ctis as ctis
+    return list(ctis.get_titles(data))
+
+
 def _conditions(trial_id, data):
     if trial_id.startswith("NCT"):
         return list(data.get("protocolSection", {}).get("conditionsModule", {}).get("conditions") or [])
@@ -786,6 +889,8 @@ def main(argv=None):
     ac.add_argument("--note", default=""); ac.add_argument("--replace", action="store_true")
     fx = sub.add_parser("flag-exclusions", help="flag diagnoses named only in exclusion criteria in existing CTML")
     fx.add_argument("--apply", action="store_true", help="write the flag and move mapped trials to review")
+    fg = sub.add_parser("flag-unsupported-genes", help="re-run the unsupported-gene check on existing CTML")
+    fg.add_argument("--apply", action="store_true", help="write the flag and move mapped trials to review")
     ex = sub.add_parser("exclude"); ex.add_argument("trial"); ex.add_argument("--reviewer", required=True)
     ex.add_argument("--reason", required=True)
     args = ap.parse_args(argv)
@@ -823,6 +928,13 @@ def main(argv=None):
         moved = sum(1 for _, layer, _ in found if layer == "mapped")
         print(f"{len(found)} trials ({moved} mapped)" + (" flagged; mapped ones moved to the review queue"
               if args.apply else " would be flagged; run with --apply to write"))
+    elif args.cmd == "flag-unsupported-genes":
+        found = flag_unsupported_genes(apply=args.apply)
+        for t, layer, genes, action in found:
+            print(f"{t}\t{layer}\t{action}\t{'; '.join(genes)}")
+        moved = sum(1 for _, layer, _, a in found if a == "moved to review")
+        print(f"{len(found)} trials ({moved} mapped would move to review)" if not args.apply
+              else f"{len(found)} trials flagged; {moved} mapped ones moved to the review queue")
     elif args.cmd == "exclude":
         layers = exclude(args.trial, args.reviewer, args.reason)
         print(f"{args.trial} excluded (ref/scope_overrides.tsv; logged in {LOG_FILE}); "

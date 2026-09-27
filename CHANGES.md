@@ -514,6 +514,24 @@ BRCA1/2) now count as mentions in _text_mentions_gene and on the review
 sheet, which changes the contradiction resolver's input for 16 gene pairs
 in 5 trials. All 16 are real family mentions in exclusion text.
 
+## Re-checking existing output for unsupported genes
+
+`review_helper flag-unsupported-genes [--apply]` re-runs the mapper's own
+unsupported-gene check (_flag_unsupported_genes, same scan and rules) on
+CTML already written. It uses the trial's eligibility text, arm
+descriptions and titles, with registry bracket escaping removed. It also
+flags an expression-only gene written as a genomic criterion. Mapped trials
+it flags move to the review queue. ctml/reviewed and out-of-scope trials
+are never touched, and a file with curator comments is only reported.
+
+Dry run after the alias block and the histone change: 46 trials. 34 are
+mapped trials that would move to review, and 12 are already in review. All
+flagged genes come from the blocked aliases or CD20, except FANCA in one
+trial already in review. A first version used only the eligibility text and
+also flagged 5 trials whose genes are named in arm descriptions (e.g. IDH1
+and FLT3 in NCT06265545's arms). The earlier audit's count of 35 included
+NCT04981509, whose FH criterion is supported by "HLRCC", the FH syndrome.
+
 ## Gene scan: 15 misread short aliases blocked; CD20 is expression-only
 
 A queue audit found that the gene scan resolved short NCBI aliases to
