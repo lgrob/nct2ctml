@@ -11,6 +11,7 @@ from loguru import logger
 
 import config
 import utils.aho_corasick as ac
+import utils.gene_mentions as gene_mentions
 import src.trial_data_helper as tdh
 import utils.protein_change as pc
 import utils.reference_validation as rv
@@ -239,9 +240,10 @@ def _flag_unsupported_genes(genomic_criteria: list, scanned_genes, criteria_text
         if not isinstance(genomic, dict):
             continue
         named = [genomic.get("hugo_symbol"), genomic.get("fusion_partner")]
+        # Written verbatim as a whole word, or glued to its protein change
+        # ("EGFRvIII", "BRAFV600E"): see utils/gene_mentions.
         missing = [g for g in named if g and g not in supported
-                   and not re.search(r"(?<![A-Za-z0-9])" + re.escape(g) + r"(?![A-Za-z0-9])",
-                                     criteria_text or "")]
+                   and not re.search(gene_mentions.name_pattern(g), criteria_text or "")]
         if not missing:
             continue
         genomic["gene_unsupported"] = ", ".join(missing)
@@ -405,13 +407,21 @@ def _text_mentions_gene(text: str, gene: str) -> bool:
     The curated addendum aliases count as the symbol (roadmap 6.9): without
     them "NF-1" in an exclusion was not a mention of NF1, so an invented NF1
     inclusion on NCT04775485 beat the stated exclusion.
+
+    Multi-gene addendum rows count for each of their genes ("H3.3" for H3-3A
+    and H3-3B, "RAS" for KRAS), as they do in the scan. A name glued to a
+    protein change counts ("H3.3K27M", "EGFRvIII"), and so does an H3
+    mutation written without a gene ("H3K27M", "H3 G34R/V") for the H3 genes
+    it can mean - but never "H3 K27-altered" or "H3K27me3", which are not
+    mutations (utils/gene_mentions).
     """
     if not text or not gene:
         return False
-    for name in [gene] + rv.curated_aliases().get(gene, []):
-        if re.search(rf"(?<![A-Za-z0-9]){re.escape(name)}(?![A-Za-z0-9])", text, re.IGNORECASE):
+    names = [gene] + rv.curated_aliases().get(gene, []) + rv.curated_group_aliases().get(gene, [])
+    for name in names:
+        if re.search(gene_mentions.name_pattern(name, gene), text, re.IGNORECASE):
             return True
-    return False
+    return any(gene in genes for _, _, genes in gene_mentions.histone_variants(text))
 
 
 def resolve_contradictory_genes(inclusions: list, exclusions: list,

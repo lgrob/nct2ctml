@@ -486,6 +486,34 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Gene scan: histone protein names and genes written together with their change
+
+Reported by the user on NCT07306299 ("H3.3K27M, H3.1K27M, H3.3G34R, ...,
+EGFRvIII"): H3-3A, H3C2 and EGFR were flagged gene_unsupported although the
+text names them. Three changes:
+- **Protein names:** ref/gene_synonym_addendum.tsv maps "H3.3" to H3-3A and
+  H3-3B, and "H3.1" to H3C2 and H3C3, the H3.1 genes where K27M occurs.
+  NCBI gives H3.1 to H3C3/H3C6, which is on the collision list.
+- **Gene and change written together:** a gene immediately followed by a
+  protein change is read as both (H3.3K27M, BRAFV600E, KRASG12C, EGFRvIII).
+  Only a residue-position-residue suffix or vII/vIII/vIV splits a word, so
+  CD19CAR and IL2RA are unaffected.
+- **H3 mutations without a gene name:** stated histone mutations (H3K27M,
+  H3K27I, H3K28M, H3G34R/V, "H3G34-mutant") name the H3 genes. H3K27a, H3
+  K27-altered, K27me3 loss and EZHIP never count as support for a mutation
+  criterion, because H3 K27-altered includes tumours without the mutation.
+
+The check, the scan and the review sheet share the new code
+(utils/gene_mentions.py). On the review queue (144 trials, 96
+gene_unsupported flags), measured on each trial's whole text because the
+arm text is not saved, so this is an upper bound: 8 flags disappear, all
+false alarms, and no real flag is lost. The DMG-H3K27a trial stays flagged.
+Across all cached trials the scan finds 53 more genes in 23 trials, all
+correct, and loses none. Side effect: curated family aliases (RAS, NTRK,
+BRCA1/2) now count as mentions in _text_mentions_gene and on the review
+sheet, which changes the contradiction resolver's input for 16 gene pairs
+in 5 trials. All 16 are real family mentions in exclusion text.
+
 ## Gene scan: 15 misread short aliases blocked; CD20 is expression-only
 
 A queue audit found that the gene scan resolved short NCBI aliases to

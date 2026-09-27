@@ -8,6 +8,8 @@ from collections.abc import Iterable, Mapping
 
 from loguru import logger
 
+import utils.gene_mentions as gene_mentions
+
 try:
     import src.trial_config as _config
 except ImportError:  # pragma: no cover - allows standalone import in tests
@@ -167,6 +169,16 @@ class TrialCriteriaToGenes:
         for p in parts or [cleaned]:
             if len(p) >= 4 and p[0] == "c" and p[1:].isupper() and self._is_official(p[1:]):
                 out.append(p[1:])
+        # A gene glued to its protein change: "H3.3K27M", "BRAFV600E",
+        # "EGFRvIII" (NCT07306299). The head is held to the same short-alias
+        # rule as a part, so "H3K27M" does not yield the blocked alias H3,
+        # and a token that is itself a gene name is never split (CDKN2A is
+        # not CDK + N2A).
+        for p in dict.fromkeys([token, cleaned] + parts):
+            head = gene_mentions.split_glued(p)
+            if (head and (len(head) > 3 or self._is_official(head))
+                    and not self._lookup_official_symbols(p)):
+                out.append(head)
         return out
 
     def extract_official_gene_symbols(self) -> list[str]:
@@ -195,6 +207,10 @@ class TrialCriteriaToGenes:
                         norm = self._normalize_token(part)
                         if norm:
                             found.add(norm)
+
+        # H3 mutations written without a gene symbol ("H3K27M", "H3 G34R/V");
+        # "H3 K27-altered" and "H3K27me3" are not mutations and add nothing.
+        found.update(gene_mentions.histone_variant_genes(self.trial_criteria))
 
         # Sorted: a set's order follows PYTHONHASHSEED, and this list is
         # printed into the genomic prompts (roadmap 1.9).

@@ -55,6 +55,7 @@ from loguru import logger
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+import utils.gene_mentions as gene_mentions
 import utils.protein_change as protein_change
 import utils.reference_validation as rv
 import utils.translocations as translocations
@@ -185,7 +186,7 @@ def _gene_aliases():
     return inverse
 
 
-def _term_pattern(term):
+def _term_pattern(term, right=r"(?![A-Za-z0-9])"):
     words = re.split(r"[\s\-/,]+", term.strip())
     parts = []
     for w in words:
@@ -195,7 +196,7 @@ def _term_pattern(term):
         for us, either in _SPELLING:
             p = p.replace(us, either)
         parts.append(p)
-    return r"(?<![A-Za-z0-9])" + r"[\s\-/,]+".join(parts) + r"(?![A-Za-z0-9])"
+    return r"(?<![A-Za-z0-9])" + r"[\s\-/,]+".join(parts) + right
 
 
 def _as_set(value):
@@ -298,13 +299,25 @@ def _conditions(trial_id, data):
     return list(ctis.get_conditions(data)) + list(ctis.get_titles(data))
 
 
-def find_mentions(text, terms, case_sensitive_short=True):
-    """[(start, end, term)] for whole-word mentions of any term in text."""
+def find_mentions(text, terms, case_sensitive_short=True, gene=None):
+    """
+    [(start, end, term)] for whole-word mentions of any term in text.
+
+    With `gene`, the terms are names of that gene, and a name glued to a
+    protein change counts too ("H3.3K27M", "EGFRvIII"), as in the scan
+    (utils/gene_mentions).
+    """
     hits = []
     for t in sorted({t for t in terms if t}, key=len, reverse=True):
         flags = 0 if (case_sensitive_short and len(t) <= 4) else re.IGNORECASE
-        for m in re.finditer(_term_pattern(t) if flags else
-                             r"(?<![A-Za-z0-9])" + re.escape(t) + r"(?![A-Za-z0-9])", text, flags):
+        if gene:
+            right = gene_mentions.right_boundary(gene)
+            pattern = (_term_pattern(t, right) if flags else
+                       r"(?<![A-Za-z0-9])" + re.escape(t) + right)
+        else:
+            pattern = (_term_pattern(t) if flags else
+                       r"(?<![A-Za-z0-9])" + re.escape(t) + r"(?![A-Za-z0-9])")
+        for m in re.finditer(pattern, text, flags):
             if not any(s < m.end() and m.start() < e for s, e, _ in hits):
                 hits.append((m.start(), m.end(), t))
     return sorted(hits)
@@ -344,10 +357,16 @@ def near_misses(sections, symbol, limit=3):
     return out
 
 
-def evidence(sections, terms, limit=4):
+def evidence(sections, terms, limit=4, gene=None):
     out = []
     for name, text in sections:
-        for s, e, _ in find_mentions(text, terms)[:limit]:
+        hits = find_mentions(text, terms, gene=gene)
+        if gene:
+            # An H3 mutation written without a gene, for the H3 genes it can
+            # mean; "H3 K27-altered" and "H3K27me3" are not in it.
+            hits = sorted(hits + [(s, e, text[s:e]) for s, e, genes in gene_mentions.histone_variants(text)
+                                  if gene in genes and not any(a < e and s < b for a, b, _ in hits)])
+        for s, e, _ in hits[:limit]:
             out.append((name, _snippet(text, s, e)))
     return out
 
@@ -366,6 +385,7 @@ class Reference:
         self.gene_aliases = _gene_aliases()
         self.synonyms = rv.gene_synonym_mapping()
         self.curated = rv.curated_aliases()
+        self.curated_groups = rv.curated_group_aliases()
 
     def dx_terms(self, name):
         return {name, re.sub(r",\s*NOS$", "", name)} | self.aliases.get(name, set())
@@ -373,9 +393,10 @@ class Reference:
     def gene_terms(self, symbol):
         """
         Terms that count as the text naming the gene: the symbol, the curated
-        aliases, and any alias the pipeline itself resolves to this symbol.
+        aliases (multi-gene addendum rows included, as in the scan: "H3.3"
+        for H3-3A), and any alias the pipeline itself resolves to this symbol.
         """
-        curated = set(self.curated.get(symbol, ()))
+        curated = set(self.curated.get(symbol, ())) | set(self.curated_groups.get(symbol, ()))
         return {symbol} | curated | {a for a in self.gene_aliases.get(symbol, ()) if rv.canonical_gene(a) == symbol}
 
     def weak_gene_terms(self, symbol):
@@ -445,7 +466,7 @@ def analyse(trial_id, ref):
         side = "exclusion" if str(g.get("variant_category", "")).startswith("!") else "inclusion"
         label = f"{sym} {g.get('variant_category', '')}".strip()
         it = Item("gene", label, flag="gene_unsupported" if g.get("gene_unsupported") else "", side=side,
-                  evidence=evidence(sections, ref.gene_terms(sym)))
+                  evidence=evidence(sections, ref.gene_terms(sym), gene=sym))
         tl = tl_genes.get(sym)
         if tl:
             it.evidence += [("translocation", html.escape(x)) for x in tl]
@@ -475,7 +496,8 @@ def analyse(trial_id, ref):
                               note=note, evidence=evidence(sections, {str(partner_raw)} | set(official))))
         elif g.get("fusion_partner"):
             items.append(Item("partner", f"{sym}::{g['fusion_partner']}", side=side,
-                              evidence=evidence(sections, ref.gene_terms(str(g["fusion_partner"])))))
+                              evidence=evidence(sections, ref.gene_terms(str(g["fusion_partner"])),
+                                                gene=str(g["fusion_partner"]))))
         stated = g.get("protein_change_unverified") or g.get("protein_change_stated") or g.get("protein_change")
         if stated:
             r = protein_change.normalise(sym, str(stated))

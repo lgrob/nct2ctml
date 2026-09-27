@@ -153,6 +153,39 @@ def curated_aliases():
 
 
 @lru_cache(maxsize=1)
+def curated_group_aliases():
+    """
+    {official symbol: [aliases]} for the addendum's multi-gene rows: a family
+    name that names each of its genes ("RAS" for KRAS, NRAS and HRAS; "H3.3"
+    for H3-3A and H3-3B; "H3.1" for H3C2 and H3C3). The scan already resolves
+    these to every gene of the row; this lets the text checks agree
+    (match_criteria_mapper._text_mentions_gene, review_helper gene_terms).
+
+    The addendum row wins over the NCBI collision list, which is only a
+    review file: "H3.1" is dropped from the NCBI table because NCBI gives it
+    to H3C3 and H3C6, and the addendum puts it back as the H3.1 genes where
+    K27M occurs. Kept apart from curated_aliases so that its callers,
+    which expect one gene per alias, are unchanged.
+    """
+    out = {}
+    try:
+        handle = open(SYNONYM_ADDENDUM_TSV, newline="")
+    except FileNotFoundError:
+        return {}
+    with handle:
+        for row in csv.reader(handle, delimiter="\t"):
+            if len(row) < 2 or row[0].strip().startswith(("!", "#")):
+                continue
+            alias, official = row[0].strip(), row[1].strip()
+            if "," not in official:
+                continue
+            for part in (p.strip() for p in official.split(",")):
+                if part and alias != part:
+                    out.setdefault(part, []).append(alias)
+    return out
+
+
+@lru_cache(maxsize=1)
 def gene_synonym_mapping():
     """
     alias -> [official symbols], for finding genes named in criteria text.
