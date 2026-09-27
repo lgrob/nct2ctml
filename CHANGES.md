@@ -514,6 +514,20 @@ BRCA1/2) now count as mentions in _text_mentions_gene and on the review
 sheet, which changes the contradiction resolver's input for 16 gene pairs
 in 5 trials. All 16 are real family mentions in exclusion text.
 
+## Second queue review: 20 trials (2026-09-27)
+
+Four reviewers, 5 trials each: 23 flags judged (14 correct, 4 partly, 5
+false alarms) and 59 further errors. Measured over the index:
+- **Fixed:** the 'H3' keyword rule lacked H3C3 (10 indexed trials); genes
+  named only as rearranged are Structural Variation (7 trials); 'ARM1' and
+  'ARMD2' are blocked as aliases.
+- **Not added, measured too weak:** negating excluded tumour types in basket
+  trials (3 real of 49); a risk-sentence rule for risk-group genetics (3
+  flags, none of the known cases).
+- **Structural, not fixed:** one age range per trial loses cohort and donor
+  ages (roadmap 7.9); risk-group genetics need a genomic-prompt experiment
+  (roadmap 2.9). disease_status errors (8 of 20) are not published.
+
 ## Six systematic issues from a 10-trial queue review (2026-09-27)
 
 A stratified random sample of 10 queued trials, checked against the text:
