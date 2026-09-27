@@ -357,6 +357,66 @@ def flag_exclusions(apply=False):
     return found
 
 
+def clear_stale_gene_flags(apply=False):
+    """
+    Remove gene_unsupported from genes a single-arm trial does name, as the
+    current scan and text check read it (e.g. "(IDH) 1/2", 2024-516896-34-00).
+    With one arm the arm's criteria text is the trial's text, so such a flag
+    is stale: it was set by an older scan. Multi-arm trials keep the flag,
+    because the gene may belong to another arm (cohort-scope problem).
+    Removes the line in place, so curator comments survive. A file left with
+    no flag at all and no curator comment moves back to cache/ctml/.
+    Returns [(trial_id, [genes], moved)].
+    """
+    import src.match_criteria_mapper as mcm
+    import src.trial_criteria_to_genes as tg
+    syn = rv.gene_synonym_mapping()
+    out = []
+    for f in sorted(os.listdir(REVIEW_DIR)):
+        if not f.endswith(".yaml"):
+            continue
+        t, path = f[:-5], os.path.join(REVIEW_DIR, f)
+        raw = open(path).read()
+        ctml = yaml.safe_load(raw)
+        if not isinstance(ctml, dict) or len((ctml.get("treatment_list") or {}).get("step", [{}])[0].get("arm") or []) != 1:
+            continue
+        flagged = {g.get("hugo_symbol") for g in _genomic_nodes(ctml.get("treatment_list")) if g.get("gene_unsupported")}
+        if not flagged:
+            continue
+        try:
+            inc, exc, data = eligibility_text(t)
+        except (OSError, ValueError, KeyError):
+            continue
+        text = "\n".join([inc, exc] + list(_arm_and_title_text(t, data)))
+        scan = set(tg.TrialCriteriaToGenes(trial_criteria=text, synonym_to_symbol=syn).extract_official_gene_symbols())
+        clear = sorted(g for g in flagged if g in scan or mcm._text_mentions_gene(text, g))
+        if not clear:
+            continue
+        new, current = [], None
+        for line in raw.split("\n"):
+            m = re.match(r"^\s*(?:-\s+)?hugo_symbol:\s*'?([^'\s]+)'?\s*$", line)
+            if m:
+                current = m.group(1)
+            elif re.match(r"^\s*-?\s*genomic:", line) or re.match(r"^\s*-\s", line):
+                current = None
+            if current in clear and line.strip().startswith("gene_unsupported:"):
+                continue
+            new.append(line)
+        text_out = "\n".join(new)
+        left = yaml.safe_load(text_out)
+        moved = not problems(left, text_out) and not re.search(r"^\s*#", text_out, re.M)
+        out.append((t, clear, moved))
+        if apply:
+            if moved:
+                with open(os.path.join(MAPPED_DIR, f), "w") as fh:
+                    fh.write(text_out)
+                os.remove(path)
+            else:
+                with open(path, "w") as fh:
+                    fh.write(text_out)
+    return out
+
+
 def flag_gene_status(apply=False):
     """
     Apply gene_status_contradictions to CTML already written (mapped and
@@ -1040,6 +1100,8 @@ def main(argv=None):
     ac.add_argument("--note", default=""); ac.add_argument("--replace", action="store_true")
     fx = sub.add_parser("flag-exclusions", help="flag diagnoses named only in exclusion criteria in existing CTML")
     fx.add_argument("--apply", action="store_true", help="write the flag and move mapped trials to review")
+    sub.add_parser("clear-stale-gene-flags", help="drop gene_unsupported where a single-arm trial names the gene").add_argument(
+        "--apply", action="store_true")
     fs = sub.add_parser("flag-gene-status", help="genes required although the text says absent or irrelevant")
     fs.add_argument("--apply", action="store_true", help="write the flag and move mapped trials to review")
     fg = sub.add_parser("flag-unsupported-genes", help="re-run the unsupported-gene check on existing CTML")
@@ -1081,6 +1143,11 @@ def main(argv=None):
         moved = sum(1 for _, layer, _ in found if layer == "mapped")
         print(f"{len(found)} trials ({moved} mapped)" + (" flagged; mapped ones moved to the review queue"
               if args.apply else " would be flagged; run with --apply to write"))
+    elif args.cmd == "clear-stale-gene-flags":
+        found = clear_stale_gene_flags(apply=args.apply)
+        for t, genes, moved in found:
+            print(f"{t}\t{','.join(genes)}\t{'-> mapped' if moved else 'stays in review'}")
+        print(f"{len(found)} trials, {sum(len(g) for _, g, _ in found)} flags" + (" cleared" if args.apply else " would be cleared; --apply to write"))
     elif args.cmd == "flag-gene-status":
         found = flag_gene_status(apply=args.apply)
         for t, layer, hit, action in found:

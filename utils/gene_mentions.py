@@ -56,6 +56,21 @@ _H3_VARIANT = re.compile(
     rf"|\(\s*[{_AA}](?:\s*/\s*[{_AA}])*\s*\)))")                    # G34 (R/V)
 
 
+_BRACKETED_STEM = re.compile(r"\(([A-Za-z]{2,6})\)\s?(\d+(?:[A-Za-z]{1,2}(?:/[A-Za-z0-9]{1,3})*|(?:/[A-Za-z0-9]{1,3})+))(?![A-Za-z0-9])")
+
+
+def join_bracketed_stems(text):
+    """
+    Join a bracketed gene abbreviation to the number that follows it:
+    "isocitrate dehydrogenase (IDH) 1/2" -> "... IDH1/2", "(CDKN)2A/B" ->
+    "CDKN2A/B" (2024-516896-34-00). The joined form is what the scan's list
+    expansion reads. Only a 2-6 letter bracket followed by a number that
+    carries a letter or a slash is joined, so list numbers ("(PCL) 3."),
+    years ("(ELN) 2022") and "(CDK) 4 & 6 inhibitors" stay as they are.
+    """
+    return _BRACKETED_STEM.sub(r"\1\2", text or "")
+
+
 def split_glued(token):
     """
     The gene head of a token that is a gene glued to a protein change, or None.

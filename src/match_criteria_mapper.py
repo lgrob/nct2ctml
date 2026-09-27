@@ -417,6 +417,7 @@ def _text_mentions_gene(text: str, gene: str) -> bool:
     """
     if not text or not gene:
         return False
+    text = gene_mentions.join_bracketed_stems(text)
     names = [gene] + rv.curated_aliases().get(gene, []) + rv.curated_group_aliases().get(gene, [])
     for name in names:
         if re.search(gene_mentions.name_pattern(name, gene), text, re.IGNORECASE):

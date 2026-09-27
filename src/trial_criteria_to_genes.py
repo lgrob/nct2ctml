@@ -29,7 +29,7 @@ class TrialCriteriaToGenes:
         trial_criteria: str,
         synonym_to_symbol: Mapping[str, str | Iterable[str]],
     ):
-        self.trial_criteria = trial_criteria or ""
+        self.trial_criteria = gene_mentions.join_bracketed_stems(trial_criteria or "")
         self.synonym_to_symbol = synonym_to_symbol
         self.blocked = {
             b.upper() for b in getattr(_config, 'blocked_gene_synonyms', [])
