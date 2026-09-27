@@ -72,6 +72,7 @@ LOG_COLUMNS = ["date", "trial_id", "reviewer", "from_layer", "flags_resolved", "
 # that still holds any of them: deleting the key is how a curator confirms
 # the item, deleting the item is how they reject it.
 FLAG_KEYS = ("gene_unsupported", "diagnosis_off_list", "diagnosis_excluded", "genomic_contradiction",
+             "remap_dropped_diagnoses",
              "protein_change_unverified",
              "protein_change_check", "fusion_partner_unverified")
 
@@ -94,6 +95,10 @@ ADVICE = {
                           "match tree, or, when a broader diagnosis the trial enrols contains it, add it as "
                           "`oncotree_primary_diagnosis: '!Name'` (quoted) beside that diagnosis. Then delete "
                           "the top-level `diagnosis_excluded:` line.",
+    "remap_dropped_diagnoses": "A re-map (2026-09-27) dropped these diagnoses, and the exclusion text does not "
+                               "explain it, so patients who matched before would no longer match. The previous "
+                               "version is kept as <trial>.yaml.prev. Add back the ones the trial enrols, then "
+                               "delete the top-level `remap_dropped_diagnoses:` line.",
     "genomic_contradiction": "The match tree requires and forbids the same gene under one AND, so it matches "
                              "nobody. Often an exclusion written for the whole gene ('!Any Variation') where the "
                              "text excludes one variant, or a gene also required as a fusion partner. Narrow or "
@@ -539,6 +544,12 @@ def analyse(trial_id, ref):
     if not real and not (set(got["diagnoses"]) & WILDCARDS):
         items.append(Item("no_diagnosis", "(none)", flag="no_diagnosis",
                           evidence=[(n, html.escape(t)) for n, t in sections_with_title[2:] if t]))
+    # A re-map dropped these; shown with the text that names them, so the
+    # curator can add back the ones the trial enrols.
+    for d in _as_set(ctml.get("remap_dropped_diagnoses")):
+        items.append(Item("diagnosis", f"{d} (dropped by the re-map)", flag="remap_dropped_diagnoses",
+                          evidence=evidence(sections_with_title, ref.dx_terms(d), limit=2),
+                          note="was in the previous version (.yaml.prev); not named in the exclusion criteria"))
     for d in dict.fromkeys(got["diagnoses"]):
         it = Item("diagnosis", d, flag="diagnosis_off_list" if d in off_list else
                   "diagnosis_excluded" if d in excluded_flag else "")
