@@ -80,7 +80,31 @@ ctis_open_statuses = ['Authorised']
 # as history and wrong as an oncology lookup, so the block stays.
 #
 # Synonyms that must never resolve to a gene symbol.
-blocked_gene_synonyms = ['ALL', 'CAP', 'H3', 'H4', 'H5']
+#
+# Added 2026-09-27 (the user's go-ahead after the queue audit): short NCBI
+# aliases that the scan resolved to genes although, in every whole-word use
+# across the 1,255 cached trials, they mean something else. Because the scan
+# found them, the unsupported-gene check passed, and 35 published trials
+# carried a genomic criterion that the text supports only through one of these
+# words (e.g. "DNMT3B any variation" from "informed consent form (ICF)").
+# Uses in the cache / trials, and what they mean:
+#   CAR  -> PRKAR1A  444 / 177  chimeric antigen receptor (CAR T cells)
+#   II   -> CD74     316 / 211  Roman numeral: phase II, grade II, Factor II
+#   B    -> ELF2     297 / 150  list item "b." (the table's alias is lower-case b)
+#   CSF  -> CSF2     254 / 118  cerebrospinal fluid; G-CSF/GM-CSF drug names
+#   ICF  -> DNMT3B   164 /  85  informed consent form
+#   NHL  -> RTEL1    135 /  54  non-Hodgkin lymphoma
+#   PN   -> USB1      58 /   5  plexiform neurofibroma
+#   JMML -> PTPN11    30 /  22  juvenile myelomonocytic leukaemia (a diagnosis)
+#   SF   -> HGF       28 /  24  shortening fraction (echocardiography)
+#   MCL  -> FH        22 /  12  mantle cell lymphoma
+#   MI   -> MITF      18 /  18  myocardial infarction
+#   FSH  -> BRD2      18 /  11  follicle-stimulating hormone
+#   NAT  -> BRD2      17 /   8  nucleic acid (amplification) testing
+#   B1   -> MS4A1     15 /   3  randomisation arm B1
+#   IP   -> SDHB      12 /   6  investigational product
+blocked_gene_synonyms = ['ALL', 'CAP', 'H3', 'H4', 'H5',
+                         'CAR', 'II', 'B', 'CSF', 'ICF', 'NHL', 'PN', 'JMML', 'SF', 'MCL', 'MI', 'FSH', 'NAT', 'B1', 'IP']
 
 # Synonyms that resolve only when the criteria text also contains one of the
 # context keywords (case-insensitive). This recovers the true meaning of the
@@ -121,6 +145,7 @@ expression_only_genes = [
     'CD22',    # CAR-T target, flow cytometry
     'CD274',   # PD-L1; has its own pdl1_status field
     'CD276',   # B7-H3; CAR-T/ADC target by IHC - all 11 cached mentions are expression
+    'MS4A1',   # CD20; antibody/CAR target by flow or IHC - all 62 cached mentions (41 trials) are expression
     'CTAG1B',  # NY-ESO-1; cancer-testis antigen for TCR therapy, IHC
     'HLA-A',   # TCR restriction, HLA typing rather than tumour sequencing
     'HLA-B',

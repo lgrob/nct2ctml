@@ -486,6 +486,30 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Gene scan: 15 misread short aliases blocked; CD20 is expression-only
+
+A queue audit found that the gene scan resolved short NCBI aliases to
+unrelated genes: "CAR" (T cells) became PRKAR1A, "ICF" (informed consent
+form) DNMT3B, "phase II" CD74, "CSF" (cerebrospinal fluid) CSF2, and so on.
+The scan counts as support, so the unsupported-gene check passed. 35 mapped
+trials carried a genomic criterion that the text supports only through one
+of these words; for example, "DNMT3B any variation" appeared in 8 trials.
+
+Each alias was checked against every whole-word use in the 1,255 cached
+trials (full list with counts in src/trial_config.py). No use means the
+gene: the few next to a genetic word are "phase II", "gene II sequencing",
+"H3K28M in the CSF", "nucleic acid amplification testing (NAT)" and a list
+item "b.". All 15 are added to blocked_gene_synonyms: CAR, II, B, CSF, ICF,
+NHL, PN, JMML, SF, MCL, MI, FSH, NAT, B1, IP. After the change:
+- 486 trials lose at least one spurious scan gene, and no gene is gained;
+- each gene disappears only where its symbol is not written (PTPN11 stays in
+  the one JMML trial that names it).
+
+MS4A1 (CD20) joins CD274 and CD276 as expression-only. All 62 cached
+mentions (41 trials) are antibody, CAR or flow targets.
+
+Existing output is re-checked in the next step.
+
 ## Scope filter: supportive-care trials are out of scope; PTLD is a tumour
 
 The user reported NCT06904235, which prevents chemotherapy-induced nausea and
