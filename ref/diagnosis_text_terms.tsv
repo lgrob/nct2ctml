@@ -1,0 +1,58 @@
+# How eligibility text names an Oncotree diagnosis, for TEXT MATCHING ONLY.
+# Tab-delimited: Oncotree display name, term, why.
+#
+# Used by utils/review_helper (Reference.dx_terms): the exclusion-diagnosis
+# check, the re-map recall guard and the review sheets. The mapper never reads
+# this file, so no mapping changes when a row is added. Singular/plural, an
+# apostrophe and British spelling are handled in code and need no row.
+# Abbreviations of 3-4 letters match case-sensitively; add one only if it
+# has no other common meaning in eligibility text (so no "ALL").
+Myelodysplastic Syndromes	MDS	standard abbreviation
+APL with PML-RARA	Acute Promyelocytic Leukemia	clinical name of the entity
+APL with PML-RARA	APL	standard abbreviation
+Chronic Myeloid Leukemia, BCR-ABL1+	Chronic Myeloid Leukemia	clinical name without the fusion qualifier
+Chronic Myeloid Leukemia, BCR-ABL1+	Chronic Myelogenous Leukemia	older synonym
+Chronic Myeloid Leukemia, BCR-ABL1+	CML	standard abbreviation
+Chronic Lymphocytic Leukemia/Small Lymphocytic Lymphoma	Chronic Lymphocytic Leukemia	either half of the combined name
+Chronic Lymphocytic Leukemia/Small Lymphocytic Lymphoma	CLL	standard abbreviation
+Juvenile Myelomonocytic Leukemia	JMML	standard abbreviation
+Myeloid Leukemia Associated with Down Syndrome	Myeloid Leukemia of Down Syndrome	WHO wording
+Myeloid Leukemia Associated with Down Syndrome	ML-DS	standard abbreviation
+T-Lymphoblastic Leukemia/Lymphoma	T-ALL	standard abbreviation
+T-Lymphoblastic Leukemia/Lymphoma	T-cell Acute Lymphoblastic Leukemia	lineage stated in words
+T-Lymphoblastic Leukemia/Lymphoma	T-LBL	standard abbreviation
+T-Lymphoblastic Leukemia/Lymphoma	T-cell Lymphoblastic Lymphoma	lineage stated in words
+B-Lymphoblastic Leukemia/Lymphoma	B-ALL	standard abbreviation
+B-Lymphoblastic Leukemia/Lymphoma	B-cell Acute Lymphoblastic Leukemia	lineage stated in words
+B-Lymphoblastic Leukemia/Lymphoma	B-cell Precursor Acute Lymphoblastic Leukemia	lineage stated in words
+B-Lymphoblastic Leukemia/Lymphoma with t(9;22)(q34.1;q11.2);BCR-ABL1	Philadelphia Chromosome-Positive	how trials name Ph+ ALL
+B-Lymphoblastic Leukemia/Lymphoma with t(9;22)(q34.1;q11.2);BCR-ABL1	Ph+ ALL	standard abbreviation
+Mixed Phenotype Acute Leukemia, B/Myeloid, NOS	Mixed Phenotype Acute Leukemia	parent name, as trials write it
+Mixed Phenotype Acute Leukemia, B/Myeloid, NOS	MPAL	standard abbreviation
+Mixed Phenotype Acute Leukemia, T/Myeloid, NOS	Mixed Phenotype Acute Leukemia	parent name, as trials write it
+Mixed Phenotype Acute Leukemia, T/Myeloid, NOS	MPAL	standard abbreviation
+Acute Leukemias of Ambiguous Lineage	Acute Leukemia of Ambiguous Lineage	singular
+Plasma Cell Myeloma	Multiple Myeloma	clinical name
+Primary Mediastinal (Thymic) Large B-Cell Lymphoma	Primary Mediastinal Large B-Cell Lymphoma	without the bracket
+Primary Mediastinal (Thymic) Large B-Cell Lymphoma	PMBCL	standard abbreviation
+Primary DLBCL of the central nervous system	Primary CNS Lymphoma	clinical name
+Primary DLBCL of the central nervous system	Primary Central Nervous System Lymphoma	clinical name
+Non-Hodgkin Lymphoma	NHL	standard abbreviation
+Hodgkin Lymphoma	Hodgkin's Lymphoma	older spelling
+Diffuse Large B-Cell Lymphoma, NOS	DLBCL	standard abbreviation
+Acute Myeloid Leukemia	AML	standard abbreviation
+Atypical Teratoid/Rhabdoid Tumor	ATRT	standard abbreviation
+Atypical Teratoid/Rhabdoid Tumor	AT/RT	standard abbreviation
+Diffuse Midline Glioma, H3 K27-Altered	Diffuse Intrinsic Pontine Glioma	pre-WHO-2021 name
+Diffuse Midline Glioma, H3 K27-Altered	DIPG	standard abbreviation
+Glioblastoma, IDH-Wildtype	Glioblastoma	how trials write it; IDH status rarely stated
+Peripheral T-Cell lymphoma, NOS	Peripheral T-Cell Lymphoma	without NOS
+Peripheral T-Cell lymphoma, NOS	PTCL	standard abbreviation
+Anaplastic Large-Cell Lymphoma ALK Positive	Anaplastic Large Cell Lymphoma	ALK status rarely stated
+Anaplastic Large-Cell Lymphoma ALK Positive	ALCL	standard abbreviation
+Langerhans Cell Histiocytosis	LCH	standard abbreviation
+Rhabdomyosarcoma	RMS	standard abbreviation
+Non-Small Cell Lung Cancer	NSCLC	standard abbreviation
+Malignant Peripheral Nerve Sheath Tumor	MPNST	standard abbreviation
+Posttransplant Lymphoproliferative Disorders	PTLD	standard abbreviation
+Posttransplant Lymphoproliferative Disorders	Post-Transplant Lymphoproliferative Disorder	singular

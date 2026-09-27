@@ -38,6 +38,7 @@ resolved, and the file's SHA-256.
 Sheets go to review_sheets/ (git-ignored); open review_sheets/index.html.
 """
 
+import config
 import argparse
 import csv
 import datetime
@@ -593,6 +594,16 @@ class Reference:
         self.parent, self.level1, self.descendants = get_lineage()
         self.names = set(self.descendants)
         self.aliases = {}
+        self.text_terms = {}
+        try:
+            with open(getattr(config, "DIAGNOSIS_TEXT_TERMS_FILE_PATH", "ref/diagnosis_text_terms.tsv")) as fh:
+                for line in fh:
+                    if line.startswith("#") or not line.strip():
+                        continue
+                    name, term = line.rstrip("\n").split("\t")[:2]
+                    self.text_terms.setdefault(name, set()).add(term)
+        except FileNotFoundError:
+            pass
         for alias, name in rv._diagnosis_aliases().items():
             self.aliases.setdefault(name, set()).add(alias)
         self.gene_aliases = _gene_aliases()
@@ -601,7 +612,22 @@ class Reference:
         self.curated_groups = rv.curated_group_aliases()
 
     def dx_terms(self, name):
-        return {name, re.sub(r",\s*NOS$", "", name)} | self.aliases.get(name, set())
+        """
+        Terms that count as the text naming a diagnosis: the Oncotree name
+        (with and without ", NOS"), the synonym-table aliases, the text terms
+        in ref/diagnosis_text_terms.tsv, and for each its singular or plural
+        and apostrophe-free form ("Myelodysplastic Syndrome", "Wilms Tumor").
+        Until 2026-09-27 only the first two, so "myelodysplastic syndrome
+        (MDS)" and "acute promyelocytic leukaemia (APL)" were not found.
+        """
+        base = {name, re.sub(r",\s*NOS$", "", name)} | self.aliases.get(name, set()) | self.text_terms.get(name, set())
+        out = set()
+        for t in base:
+            for v in (t, t.replace("'", "")):
+                out.add(v)
+                if len(v) > 4:
+                    out.add(v[:-1] if v.endswith("s") else v + "s")
+        return out
 
     def gene_terms(self, symbol):
         """
