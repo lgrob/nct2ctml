@@ -49,7 +49,10 @@ ANTHROPIC_TEMPERATURE = 0
 #   inclusion_only  - title, conditions and inclusion criteria only (arm
 #                     level: the arm's inclusion criteria)
 # NCT2CTML_DIAGNOSIS_INPUT overrides it (used by the measurement harness).
-DIAGNOSIS_INPUT = os.environ.get("NCT2CTML_DIAGNOSIS_INPUT", "legacy")
+# Default "labelled" since 2026-09-27 (3 replicates, 123 trials): exclusion-only
+# diagnoses 113 -> 57, recall unchanged; inclusion_only lost 16 curated
+# diagnoses and was rejected. See CHANGES.md.
+DIAGNOSIS_INPUT = os.environ.get("NCT2CTML_DIAGNOSIS_INPUT", "labelled")
 ANTHROPIC_MAX_TOKENS = 16000
 
 # deepseek library
