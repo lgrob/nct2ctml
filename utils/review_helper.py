@@ -521,6 +521,62 @@ def fix_all_lineage(apply=False):
     return found
 
 
+def resolve_remap_drops(apply=False):
+    """
+    Remove from remap_dropped_diagnoses every diagnosis named only in the
+    exclusion criteria: the re-map was right to drop it (the same rule the
+    re-map integration applies, re-run with today's diagnosis text terms).
+    Rewrites only the flag line, so curator comments survive; a file left
+    with no flag and no comment moves back to cache/ctml/.
+    Returns [(trial_id, [resolved], [remaining], moved, evidence)].
+    """
+    ref = _shared_reference()
+    out = []
+    for f in sorted(os.listdir(REVIEW_DIR)):
+        if not f.endswith(".yaml"):
+            continue
+        t, path = f[:-5], os.path.join(REVIEW_DIR, f)
+        raw = open(path).read()
+        ctml = yaml.safe_load(raw)
+        dropped = _as_set((ctml or {}).get("remap_dropped_diagnoses"))
+        if not dropped:
+            continue
+        try:
+            inc, exc, data = eligibility_text(t)
+        except (OSError, ValueError, KeyError):
+            continue
+        ctx = [str(c) for c in _conditions(t, data)] + list(_arm_and_title_text(t, data))
+        ok = sorted(set(diagnoses_only_in_exclusions(sorted(dropped), inc, exc, ctx, ref=ref)))
+        # An exclusion scoped to part of the trial ("excluded from the
+        # randomization part", a cohort or stratum) does not exclude the
+        # patient from the trial (2023-505512-37-00, NCT05477589: MDS).
+        ok = [x for x in ok if not any(re.search(r"randomi[sz]|cohort|stratum|arm\s+[A-D1-4]\b|part\s+[A-D1-4I]\b",
+                                                 exc[max(0, s - 250):s], re.I)
+                                       for s, _, _ in find_mentions(exc, ref.dx_terms(x)))]
+        if not ok:
+            continue
+        left = sorted(dropped - set(ok))
+        ev = []
+        for x in ok:
+            s, e, _ = find_mentions(exc, ref.dx_terms(x))[0]
+            ev.append(f"{x}: ...{' '.join(exc[max(0, s - 50):e + 20].split())}...")
+        lines = raw.split("\n")
+        k = next(i for i, l in enumerate(lines) if l.startswith("remap_dropped_diagnoses:"))
+        if left:
+            lines[k] = yaml.safe_dump({"remap_dropped_diagnoses": "; ".join(left)}, width=1000).rstrip("\n")
+        else:
+            del lines[k]
+        text_out = "\n".join(lines)
+        moved = not left and not problems(yaml.safe_load(text_out), text_out) and not re.search(r"^\s*#", text_out, re.M)
+        out.append((t, ok, left, moved, ev))
+        if apply:
+            with open(os.path.join(MAPPED_DIR, f) if moved else path, "w") as fh:
+                fh.write(text_out)
+            if moved:
+                os.remove(path)
+    return out
+
+
 def flag_gene_status(apply=False):
     """
     Apply gene_status_contradictions to CTML already written (mapped and
@@ -1208,6 +1264,8 @@ def main(argv=None):
         "--apply", action="store_true")
     sub.add_parser("fix-all-lineage", help="add T-ALL where a trial names ALL without lineage").add_argument(
         "--apply", action="store_true")
+    sub.add_parser("resolve-remap-drops", help="clear re-map drops named only in the exclusions").add_argument(
+        "--apply", action="store_true")
     fs = sub.add_parser("flag-gene-status", help="genes required although the text says absent or irrelevant")
     fs.add_argument("--apply", action="store_true", help="write the flag and move mapped trials to review")
     fg = sub.add_parser("flag-unsupported-genes", help="re-run the unsupported-gene check on existing CTML")
@@ -1259,6 +1317,13 @@ def main(argv=None):
         for t, layer, n in found:
             print(f"{t}\t{layer}\t{n} B-ALL node(s) given a T-ALL alternative")
         print(f"{len(found)} trials" + (" updated" if args.apply else " would be updated; --apply to write"))
+    elif args.cmd == "resolve-remap-drops":
+        found = resolve_remap_drops(apply=args.apply)
+        for t, ok, left, moved, ev in found:
+            print(f"{t}\tresolved {len(ok)}, left {len(left)}\t{'-> mapped' if moved else 'stays in review'}")
+            for e in ev:
+                print(f"    {e}")
+        print(f"{len(found)} trials, {sum(len(x[1]) for x in found)} drops" + (" resolved" if args.apply else " would be resolved; --apply to write"))
     elif args.cmd == "flag-gene-status":
         found = flag_gene_status(apply=args.apply)
         for t, layer, hit, action in found:

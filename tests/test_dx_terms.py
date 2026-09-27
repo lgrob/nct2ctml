@@ -40,5 +40,15 @@ class TestDxTerms(unittest.TestCase):
         self.assertEqual([n for n in self.ref.text_terms if n not in self.ref.names], [])
 
 
+class TestResolveRemapDrops(unittest.TestCase):
+
+    def test_scoped_exclusion_is_not_a_trial_exclusion(self):
+        import re
+        exc = "Exclusion from the randomization part of the study: - Diagnosis of Myelodysplastic syndrome (MDS)."
+        ref = rh.Reference()
+        s = rh.find_mentions(exc, ref.dx_terms("Myelodysplastic Syndromes"))[0][0]
+        self.assertTrue(re.search(r"randomi[sz]", exc[max(0, s - 250):s], re.I))
+
+
 if __name__ == "__main__":
     unittest.main()
