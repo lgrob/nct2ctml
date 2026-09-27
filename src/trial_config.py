@@ -104,7 +104,9 @@ ctis_open_statuses = ['Authorised']
 #   B1   -> MS4A1     15 /   3  randomisation arm B1
 #   IP   -> SDHB      12 /   6  investigational product
 blocked_gene_synonyms = ['ALL', 'CAP', 'H3', 'H4', 'H5',
-                         'CAR', 'II', 'B', 'CSF', 'ICF', 'NHL', 'PN', 'JMML', 'SF', 'MCL', 'MI', 'FSH', 'NAT', 'B1', 'IP']
+                         'CAR', 'II', 'B', 'CSF', 'ICF', 'NHL', 'PN', 'JMML', 'SF', 'MCL', 'MI', 'FSH', 'NAT', 'B1', 'IP',
+                         # trial-arm labels, not genes: 'ARM1' -> ADRM1 (NCT06972641), 'ARMD2' -> ABCA4
+                         'ARM1', 'ARMD2']
 
 # Synonyms that resolve only when the criteria text also contains one of the
 # context keywords (case-insensitive). This recovers the true meaning of the
@@ -115,7 +117,9 @@ blocked_gene_synonyms = ['ALL', 'CAP', 'H3', 'H4', 'H5',
 # pre-2019 forms (H3F3A, HIST1H3B, HIST1H4I) live in the synonym table, which
 # maps them onto these.
 contextual_gene_synonyms = {
-    'H3': (['k27', 'k27m', 'g34', 'histone'], ['H3-3A', 'H3-3B', 'H3C2']),
+    # H3C3 (H3.1, HIST1H3C) carries K27M as H3C2 does; it was missing until
+    # 2026-09-27, so 9 published K27M trials lacked it (gene_mentions.H3_K27_GENES).
+    'H3': (['k27', 'k27m', 'g34', 'histone'], ['H3-3A', 'H3-3B', 'H3C2', 'H3C3']),
     'H4': (['histone'], ['H4C9']),
 }
 

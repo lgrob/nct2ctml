@@ -151,8 +151,9 @@ class TestHistoneVariants(unittest.TestCase):
         # (src/trial_config.contextual_gene_synonyms) resolves a standalone
         # "H3" whenever the text contains "k27", so "H3 K27-altered" (with a
         # space) still reaches the scan as H3-3A/H3-3B/H3C2, as it did before
-        # this change. The glued "H3K27-altered" does not.
-        self.assertEqual(scan("H3 K27-altered"), ["H3-3A", "H3-3B", "H3C2"])
+        # this change. The glued "H3K27-altered" does not. H3C3 (H3.1) was
+        # added to that rule on 2026-09-27 (it carries K27M as H3C2 does).
+        self.assertEqual(scan("H3 K27-altered"), ["H3-3A", "H3-3B", "H3C2", "H3C3"])
         self.assertEqual(scan("H3K27-altered"), [])
 
     def test_g34_is_not_h31(self):

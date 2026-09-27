@@ -489,6 +489,89 @@ def add_sibling_diagnosis(tree, existing, new):
     return count
 
 
+def add_sibling_gene(tree, existing, new):
+    """
+    Give every genomic criterion on `existing` a twin on `new` with the same
+    fields: beside it in an OR list; for an exclusion ('!...') under an AND,
+    beside it in the AND (both must be absent); a lone required criterion is
+    wrapped in an OR. Skips lists that already hold `new`. Returns the count.
+    """
+    import copy
+    count = 0
+
+    def gene(n):
+        return n.get("genomic", {}).get("hugo_symbol") if isinstance(n, dict) and isinstance(n.get("genomic"), dict) else None
+
+    def walk(node, parent_key=None):
+        nonlocal count
+        if isinstance(node, dict):
+            for k, v in node.items():
+                walk(v, k)
+        elif isinstance(node, list):
+            if any(gene(n) == new for n in node):
+                return
+            i = 0
+            while i < len(node):
+                n = node[i]
+                if gene(n) == existing:
+                    twin = copy.deepcopy(n)
+                    twin["genomic"]["hugo_symbol"] = new
+                    negated = str(n["genomic"].get("variant_category", "")).startswith("!")
+                    count += 1
+                    if parent_key == "or" or negated:
+                        node.insert(i + 1, twin); i += 1
+                    else:
+                        node[i] = {"or": [n, twin]}
+                else:
+                    walk(n, parent_key)
+                i += 1
+    walk(tree)
+    return count
+
+
+def fix_genomic_notation(apply=False):
+    """
+    Existing output: H3C3 beside H3C2 (the H3 keyword map lacked it until
+    2026-09-27), and a gene the text names only as rearranged becomes a
+    Structural Variation (match_criteria_mapper.rearranged_as_structural).
+    Mapped and review layers; reviewed and curator-edited files are skipped.
+    Returns [(trial_id, layer, n_h3c3, [rearranged genes])].
+    """
+    import src.match_criteria_mapper as mcm
+    import utils.oncology_scope as scope
+    out_of_scope = set(scope.load_report()) | {t for t, (d, _) in scope.load_overrides().items() if d == "skip"}
+    found = []
+    for d, layer in ((MAPPED_DIR, "mapped"), (REVIEW_DIR, "needs_review")):
+        for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
+            if not f.endswith(".yaml"):
+                continue
+            t, path = f[:-5], os.path.join(d, f)
+            if t in out_of_scope or os.path.exists(os.path.join(REVIEWED_DIR, f)) or \
+                    (layer == "mapped" and os.path.exists(os.path.join(REVIEW_DIR, f))):
+                continue
+            raw = open(path).read()
+            if re.search(r"^\s*#", raw, re.M):
+                continue
+            ctml = yaml.safe_load(raw)
+            if not isinstance(ctml, dict):
+                continue
+            n_h3 = add_sibling_gene(ctml.get("treatment_list"), "H3C2", "H3C3")
+            try:
+                inc, exc, _ = eligibility_text(t)
+            except (OSError, ValueError, KeyError):
+                inc = exc = ""
+            before = [(id(g), g.get("variant_category")) for g in _genomic_nodes(ctml.get("treatment_list"))]
+            nodes = list(_genomic_nodes(ctml.get("treatment_list")))
+            mcm.rearranged_as_structural([{"genomic": g} for g in nodes], inc + "\n" + exc, t)
+            rearr = sorted({g["hugo_symbol"] for g, (_, vc) in zip(nodes, before) if g.get("variant_category") != vc})
+            if n_h3 or rearr:
+                found.append((t, layer, n_h3, rearr))
+                if apply:
+                    with open(path, "w") as fh:
+                        fh.write(yaml.dump(ctml, sort_keys=False))
+    return found
+
+
 def fix_all_lineage(apply=False):
     """Apply all_lineage_unspecified to CTML already written (mapped and review layers)."""
     import utils.oncology_scope as scope
@@ -1266,6 +1349,8 @@ def main(argv=None):
         "--apply", action="store_true")
     sub.add_parser("resolve-remap-drops", help="clear re-map drops named only in the exclusions").add_argument(
         "--apply", action="store_true")
+    sub.add_parser("fix-genomic-notation", help="H3C3 beside H3C2; rearranged genes as Structural Variation").add_argument(
+        "--apply", action="store_true")
     fs = sub.add_parser("flag-gene-status", help="genes required although the text says absent or irrelevant")
     fs.add_argument("--apply", action="store_true", help="write the flag and move mapped trials to review")
     fg = sub.add_parser("flag-unsupported-genes", help="re-run the unsupported-gene check on existing CTML")
@@ -1324,6 +1409,11 @@ def main(argv=None):
             for e in ev:
                 print(f"    {e}")
         print(f"{len(found)} trials, {sum(len(x[1]) for x in found)} drops" + (" resolved" if args.apply else " would be resolved; --apply to write"))
+    elif args.cmd == "fix-genomic-notation":
+        found = fix_genomic_notation(apply=args.apply)
+        for t, layer, n, rearr in found:
+            print(f"{t}\t{layer}\tH3C3 x{n}\trearranged: {','.join(rearr) or '-'}")
+        print(f"{len(found)} trials" + (" updated" if args.apply else " would be updated; --apply to write"))
     elif args.cmd == "flag-gene-status":
         found = flag_gene_status(apply=args.apply)
         for t, layer, hit, action in found:

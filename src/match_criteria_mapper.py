@@ -252,6 +252,52 @@ def _flag_unsupported_genes(genomic_criteria: list, scanned_genes, criteria_text
     return genomic_criteria
 
 
+_REARRANGED = r"(?:-?r\b|[\s-]+(?:rearrang\w*|translocat\w*|fusion|re-?arrang\w*))"
+_OTHER_ALTERATION = (r"(?:[\s-]+(?:mutation|mutated|mutant|variant|amplif\w*|deletion|deleted|duplication|ITD|TKD|PTD|"
+                     r"alteration|aberration|abnormalit\w*|activating|kinase domain)|[\s-]*(?:p\.)?[A-Z]\d{2,4}[A-Z*]?\b)")
+
+
+def is_rearrangement_only(gene: str, text: str) -> bool:
+    """
+    The text writes the gene only as rearranged ("KMT2A-r", "KMT2Ar", "KMT2A
+    rearranged", "NUP98 fusion") and never with another alteration.
+    """
+    g = re.escape(gene)
+    if not re.search(rf"(?<![A-Za-z0-9]){g}{_REARRANGED}", text or "", re.I) or \
+            re.search(rf"(?<![A-Za-z0-9]){g}{_OTHER_ALTERATION}", text or "", re.I):
+        return False
+    # A sentence naming the gene with an alteration word it shares with a list
+    # ("rearrangements or mutations", "KMT2A, NPM1 or nucleoporin alterations",
+    # "genomic abnormality including ... ALK") allows more than rearrangement.
+    # An alteration attached to another gene ("NPM1 mutation", "NPM1m") does not.
+    for sentence in re.split(r"[.;\n•*]|\s\d+\.\s", text or ""):
+        if not re.search(rf"(?<![A-Za-z0-9]){g}(?![A-Za-z0-9])", sentence):
+            continue
+        rest = re.sub(r"(?<![A-Za-z0-9])(?!%s)[A-Z][A-Z0-9-]{1,9}[\s-]*(?:mutations?|mutated|mutant|alterations?|m|c)\b" % g, " ", sentence)
+        if re.search(r"mutation|mutated|mutant|alteration|abnormalit|aberration|variant", rest, re.I):
+            return False
+    return True
+
+
+def rearranged_as_structural(genomic_criteria: list, criteria_text: str, trial_id: str = "") -> list:
+    """
+    A gene the text names only as rearranged is a Structural Variation, not
+    'Any Variation' (which also matches point mutations) or 'Mutation'.
+    Measured 2026-09-27: 12 criteria in 7 trials, nearly all KMT2A-r.
+    """
+    for c in genomic_criteria or []:
+        g = c.get("genomic") if isinstance(c, dict) else None
+        if not isinstance(g, dict) or not g.get("hugo_symbol"):
+            continue
+        vc = str(g.get("variant_category", ""))
+        neg = "!" if vc.startswith("!") else ""
+        if vc.lstrip("!") in ("Any Variation", "Mutation") and not g.get("protein_change") \
+                and is_rearrangement_only(g["hugo_symbol"], criteria_text):
+            g["variant_category"] = neg + "Structural Variation"
+            logger.info(f"{trial_id} | {g['hugo_symbol']} named only as rearranged: {vc} -> {g['variant_category']}")
+    return genomic_criteria
+
+
 def _postprocess_genomic_criteria(genomic_criteria: list, trial_id: str = "",
                                   scanned_genes=None, criteria_text: str = "") -> list:
     """
@@ -278,6 +324,8 @@ def _postprocess_genomic_criteria(genomic_criteria: list, trial_id: str = "",
     genomic_criteria = filter_genomic_criteria(genomic_criteria, trial_id)
     genomic_criteria = _clean_protein_change_fields(genomic_criteria, trial_id)
     genomic_criteria = _clean_fusion_partners(genomic_criteria, trial_id)
+    if criteria_text:
+        genomic_criteria = rearranged_as_structural(genomic_criteria, criteria_text, trial_id)
     if scanned_genes is not None:
         genomic_criteria = _flag_unsupported_genes(genomic_criteria, scanned_genes,
                                                    criteria_text, trial_id)
