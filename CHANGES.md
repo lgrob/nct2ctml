@@ -489,6 +489,38 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Index releases (2026-09-28)
+
+Step 6 of `doc/improvement_plan.md`. Before this, `index/` was overwritten by
+every sync, not in git, and by default built partly from unreviewed trials.
+An index behind a patient report was therefore gone by the next run, and
+could not be rebuilt, because its inputs in `cache/` were not kept.
+
+- **`utils/release_index.py` (new).**
+  - **`create`** refuses unless the tree is clean and `ref/` verifies. It
+    builds from `ctml/reviewed` with `--strict` and writes `release.json`
+    (commit, and the SHA-256 of every reviewed CTML file, reference file and
+    output). It packs a reproducible `releases/<tag>.tar.gz` with a
+    `.sha256` file, and tags HEAD with the archive's hash in the message.
+  - **`verify [--rebuild]`** checks the archive against all three records;
+    with `--rebuild`, the outputs rebuilt from the tagged commit must be
+    byte-identical.
+  - Nothing is pushed or uploaded automatically.
+- **Checked in a scratch clone:**
+  - a release of the 56 reviewed trials rebuilt byte-identical;
+  - refused: an uncommitted edit, an untracked reviewed file, a committed but
+    unpinned change to `ref/genes.txt`;
+  - a same-day second release became `.2`;
+  - caught: a moved tag, an edited table, an archive swapped under its
+    `.sha256`, and a forgery that rewrote the archive, `.sha256` and
+    `release.json` together. The last is caught by the tag.
+- **Tests:** `tests/test_release_index.py` (7 tests) runs the whole cycle in
+  a temporary clone. `tests.yml` now checks out the full history.
+- **Found on the way:** the index build also reads the untracked
+  `ctml/out-of-scope.tsv`, but that file never drops a reviewed trial, so a
+  reviewed-only release does not depend on it. The rebuild check confirms
+  it.
+
 ## Tests and a benchmark regression check in CI (2026-09-28)
 
 This completes step 8 of `doc/improvement_plan.md`, apart from CTIS.

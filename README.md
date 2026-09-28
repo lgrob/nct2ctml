@@ -272,9 +272,47 @@ will report a patient who carries an excluded alteration as a hit.
 
 The build is deterministic - the same inputs give byte-identical outputs - so
 the checksums in `manifest.json` identify exactly which trial set produced a
-given result. `index/` is gitignored on the assumption that it is regenerated;
-if a patient report ever cites it, ship it as a versioned artefact with its
-manifest (see CHANGES.md).
+given result. `index/` itself is a working copy: every sync overwrites it,
+and by default it includes trials nobody has reviewed. An index a report
+cites must be a release.
+
+### Index releases
+
+A release is a frozen, numbered index that can be cited in a report and
+rebuilt later from git alone (`utils/release_index.py`):
+
+```bash
+python -m utils.release_index create                   # tag index-YYYY.MM.DD[.N] at HEAD
+python -m utils.release_index verify releases/index-2026.10.01.tar.gz --rebuild
+```
+
+`create` refuses to run unless the checkout is clean (no uncommitted or
+untracked files, so every input is in the commit) and `ref/` matches
+`ref/SOURCES.tsv`. It then:
+
+1. builds from `ctml/reviewed` only, with `--strict`;
+2. writes `release.json`: the commit, the SHA-256 of every reviewed CTML
+   file, every reference file and every output;
+3. packs it with the four tables and `manifest.json` into
+   `releases/<tag>.tar.gz`, byte for byte reproducible, plus a `.sha256`
+   file;
+4. creates an annotated git tag at HEAD whose message records the
+   archive's SHA-256 and every output's.
+
+`verify` checks an archive against its `.sha256` file, `release.json` and the
+tag. The tag is the one record not stored beside the archive, so rewriting
+all three together still fails. `--rebuild` builds again from the tagged
+commit in a temporary worktree and requires byte-identical outputs.
+
+Nothing leaves the machine until you publish: `create` tags locally and
+prints the commands to push the tag and upload the archive (a GitHub
+Release, or Kispi storage). `releases/` is gitignored.
+
+For the consuming pipeline: read the tables from an extracted release, never
+from `index/`; check the archive with its `.sha256`; and write the tag (for
+example `index-2026.10.01`) into every report that uses a match. "Why did
+this sample match that trial?" is then answered by that release's CTML at
+that commit.
 
 ## Provenance and replay
 

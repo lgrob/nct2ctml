@@ -72,10 +72,15 @@ Baseline at the time of the review: 543 offline tests pass in ~13 s
   pinned. Found: the Oncotree API does not serve a version byte for byte the
   same over time, and name-keyed parents (`doc/open_issues.md`).
 
-- [ ] **6. Treat the index as a release.**
+- [x] **6. Treat the index as a release.**
   One command (e.g. `make release`) that builds from `ctml/reviewed` with
   `--strict`, tags the commit, and archives `index/` with its manifest - the
   step `.gitignore` already asks for once a patient report cites the index.
+
+  Done 2026-09-28: `python -m utils.release_index create` / `verify --rebuild`
+  (README, "Index releases"). Not yet done, and outside this repo: the
+  genomics pipeline reading a release instead of `index/` and writing the tag
+  into reports; publishing the first release.
 
 ## Phase 2 - Code quality
 
