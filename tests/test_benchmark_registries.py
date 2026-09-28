@@ -50,8 +50,9 @@ def _run_main(*argv):
     cwd = os.getcwd()
     os.chdir(ROOT)
     try:
+        # RUNS_PATH None: a dispatch test must not leave a run record in runs/.
         with patch.object(sys, "argv", ["benchmark_map", *argv, "--json", out_json]), \
-             contextlib.redirect_stdout(io.StringIO()):
+             patch.object(bm.config, "RUNS_PATH", None), contextlib.redirect_stdout(io.StringIO()):
             bm.main()
     finally:
         os.chdir(cwd)

@@ -56,6 +56,10 @@ def convert(nct_ids: list[str], dry_run: bool = False) -> int:
         if not isinstance(doc, dict) or not doc.get("nct_id"):
             print(f"  INVALID  {src}: no nct_id at the top level", file=sys.stderr)
             continue
+        # MatchMiner's trial resource rejects unknown fields (allow_unknown is
+        # False), and a leading underscore is Eve's own namespace. The
+        # reviewed YAML keeps the block; the queue for MatchMiner does not.
+        doc.pop("_provenance", None)
         if dry_run:
             print(f"  would write  {dst}")
         else:

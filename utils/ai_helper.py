@@ -5,12 +5,14 @@
 
 import json
 import re
+import time
 import config
 import requests
 import urllib.parse
 from inspect import cleandoc
 from loguru import logger
 from utils.llm_platforms import create_llm_platform
+from utils import provenance
 from utils.genomic_patterns import MUTATION_DETAIL_KEYWORDS, CNV_DETAIL_KEYWORDS
 
 # Pre-compile patterns for efficiency
@@ -317,7 +319,23 @@ def parse_ai_response(ai_response, trial_id=""):
     return _llm_platform.parse_response(ai_response, trial_id)
 
 def send_ai_request(id, prompt, json_schema=None):
-    """Send AI request using the configured platform."""
+    """
+    Send AI request using the configured platform. Inside a run
+    (utils/provenance.start_run) the call is recorded, answer or error.
+    """
+    started = time.monotonic()
+    try:
+        ai_response = _send_ai_request(id, prompt, json_schema)
+    except Exception as ex:
+        provenance.record_call(id, prompt, json_schema, error=f"{type(ex).__name__}: {ex}",
+                               elapsed=time.monotonic() - started)
+        raise
+    provenance.record_call(id, prompt, json_schema, response=ai_response,
+                           elapsed=time.monotonic() - started)
+    return ai_response
+
+
+def _send_ai_request(id, prompt, json_schema=None):
     # Hosted platforms (e.g. Anthropic) own their transport and auth via an
     # official SDK, so they expose send() instead of going through the
     # unauthenticated hostname:port POST used by the self-hosted platforms.
@@ -664,9 +682,14 @@ ENUM_CAP_EVENTS = {"enum": 0, "near_cap": 0, "dropped": 0, "largest": 0}
 
 
 def max_enum_values():
-    """The enum cap for config.LLM_PLATFORM; None means the enum is never dropped."""
+    """
+    The enum cap for config.LLM_PLATFORM; None means the enum is never dropped.
+    A replay uses the recorded platform's cap, or its schemas would differ
+    from the recorded ones and every capped call would miss.
+    """
     caps = getattr(config, "SCHEMA_ENUM_MAX_VALUES", {}) or {}
-    platform = str(getattr(config, "LLM_PLATFORM", "")).lower()
+    platform = str(getattr(_llm_platform, "recorded_platform", None)
+                   or getattr(config, "LLM_PLATFORM", "")).lower()
     return caps.get(platform, _DEFAULT_MAX_ENUM_VALUES)
 
 

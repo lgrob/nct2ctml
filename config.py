@@ -12,9 +12,21 @@ import os
 # proxy, which cannot reach a port on the compute node.
 GPU_SERVER_HOSTNAME = "http://127.0.0.1"
 
-# Options: Local_ai, vllm, SGLang, Ollama, Anthropic
-LLM_PLATFORM = "Anthropic"
+# Options: Local_ai, vllm, SGLang, Ollama, Anthropic, Replay
+# NCT2CTML_LLM_PLATFORM overrides it, e.g. for a replay; every mapped file
+# records the platform it was made with.
+LLM_PLATFORM = os.environ.get("NCT2CTML_LLM_PLATFORM", "Anthropic")
 #LLM_PLATFORM = "Ollama"
+
+# Provenance (utils/provenance.py). Each `map` and benchmark run writes
+# RUNS_PATH/<run_id>/run.json and records every model call, prompt and raw
+# answer, in RUNS_PATH/<run_id>/llm_calls.jsonl. Unlike cache/ it cannot be
+# regenerated: it is the only copy of what the model said. None turns
+# recording off; the CTML is still stamped with its _provenance block.
+RUNS_PATH = "runs"
+# LLM_PLATFORM = "Replay" answers from a recorded run instead of a model,
+# which rebuilds that run's CTML offline. Point this at its llm_calls.jsonl.
+LLM_REPLAY_FILE = os.environ.get("NCT2CTML_REPLAY_FILE")
 
 # Anthropic (hosted Claude API) settings - the production backend since
 # 2026-09-24 (roadmap D1). Auth comes from the ANTHROPIC_API_KEY environment

@@ -11,6 +11,7 @@ This module handles the mapping of NCT trial data to CTML format.
 
 import csv
 import os
+import re
 import yaml
 from datetime import datetime
 from typing import Dict, List
@@ -22,7 +23,12 @@ import utils.ai_helper as ai
 import src.trial_data_helper as tdh
 import utils.reference_validation as rv
 import utils.oncology_scope as scope
+from utils import provenance
 import config
+
+# The _provenance block as yaml.dump writes it: a top-level key, last, with
+# its content indented below it.
+_PROVENANCE_BLOCK = re.compile(r"^_provenance:.*\n(?:[ -].*\n?)*", re.M)
 
 
 class TrialMapManager:
@@ -378,14 +384,19 @@ class TrialMapManager:
         (it reads .yaml/.yml/.json only) and lists them in its manifest.
         Copies outside the review queue are overwritten as before: they
         are machine output nobody edits.
+
+        Every file gets a `_provenance` block, last (utils/provenance). The
+        comparison leaves it out: it carries the time of mapping, so it
+        differs on every run, and a backup is about the curator's content.
         """
         import config
+        mapped_ctml.pop("_provenance", None)
         target = os.path.join(destination, f"{trial_id}.yaml")
         review = os.path.realpath(getattr(config, 'CTML_REVIEW_PATH', 'ctml/needs-review'))
         if os.path.realpath(destination) == review and os.path.exists(target):
             new = yaml.dump(mapped_ctml, sort_keys=False)
             with open(target) as handle:
-                old = handle.read()
+                old = _PROVENANCE_BLOCK.sub("", handle.read())
             if old != new:
                 backup, n = f"{target}.prev", 0
                 while os.path.exists(backup):
@@ -394,6 +405,7 @@ class TrialMapManager:
                 os.replace(target, backup)
                 logger.warning(f"{trial_id} | the review copy differs from the new mapping; "
                                f"kept as {backup} before writing the new one")
+        mapped_ctml["_provenance"] = provenance.for_trial(trial_id)
         tdh.save_to_file(mapped_ctml, destination, trial_id, 'yaml')
         return target
 

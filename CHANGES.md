@@ -60,6 +60,9 @@ targets paediatric oncology worldwide.
   and its 50-trial answer key, whose
   match criteria are hand-written in `curations.py` and combined with the
   pipeline's deterministic, non-LLM mapping of the cached record.
+- `utils/provenance.py` — stamps every mapped file with what produced it,
+  records every model call of a run, and backs the `Replay` platform in
+  `utils/llm_platforms.py` that rebuilds a run from its record.
 
 ## Defects fixed
 
@@ -485,6 +488,57 @@ files.
   `tests/test_diagnosis_branch_floor.py` are new;
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
+
+## Provenance: what produced each file, every model call recorded, runs replayable (2026-09-28)
+
+Before this change, a mapped trial carried nothing about how it was made.
+Model, prompt variants (`GENOMIC_PROMPT` and `DIAGNOSIS_INPUT` can both be
+set from the environment), code and reference files all change the output,
+and temperature 0 does not make the hosted model repeatable. So a file could
+be traced neither to its pipeline nor to the answer the model gave. Steps
+1-3 of `doc/improvement_plan.md`.
+
+- **`_provenance` in every mapped file.** `TrialMapManager._save` appends it
+  last on all three save paths. It holds the run id, the time, the git commit
+  and dirty flag, the platform and model with their settings and both prompt
+  variants, and the SHA-256 of all 13 reference files the mapper reads. The
+  `.prev` backup check leaves the block out, so re-mapping an unchanged trial
+  still makes no backup. `accept` edits the raw text, so the block survives
+  review. `bulk_convert_yaml_to_json.py` strips it from the JSON, because
+  MatchMiner's `trial` resource has `allow_unknown: False` and would reject
+  the load.
+- **Runs.** `main.py map` and the benchmark each start a run:
+  `runs/<run_id>/run.json` (command, code, model and settings, reference
+  hashes, Python and package versions, call counts at the end), and
+  `runs/<run_id>/llm_calls.jsonl` with one line per model call (trial, prompt,
+  prompt and schema SHA-256, raw response, time taken, or the error). Each
+  distinct schema is stored once under `schemas/`. For Anthropic the raw
+  response now includes the request id, the model that answered and the
+  token usage. Estimated from a stub run at ~5.6 KB per call, a full run is
+  about 50 MB. `runs/` is gitignored but **not regenerable**: it is the only
+  copy of what the model said. With no run started nothing is recorded, so
+  tests leave nothing behind.
+- **Replay.** `LLM_PLATFORM = "Replay"` with `NCT2CTML_REPLAY_FILE` pointing
+  at a run's `llm_calls.jsonl` answers every call from the record, keyed by
+  prompt and schema hash, and parses it with the recorded platform's own
+  parser. It also uses the recorded platform's schema enum cap, since a
+  different cap would send different schemas and every capped call would
+  miss. `NCT2CTML_LLM_PLATFORM` now overrides `LLM_PLATFORM`. A prompt the run never sent raises `ReplayMiss`. Checked end to
+  end: one NCT and one CTIS trial were mapped with a stub model, then
+  replayed, and the replay gave identical CTML.
+- **Index.** `trials.tsv` gains `mapped_at`, `mapped_run`, `mapped_commit`,
+  `llm_model` and `prompt_settings` (empty for files without the block).
+  `manifest.json` gains the build's `code`, `reference_sha256` for every
+  reference file, `trials_by_mapping`, `trials_by_commit` and
+  `reference_drift`: per reference file, the number of trials mapped against
+  a different version of it.
+- **Defect fixed on the way.** The CTIS age call was tagged
+  `"CTIS: <number>"`, not the trial id, so its record was attributed to no
+  trial. It now passes the bare number, as every other call does.
+
+All reviewed trials and all earlier mapped output have no block, and show
+as `unrecorded` in the manifest until they are re-mapped.
+`tests/test_provenance.py` is new (22 tests); 565 tests pass offline.
 
 ## Gene scan: histone protein names and genes written together with their change
 

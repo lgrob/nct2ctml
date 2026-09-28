@@ -17,6 +17,11 @@ cache/
 # Runtime logs
 logs/
 
+# Run records and every model call (utils/provenance.py). NOT regenerable -
+# the only copy of what the model answered - so back it up with the outputs
+# rather than deleting it; untracked only because of its size.
+runs/
+
 # COSMIC Cancer Gene Census - redistribution is restricted by the COSMIC
 # licence. Kept locally for utils/get_gene_synonym_mapping.py (a one-time
 # script, not used at runtime); never committed to this public fork.

@@ -399,16 +399,22 @@ def main():
         import src.trial_map_manager as tmm
         print(f"platform={config.LLM_PLATFORM}  model={config.LLM_AI_MODEL}")
         print(f"mapping {len(ids)} trials -> {args.out}\n")
+        from utils import provenance
+        run_id = provenance.start_run(command="benchmark")
+        print(f"run {run_id}")
         mgr = tmm.TrialMapManager()
-        for n, nct in enumerate(ids, 1):
-            t0 = time.time()
-            try:
-                ok = map_trial(mgr, nct, args.out)
-                status = "ok" if ok else "FAILED"
-            except Exception as e:
-                status = f"CRASH {type(e).__name__}: {str(e)[:60]}"
-            timings[nct] = time.time() - t0
-            print(f"  [{n}/{len(ids)}] {nct}  {status}  ({timings[nct]:.0f}s)")
+        try:
+            for n, nct in enumerate(ids, 1):
+                t0 = time.time()
+                try:
+                    ok = map_trial(mgr, nct, args.out)
+                    status = "ok" if ok else "FAILED"
+                except Exception as e:
+                    status = f"CRASH {type(e).__name__}: {str(e)[:60]}"
+                timings[nct] = time.time() - t0
+                print(f"  [{n}/{len(ids)}] {nct}  {status}  ({timings[nct]:.0f}s)")
+        finally:
+            provenance.finish_run(output=args.out, trials=len(ids))
 
     rows, agg = score(args.truth, args.out, ids)
     for r in rows:

@@ -95,7 +95,8 @@ For registry trials:
    `reviewed = 0`; a hit on one is a lead for a curator, not a finding.
 4. `python bulk_convert_yaml_to_json.py` converts `ctml/reviewed` to
    `ctml/json` (pass NCT ids to convert only those, `--dry-run` to list
-   without writing).
+   without writing). The `_provenance` block is left out of the JSON,
+   because MatchMiner rejects unknown fields.
 
 A trial is written to `ctml/needs-review/` (`config.CTML_REVIEW_PATH`) instead
 of `cache/ctml/`, for both registries, when the mapper could determine no
@@ -211,11 +212,11 @@ Outputs:
 
 | File | One row per | Key columns |
 |---|---|---|
-| `trials.tsv` | trial | `trial_id`, `source`, `nct_id`, `phase`, `status`, `review_status`, `reviewed`, `source_file`, `layer_conflict`, `age_min`/`age_max` with `age_min_inclusive`/`age_max_inclusive`, `genes_not_required` |
+| `trials.tsv` | trial | `trial_id`, `source`, `nct_id`, `phase`, `status`, `review_status`, `reviewed`, `source_file`, `layer_conflict`, `age_min`/`age_max` with `age_min_inclusive`/`age_max_inclusive`, `genes_not_required`, `mapped_at`, `mapped_run`, `mapped_commit`, `llm_model`, `prompt_settings` |
 | `trial_diagnosis.tsv` | trial, arm, Oncotree node | `oncotree_code`, `oncotree_name`, `source_term`, `from_basket`, `include` |
 | `trial_genomic.tsv` | trial, arm, gene criterion | `hugo_symbol`, `variant_category`, `cnv_call`, `protein_change`, `protein_change_stated`, `protein_change_kind`, `protein_refseq`, `protein_ensembl`, `protein_check`, `fusion_partner`, `fusion`, `fusion_partner_check`, `variant_classification`, `include` |
 | `layer_conflicts.tsv` | trial | trials whose published `ctml/needs-review` copy is older than a clean mapping in `cache/ctml`: both files and their modification times |
-| `manifest.json` | - | row counts, SHA-256 of each output and of `ref/oncotree_file.txt`, `layer_conflicts` count, `review_backups` list |
+| `manifest.json` | - | row counts, SHA-256 of each output and of every reference file, the build's commit, `layer_conflicts` count, `review_backups` list, trials per mapping setup and per commit, `reference_drift` |
 
 `genes_not_required` lists genes the text mentions that the model judged not required of every patient (risk group, one cohort, conditional, an alternative route, an example, expression or germline), each with its role. They are not matched on; show them to the clinician beside the trial. Trials carrying only this note are published, not queued for review (roadmap 2.9, option A).
 
@@ -259,6 +260,42 @@ given result. `index/` is gitignored on the assumption that it is regenerated;
 if a patient report ever cites it, ship it as a versioned artefact with its
 manifest (see CHANGES.md).
 
+## Provenance and replay
+
+Every mapped file ends with a `_provenance` block (`utils/provenance.py`)
+saying what produced it: run id, time, git commit and whether the tree had
+local changes, LLM platform, model and settings, both prompt variants
+(`GENOMIC_PROMPT`, `DIAGNOSIS_INPUT`), and the SHA-256 of every reference
+file. Review keeps it; the index publishes it in `trials.tsv`, and its
+manifest counts trials mapped against a reference file other than the
+current one (`reference_drift`).
+
+Each `map` and benchmark run also writes `runs/<run_id>/`:
+
+| File | What it is |
+|---|---|
+| `run.json` | command, code version, model and settings, reference hashes, Python and package versions; call counts once the run ends |
+| `llm_calls.jsonl` | one line per model call: trial, prompt, prompt and schema SHA-256, raw response (for Anthropic with request id, answering model and token usage), time taken, or the error |
+| `schemas/<sha256>.json` | each distinct schema, exactly as sent |
+
+A full run is about 50 MB (estimated). `runs/` is gitignored but, unlike
+`cache/`, cannot be regenerated: it is the only copy of what the model
+answered. Keep the run a published result was built from. `RUNS_PATH = None`
+in `config.py` turns recording off.
+
+To rebuild a run's CTML without a model, answer from its record:
+
+```bash
+NCT2CTML_LLM_PLATFORM=Replay NCT2CTML_REPLAY_FILE=runs/<run_id>/llm_calls.jsonl \
+    python main.py map --nct_id NCT03643276 --out /tmp/replay
+```
+
+Each call is looked up by the hash of its prompt and schema and answered
+with the recorded response. A prompt the run never sent, because the code
+or its inputs have changed since, fails that trial with `ReplayMiss`. So a
+replay that completes shows that the deterministic code still does what it
+did, and a diff against the original isolates what changed outside the model.
+
 ## LLM backends
 
 `config.py` selects the backend with `LLM_PLATFORM` and the model with
@@ -271,6 +308,7 @@ case-insensitively.
 | `Ollama` | the GPU backend; served at `GPU_SERVER_HOSTNAME`. Context and output limits come from `OLLAMA_NUM_CTX` and `OLLAMA_NUM_PREDICT`. |
 | `SGLang`, `vllm` | self-hosted, OpenAI-style chat endpoint at `GPU_SERVER_HOSTNAME`. |
 | `Local_ai` | a stub; raises `NotImplementedError`. |
+| `Replay` | answers from a recorded run instead of a model; see [Provenance and replay](#provenance-and-replay). |
 
 `LLM_REQUEST_TIMEOUT_SECONDS` bounds every request. To run the mapping on a
 Slurm GPU cluster with Ollama under Apptainer, see

@@ -75,6 +75,18 @@ mapper flagged it: no diagnosis, or a protein change that failed its check)
 or `mapped` (machine output nobody has read), with `reviewed` as 0/1 and
 `source_file` naming the file the rows came from. A hit on an unreviewed
 trial is a lead for a curator, not a finding; route it accordingly.
+
+Provenance
+----------
+`trials.tsv` carries what the mapper stamped into each file's `_provenance`
+block (utils/provenance.py): `mapped_at`, `mapped_run`, `mapped_commit`,
+`llm_model` and `prompt_settings`, all empty for a file mapped before the
+block existed or written by hand. `manifest.json` records the build's own
+commit, the SHA-256 of every reference file, the trials per mapping setup
+and per commit, and `reference_drift`: per reference file, how many trials
+were mapped against a version other than the one this build read. A drifted
+trial is not wrong, but its gene or diagnosis vocabulary is older than the
+index's; re-map it or accept that.
 """
 import argparse
 from collections import Counter
@@ -93,7 +105,7 @@ import yaml
 from loguru import logger
 
 import config
-from utils import protein_change
+from utils import protein_change, provenance
 from utils.oncotree import get_all_oncotree_data, get_lineage
 from utils.reference_validation import _oncotree, canonical_gene, fusion_partner
 
@@ -117,7 +129,8 @@ GENOMIC_COLUMNS = ["trial_id", "arm_code", "hugo_symbol", "variant_category",
 TRIAL_COLUMNS = ["trial_id", "source", "nct_id", "protocol_no", "short_title",
                  "phase", "status", "review_status", "reviewed", "source_file", "layer_conflict",
                  "age_label", "age_min", "age_min_inclusive",
-                 "age_max", "age_max_inclusive", "n_diagnosis_codes", "n_genes", "genes_not_required"]
+                 "age_max", "age_max_inclusive", "n_diagnosis_codes", "n_genes", "genes_not_required",
+                 "mapped_at", "mapped_run", "mapped_commit", "llm_model", "prompt_settings"]
 
 # Input layers, lowest precedence first. The status says what a row is worth:
 # `reviewed` was signed off by a curator, `needs_review` is machine output the
@@ -457,8 +470,46 @@ def index_trial(trial_id, trial, descendants, solid, liquid, name_to_code):
         # every patient ("FLT3 (cohort_specific); ..."): not matched on, shown to
         # the clinician (roadmap 2.9, option A).
         "genes_not_required": str(trial.get("gene_role_dropped") or "").replace("\t", " ").replace("\n", " "),
+        **_provenance_columns(trial.get("_provenance")),
     }
     return trial_row, diagnosis_rows, genomic_rows
+
+
+def _provenance_columns(block):
+    """The trials.tsv columns for a file's _provenance block; empty without one."""
+    block = block if isinstance(block, dict) else {}
+    llm = block.get("llm") or {}
+    prompts = [f"{k}={llm[k]}" for k in ("genomic_prompt", "diagnosis_input") if llm.get(k)]
+    return {
+        "mapped_at": block.get("mapped_at") or "",
+        "mapped_run": block.get("run_id") or "",
+        "mapped_commit": provenance.short_commit(block.get("code")),
+        "llm_model": llm.get("model") or "",
+        "prompt_settings": ";".join(prompts),
+    }
+
+
+def _provenance_summary(trials, reference):
+    """
+    Trials per mapping setup and per commit, and per reference file how many
+    trials were mapped against another version of it.
+    """
+    setups, commits, drift = Counter(), Counter(), Counter()
+    for trial in trials:
+        block = trial.get("_provenance")
+        if not isinstance(block, dict):
+            setups["unrecorded"] += 1
+            commits["unrecorded"] += 1
+            continue
+        cols = _provenance_columns(block)
+        setups[" ".join(filter(None, (cols["llm_model"], cols["prompt_settings"]))) or "unrecorded"] += 1
+        commits[cols["mapped_commit"] or "unrecorded"] += 1
+        for path, digest in (block.get("reference_sha256") or {}).items():
+            if path in reference and digest != reference[path]:
+                drift[path] += 1
+    return {"trials_by_mapping": dict(sorted(setups.items())),
+            "trials_by_commit": dict(sorted(commits.items())),
+            "reference_drift": dict(sorted(drift.items()))}
 
 
 def _normalise_protein_changes(genomic_rows):
@@ -552,6 +603,7 @@ def build(source=None, out_dir="index", strict=False):
             writer.writerows(rows)
         written[name] = {"rows": len(rows), "sha256": _sha256(path)}
 
+    reference = provenance.reference_hashes()
     manifest = {
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "layers": [{"directory": d, "review_status": s} for d, s in layers],
@@ -568,6 +620,9 @@ def build(source=None, out_dir="index", strict=False):
         "protein_reference_sha256": _sha256(protein_change.REFERENCE),
         "protein_checks": protein_checks,
         "outputs": written,
+        "code": provenance.code_version(),
+        "reference_sha256": reference,
+        **_provenance_summary([trial for trial, _, _ in chosen.values()], reference),
     }
     with open(os.path.join(out_dir, "manifest.json"), "w") as handle:
         json.dump(manifest, handle, indent=2, sort_keys=True)
@@ -601,6 +656,10 @@ def main():
     print(f"  manifest.json          oncotree {manifest['oncotree_sha256'][:12]}")
     print(f"  protein changes        {manifest['protein_checks'] or 'none'}")
     print(f"  layer conflicts        {manifest['layer_conflicts']} (see layer_conflicts.tsv)")
+    print(f"  mapped with            {manifest['trials_by_mapping']}")
+    if manifest["reference_drift"]:
+        print(f"  reference drift        {manifest['reference_drift']} "
+              f"(trials mapped against another version of these files)")
     print(f"  review backups         {len(manifest['review_backups'])} (.yaml.prev files in the review queue)")
     print(f"  excluded (scope)       {len(manifest['excluded_by_scope_override'])} skip rows in ref/scope_overrides.tsv, "
           f"{len(manifest['excluded_out_of_scope'])} out of scope per ctml/out-of-scope.tsv")

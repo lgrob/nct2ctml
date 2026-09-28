@@ -130,7 +130,9 @@ def map_age_numerical(ct_number: str, inclusion_text: str) -> List[str]:
     Returns [] when no age is stated. An absent bound is correct; an invented
     one is not.
     """
-    minimum, maximum = ab.prose_bounds(ab.read_age_bounds(f"CTIS: {ct_number}", inclusion_text),
+    # The bare number, as for every other model call: it is the trial id the
+    # call is recorded under (utils/provenance).
+    minimum, maximum = ab.prose_bounds(ab.read_age_bounds(ct_number, inclusion_text),
                                        f"CTIS: {ct_number}")
     return [b for b in (minimum, maximum) if b]
 

@@ -309,6 +309,8 @@ def create_llm_platform(platform_name: str, model: str, hostname: str) -> LLMPla
     elif platform_name_lower == "anthropic":
         print( "Creating Anthropic platform..." )
         return AnthropicPlatform(model, hostname)
+    elif platform_name_lower == "replay":
+        return ReplayPlatform(model, hostname)
     else:
         raise ValueError(f"Unsupported LLM platform: {platform_name}")
 
@@ -505,7 +507,14 @@ class AnthropicPlatform(LLMPlatform):
         logger.debug(
             f"Anthropic usage | in={response.usage.input_tokens} out={response.usage.output_tokens}"
         )
-        return {"text": text, "stop_reason": response.stop_reason}
+        # parse_response reads only "text"; the rest is for the call record
+        # (utils/provenance): the request id is what Anthropic support asks for,
+        # and the served model confirms the pinned snapshot answered.
+        return {"text": text, "stop_reason": response.stop_reason,
+                "request_id": getattr(response, "_request_id", None),
+                "model": getattr(response, "model", None),
+                "usage": {"input_tokens": response.usage.input_tokens,
+                          "output_tokens": response.usage.output_tokens}}
 
     def parse_response(self, ai_response: Dict[str, Any], trial_id: str = "") -> Dict[str, Any]:
         """Extract the JSON object out of the model's text response."""
@@ -531,3 +540,77 @@ class AnthropicPlatform(LLMPlatform):
         except json.JSONDecodeError as ex:
             logger.error(f"{trial_id or 'unknown trial'}: the model returned text that is not valid JSON, so this criterion is empty. {ex=} | {sanitized_res[:400]}")
         return response_dict
+
+
+class ReplayMiss(LookupError):
+    """A prompt the replayed run never sent."""
+
+
+class ReplayPlatform(LLMPlatform):
+    """
+    Answers from a recorded run instead of a model (utils/provenance).
+
+    LLM_PLATFORM = "Replay" with LLM_REPLAY_FILE (or NCT2CTML_REPLAY_FILE)
+    naming a run's llm_calls.jsonl. A call is looked up by the SHA-256 of its
+    prompt and schema and gets the raw response that run received, which the
+    recorded platform's own parse_response then reads, so the answer goes
+    through exactly the code it went through the first time. The model and
+    platform come from the file, not from config.
+
+    A prompt asked more than once in the run gets its answers in recorded
+    order, the last one repeating. A prompt the run never sent - because the
+    prompt code or its inputs changed since - raises ReplayMiss, and the
+    trial fails as it would on an API error; calls that failed in the
+    recorded run are not replayed and fail the same way.
+    """
+
+    def __init__(self, model: str, hostname: str, calls_file: Optional[str] = None):
+        import config
+        from collections import defaultdict, deque
+
+        path = calls_file or getattr(config, "LLM_REPLAY_FILE", None)
+        if not path:
+            raise ValueError("LLM_PLATFORM = 'Replay' needs LLM_REPLAY_FILE "
+                             "(or NCT2CTML_REPLAY_FILE): a run's llm_calls.jsonl")
+        self.source = path
+        self._answers = defaultdict(deque)
+        recorded = set()
+        with open(path, encoding="utf-8") as handle:
+            for line in handle:
+                if not line.strip():
+                    continue
+                call = json.loads(line)
+                recorded.add((call["platform"], call["model"]))
+                if call.get("error") is None:
+                    self._answers[(call["prompt_sha256"], call["schema_sha256"])].append(call["response"])
+        if len(recorded) != 1:
+            raise ValueError(f"{path}: expected the calls of one platform and model, found {sorted(recorded)}")
+        self.recorded_platform, recorded_model = recorded.pop()
+        if self.recorded_platform.lower() == "replay":
+            raise ValueError(f"{path} is itself a replay")
+        super().__init__(recorded_model, hostname)
+        self._parser = create_llm_platform(self.recorded_platform, recorded_model, hostname)
+
+    @property
+    def port(self) -> int:
+        return 0
+
+    @property
+    def chat_endpoint(self) -> str:
+        return ""
+
+    def get_request_body(self, prompt: str, json_schema: Optional[Dict] = None) -> Dict[str, Any]:
+        raise NotImplementedError("Replay sends no request; send() answers from the recording.")
+
+    def send(self, prompt: str, json_schema: Optional[Dict] = None) -> Any:
+        from utils import provenance
+
+        key = (provenance.sha256_text(prompt), provenance.schema_sha256(json_schema))
+        answers = self._answers.get(key)
+        if not answers:
+            raise ReplayMiss(f"{self.source} has no answer for prompt {key[0][:12]} "
+                             f"(schema {str(key[1])[:12]}): the prompt differs from the recorded run's")
+        return answers.popleft() if len(answers) > 1 else answers[0]
+
+    def parse_response(self, ai_response: Dict[str, Any], trial_id: str = "") -> Dict[str, Any]:
+        return self._parser.parse_response(ai_response, trial_id)

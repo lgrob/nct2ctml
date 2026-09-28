@@ -19,7 +19,8 @@ logger.remove()
 
 
 def _run(*argv):
-    with patch.object(sys, "argv", ["main.py", *argv]), \
+    # RUNS_PATH None: a dispatch test must not leave a run record in runs/.
+    with patch.object(sys, "argv", ["main.py", *argv]), patch.object(config, "RUNS_PATH", None), \
          patch.object(main, "map_all") as nct, patch.object(main, "map_all_ctis") as ctis:
         main.main()
     return nct, ctis

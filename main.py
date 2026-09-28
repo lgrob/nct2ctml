@@ -176,15 +176,22 @@ Examples:
             ctml_files_path = config.CTML_MAPPED_PATH
         os.makedirs(ctml_files_path, exist_ok=True)
         logger.info(f"Writing mapped CTML to {ctml_files_path}")
-        if args.all:
-            if args.source in ('nct', 'all'):
-                map_all(nct_files_path, ctml_files_path, args)
-            if args.source in ('ctis', 'all'):
-                map_all_ctis(ctis_files_path, ctml_files_path, args)
-        elif args.ct_number:
-            map_ctis(args.ct_number, ctis_files_path, ctml_files_path)
-        else:
-            map_nct(args.nct_id, nct_files_path, ctml_files_path)
+        # A run: run.json and every model call under config.RUNS_PATH, and its
+        # id in each file's _provenance block (utils/provenance.py).
+        from utils import provenance
+        provenance.start_run(command="map")
+        try:
+            if args.all:
+                if args.source in ('nct', 'all'):
+                    map_all(nct_files_path, ctml_files_path, args)
+                if args.source in ('ctis', 'all'):
+                    map_all_ctis(ctis_files_path, ctml_files_path, args)
+            elif args.ct_number:
+                map_ctis(args.ct_number, ctis_files_path, ctml_files_path)
+            else:
+                map_nct(args.nct_id, nct_files_path, ctml_files_path)
+        finally:
+            provenance.finish_run(output=ctml_files_path)
 
 def map_ctis(ct_number, ctis_files_path, ctml_files_path):
     """Map one CTIS trial to CTML."""
