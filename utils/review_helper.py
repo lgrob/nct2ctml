@@ -73,7 +73,7 @@ LOG_COLUMNS = ["date", "trial_id", "reviewer", "from_layer", "flags_resolved", "
 # that still holds any of them: deleting the key is how a curator confirms
 # the item, deleting the item is how they reject it.
 FLAG_KEYS = ("gene_unsupported", "diagnosis_off_list", "diagnosis_excluded", "genomic_contradiction",
-             "remap_dropped_diagnoses", "gene_status_contradiction",
+             "remap_dropped_diagnoses", "gene_status_contradiction", "gene_role_dropped",
              "protein_change_unverified",
              "protein_change_check", "fusion_partner_unverified")
 
@@ -96,6 +96,10 @@ ADVICE = {
                           "match tree, or, when a broader diagnosis the trial enrols contains it, add it as "
                           "`oncotree_primary_diagnosis: '!Name'` (quoted) beside that diagnosis. Then delete "
                           "the top-level `diagnosis_excluded:` line.",
+    "gene_role_dropped": "The model read these genes as something other than an entry requirement (risk group, one "
+                         "cohort, conditional, an alternative route, an example, expression or germline) and kept them out "
+                         "of the match tree. Check the sentence; add a gene back only if every patient must carry it, then "
+                         "delete the top-level `gene_role_dropped:` line.",
     "gene_status_contradiction": "The match tree requires an alteration in a gene that the inclusion text says "
                                  "must be absent (wild type, negative, 'no ... mutation') or does not matter "
                                  "('with or without'). Remove or negate the criterion, then delete the top-level "

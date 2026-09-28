@@ -230,6 +230,7 @@ class TrialMapManager:
                     self._record_off_list(mapped_ctml, nct_id)
                     self._flag_excluded_diagnoses(mapped_ctml, trial_data, "nct", nct_id)
                     self._flag_contradictions(mapped_ctml, nct_id)
+                    self._record_role_drops(mapped_ctml, nct_id)
                     self._add_unspecified_all_lineage(mapped_ctml, trial_data, "nct", nct_id)
                     self._flag_gene_status(mapped_ctml, trial_data, "nct", nct_id)
                     
@@ -346,6 +347,7 @@ class TrialMapManager:
             self._record_off_list(mapped_ctml, ct_number)
             self._flag_excluded_diagnoses(mapped_ctml, trial_data, "ctis", ct_number)
             self._flag_contradictions(mapped_ctml, ct_number)
+            self._record_role_drops(mapped_ctml, ct_number)
             self._add_unspecified_all_lineage(mapped_ctml, trial_data, "ctis", ct_number)
             self._flag_gene_status(mapped_ctml, trial_data, "ctis", ct_number)
             # CTIS bypassed the review queue entirely until 2026-09-21: it saved
@@ -409,6 +411,22 @@ class TrialMapManager:
         if found:
             mapped_ctml["genomic_contradiction"] = "; ".join(found)
             logger.warning(f"{trial_id} | match tree requires and forbids {', '.join(found)}: matches nobody")
+
+    @staticmethod
+    def _record_role_drops(mapped_ctml: dict, trial_id: str) -> None:
+        """
+        Roadmap 2.9 "roles": genes the model classified as a risk group,
+        cohort-specific, conditional, an alternative route, an example or
+        expression/germline were kept out of the match tree; record them so a
+        curator sees them (routes the trial to review).
+        """
+        drops = ai.ROLE_DROPS.pop(trial_id, None) if hasattr(ai, "ROLE_DROPS") else None
+        if drops and isinstance(mapped_ctml, dict):
+            seen = []
+            for g, role in drops:
+                if f"{g} ({role})" not in seen:
+                    seen.append(f"{g} ({role})")
+            mapped_ctml["gene_role_dropped"] = "; ".join(seen)
 
     @staticmethod
     def _add_unspecified_all_lineage(mapped_ctml: dict, trial_data: dict, registry: str, trial_id: str) -> None:
@@ -559,6 +577,8 @@ class TrialMapManager:
             reasons.append("the match tree requires and forbids the same gene, so it matches nobody")
         if 'diagnosis_excluded' in keys:
             reasons.append("a diagnosis is named only in the exclusion criteria")
+        if 'gene_role_dropped' in keys:
+            reasons.append("genes the text uses for something other than entry were kept out of the match tree")
         if 'gene_status_contradiction' in keys:
             reasons.append("a gene is required although the text says it must be absent or does not matter")
         if not reasons:
@@ -603,6 +623,7 @@ class TrialMapManager:
             self._record_off_list(mapped_ctml, nct_id)
             self._flag_excluded_diagnoses(mapped_ctml, trial_data, "nct", nct_id)
             self._flag_contradictions(mapped_ctml, nct_id)
+            self._record_role_drops(mapped_ctml, nct_id)
             self._add_unspecified_all_lineage(mapped_ctml, trial_data, "nct", nct_id)
             self._flag_gene_status(mapped_ctml, trial_data, "nct", nct_id)
             

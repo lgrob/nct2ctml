@@ -168,10 +168,26 @@ def get_arm_criteria_mapping(nct_id: str, arm_groups: list, inclusion_criteria: 
     mapping = parse_ai_response(ai_response, nct_id)
     return mapping
 
+# Roadmap 2.9, "roles": genes the model classified as something other than an
+# entry requirement, per trial id: [(gene, role)]. Read by the mapper, which
+# records them as gene_role_dropped on the trial.
+ROLE_DROPS = {}
+
+
 def get_inclusion_genomic_criteria(nct_id:str, genes:list, eligibilityCriteria:str)-> list:
     json_schema, prompt = get_inclusion_genomic_criteria_prompt(genes, eligibilityCriteria)
     ai_response = send_ai_request(nct_id, prompt, json_schema)
     genomic_criteria = parse_ai_response(ai_response, nct_id)
+    if getattr(config, "GENOMIC_PROMPT", "baseline") == "roles" and isinstance(genomic_criteria, list):
+        kept = []
+        for c in genomic_criteria:
+            g = c.get("genomic") if isinstance(c, dict) else None
+            role = str(g.pop("role", "requirement")) if isinstance(g, dict) else "requirement"
+            if role == "requirement":
+                kept.append(c)
+            elif isinstance(g, dict) and g.get("hugo_symbol"):
+                ROLE_DROPS.setdefault(nct_id, []).append((str(g["hugo_symbol"]), role))
+        genomic_criteria = kept
     return genomic_criteria
 
 def get_exclusion_genomic_criteria(nct_id:str, genes:list, eligibilityCriteria:str)-> list:
@@ -950,6 +966,19 @@ AGE_BOUNDS_SCHEMA = {
 }
 
 
+GENOMIC_ROLES = ["requirement", "risk_group", "cohort_specific", "conditional",
+                 "alternative_route", "example", "expression_or_germline"]
+
+
+def _with_role(schema):
+    import copy
+    s = copy.deepcopy(schema)
+    g = s["items"]["properties"]["genomic"]
+    g["properties"]["role"] = {"type": "string", "enum": GENOMIC_ROLES}
+    g["required"] = g["required"] + ["role"]
+    return s
+
+
 GENOMIC_CRITERIA_SCHEMA = {
     "type": "array",
     "items": {
@@ -1004,6 +1033,32 @@ GENOMIC_CRITERIA_SCHEMA = {
         "required": ["genomic"],
     },
 }
+
+GENOMIC_ROLE_SCHEMA = _with_role(GENOMIC_CRITERIA_SCHEMA)
+
+
+_EXAMPLE_ANCHOR = "    Example 1:"
+_NOT_A_REQUIREMENT = """(a) it defines a risk group, a stratification or a treatment allocation among patients who can all enter;
+       (b) it is required only for some cohorts, parts, strata, phases or arms, while others enter without it;
+       (c) it is required only under a condition not every patient meets ("if a biopsy is done, H3 K27M must be confirmed");
+       (d) it is one route to entry among routes that are not genetic ("high-risk AML defined by a TP53 mutation, a complex karyotype or therapy-related disease");
+       (e) it is only an example inside a broader criterion ("an actionable alteration such as ALK or ROS1" when any actionable alteration qualifies);
+       (f) the text is about protein expression (IHC, flow cytometry) or a germline syndrome (neurofibromatosis type 1)."""
+_RULES_TEXT = """    10. ENTRY REQUIREMENTS ONLY. Return a gene only if EVERY patient entering (the trial, or the arm this text describes) must carry the alteration,
+       alone or as one alternative in a list made only of genetic alterations. Do NOT return a gene when:
+       """ + _NOT_A_REQUIREMENT + """
+       If no gene is an entry requirement for every patient, return an empty list [].
+       Example: "Part A: any relapsed solid tumour. Part B: solid tumours with a CTNNB1 or APC mutation." -> []
+"""
+_ROLES_TEXT = """    10. For EVERY gene you return, set "role" to exactly one of:
+       "requirement" - EVERY patient entering (the trial, or the arm this text describes) must carry the alteration, alone or as one
+                       alternative in a list made only of genetic alterations;
+       "risk_group" (a), "cohort_specific" (b), "conditional" (c), "alternative_route" (d), "example" (e), "expression_or_germline" (f), where:
+       """ + _NOT_A_REQUIREMENT + """
+       Only "requirement" genes decide eligibility; the other roles are kept for a curator. When unsure, prefer the narrower role over "requirement".
+       Example: "Part A: any relapsed solid tumour. Part B: solid tumours with a CTNNB1 or APC mutation." ->
+       CTNNB1 and APC, both "role": "cohort_specific".
+"""
 
 
 def get_inclusion_genomic_criteria_prompt(genes, inclusion_criteria):
@@ -1072,6 +1127,11 @@ def get_inclusion_genomic_criteria_prompt(genes, inclusion_criteria):
         }}
     ]
     """
+    variant = getattr(config, "GENOMIC_PROMPT", "baseline")
+    if variant in ("rules", "roles"):
+        assert prompt.count(_EXAMPLE_ANCHOR) == 1
+        prompt = prompt.replace(_EXAMPLE_ANCHOR, (_RULES_TEXT if variant == "rules" else _ROLES_TEXT) + _EXAMPLE_ANCHOR, 1)
+        return (GENOMIC_ROLE_SCHEMA if variant == "roles" else GENOMIC_CRITERIA_SCHEMA), cleandoc(prompt)
     return GENOMIC_CRITERIA_SCHEMA, cleandoc(prompt)
 
 def get_exclusion_genomic_criteria_prompt(genes, exclusion_criteria):

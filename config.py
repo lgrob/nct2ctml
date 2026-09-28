@@ -53,6 +53,12 @@ ANTHROPIC_TEMPERATURE = 0
 # diagnoses 113 -> 57, recall unchanged; inclusion_only lost 16 curated
 # diagnoses and was rejected. See CHANGES.md.
 DIAGNOSIS_INPUT = os.environ.get("NCT2CTML_DIAGNOSIS_INPUT", "labelled")
+# Inclusion genomic prompt (roadmap 2.9): "baseline" (unchanged), "rules"
+# (explicit rules: only genes every entering patient must carry) or "roles"
+# (each gene is classified; only requirements enter the match tree, the rest
+# are recorded as gene_role_dropped and route the trial to review).
+# NCT2CTML_GENOMIC_PROMPT overrides it (used by the measurement harness).
+GENOMIC_PROMPT = os.environ.get("NCT2CTML_GENOMIC_PROMPT", "baseline")
 ANTHROPIC_MAX_TOKENS = 16000
 
 # deepseek library
