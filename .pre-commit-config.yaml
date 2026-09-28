@@ -1,0 +1,10 @@
+# Runs the CI lint on every commit: pip install pre-commit && pre-commit install
+# rev is the ruff version in requirements-dev.txt; tests/test_environment.py
+# checks that they agree.
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.5
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format

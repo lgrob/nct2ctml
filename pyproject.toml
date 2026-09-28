@@ -29,9 +29,10 @@ extend-exclude = ["rag"]
 [tool.ruff.lint]
 # Pyflakes, pycodestyle, bugbear, import order, pyupgrade.
 select = ["F", "E", "W", "B", "I", "UP"]
-# Line length is the formatter's job; what it cannot wrap (long strings and
-# comments) is left alone.
-ignore = ["E501"]
+# Line length and whitespace are the formatter's job. What it leaves is inside
+# strings: long lines, and trailing whitespace in the prompts of
+# utils/ai_helper.py, where removing it would change what the model is asked.
+ignore = ["E501", "W291", "W293"]
 
 [tool.ruff.lint.per-file-ignores]
 # Tests put the repo root on sys.path before importing it.

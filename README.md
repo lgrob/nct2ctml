@@ -367,6 +367,39 @@ backend `config.py` selects, so they need a running server or an API key:
 RUN_LIVE_LLM_TESTS=1 python -m unittest tests.test_ai_helper -v
 ```
 
+## Linting and formatting
+
+[ruff](https://docs.astral.sh/ruff/) lints and formats the code (its
+formatter replaces Black). The rules are in `pyproject.toml`, and the version
+is pinned in `requirements-dev.txt`, because a different ruff can format
+differently. GitHub Actions runs both checks on every push and pull request
+(`.github/workflows/lint.yml`).
+
+```bash
+./.venv/bin/pip install -r requirements-dev.txt
+ruff check .                  # lint; --fix applies the safe fixes
+ruff format .                 # format in place; --check only reports
+pip install pre-commit && pre-commit install   # run both on every commit
+git config blame.ignoreRevsFile .git-blame-ignore-revs   # blame past the reformat
+```
+
+The whole repository was reformatted in one commit, listed in
+`.git-blame-ignore-revs`. GitHub's blame skips it automatically. A plain
+merge from upstream would now conflict almost everywhere, so merge upstream
+with:
+
+```bash
+python scripts/merge_upstream.py              # upstream/main, or pass a ref
+```
+
+It merges each file three ways after putting both the merge base and
+upstream's version through the same ruff steps, so only real changes can
+conflict. On a simulated upstream update touching three files, a plain merge
+conflicted in 2 files, formatting upstream's tip alone conflicted in 24, and
+the script conflicted in 1: the function both sides had really changed. A
+conflict leaves the merge in progress, with the files unstaged, for you to
+resolve.
+
 ## Reference data
 
 | File | What it is |

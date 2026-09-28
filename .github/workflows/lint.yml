@@ -1,0 +1,25 @@
+# Lint and format check. The ruff version comes from requirements-dev.txt,
+# the rules from pyproject.toml, so this runs exactly what `ruff check .`
+# and `ruff format --check .` run locally.
+name: lint
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ruff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - name: ruff check
+        run: ruff check --output-format=github .
+      - name: ruff format
+        run: ruff format --check --diff .

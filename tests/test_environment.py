@@ -1,7 +1,8 @@
 """
-The three statements of the environment agree: pyproject.toml (the Python
+The statements of the environment agree: pyproject.toml (the Python
 version and the dependency floors), requirements.txt (the same floors, for
-pip) and requirements.lock (the exact versions the suite was run with).
+pip), requirements.lock (the exact versions the suite was run with), and one
+ruff version for CI, pre-commit and requirements-dev.txt.
 """
 
 import os
@@ -9,6 +10,8 @@ import re
 import sys
 import tomllib
 import unittest
+
+import yaml
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -79,6 +82,16 @@ class TestEnvironment(unittest.TestCase):
         floor = _version(PROJECT["requires-python"])
         self.assertIsNotNone(guard, "main.py has no Python version guard")
         self.assertEqual(tuple(int(g) for g in guard.groups()), floor[:2])
+
+    def test_one_ruff_version_everywhere(self):
+        with open(os.path.join(ROOT, "requirements-dev.txt")) as handle:
+            pin = re.search(r"^ruff==([0-9.]+)$", handle.read(), re.M).group(1)
+        with open(os.path.join(ROOT, ".pre-commit-config.yaml")) as handle:
+            hooks = yaml.safe_load(handle)["repos"]
+        revs = [r["rev"] for r in hooks if r["repo"].endswith("/ruff-pre-commit")]
+        self.assertEqual(revs, [f"v{pin}"])
+        with open(os.path.join(ROOT, ".github", "workflows", "lint.yml")) as handle:
+            self.assertIn("pip install -r requirements-dev.txt", handle.read())
 
 
 if __name__ == "__main__":

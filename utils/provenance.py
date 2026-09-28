@@ -149,7 +149,7 @@ def code_version():
 
 
 def short_commit(code):
-    """ "d61a30c1b2e4", "+dirty" appended when the tree had local changes."""
+    """The commit's first 12 characters, with "+dirty" when the tree had local changes."""
     commit = (code or {}).get("commit")
     if not commit:
         return ""

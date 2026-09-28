@@ -73,7 +73,7 @@ Baseline at the time of the review: 543 offline tests pass in ~13 s
 
 ## Phase 2 - Code quality
 
-- [ ] **7. Linting, in two commits.**
+- [x] **7. Linting, in two commits.**
   1. `[tool.ruff]` in `pyproject.toml`, `select = ["F", "E", "W", "B", "I", "UP"]`,
      `ignore = ["E501"]`; run `ruff check --fix` and `ruff format` in one
      commit and list it in `.git-blame-ignore-revs`.
@@ -84,14 +84,18 @@ Baseline at the time of the review: 543 offline tests pass in ~13 s
        and [utils/build_protein_reference.py](../utils/build_protein_reference.py) (~line 94)
      - duplicate set member in [tests/test_prompt_determinism.py](../tests/test_prompt_determinism.py) (~line 57)
 
-- [ ] **8. CI.**
+  Done 2026-09-28 (`45c08b6`, `04c8de4`), with the lint half of step 8
+  (`.github/workflows/lint.yml`, pre-commit) and
+  `scripts/merge_upstream.py` for upstream merges after the reformat.
+
+- [ ] **8. CI.** (lint job done with step 7; tests still to add)
   GitHub Actions or GitLab CI running ruff, the offline unittest suite,
   `python -m bench.benchmark_map --conditions-only` as a regression check (no
   model, no network), and the reference check from step 5. A `pre-commit`
   config runs the same checks locally.
 
 - [ ] **9. Remove dead and orphaned code.**
-  - [ ] Delete [src/get_all_intervention_types.py](../src/get_all_intervention_types.py)
+  - [x] Delete [src/get_all_intervention_types.py](../src/get_all_intervention_types.py)
         (one-off script, broken import path).
   - [ ] Delete `rag/` (two upstream notebooks, referenced nowhere) or move it
         to `archive/` with a note.

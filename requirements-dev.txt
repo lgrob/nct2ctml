@@ -1,0 +1,5 @@
+# Development tools, pinned: a different ruff can format differently, and
+# then CI, pre-commit and scripts/merge_upstream.sh disagree with each other.
+# .pre-commit-config.yaml pins the same version; tests/test_environment.py
+# checks that they agree.
+ruff==0.16.5

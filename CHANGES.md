@@ -489,6 +489,45 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Lint and format with ruff, checked on GitHub (2026-09-28)
+
+Step 7 of `doc/improvement_plan.md`, plus the lint part of step 8. ruff
+(0.16.5, pinned in `requirements-dev.txt`) replaces a Black + flake8
+toolchain. Rules in `pyproject.toml`: pyflakes, pycodestyle, bugbear, import
+order and pyupgrade, at line length 100. Three commits:
+
+1. **Findings that needed a person** (`45c08b6`).
+   - `config.py` and `src/clinical_trials_gov.py` had an import above the
+     licence notice, so their docstrings were not module docstrings.
+   - `test_prompt_determinism` passed a set literal containing "a" twice, so
+     it never actually tested de-duplication.
+   - `zip(strict=True)` where the two sides must line up.
+   - `src/get_all_intervention_types.py` deleted (step 9).
+2. **The mechanical reformat** (`04c8de4`, 79 files, listed in
+   `.git-blame-ignore-revs`): `ruff check --fix`, then `ruff format`.
+   Behaviour checked unchanged:
+   - every prompt, schema and CTML output of the 56 reviewed trials is
+     byte-identical (484 model calls, `tests/determinism_probe.py`)
+   - the flat index over 1,146 trials is byte-identical
+   - 570 tests pass
+
+   Trailing whitespace inside the prompt strings is left alone (`W291` and
+   `W293` are ignored), because removing it would change what the model is
+   asked.
+3. **CI and tooling.**
+   - `.github/workflows/lint.yml` runs `ruff check` and
+     `ruff format --check` on push and pull request.
+   - `.pre-commit-config.yaml` runs the same checks locally.
+   - `tests/test_environment.py` checks that CI, pre-commit and
+     `requirements-dev.txt` name one ruff version.
+   - `scripts/merge_upstream.py` merges upstream without the conflicts the
+     reformat would cause. Each file is merged three ways, with both the
+     merge base and upstream's version formatted. On a simulated upstream
+     update, a plain merge conflicted in 2 files, formatting only
+     upstream's tip in 24, and the script in 1 (the function both sides had
+     changed). The upstream commit stays in history as a parent of the
+     merge.
+
 ## Environment pinned; sync script portable (2026-09-28)
 
 Step 4 of `doc/improvement_plan.md`. The Python version was stated nowhere:
