@@ -57,6 +57,8 @@ DIAGNOSIS_INPUT = os.environ.get("NCT2CTML_DIAGNOSIS_INPUT", "labelled")
 # (explicit rules: only genes every entering patient must carry) or "roles"
 # (each gene is classified; only requirements enter the match tree, the rest
 # are recorded as gene_role_dropped and route the trial to review).
+# "roles_union" (2.9b, under measurement): roles plus cohort_union, a gene only
+# some cohorts need in a trial where every cohort needs one of the genes; kept.
 # NCT2CTML_GENOMIC_PROMPT overrides it (used by the measurement harness).
 # Default "roles" since 2026-09-28 (roadmap 2.9, 370 trials x 3 replicates):
 # trials requiring a gene of every patient that the text does not require

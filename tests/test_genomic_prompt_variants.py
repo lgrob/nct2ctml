@@ -50,5 +50,18 @@ class TestGenomicPromptVariants(unittest.TestCase):
         self.assertEqual(ai.ROLE_DROPS.pop("T1"), [("APC", "cohort_specific")])
 
 
+    def test_roles_union_keeps_cohort_union(self):
+        ai = load("roles_union")
+        s, p = ai.get_inclusion_genomic_criteria_prompt({"ALK"}, "Stratum 1: ALK fusion")
+        self.assertIn("cohort_union", s["items"]["properties"]["genomic"]["properties"]["role"]["enum"])
+        ai.send_ai_request = lambda i, p, s=None: [
+            {"genomic": {"hugo_symbol": "ALK", "variant_category": "Structural Variation", "role": "cohort_union"}},
+            {"genomic": {"hugo_symbol": "APC", "variant_category": "Mutation", "role": "cohort_specific"}}]
+        ai.parse_ai_response = lambda r, trial_id="": r
+        out = ai.get_inclusion_genomic_criteria("T2", ["ALK", "APC"], "text")
+        self.assertEqual([c["genomic"]["hugo_symbol"] for c in out], ["ALK"])
+        self.assertEqual(ai.ROLE_DROPS.pop("T2"), [("APC", "cohort_specific")])
+
+
 if __name__ == "__main__":
     unittest.main()

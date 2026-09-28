@@ -178,12 +178,12 @@ def get_inclusion_genomic_criteria(nct_id:str, genes:list, eligibilityCriteria:s
     json_schema, prompt = get_inclusion_genomic_criteria_prompt(genes, eligibilityCriteria)
     ai_response = send_ai_request(nct_id, prompt, json_schema)
     genomic_criteria = parse_ai_response(ai_response, nct_id)
-    if getattr(config, "GENOMIC_PROMPT", "baseline") == "roles" and isinstance(genomic_criteria, list):
+    if getattr(config, "GENOMIC_PROMPT", "baseline") in ("roles", "roles_union") and isinstance(genomic_criteria, list):
         kept = []
         for c in genomic_criteria:
             g = c.get("genomic") if isinstance(c, dict) else None
             role = str(g.pop("role", "requirement")) if isinstance(g, dict) else "requirement"
-            if role == "requirement":
+            if role in _KEPT_ROLES:
                 kept.append(c)
             elif isinstance(g, dict) and g.get("hugo_symbol"):
                 ROLE_DROPS.setdefault(nct_id, []).append((str(g["hugo_symbol"]), role))
@@ -968,13 +968,18 @@ AGE_BOUNDS_SCHEMA = {
 
 GENOMIC_ROLES = ["requirement", "risk_group", "cohort_specific", "conditional",
                  "alternative_route", "example", "expression_or_germline"]
+# "roles_union" (roadmap 2.9b) adds cohort_union: a gene one cohort needs in a
+# trial where EVERY cohort needs one of the returned genes. Kept in the tree
+# like a requirement, so a strata trial (ALK / MET / ROS1) keeps its genetics.
+GENOMIC_ROLES_UNION = GENOMIC_ROLES + ["cohort_union"]
+_KEPT_ROLES = {"requirement", "cohort_union"}
 
 
-def _with_role(schema):
+def _with_role(schema, roles=GENOMIC_ROLES):
     import copy
     s = copy.deepcopy(schema)
     g = s["items"]["properties"]["genomic"]
-    g["properties"]["role"] = {"type": "string", "enum": GENOMIC_ROLES}
+    g["properties"]["role"] = {"type": "string", "enum": roles}
     g["required"] = g["required"] + ["role"]
     return s
 
@@ -1035,6 +1040,7 @@ GENOMIC_CRITERIA_SCHEMA = {
 }
 
 GENOMIC_ROLE_SCHEMA = _with_role(GENOMIC_CRITERIA_SCHEMA)
+GENOMIC_ROLE_UNION_SCHEMA = _with_role(GENOMIC_CRITERIA_SCHEMA, GENOMIC_ROLES_UNION)
 
 
 _EXAMPLE_ANCHOR = "    Example 1:"
@@ -1059,6 +1065,13 @@ _ROLES_TEXT = """    10. For EVERY gene you return, set "role" to exactly one of
        Example: "Part A: any relapsed solid tumour. Part B: solid tumours with a CTNNB1 or APC mutation." ->
        CTNNB1 and APC, both "role": "cohort_specific".
 """
+_ROLES_UNION_TEXT = _ROLES_TEXT.replace(
+    """       Only "requirement" genes decide eligibility;""",
+    """       "cohort_union" - the gene is needed only by some cohorts, parts or strata, BUT every cohort of the trial needs one of the
+                       genes you return (no cohort enters without a genetic alteration). Use it for every gene of such a trial.
+       Example: "Stratum 1: ALK fusion. Stratum 2: MET amplification. Stratum 3: ROS1 fusion." -> ALK, MET, ROS1, all "cohort_union".
+       Only "requirement" and "cohort_union" genes decide eligibility;""")
+assert _ROLES_UNION_TEXT != _ROLES_TEXT
 
 
 def get_inclusion_genomic_criteria_prompt(genes, inclusion_criteria):
@@ -1128,10 +1141,12 @@ def get_inclusion_genomic_criteria_prompt(genes, inclusion_criteria):
     ]
     """
     variant = getattr(config, "GENOMIC_PROMPT", "baseline")
-    if variant in ("rules", "roles"):
+    if variant in ("rules", "roles", "roles_union"):
         assert prompt.count(_EXAMPLE_ANCHOR) == 1
-        prompt = prompt.replace(_EXAMPLE_ANCHOR, (_RULES_TEXT if variant == "rules" else _ROLES_TEXT) + _EXAMPLE_ANCHOR, 1)
-        return (GENOMIC_ROLE_SCHEMA if variant == "roles" else GENOMIC_CRITERIA_SCHEMA), cleandoc(prompt)
+        text = {"rules": _RULES_TEXT, "roles": _ROLES_TEXT, "roles_union": _ROLES_UNION_TEXT}[variant]
+        prompt = prompt.replace(_EXAMPLE_ANCHOR, text + _EXAMPLE_ANCHOR, 1)
+        schema = {"rules": GENOMIC_CRITERIA_SCHEMA, "roles": GENOMIC_ROLE_SCHEMA, "roles_union": GENOMIC_ROLE_UNION_SCHEMA}[variant]
+        return schema, cleandoc(prompt)
     return GENOMIC_CRITERIA_SCHEMA, cleandoc(prompt)
 
 def get_exclusion_genomic_criteria_prompt(genes, exclusion_criteria):
