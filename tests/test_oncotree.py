@@ -1,5 +1,4 @@
 import unittest
-from pprint import pprint
 
 import utils.oncotree as ot
 import utils.reference_validation as rv
@@ -81,8 +80,6 @@ class TestOncotree(unittest.TestCase):
 
     def test_get_l1_l2_oncotree_data(self):
         level_1_list, mapping_l1_l2 = get_l1_l2_oncotree_data()
-        pprint(sorted(level_1_list))
-        pprint({k: sorted(v) for k, v in mapping_l1_l2.items()})
         self.assertIn("Breast", level_1_list)
         self.assertGreater(len(mapping_l1_l2["Breast"]), 0)
         self.assertIn("Diffuse Glioma", mapping_l1_l2["CNS/Brain"])

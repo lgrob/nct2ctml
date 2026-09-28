@@ -489,6 +489,27 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Dead and misplaced files (2026-09-28)
+
+Step 9 of `doc/improvement_plan.md`.
+
+- **Removed.**
+  - `rag/`: two upstream notebooks that nothing references.
+  - `yaml/.DS_Store`: `.DS_Store` is now gitignored. The `yaml/` directory
+    also made ruff sort PyYAML's `import yaml` as a local package; with it
+    gone, those imports moved to the third-party group.
+  - `tests/test_ctml_conversion.py`: a loop running `main.py map` on 24
+    trials, with no assertions. unittest never collected it, but pytest
+    would have, calling the live API and overwriting `cache/ctml`.
+- **Kept, moved:** `bulk_convert_yaml_to_json.py` is now
+  `python main.py promote` (`utils/promote.py`). `open_issues.md` and roadmap
+  6.7 had it down as possibly dead, but `matchminer-admin` loads the
+  `ctml/json` it writes into MatchMiner. A dry run no longer creates
+  `ctml/json`.
+- **Moved:** `tests/determinism_probe.py` is now in `scripts/`; it is a
+  helper that `test_prompt_determinism` runs, not a test.
+- The debug `print()` calls in the tests are gone. 573 tests pass.
+
 ## Lint and format with ruff, checked on GitHub (2026-09-28)
 
 Step 7 of `doc/improvement_plan.md`, plus the lint part of step 8. ruff

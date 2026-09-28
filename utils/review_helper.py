@@ -50,10 +50,10 @@ import re
 import sys
 from dataclasses import dataclass, field
 
+import yaml
 from loguru import logger
 
 import config
-import yaml
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 

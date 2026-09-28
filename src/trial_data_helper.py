@@ -5,9 +5,9 @@
 
 import json
 
+import yaml
 from loguru import logger
 
-import yaml
 from utils.reference_validation import strip_condition_qualifiers
 
 

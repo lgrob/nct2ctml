@@ -11,13 +11,14 @@ ctml/json once a person has moved it into ctml/reviewed. matchminer-admin
 POSTs whatever it finds in ctml/json to the MatchMiner API and deletes it
 afterwards, so nothing should be written here that has not been reviewed.
 
-Usage:
-    python bulk_convert_yaml_to_json.py                 # all reviewed files
-    python bulk_convert_yaml_to_json.py NCT01 NCT02     # only these
-    python bulk_convert_yaml_to_json.py --dry-run       # list, write nothing
+Usage (formerly bulk_convert_yaml_to_json.py at the repo root):
+    python main.py promote                    # all reviewed files
+    python main.py promote NCT01 NCT02        # only these
+    python main.py promote --dry-run          # list, write nothing
+
+Nothing runs this automatically: promotion is a deliberate step after review.
 """
 
-import argparse
 import json
 import os
 import sys
@@ -29,7 +30,9 @@ JSON_DIR = "ctml/json"
 
 
 def convert(nct_ids: list[str], dry_run: bool = False) -> int:
-    os.makedirs(JSON_DIR, exist_ok=True)
+    """Write ctml/json/<id>.json for each reviewed trial; returns how many (would be) written."""
+    if not dry_run:
+        os.makedirs(JSON_DIR, exist_ok=True)
     if nct_ids:
         names = [f"{n}.yaml" for n in nct_ids]
     else:
@@ -68,24 +71,3 @@ def convert(nct_ids: list[str], dry_run: bool = False) -> int:
             print(f"  {src} -> {dst}")
         written += 1
     return written
-
-
-def main():
-    ap = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    ap.add_argument(
-        "nct_ids", nargs="*", help="NCT IDs to promote. Default: every file in ctml/reviewed."
-    )
-    ap.add_argument(
-        "--dry-run", action="store_true", help="List what would be written without writing it."
-    )
-    args = ap.parse_args()
-
-    n = convert(args.nct_ids, args.dry_run)
-    verb = "would promote" if args.dry_run else "promoted"
-    print(f"\n{verb} {n} trial(s) to {JSON_DIR}/")
-
-
-if __name__ == "__main__":
-    main()

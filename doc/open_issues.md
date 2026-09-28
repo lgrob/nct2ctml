@@ -506,11 +506,12 @@ but it is the thing to check first.
   level_1 mapping or the branch floor.
 - **`config.py` carries ~24 commented-out `LLM_AI_MODEL` lines**, which is why
   the live setting drifted out of step with the cluster unnoticed.
-- **Possibly dead, unconfirmed**: `bulk_convert_yaml_to_json.py` and
-  `src/get_all_intervention_types.py` have no importers and may be standalone
-  scripts still in use. `rag/llamaindex/` and `rag/simple/` are upstream
-  notebooks unconnected to this pipeline. `yaml/` contains one tracked file:
-  `.DS_Store`.
+- **Settled 2026-09-28** (improvement plan step 9): `ctml/json` is not
+  dead. `matchminer-admin` (a sibling repository) loads it into MatchMiner,
+  so the converter was kept, as `python main.py promote`.
+  `src/get_all_intervention_types.py`, `rag/`, `yaml/.DS_Store` and
+  `tests/test_ctml_conversion.py` (a mapping loop with no assertions, which
+  pytest would have run against the live API) were removed.
 
 ## Inherited from upstream
 

@@ -14,6 +14,7 @@ import os
 import re
 from datetime import datetime
 
+import yaml
 from loguru import logger
 
 import config
@@ -24,7 +25,6 @@ import src.trial_data_helper as tdh
 import utils.ai_helper as ai
 import utils.oncology_scope as scope
 import utils.reference_validation as rv
-import yaml
 from utils import provenance
 
 # The _provenance block as yaml.dump writes it: a top-level key, last, with

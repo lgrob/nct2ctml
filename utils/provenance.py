@@ -16,7 +16,7 @@ Three things fix that:
 - `for_trial()` is stamped into every mapped CTML file as `_provenance`
   (by TrialMapManager._save): run id, time, git commit and dirty flag, LLM
   platform, model and settings, and the SHA-256 of every reference file.
-  `bulk_convert_yaml_to_json.py` strips it, because MatchMiner's trial
+  `main.py promote` (utils/promote.py) strips it, because MatchMiner's trial
   resource rejects unknown fields; the reviewed YAML keeps it.
 - A run (`start_run()`, called by `main.py map` and the benchmark) writes
   `runs/<run_id>/run.json` with the same facts plus the command, Python and

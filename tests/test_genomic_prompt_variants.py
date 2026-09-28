@@ -136,8 +136,9 @@ class TestGeneRoleDroppedIsInformation(unittest.TestCase):
         )
 
     def test_accept_does_not_refuse_it(self):
-        import utils.review_helper as rh
         import yaml
+
+        import utils.review_helper as rh
 
         self.assertNotIn("gene_role_dropped", rh.FLAG_KEYS)
         c = self._ctml()

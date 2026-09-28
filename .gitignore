@@ -14,6 +14,9 @@ __pycache__/*
 # Pulled trial data - regenerable with `python main.py pull --all`
 cache/
 
+# macOS Finder metadata
+.DS_Store
+
 # Runtime logs
 logs/
 

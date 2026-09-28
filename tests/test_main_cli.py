@@ -54,5 +54,24 @@ class TestMapDispatch(unittest.TestCase):
         self.assertNotEqual(os.path.normpath(path), os.path.normpath(config.CTML_MAPPED_PATH))
 
 
+class TestPromoteDispatch(unittest.TestCase):
+    def _promote(self, *argv):
+        with (
+            patch.object(sys, "argv", ["main.py", "promote", *argv]),
+            patch("utils.promote.convert", return_value=2) as convert,
+            patch("builtins.print"),
+        ):
+            main.main()
+        return convert
+
+    def test_promote_defaults_to_every_reviewed_trial(self):
+        self.assertEqual(self._promote().call_args.args, ([], False))
+
+    def test_promote_passes_ids_and_dry_run(self):
+        self.assertEqual(
+            self._promote("NCT1", "NCT2", "--dry-run").call_args.args, (["NCT1", "NCT2"], True)
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -108,10 +108,11 @@ For registry trials:
 3. A reviewer checks the diagnosis and match criteria and moves the file to
    `ctml/reviewed/`. Unreviewed trials are in the flat index, marked
    `reviewed = 0`; a hit on one is a lead for a curator, not a finding.
-4. `python bulk_convert_yaml_to_json.py` converts `ctml/reviewed` to
-   `ctml/json` (pass NCT ids to convert only those, `--dry-run` to list
-   without writing). The `_provenance` block is left out of the JSON,
-   because MatchMiner rejects unknown fields.
+4. `python main.py promote` converts `ctml/reviewed` to `ctml/json`, the
+   queue `matchminer-admin` loads into MatchMiner (pass trial ids to convert
+   only those, `--dry-run` to list without writing). It used to be
+   `bulk_convert_yaml_to_json.py`. The `_provenance` block is left out of the
+   JSON, because MatchMiner rejects unknown fields.
 
 A trial is written to `ctml/needs-review/` (`config.CTML_REVIEW_PATH`) instead
 of `cache/ctml/`, for both registries, when the mapper could determine no

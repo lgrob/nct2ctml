@@ -15,14 +15,14 @@ from unittest import mock
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+import yaml
 from loguru import logger
 
-import bulk_convert_yaml_to_json as convert
 import config
 import utils.ai_helper as ai
-import yaml
 from src.trial_map_manager import TrialMapManager
 from utils import build_trial_index as bti
+from utils import promote as convert
 from utils import provenance
 from utils.llm_platforms import AnthropicPlatform, ReplayMiss, ReplayPlatform, create_llm_platform
 

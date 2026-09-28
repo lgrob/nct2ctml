@@ -39,6 +39,9 @@ Examples:
   # Map a specific trial
   python main.py map --nct_id NCT03997435
   
+  # Convert reviewed trials to ctml/json for matchminer-admin
+  python main.py promote --dry-run
+
   # For continuous automation, use sync_trials.sh
   ./sync_trials.sh
         """,
@@ -150,10 +153,32 @@ Examples:
         help="Only with --all. Map trials updated in the last DAYS; overrides MAPPING_CUTOFF_DAYS in the config.",
     )
 
+    # Subparser for 'promote'
+    promote_parser = subparsers.add_parser(
+        "promote",
+        help="Convert reviewed CTML to the JSON matchminer-admin loads into MatchMiner",
+        description="Convert ctml/reviewed/*.yaml to ctml/json/*.json, the queue "
+        "matchminer-admin loads into MatchMiner. Only reviewed trials are promoted.",
+    )
+    promote_parser.add_argument(
+        "trial_ids", nargs="*", help="Trials to promote. Default: every file in ctml/reviewed."
+    )
+    promote_parser.add_argument(
+        "--dry-run", action="store_true", help="List what would be written without writing it."
+    )
+
     args = parser.parse_args()
 
     nct_files_path = "cache/nct"
     ctis_files_path = "cache/ctis"
+
+    if args.command == "promote":
+        from utils import promote
+
+        n = promote.convert(args.trial_ids, args.dry_run)
+        verb = "would promote" if args.dry_run else "promoted"
+        print(f"\n{verb} {n} trial(s) to {promote.JSON_DIR}/")
+        return
 
     if args.command == "pull":
         if args.all:

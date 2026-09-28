@@ -21,10 +21,8 @@ dependencies = [
 ]
 
 [tool.ruff]
-# Target version comes from requires-python. rag/ holds two upstream
-# notebooks slated for removal (doc/improvement_plan.md step 9).
+# Target version comes from requires-python.
 line-length = 100
-extend-exclude = ["rag"]
 
 [tool.ruff.lint]
 # Pyflakes, pycodestyle, bugbear, import order, pyupgrade.
@@ -37,3 +35,4 @@ ignore = ["E501", "W291", "W293"]
 [tool.ruff.lint.per-file-ignores]
 # Tests put the repo root on sys.path before importing it.
 "tests/*" = ["E402"]
+"scripts/determinism_probe.py" = ["E402"]

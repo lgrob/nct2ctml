@@ -489,7 +489,6 @@ class TestTrialDataHelper(unittest.TestCase):
         substring = "exclusion criteria"
         expected_output = ("Inclusion criteria:Minimum body weight of 35 kg. ", ": HER2 mutation")
         result = split_with_find(input_string, [substring])
-        print(result)
         self.assertEqual(result, expected_output)
 
     def test_split_with_find_splits_correctly_with_multiple_split_keywords(self):

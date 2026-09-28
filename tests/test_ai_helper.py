@@ -108,8 +108,6 @@ class TestAITasks(unittest.TestCase):
                 gene, result_str, msg=f"Gene {gene} not found in genomic criteria response"
             )
 
-        print(result)
-
 
 if __name__ == "__main__":
     unittest.main()

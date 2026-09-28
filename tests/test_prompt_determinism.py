@@ -36,7 +36,7 @@ def _probe(seed):
     subprocess.run(
         [
             sys.executable,
-            os.path.join(ROOT, "tests", "determinism_probe.py"),
+            os.path.join(ROOT, "scripts", "determinism_probe.py"),
             out,
             ",".join(TRIALS),
         ],

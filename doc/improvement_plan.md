@@ -94,16 +94,22 @@ Baseline at the time of the review: 543 offline tests pass in ~13 s
   model, no network), and the reference check from step 5. A `pre-commit`
   config runs the same checks locally.
 
-- [ ] **9. Remove dead and orphaned code.**
+- [x] **9. Remove dead and orphaned code.**
   - [x] Delete [src/get_all_intervention_types.py](../src/get_all_intervention_types.py)
         (one-off script, broken import path).
-  - [ ] Delete `rag/` (two upstream notebooks, referenced nowhere) or move it
+  - [x] Delete `rag/` (two upstream notebooks, referenced nowhere) or move it
         to `archive/` with a note.
-  - [ ] `git rm yaml/.DS_Store`; add `.DS_Store` to `.gitignore`.
-  - [ ] Move `tests/determinism_probe.py` out of `tests/` (a helper, not a test).
-  - [ ] Move `bulk_convert_yaml_to_json.py` into `utils/` or behind a
+  - [x] `git rm yaml/.DS_Store`; add `.DS_Store` to `.gitignore`.
+  - [x] Move `tests/determinism_probe.py` out of `tests/` (a helper, not a test).
+  - [x] Move `bulk_convert_yaml_to_json.py` into `utils/` or behind a
         `main.py` subcommand.
-  - [ ] Remove the 19 `print()` calls in tests.
+  - [x] Remove the 19 `print()` calls in tests.
+
+  Done 2026-09-28. The converter turned out to be live (`matchminer-admin`
+  reads `ctml/json`), so it became `python main.py promote`
+  (`utils/promote.py`) rather than being removed. The probe is in `scripts/`.
+  `tests/test_ctml_conversion.py` was deleted too: 24 live `map` calls with no
+  assertions, which pytest would collect.
 
 - [ ] **10. Slim down `config.py`.**
   Move the ~60 lines of commented-out alternative models to `doc/` (with the

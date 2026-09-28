@@ -22,7 +22,6 @@ class TestTrialCriteriaToGenes(unittest.TestCase):
             synonym_to_symbol=self.mapping,
         )
         symbols = tcg.extract_official_gene_symbols()
-        print(f"\nsymbols: {symbols}")
         self.assertCountEqual(symbols, ["KRAS", "NRAS", "HRAS"])
 
     def test_extract_official_gene_symbols_kras_family_2(self):
@@ -32,7 +31,6 @@ class TestTrialCriteriaToGenes(unittest.TestCase):
             synonym_to_symbol=self.mapping,
         )
         symbols = tcg.extract_official_gene_symbols()
-        print(f"\nsymbols: {symbols}")
         self.assertCountEqual(symbols, ["KRAS", "EGFR", "BRCA1"])
 
     def test_extract_official_gene_symbols_kras_family_3(self):
@@ -67,10 +65,8 @@ class TestTrialCriteriaToGenes(unittest.TestCase):
             synonym_to_symbol=self.mapping,
         )
         symbols = tcg.extract_official_gene_symbols()
-        print(f"\nsymbols: {symbols}")
 
         expected_symbols = ["KRAS"]
-        print(f"Expected symbols: {expected_symbols}")
         self.assertCountEqual(symbols, expected_symbols)
 
     def test_extract_official_gene_symbols_kras_family_4(self):
@@ -97,10 +93,8 @@ class TestTrialCriteriaToGenes(unittest.TestCase):
             synonym_to_symbol=self.mapping,
         )
         symbols = tcg.extract_official_gene_symbols()
-        print(f"\nsymbols: {symbols}")
 
         expected_symbols = ["ALK", "ROS1", "NTRK1", "NTRK2", "NTRK3"]
-        print(f"Expected symbols: {expected_symbols}")
         self.assertCountEqual(symbols, expected_symbols)
 
     def test_extract_official_gene_symbols_kras_family_5(self):
@@ -114,10 +108,8 @@ class TestTrialCriteriaToGenes(unittest.TestCase):
             synonym_to_symbol=self.mapping,
         )
         symbols = tcg.extract_official_gene_symbols()
-        print(f"\nsymbols: {symbols}")
 
         expected_symbols = ["ROS1", "NTRK1", "NTRK2", "NTRK3"]
-        print(f"Expected symbols: {expected_symbols}")
         self.assertCountEqual(symbols, expected_symbols)
 
     def test_extract_official_gene_symbols_kras_family_6(self):
@@ -127,7 +119,6 @@ class TestTrialCriteriaToGenes(unittest.TestCase):
             synonym_to_symbol=self.mapping,
         )
         symbols = tcg.extract_official_gene_symbols()
-        print(f"\nsymbols: {symbols}")
         self.assertCountEqual(symbols, ["KRAS", "NRAS", "HRAS"])
 
 

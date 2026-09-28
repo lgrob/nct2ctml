@@ -102,10 +102,10 @@ from functools import lru_cache
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+import yaml
 from loguru import logger
 
 import config
-import yaml
 from utils import protein_change, provenance
 from utils.oncotree import get_all_oncotree_data, get_lineage
 from utils.reference_validation import _oncotree, canonical_gene, fusion_partner
