@@ -165,7 +165,7 @@ something a diagnostic lab can defend.
 | 7.4 | Per-arm (cohort) diagnoses in the index and the benchmark. | The benchmark scores only the global match today. |
 | 7.5 | Translocation table: the 4 ALK variant forms and other unresolved notations from the corpus. | 6 of 132 mentions unresolved today. |
 | 7.6 | A single `variant_classification` cannot express "missense or in-frame indel" (NCT05745714, IL7R/JAK3): the enrichment narrows the criterion and an in-frame indel patient no longer matches. Keep the classification only when the text names one type, or allow a list. | No criterion narrower than its text on the benchmark trials. | 4.3 [D2] |
-| 7.7 | Re-map the 17 trials whose ClinicalTrials.gov criteria were split too early (S4, commit b493f2e). | Their CTML reflects the real inclusion text. | - |
+| 7.7 | ~~Re-map the 17 trials split too early~~ **Done 2026-09-28**: 13 mapped, 4 review; no patient codes lost except one guarded rename (NCT05442515). | Recorded. | - |
 | 7.8 | Cohort-scoped genetics (S1): a deterministic rule reached 2/6; needs a structural signal (arm-to-cohort mapping) before it is worth a flag. | Precision >= 0.8 on the 80 genomic trials. | - |
 | 7.9 | Per-arm age bounds: trials whose cohorts differ in age, or that enrol donors, get one registry range today (NCT04283006, NCT04924075, NCT05327023). | trials.tsv or trial_diagnosis.tsv carries arm-level ages. | - |
 
