@@ -134,6 +134,7 @@ Baseline at the time of the review: 543 offline tests pass in ~13 s
   startup.
 
 - [ ] **11. Split the largest modules as they are touched, not in one rewrite.**
+  Broken down in [plan_step11_split_modules.md](plan_step11_split_modules.md).
   - `utils/review_helper.py` (1,448 lines; `analyse` and `main` are the most
     complex functions) -> e.g. `review/cli.py`, `review/checks.py`,
     `review/sheets.py`
