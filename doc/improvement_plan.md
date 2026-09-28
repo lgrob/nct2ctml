@@ -60,11 +60,17 @@ Baseline at the time of the review: 543 offline tests pass in ~13 s
   venv; no uv or pip-compile here, so no hashes), `tests/test_environment.py`,
   and `sync_trials.sh` with a `mkdir` lock (macOS has no `flock`).
 
-- [ ] **5. Add a fetch/verify script for reference data.**
+- [x] **5. Add a fetch/verify script for reference data.**
   `ref/oncotree_file.txt` is "placed by hand; no script fetches it". Add
   `ref/SOURCES.tsv` (file, upstream URL, version, retrieved on, SHA-256) and
   `python -m utils.verify_refs`, and run it as a test so a silently replaced
   file fails CI.
+
+  Done 2026-09-28: `ref/SOURCES.tsv`, `utils/verify_refs.py` (check, `--update`,
+  `--online`, `--fetch-oncotree`), `tests/test_reference_sources.py`, and
+  `.github/workflows/reference-data.yml`. Curated files are listed but not
+  pinned. Found: the Oncotree API does not serve a version byte for byte the
+  same over time, and name-keyed parents (`doc/open_issues.md`).
 
 - [ ] **6. Treat the index as a release.**
   One command (e.g. `make release`) that builds from `ctml/reviewed` with
@@ -88,7 +94,7 @@ Baseline at the time of the review: 543 offline tests pass in ~13 s
   (`.github/workflows/lint.yml`, pre-commit) and
   `scripts/merge_upstream.py` for upstream merges after the reformat.
 
-- [ ] **8. CI.** (lint job done with step 7; tests still to add)
+- [ ] **8. CI.** (lint and reference-data jobs done; the test job and benchmark still to add)
   GitHub Actions or GitLab CI running ruff, the offline unittest suite,
   `python -m bench.benchmark_map --conditions-only` as a regression check (no
   model, no network), and the reference check from step 5. A `pre-commit`

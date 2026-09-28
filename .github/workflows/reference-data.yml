@@ -1,0 +1,31 @@
+# Reference data in ref/ is what ref/SOURCES.tsv says it is.
+# On every push and pull request: offline, every file listed and every pinned
+# hash unchanged. Weekly and on demand: also compare Oncotree with its API,
+# which reports metadata drift as notes and fails only if the tree differs.
+# utils/verify_refs.py needs only the standard library, so nothing is installed.
+name: reference-data
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: offline
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
+        run: python -m utils.verify_refs
+      - name: online (Oncotree API)
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: python -m utils.verify_refs --online

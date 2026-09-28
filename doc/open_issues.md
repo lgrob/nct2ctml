@@ -6,6 +6,23 @@ guesses.
 
 ## Correctness
 
+### Oncotree parents are keyed by display name, and nine names have two
+Found 2026-09-28 while testing the Oncotree fetch. `utils/oncotree.get_lineage`
+maps each display name to one parent, and the last row read wins. Nine names
+sit under two parents: Sex Cord Stromal Tumor (Ovary/Fallopian Tube, Testis),
+Choriocarcinoma (Non-Seminomatous Germ Cell Tumor, Gestational Trophoblastic
+Disease), and Dysgerminoma, Embryonal Carcinoma, Immature and Mature Teratoma,
+Mixed Germ Cell Tumor, Polyembryoma and Yolk Sac Tumor (Ovarian Germ Cell
+Tumor, Germ Cell Tumor of the Vulva). So the file's row order picks the
+parent, and the API serves a different order from `ref/oncotree_file.txt`.
+
+**Costs nothing today.** `parent` is only read for ", NOS" names (the
+index's NOS handling and `reference_validation`'s NOS widening), and none of
+the nine is one. The descendant sets, which do the diagnosis expansion, are
+identical in either order. It would matter if a ", NOS" node ever sat under
+a duplicated name, or if new code read `parent` for other names. Keying by
+Oncotree code instead of display name removes the ambiguity.
+
 ### The wrong-branch problem is only half solved
 Terms named outright in `conditionsModule` now force their Oncotree branch
 into the second stage, but that covers 326 of 924 trials (35%), the ones whose

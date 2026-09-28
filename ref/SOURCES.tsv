@@ -1,0 +1,27 @@
+# Where every file in ref/ comes from. Checked by `python -m utils.verify_refs`
+# (offline, in CI and tests/test_reference_sources.py): every file in ref/ is
+# listed, and each pinned file still has the SHA-256 below. A pinned file changes
+# only through its fetch or build step, followed by
+#     python -m utils.verify_refs --update <file>
+# in the same commit. Curated files are edited by hand or by review_helper and are
+# not pinned: git records every change to them.
+#
+# kind: fetched (downloaded as is), built (by the script named in source),
+#       supplied (handed over by a person), curated (maintained in this repo).
+# retrieved: when the pinned content was obtained; for files placed before this
+#       list existed, the date of the commit that added it.
+file	kind	source	version	retrieved	sha256	notes
+ref/oncotree_file.txt	fetched	https://oncotree.mskcc.org/api/tumor_types.txt?version=oncotree_2025_10_03	oncotree_2025_10_03	2026-06-15	5f344b79667f5d29c12fef3956100505193eaaa09c2f6b4215025a9070563226	Upstream commit 520826f. The API now serves this version in a different layout, with extra NCI/UMLS codes for SRCCR (checked 2026-09-28); the tree is identical. --online compares the tree.
+ref/mane_select_proteins.tsv	built	utils/build_protein_reference.py from https://ftp.ncbi.nlm.nih.gov/refseq/MANE/MANE_human/release_1.5/	MANE 1.5	2026-09-23	8a6d15de132866f7f65e126c17b77d886ae0a98d5264375ad80005ecc1eaa87f	The header records the SHA-256 of each MANE source file.
+ref/mane_genes.tsv	built	utils/build_protein_reference.py from https://ftp.ncbi.nlm.nih.gov/refseq/MANE/MANE_human/release_1.5/	MANE 1.5	2026-09-23	1990481028eb4b720785435ac56c729125707bd14865999976771a8577b804aa	Same run as mane_select_proteins.tsv.
+ref/synonym_to_gene_symbol.tsv	built	utils/build_gene_synonyms.py from NCBI Gene (https://eutils.ncbi.nlm.nih.gov/entrez/eutils)	NCBI Gene, unversioned	2026-09-11	85e3b9f98a5b3d30f4a481b849b597b324429cf65bafa68202548dc64a6d91c1	NCBI Gene is live, so a rebuild on another day can differ; this hash is the only fixed point.
+ref/synonym_collisions.tsv	built	utils/build_gene_synonyms.py	NCBI Gene, unversioned	2026-09-11	b5390702d6fa9669cbfb858919575ca8baed51023a390d393d8c321cea9f2c83	Written by the same run as synonym_to_gene_symbol.tsv.
+ref/genes_kispi.txt	supplied	Kispi paediatric gene panel, as supplied	1,092 symbols	2026-09-11	ff7701189fc5481a89c3c792b930596e81b645f9a851239d8c141b7d73301a96	Kept unmodified so the normalisation in genes.txt stays auditable.
+ref/genes.txt	supplied	genes_kispi.txt resolved to current HGNC symbols	1,086 symbols	2026-09-11	a3d78a6fc812766d3e7cc5690f6de1f8ace04d80f0861c6c0475cdb2fa54e54f	The accept-list for hugo_symbol. Fifteen renames from genes_kispi.txt (CHANGES.md, Reference data).
+ref/diagnosis_synonyms.tsv	curated	this repository				
+ref/diagnosis_text_terms.tsv	curated	this repository				
+ref/gene_rewrite_exclusions.tsv	curated	this repository				
+ref/gene_synonym_addendum.tsv	curated	this repository				
+ref/scope_overrides.tsv	curated	this repository				
+ref/translocation_fusions.tsv	curated	this repository				
+ref/local_trial_info.csv	curated	this repository				

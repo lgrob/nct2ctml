@@ -489,6 +489,38 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Reference data accounted for and pinned (2026-09-28)
+
+Step 5 of `doc/improvement_plan.md`, and the reference check of step 8.
+
+- **`ref/SOURCES.tsv` (new)** lists every file in `ref/` with its kind,
+  source, version, date retrieved and notes.
+  - **Pinned:** the seven files from outside are pinned by SHA-256. Fetched:
+    Oncotree. Built: MANE ×2 and NCBI gene synonyms ×2. Supplied: Kispi's
+    panel and its HGNC-resolved form.
+  - **Not pinned:** the seven curated files, because git records every edit
+    to them, and `review_helper exclude` writes one of them.
+  - **Dates:** files placed before this list existed carry the date of the
+    commit that added them.
+- **`utils/verify_refs.py` (new, standard library only)**:
+  - The default mode fails on an unlisted file, a missing file, or a pinned
+    file whose hash changed.
+  - `--update` re-pins after a deliberate rebuild.
+  - `--online` compares the Oncotree tree with the API.
+  - `--fetch-oncotree` is the fetch step `ref/oncotree_file.txt` never had.
+  - `.github/workflows/reference-data.yml` runs it offline on every push and
+    online weekly. `tests/test_reference_sources.py` has 15 tests.
+- **Found on the way:**
+  - **Oncotree edits a version in place.** For `oncotree_2025_10_03`, the
+    API now serves a different layout and row order, and two extra
+    cross-reference codes for SRCCR, compared with the file upstream placed
+    on 2026-06-15. The tree itself is identical. Hence the pinned hash and
+    the tree-only online check.
+  - **Parents are keyed by display name.** `get_lineage` does this, and nine
+    germ-cell and sex-cord names have two parents. Row order therefore picks
+    the parent. This affects no output today, because `parent` is only read
+    for ", NOS" names; recorded in `doc/open_issues.md`.
+
 ## Dead and misplaced files (2026-09-28)
 
 Step 9 of `doc/improvement_plan.md`.
