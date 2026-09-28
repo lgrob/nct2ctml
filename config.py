@@ -34,7 +34,7 @@ LLM_REPLAY_FILE = os.environ.get("NCT2CTML_REPLAY_FILE")
 #
 # Claude Haiku 4.5, pinned to its dated snapshot so a run is reproducible:
 # an alias can move to new weights under the same name. Every prompt
-# measurement in CHANGES.md from 2026-09-23 on (age bounds, fusion partners,
+# measurement in doc/decisions/ and doc/changelog.md from 2026-09-23 on (age bounds, fusion partners,
 # the stage-2 baseline) was made on this snapshot, with the request shape
 # utils/llm_platforms.AnthropicPlatform sends: JSON through a forced tool
 # call, no thinking. It is also the cheapest current Claude model ($1/$5 per
@@ -63,7 +63,7 @@ ANTHROPIC_TEMPERATURE = 0
 # NCT2CTML_DIAGNOSIS_INPUT overrides it (used by the measurement harness).
 # Default "labelled" since 2026-09-27 (3 replicates, 123 trials): exclusion-only
 # diagnoses 113 -> 57, recall unchanged; inclusion_only lost 16 curated
-# diagnoses and was rejected. See CHANGES.md.
+# diagnoses and was rejected. See doc/decisions/2026-09-27-2.8-diagnosis-input.md.
 DIAGNOSIS_INPUT = os.environ.get("NCT2CTML_DIAGNOSIS_INPUT", "labelled")
 # Inclusion genomic prompt (roadmap 2.9): "baseline" (unchanged), "rules"
 # (explicit rules: only genes every entering patient must carry) or "roles"
@@ -74,7 +74,8 @@ DIAGNOSIS_INPUT = os.environ.get("NCT2CTML_DIAGNOSIS_INPUT", "labelled")
 # NCT2CTML_GENOMIC_PROMPT overrides it (used by the measurement harness).
 # Default "roles" since 2026-09-28 (roadmap 2.9, 370 trials x 3 replicates):
 # trials requiring a gene of every patient that the text does not require
-# 191 -> 86; every gene kept out is recorded for review. See CHANGES.md.
+# 191 -> 86; every gene kept out is recorded for review. See
+# doc/decisions/2026-09-28-2.9-genomic-prompt-roles.md.
 GENOMIC_PROMPT = os.environ.get("NCT2CTML_GENOMIC_PROMPT", "roles")
 ANTHROPIC_MAX_TOKENS = 16000
 

@@ -337,7 +337,7 @@ the Classical Hodgkin Lymphoma it names.
 
 ### The gene scan misses genes written only as a syndrome or karyotype
 
-*Fusion notation and lists fixed 2026-09-24 (CHANGES.md). The scan now
+*Fusion notation and lists fixed 2026-09-24 (doc/changelog.md). The scan now
 misses curated genes in 2 of the 55 reviewed trials instead of 12.* The two
 left are NF1 written only as "NF-1" and RAF1 only as "RAF fusion"
 (NCT04775485), and CBFB and PML written only as the karyotypes inv(16) and
@@ -348,7 +348,7 @@ table below. Genes the model adds without textual support now go to review
 ### Cytogenetic translocations are not turned into fusion pairs
 
 *Conversion done 2026-09-24 (utils/translocations.py, 69 curated rows; see
-CHANGES.md). Open: the resolved pair does not yet reach the model (roadmap
+doc/changelog.md). Open: the resolved pair does not yet reach the model (roadmap
 1.4b).*
 
 Prompt rule 9 tells the model not to derive genes from notation such as
@@ -364,7 +364,7 @@ t(X;18) (SS18 with SSX1, SSX2 or SSX4), should stay gene-level.
 With prompt rule 9, NCT06071897 (high-risk neuroblastoma, no gene named in
 its inclusion text) gained `MYCN` in both replicates. That is the
 disease-to-gene inference rule 7 forbids. It is one trial of 55 and the only
-consistent regression left after the fixes in CHANGES.md, but it is the kind
+consistent regression left after the fixes in doc/changelog.md, but it is the kind
 the next full run should be checked for.
 
 ### Off-panel fusion partners are dropped, and that is correct
@@ -404,7 +404,7 @@ See "The rewrite set is narrower than it needs to be" below.
 ### The 400-value enum cap
 
 *Addressed 2026-09-24: the cap is set per backend and logged when it fires
-(CHANGES.md). On the benchmark it never fired (max 370). Open: without
+(doc/changelog.md). On the benchmark it never fired (max 370). Open: without
 `strict`, the Anthropic enum is advisory; see roadmap 1.8.*
 `utils/ai_helper._MAX_ENUM_VALUES` drops the enum from a schema above 400
 candidates, on the reasoning that llama.cpp compiles `format` into a grammar
@@ -464,7 +464,7 @@ as diligence and was actually a narrower trial than the protocol describes.
 
 ### The rewrite set is narrower than it needs to be
 
-*Addressed 2026-09-24 (CHANGES.md: "Retired-symbol rewrite widened"). The
+*Addressed 2026-09-24 (doc/changelog.md: "Retired-symbol rewrite widened"). The
 proposal below turned out unsafe as stated: JMML, CHOP, PD-1 and 34 English
 words pass a 4-character floor. The implemented set adds shape rules and a
 documented exclusion file. Kept for the reasoning.*

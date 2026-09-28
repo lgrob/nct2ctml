@@ -54,6 +54,10 @@ run without spending anything:
 
     ./.venv/bin/python -m bench.benchmark_map --score-only
 
+`--out`, `--truth`, `--limit` and `--json` adjust paths and scope. Outputs
+under `bench/output*/` are gitignored; the scored summary is
+`bench/report.json`.
+
 Score only the deterministic half of the diagnosis path, meaning the terms read
 from the trial's own conditions plus the `_SOLID_`/`_LIQUID_` rule. It needs no
 model and no network, finishes in seconds, and is identical from run to run:

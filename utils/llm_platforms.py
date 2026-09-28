@@ -444,7 +444,7 @@ class AnthropicPlatform(LLMPlatform):
         A JSON schema is enforced through a forced tool call whose input is
         {"result": <the prompt's schema>}. The wrapper is needed because
         several prompts return a top-level array and a tool input must be an
-        object. This is also the shape every Haiku measurement in CHANGES.md
+        object. This is also the shape every Haiku measurement in doc/decisions/
         was made with, so production and benchmark send the same request.
         """
         import config

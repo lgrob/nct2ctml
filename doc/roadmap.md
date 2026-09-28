@@ -9,7 +9,8 @@ Each step lists what "done" means in measurable terms, so a step is closed by
 a number, not by an impression. Steps within a phase can run in any order
 unless *Depends on* says otherwise. Open decisions are collected at the end;
 the step that needs each one is marked **[D1]** etc. Measurements behind
-every closed step are in `CHANGES.md`.
+every closed step are in `doc/decisions/` (choices) and `doc/changelog.md`
+(changes); runs are in `doc/runs/`.
 
 Standing rules for every step:
 
@@ -21,8 +22,8 @@ Standing rules for every step:
   verifies; failures go to review, never silently to output.
 - **Recall first.** A change that loses curated diagnoses or genes in every
   replicate is not adopted for a precision gain, however large.
-- **Commit per step,** with the numbers in the message and a `CHANGES.md`
-  section, and the offline suite green on the committed tree.
+- **Commit per step,** with the numbers in the message and a
+  `doc/changelog.md` entry (plus a `doc/decisions/` file for a measured choice), and the offline suite green on the committed tree.
 
 ---
 
@@ -33,7 +34,7 @@ Standing rules for every step:
 | 0 - Now | 0.3 done. **0.1 (push) is overdue:** 28 commits exist only on this machine. 0.2 and 0.4 open. |
 | 1 - Deterministic fixes | 1.1-1.5, 1.7, 1.8, 1.9 done; 1.4b measured and not adopted. Open: 1.6 (curator time). |
 | 2 - Stage-2 diagnosis | Closed as measured: no narrowing arm (2.4) and no model swap (2.3, 2.6) beats production without losing curated diagnoses. Production stage 2 stays. Open: 2.7 (quote grounding) and optional 2.5. |
-| 3 - Full run | 3.0-3.2 done through the analysis environment (3.2: 1,171/1,171 trials, 1,021 mapped / 95 review / 55 reviewed, NCT recall 0.951; doc/run_2026-09-25.md). 3.3 and 3.4 await the go-ahead; 0.4 (SDK smoke test) still needs an API key. |
+| 3 - Full run | 3.0-3.2 done through the analysis environment (3.2: 1,171/1,171 trials, 1,021 mapped / 95 review / 55 reviewed, NCT recall 0.951; doc/runs/2026-09-25-3.2-full-run.md). 3.3 and 3.4 await the go-ahead; 0.4 (SDK smoke test) still needs an API key. |
 | 4-7 | Not started. 4.1-4.2 can start on synthetic fixtures at any time. |
 
 The offline suite has 431 tests (2 live-model tests are opt-in). Conditions-only
@@ -73,7 +74,7 @@ before it.
 ## Phase 2 - Stage-2 diagnosis over-generation
 
 Stage 2 emits about 2.2 diagnoses for every curated one. Everything tried so far is
-measured and rejected (details and per-trial losses in `CHANGES.md` and
+measured and rejected (details and per-trial losses in `doc/decisions/` and
 `stage2_arms_report.md` / `stage2_sonnet_report.md`, kept outside the repo):
 
 - **Narrowing arms (2.4):** the seed subtree, level-2-first, a verify pass, and
@@ -110,7 +111,7 @@ the other arms from the part-1 cache).
 | 3.0 | **Done (D6: keep and report).** The review copy stays published; the index sets `layer_conflict` and writes `layer_conflicts.tsv`. Originally: **Stale review copies.** A trial routed to `ctml/needs-review` in one run and mapped cleanly in a later one keeps its old review copy, and the index publishes it (needs-review overrides mapped). Decide: remove the stale copy on a clean remap (risk: a curator may be editing it), or have the index prefer the newer file, or flag the conflict. | Rule chosen **[D6]**; test pins it; the index reports conflicts. | [D6] |
 | 3.1 | **Done 2026-09-24** through the analysis environment's model access (no API key yet): 55/55, NCT diagnosis recall 0.938, gene F1 0.599, age F1 0.919, $0.10/trial at list price; found and fixed the H3 HGVS one-letter rejection. Originally: Dry run on the 55 benchmark trials with the final code and backend. | First real `bench/report.json` (replacing the identity calibration); cost and time per trial recorded; diagnosis recall within the 1.9 baseline range (0.942). | 0.4 |
 | 3.1a | Consider the Message Batches API for 3.2: asynchronous and cheaper per token than live calls, and the run does not need live answers. Needs a batch submit/collect path in `llm_platforms`. | Decision recorded with the cost difference. | 3.1 |
-| 3.2 | **Done 2026-09-25** (`2104df7`, doc/run_2026-09-25.md), **re-run 2026-09-28** at `d61a30c` on refreshed registries (doc/run_2026-09-28.md): 1,080/1,080, 0 failed calls, about $26; 911 published, 169 in review. First run: 1,171/1,171, 0 failed calls, about $85 at list price; three defects found and fixed. Full run: `map --all --source all` over the in-scope corpus (about 1,170 trials). | Every in-scope trial is in `cache/ctml` or `ctml/needs-review`; failures listed; enum-cap and off-list counts from the run log reported. | 3.1 |
+| 3.2 | **Done 2026-09-25** (`2104df7`, doc/runs/2026-09-25-3.2-full-run.md), **re-run 2026-09-28** at `d61a30c` on refreshed registries (doc/runs/2026-09-28-3.2-second-full-run.md): 1,080/1,080, 0 failed calls, about $26; 911 published, 169 in review. First run: 1,171/1,171, 0 failed calls, about $85 at list price; three defects found and fixed. Full run: `map --all --source all` over the in-scope corpus (about 1,170 trials). | Every in-scope trial is in `cache/ctml` or `ctml/needs-review`; failures listed; enum-cap and off-list counts from the run log reported. | 3.1 |
 | 3.3 | Build the index from the three layers and tag it as the first release (`index-2026.MM.DD`) with its manifest. | Manifest checksums recorded; review-status counts reported. | 3.2 |
 | 3.4 | Audit the run: count needs-review reasons (no diagnosis, unverified protein change, unsupported gene), fusion partners, out-of-scope skips, and spot-check **60** unreviewed trials at random against their text (decided 2026-09-25: 0 errors in 20 still allows up to ~14% at 95%, 0 in 60 about 5%). A first pass flags disagreements with the text; a curator decides each one. | Audit note in `doc/`, with an estimated error rate and its 95% interval for unreviewed rows. | 3.3 |
 

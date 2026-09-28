@@ -1,12 +1,31 @@
 cff-version: 1.2.0
-message: If you use this software, please cite the paper below.
-title: nct2ctml
+message: >-
+  If you use this software, please cite the paper below, which describes the
+  method, and name this fork (Kinderspital Zürich) and its version or
+  commit, which is what you ran.
+title: "nct2ctml (Kinderspital Zürich fork): paediatric oncology trial matching"
 type: software
-repository-code: https://github.com/sumedhasaxena/nct2ctml
+version: 0.1.0
+repository-code: https://github.com/lgrob/nct2ctml
 license: Apache-2.0
+abstract: >-
+  Pulls paediatric oncology trials from ClinicalTrials.gov and EU CTIS, maps
+  their eligibility criteria to CTML with deterministic rules and an LLM,
+  routes the result through human review, and publishes a flat index for
+  joining against genomic samples. A fork of sumedhasaxena/nct2ctml,
+  retargeted from adult oncology in Hong Kong.
+keywords:
+  - clinical trial matching
+  - paediatric oncology
+  - CTML
+  - MatchMiner
+  - large language models
 authors:
+  - name: Kinderspital Zürich
+    city: Zürich
+    country: CH
   - family-names: Saxena
-    given-names: Sumedha  
+    given-names: Sumedha
   - family-names: Shih
     given-names: David J H
 preferred-citation:
@@ -30,3 +49,14 @@ preferred-citation:
   end: i14
   doi: 10.1093/bib/bbaf631.013
   url: https://academic.oup.com/bib/article/26/Supplement_1/i12/8378037
+references:
+  - type: software
+    title: nct2ctml
+    repository-code: https://github.com/sumedhasaxena/nct2ctml
+    license: Apache-2.0
+    authors:
+      - family-names: Saxena
+        given-names: Sumedha
+      - family-names: Shih
+        given-names: David J H
+    notes: The upstream project this fork is based on.

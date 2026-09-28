@@ -43,7 +43,7 @@ Baseline at the time of the review: 543 offline tests pass in ~13 s
   answers, and an odd output traced to the exact answer. Relevant to the IVDR
   audit trail.
 
-  Steps 1-3 done 2026-09-28 (see CHANGES.md, "Provenance"), including replay:
+  Steps 1-3 done 2026-09-28 (see doc/changelog.md, "Provenance"), including replay:
   `NCT2CTML_LLM_PLATFORM=Replay NCT2CTML_REPLAY_FILE=runs/<id>/llm_calls.jsonl`.
 
 - [x] **4. Pin the environment.**
@@ -111,7 +111,7 @@ Baseline at the time of the review: 543 offline tests pass in ~13 s
   records from CTIS may be republished. Until then, 4 CTIS tests skip in CI.
 
 - [x] **9. Remove dead and orphaned code.**
-  - [x] Delete [src/get_all_intervention_types.py](../src/get_all_intervention_types.py)
+  - [x] Delete `src/get_all_intervention_types.py`
         (one-off script, broken import path).
   - [x] Delete `rag/` (two upstream notebooks, referenced nowhere) or move it
         to `archive/` with a note.
@@ -148,29 +148,47 @@ Baseline at the time of the review: 543 offline tests pass in ~13 s
 
 ## Phase 3 - Documentation
 
-- [ ] **13. Split `CHANGES.md`** (1,769 lines, 100 KB; it is the Apache
+- [x] **13. Split `CHANGES.md`** (1,769 lines, 100 KB; it is the Apache
   §4(b) notice, a changelog and an experiment log at once).
   - `CHANGES.md`: the fork notice and a short summary per release.
   - `doc/decisions/`: one dated file per measured decision (roadmap 2.8, 2.9,
     2.9b, ...) with question, method, numbers, decision, commit and model.
   - `doc/runs/`: move `doc/run_2026-09-25.md` there as the template.
 
-- [ ] **14. Restructure the README.**
+  Done 2026-09-28. CHANGES.md 2,023 -> 544 lines: the notice, the summary of
+  the retargeting and a short summary since. 37 entries moved to
+  `doc/changelog.md`, 12 to 11 files in `doc/decisions/`, 8 to
+  `doc/runs/` (both run files merged in). Moved verbatim: every line of the
+  old file is in one of them.
+
+- [x] **14. Restructure the README.**
   First screen: a 10-line quickstart (Python version, environment, API key,
   pull one trial, map it, build the index) and one diagram
   (pull -> map -> review -> index). Move the review helper, index columns and
   backend details into `doc/` pages and link them.
 
-- [ ] **15. Cite the fork in `CITATION.cff`.**
+  Done 2026-09-28. README 519 -> ~220 lines: quickstart, Mermaid diagram,
+  usage, workflow and a documentation table. New pages: `doc/review_guide.md`,
+  `doc/index_guide.md`, `doc/provenance.md`, `doc/llm_backends.md`,
+  `doc/reference_data.md`.
+
+- [x] **15. Cite the fork in `CITATION.cff`.**
   It lists only upstream. Add the Kispi fork as the cited software (own
   repository, version, date) and keep the upstream paper under `references`.
   Add a Zenodo DOI once releases are tagged (step 6).
 
-- [ ] **16. Add `CONTRIBUTING.md`.**
+  Done 2026-09-28 (validated with cffconvert). The fork is the software
+  described; the paper stays the preferred citation; upstream is listed
+  under `references`. Open: named Kispi authors (only the organisation is
+  listed) and a Zenodo DOI.
+
+- [x] **16. Add `CONTRIBUTING.md`.**
   How to run the tests, how to record a measurement (step 13), how to change a
   `ref/` file (step 5), and the rule that a model or prompt change needs
   benchmark numbers first - today that rule lives only in a `config.py`
   comment.
+
+  Done 2026-09-28.
 
 ## Suggested order
 
