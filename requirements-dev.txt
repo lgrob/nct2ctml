@@ -3,3 +3,6 @@
 # .pre-commit-config.yaml pins the same version; tests/test_environment.py
 # checks that they agree.
 ruff==0.16.5
+# Validates the prompt schemas in tests/test_enrichment_schema.py, which
+# skips without it. Test-only; the pipeline never imports it.
+jsonschema==4.26.0

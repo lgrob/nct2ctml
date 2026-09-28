@@ -489,6 +489,33 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Tests and a benchmark regression check in CI (2026-09-28)
+
+This completes step 8 of `doc/improvement_plan.md`, apart from CTIS.
+
+- **`tests/fixtures/registry/nct/` (new, 888 KB):** frozen records of the 50
+  curated NCT trials, plus `NCT06776952`, which an age test reads.
+  ClinicalTrials.gov content is public domain.
+- **CTIS records are not included.** EMA's legal notice allows reproduction
+  but excludes third-party content, and CTIS records are submitted by
+  sponsors. The 6 curated CTIS trials, and the 4 tests that need them, stay
+  out of CI until that is settled.
+- **`bench/conditions_baseline.py` (new)** runs the model-free diagnosis
+  path on the fixtures and compares each trial's diagnoses, and the mean
+  scores, with `bench/baseline_conditions_nct.json`.
+  - The baseline is identical under three hash seeds and matches
+    `benchmark_map --conditions-only` on the live cache: dx F1 0.739, pop P
+    0.920, pop R 0.784.
+  - Removing one curated synonym row fails it and names the five ALL trials
+    that lose B-ALL.
+- **`.github/workflows/tests.yml` (new)** runs the suite on 3.12 and 3.13
+  from the lock, with the fixtures copied into `cache/nct`, then the
+  baseline check. Simulated locally in a copy without `cache/`, with a fresh
+  3.12 venv: 591 tests, 7 skipped. On GitHub: 2 live-LLM tests and 4 CTIS
+  tests; the 7th skipped only because the copy had no `.git`.
+- **`requirements-dev.txt`** pins `jsonschema==4.26.0`, so the 7 schema
+  tests that used to skip now run in CI.
+
 ## Reference data accounted for and pinned (2026-09-28)
 
 Step 5 of `doc/improvement_plan.md`, and the reference check of step 8.

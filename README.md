@@ -368,6 +368,14 @@ backend `config.py` selects, so they need a running server or an API key:
 RUN_LIVE_LLM_TESTS=1 python -m unittest tests.test_ai_helper -v
 ```
 
+GitHub Actions runs the suite on Python 3.12 and 3.13 on every push
+(`.github/workflows/tests.yml`), installed from `requirements.lock` and
+`requirements-dev.txt`. The job also runs the benchmark regression check
+(`bench/README.md`). `cache/` is not in git, so CI uses frozen
+ClinicalTrials.gov records from `tests/fixtures/registry/nct`. Tests that
+need CTIS records skip there: whether those may be republished is not
+settled (`tests/fixtures/registry/README.md`).
+
 ## Linting and formatting
 
 [ruff](https://docs.astral.sh/ruff/) lints and formats the code (its

@@ -1,0 +1,214 @@
+{
+ "means": {
+  "dx_f1": 0.739,
+  "dx_p": 0.9156,
+  "dx_r": 0.6774,
+  "pop_f1": 0.7919,
+  "pop_p": 0.9196,
+  "pop_r": 0.7841
+ },
+ "trials": {
+  "NCT01704716": [
+   "Neuroblastoma"
+  ],
+  "NCT02332668": [
+   "Classical Hodgkin Lymphoma",
+   "Melanoma",
+   "_SOLID_"
+  ],
+  "NCT02393157": [
+   "Burkitt Lymphoma",
+   "Diffuse Large B-Cell Lymphoma, NOS",
+   "Non-Hodgkin Lymphoma"
+  ],
+  "NCT02443831": [
+   "B-Lymphoblastic Leukemia/Lymphoma"
+  ],
+  "NCT02559778": [
+   "Neuroblastoma"
+  ],
+  "NCT02813135": [
+   "_LIQUID_",
+   "_SOLID_"
+  ],
+  "NCT03067181": [
+   "Embryonal Carcinoma",
+   "Ovarian Choriocarcinoma, NOS"
+  ],
+  "NCT03643276": [
+   "B-Lymphoblastic Leukemia/Lymphoma"
+  ],
+  "NCT03838042": [
+   "_SOLID_"
+  ],
+  "NCT03900793": [
+   "Osteosarcoma"
+  ],
+  "NCT04094610": [
+   "_SOLID_"
+  ],
+  "NCT04185038": [
+   "Atypical Teratoid/Rhabdoid Tumor",
+   "Choroid Plexus Carcinoma",
+   "Diffuse Glioma",
+   "Diffuse Midline Glioma, H3 K27-Altered",
+   "Ependymoma",
+   "Medulloblastoma",
+   "Pineoblastoma",
+   "Primitive Neuroectodermal Tumor"
+  ],
+  "NCT04221035": [
+   "Neuroblastoma"
+  ],
+  "NCT04322318": [
+   "Wilms' Tumor"
+  ],
+  "NCT04478292": [
+   "Hepatoblastoma"
+  ],
+  "NCT04625907": [
+   "Rhabdomyosarcoma"
+  ],
+  "NCT04634357": [
+   "Hepatoblastoma"
+  ],
+  "NCT04655404": [
+   "Diffuse Midline Glioma, H3 K27-Altered",
+   "High-Grade Glioma, NOS"
+  ],
+  "NCT04696029": [
+   "Medulloblastoma"
+  ],
+  "NCT04732065": [
+   "Ependymoma"
+  ],
+  "NCT04775485": [
+   "Low-Grade Glioma, NOS"
+  ],
+  "NCT04897321": [
+   "Clear Cell Sarcoma",
+   "Desmoplastic Small-Round-Cell Tumor",
+   "Ewing Sarcoma",
+   "Hepatoblastoma",
+   "Melanoma",
+   "Neuroblastoma",
+   "Osteosarcoma",
+   "Rhabdomyosarcoma",
+   "Wilms' Tumor"
+  ],
+  "NCT05009992": [
+   "Diffuse Midline Glioma, H3 K27-Altered"
+  ],
+  "NCT05106296": [
+   "Ependymoma",
+   "Medulloblastoma",
+   "Primary Brain Tumor"
+  ],
+  "NCT05180825": [
+   "Pleomorphic Xanthoastrocytoma"
+  ],
+  "NCT05183035": [
+   "Acute Myeloid Leukemia"
+  ],
+  "NCT05304585": [
+   "Embryonal Rhabdomyosarcoma",
+   "Spindle Cell/Sclerosing Rhabdomyosarcoma"
+  ],
+  "NCT05366218": [
+   "B-Lymphoblastic Leukemia/Lymphoma"
+  ],
+  "NCT05489887": [
+   "Neuroblastoma"
+  ],
+  "NCT05504291": [
+   "Retinoblastoma"
+  ],
+  "NCT05580562": [
+   "Diffuse Glioma"
+  ],
+  "NCT05658640": [
+   "B-Lymphoblastic Leukemia/Lymphoma"
+  ],
+  "NCT05745714": [
+   "B-Lymphoblastic Leukemia/Lymphoma"
+  ],
+  "NCT05748171": [
+   "B-Lymphoblastic Leukemia/Lymphoma"
+  ],
+  "NCT05918640": [
+   "Desmoplastic Small-Round-Cell Tumor",
+   "Ewing Sarcoma"
+  ],
+  "NCT05985161": [
+   "Malignant Peripheral Nerve Sheath Tumor",
+   "Wilms' Tumor"
+  ],
+  "NCT06023641": [
+   "Rhabdomyosarcoma"
+  ],
+  "NCT06071897": [
+   "Ganglioneuroblastoma",
+   "Neuroblastoma"
+  ],
+  "NCT06083883": [
+   "Myxoid/Round-Cell Liposarcoma",
+   "Synovial Sarcoma"
+  ],
+  "NCT06172296": [
+   "Neuroblastoma"
+  ],
+  "NCT06177067": [
+   "Acute Myeloid Leukemia"
+  ],
+  "NCT06239272": [
+   "Angiomatoid Fibrous Histiocytoma",
+   "Angiosarcoma",
+   "Atypical Fibroxanthoma",
+   "Clear Cell Sarcoma",
+   "Dedifferentiated Liposarcoma",
+   "Epithelioid Hemangioendothelioma",
+   "Epithelioid Sarcoma",
+   "Extraskeletal Myxoid Chondrosarcoma",
+   "Fibrosarcoma",
+   "Intimal Sarcoma",
+   "Leiomyosarcoma",
+   "Liposarcoma",
+   "Low-Grade Fibromyxoid Sarcoma",
+   "Malignant Peripheral Nerve Sheath Tumor",
+   "Myoepithelial Carcinoma",
+   "Myxofibrosarcoma",
+   "Pleomorphic Liposarcoma",
+   "Round Cell Sarcoma, NOS",
+   "Sclerosing Epithelioid Fibrosarcoma",
+   "Synovial Sarcoma",
+   "Well-Differentiated Liposarcoma"
+  ],
+  "NCT06528691": [
+   "High-Grade Glioma, NOS"
+  ],
+  "NCT06865664": [
+   "Rhabdomyosarcoma"
+  ],
+  "NCT07012447": [
+   "Mixed Phenotype Acute Leukemia, T/Myeloid, NOS"
+  ],
+  "NCT07059975": [
+   "Acute Myeloid Leukemia"
+  ],
+  "NCT07110246": [
+   "Low-Grade Glioma, NOS"
+  ],
+  "NCT07215910": [
+   "Astrocytoma, IDH-Mutant, Grade 3"
+  ],
+  "NCT07297979": [
+   "Ewing Sarcoma"
+  ],
+  "NCT07440290": [
+   "Diffuse Glioma",
+   "Erdheim-Chester Disease",
+   "_LIQUID_",
+   "_SOLID_"
+  ]
+ }
+}

@@ -63,6 +63,19 @@ model and no network, finishes in seconds, and is identical from run to run:
 Genes and ages are not produced on that path and show as `-`. What a full
 run adds on top of it is what the model contributes.
 
+The same path is a regression check. It runs on frozen registry records
+(`tests/fixtures/registry/nct`, the 50 curated NCT trials) rather than on
+`cache/`, which `pull` keeps changing, and compares every trial's diagnoses
+and the mean scores with `bench/baseline_conditions_nct.json`:
+
+    ./.venv/bin/python -m bench.conditions_baseline            # compare
+    ./.venv/bin/python -m bench.conditions_baseline --update   # accept a deliberate change
+
+CI and `tests/test_benchmark_baseline.py` run the comparison. Removing the
+single `Acute Lymphoblastic Leukemia` row from `ref/diagnosis_synonyms.tsv`,
+for example, fails it: five ALL trials lose B-ALL, and population recall
+drops from 0.78 to 0.70.
+
 Every mode covers both registries: the 50 curated ClinicalTrials.gov keys and
 the 5 CTIS keys (EU CT numbers). `--source nct|ctis|all` (default `all`)
 restricts a run to one registry. Each report row carries its registry, and

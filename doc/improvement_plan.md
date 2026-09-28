@@ -94,11 +94,16 @@ Baseline at the time of the review: 543 offline tests pass in ~13 s
   (`.github/workflows/lint.yml`, pre-commit) and
   `scripts/merge_upstream.py` for upstream merges after the reformat.
 
-- [ ] **8. CI.** (lint and reference-data jobs done; the test job and benchmark still to add)
+- [x] **8. CI.**
   GitHub Actions or GitLab CI running ruff, the offline unittest suite,
   `python -m bench.benchmark_map --conditions-only` as a regression check (no
   model, no network), and the reference check from step 5. A `pre-commit`
   config runs the same checks locally.
+
+  Done 2026-09-28. Workflows: `lint.yml`, `reference-data.yml` (step 5) and
+  `tests.yml` (the suite on 3.12 and 3.13, plus `bench.conditions_baseline`
+  on frozen NCT fixtures). **Open:** CTIS fixtures, pending whether sponsor
+  records from CTIS may be republished. Until then, 4 CTIS tests skip in CI.
 
 - [x] **9. Remove dead and orphaned code.**
   - [x] Delete [src/get_all_intervention_types.py](../src/get_all_intervention_types.py)

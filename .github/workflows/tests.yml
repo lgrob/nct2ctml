@@ -1,0 +1,31 @@
+# The offline test suite, in the locked environment. cache/ is not in git, so
+# the frozen ClinicalTrials.gov records in tests/fixtures/registry/nct are
+# copied into cache/nct first; tests that need CTIS records still skip
+# (tests/fixtures/registry/README.md says why). Includes the benchmark
+# regression check (tests/test_benchmark_baseline.py): no model, no network.
+name: tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  unittest:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -r requirements.lock -r requirements-dev.txt
+      - name: registry fixtures into cache/
+        run: mkdir -p cache/nct && cp tests/fixtures/registry/nct/*.json cache/nct/
+      - run: python -m unittest discover -s tests -v
+      - name: benchmark regression check
+        run: python -m bench.conditions_baseline
