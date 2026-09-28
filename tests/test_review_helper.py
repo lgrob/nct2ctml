@@ -435,5 +435,15 @@ class TestAudit(_Layers):
         self.assertNotIn("B", s1)
 
 
+class TestFlagOrder(unittest.TestCase):
+    """Sheets list a flag's names in the file's order, not a set's (which follows the hash seed)."""
+
+    def test_names_keep_the_file_order_without_duplicates(self):
+        self.assertEqual(rh._as_list("FLT3 (x); BCR (y); FLT3 (x)"), ["FLT3 (x)", "BCR (y)"])
+        self.assertEqual(rh._as_list(["b", "a", "b"]), ["b", "a"])
+        self.assertEqual(rh._as_list(None), [])
+        self.assertEqual(rh._as_set("a; b"), {"a", "b"})
+
+
 if __name__ == "__main__":
     unittest.main()

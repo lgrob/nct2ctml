@@ -235,11 +235,23 @@ def _term_pattern(term, right=r"(?![A-Za-z0-9])"):
     return r"(?<![A-Za-z0-9])" + r"[\s\-/,]+".join(parts) + right
 
 
-def _as_set(value):
-    """A flag value as a set of names: a list, or a string joined with '; '."""
+def _as_list(value):
+    """
+    A flag value as a list of names in the order the file gives them: a list,
+    or a string joined with '; '. Duplicates dropped. Iterate this, not
+    _as_set: a set's order follows PYTHONHASHSEED, so a sheet listed the
+    same trial's genes in a different order on every run.
+    """
     if isinstance(value, list):
-        return {str(v) for v in value}
-    return {v.strip() for v in str(value).split(";") if v.strip()} if value else set()
+        names = [str(v) for v in value]
+    else:
+        names = [v.strip() for v in str(value).split(";") if v.strip()] if value else []
+    return list(dict.fromkeys(names))
+
+
+def _as_set(value):
+    """A flag value as a set of names, for membership tests."""
+    return set(_as_list(value))
 
 
 _ALTERATION = (
@@ -1209,7 +1221,7 @@ def analyse(trial_id, ref):
             )
         )
     # Genes kept out of the tree by the roles prompt (information only).
-    for entry in _as_set(ctml.get("gene_role_dropped")):
+    for entry in _as_list(ctml.get("gene_role_dropped")):
         gname = str(entry).split(" (")[0]
         items.append(
             Item(
@@ -1221,7 +1233,7 @@ def analyse(trial_id, ref):
         )
     # A re-map dropped these; shown with the text that names them, so the
     # curator can add back the ones the trial enrols.
-    for d in _as_set(ctml.get("remap_dropped_diagnoses")):
+    for d in _as_list(ctml.get("remap_dropped_diagnoses")):
         items.append(
             Item(
                 "diagnosis",
@@ -1271,7 +1283,7 @@ def analyse(trial_id, ref):
     # Genes required although the text says absent / irrelevant.
     if ctml.get("gene_status_contradiction"):
         live = gene_status_contradictions(ctml, inc, ref)
-        for gname in _as_set(ctml.get("gene_status_contradiction")):
+        for gname in _as_list(ctml.get("gene_status_contradiction")):
             items.append(
                 Item(
                     "gene",
