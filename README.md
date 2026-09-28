@@ -211,11 +211,13 @@ Outputs:
 
 | File | One row per | Key columns |
 |---|---|---|
-| `trials.tsv` | trial | `trial_id`, `source`, `nct_id`, `phase`, `status`, `review_status`, `reviewed`, `source_file`, `layer_conflict`, `age_min`/`age_max` with `age_min_inclusive`/`age_max_inclusive` |
+| `trials.tsv` | trial | `trial_id`, `source`, `nct_id`, `phase`, `status`, `review_status`, `reviewed`, `source_file`, `layer_conflict`, `age_min`/`age_max` with `age_min_inclusive`/`age_max_inclusive`, `genes_not_required` |
 | `trial_diagnosis.tsv` | trial, arm, Oncotree node | `oncotree_code`, `oncotree_name`, `source_term`, `from_basket`, `include` |
 | `trial_genomic.tsv` | trial, arm, gene criterion | `hugo_symbol`, `variant_category`, `cnv_call`, `protein_change`, `protein_change_stated`, `protein_change_kind`, `protein_refseq`, `protein_ensembl`, `protein_check`, `fusion_partner`, `fusion`, `fusion_partner_check`, `variant_classification`, `include` |
 | `layer_conflicts.tsv` | trial | trials whose published `ctml/needs-review` copy is older than a clean mapping in `cache/ctml`: both files and their modification times |
 | `manifest.json` | - | row counts, SHA-256 of each output and of `ref/oncotree_file.txt`, `layer_conflicts` count, `review_backups` list |
+
+`genes_not_required` lists genes the text mentions that the model judged not required of every patient (risk group, one cohort, conditional, an alternative route, an example, expression or germline), each with its role. They are not matched on; show them to the clinician beside the trial. Trials carrying only this note are published, not queued for review (roadmap 2.9, option A).
 
 Join samples on `oncotree_code` and `hugo_symbol`. Diagnosis subtrees and the
 `_SOLID_`/`_LIQUID_` wildcards are expanded at build time, so a consumer needs

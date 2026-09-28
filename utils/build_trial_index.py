@@ -117,7 +117,7 @@ GENOMIC_COLUMNS = ["trial_id", "arm_code", "hugo_symbol", "variant_category",
 TRIAL_COLUMNS = ["trial_id", "source", "nct_id", "protocol_no", "short_title",
                  "phase", "status", "review_status", "reviewed", "source_file", "layer_conflict",
                  "age_label", "age_min", "age_min_inclusive",
-                 "age_max", "age_max_inclusive", "n_diagnosis_codes", "n_genes"]
+                 "age_max", "age_max_inclusive", "n_diagnosis_codes", "n_genes", "genes_not_required"]
 
 # Input layers, lowest precedence first. The status says what a row is worth:
 # `reviewed` was signed off by a curator, `needs_review` is machine output the
@@ -453,6 +453,10 @@ def index_trial(trial_id, trial, descendants, solid, liquid, name_to_code):
         "age_max_inclusive": "" if high_incl is None else int(high_incl),
         "n_diagnosis_codes": len(diagnosis_rows),
         "n_genes": len({r["hugo_symbol"] for r in genomic_rows if r["hugo_symbol"]}),
+        # Genes the text mentions that the roles prompt judged not required of
+        # every patient ("FLT3 (cohort_specific); ..."): not matched on, shown to
+        # the clinician (roadmap 2.9, option A).
+        "genes_not_required": str(trial.get("gene_role_dropped") or "").replace("\t", " ").replace("\n", " "),
     }
     return trial_row, diagnosis_rows, genomic_rows
 

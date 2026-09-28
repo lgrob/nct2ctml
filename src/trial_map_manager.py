@@ -577,8 +577,9 @@ class TrialMapManager:
             reasons.append("the match tree requires and forbids the same gene, so it matches nobody")
         if 'diagnosis_excluded' in keys:
             reasons.append("a diagnosis is named only in the exclusion criteria")
-        if 'gene_role_dropped' in keys:
-            reasons.append("genes the text uses for something other than entry were kept out of the match tree")
+        # gene_role_dropped does not route to review (user decision 2026-09-28,
+        # option A): a gene kept out of the tree can only widen matching, never
+        # lose a patient. It is published in trials.tsv (genes_not_required).
         if 'gene_status_contradiction' in keys:
             reasons.append("a gene is required although the text says it must be absent or does not matter")
         if not reasons:

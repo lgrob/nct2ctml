@@ -65,3 +65,30 @@ class TestGenomicPromptVariants(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestGeneRoleDroppedIsInformation(unittest.TestCase):
+    """Option A (user, 2026-09-28): genes kept out are published, not queued."""
+
+    def _ctml(self):
+        return {"gene_role_dropped": "FLT3 (cohort_specific)", "age": "Pediatric",
+                "treatment_list": {"step": [{"match": [{"and": [
+                    {"clinical": {"oncotree_primary_diagnosis": "Acute Myeloid Leukemia", "age_numerical": "<22"}}]}],
+                    "arm": [{"arm_code": "A", "match": []}]}]}}
+
+    def test_does_not_route_to_review(self):
+        import tempfile
+        from src.trial_map_manager import TrialMapManager
+        d = tempfile.mkdtemp()
+        self.assertFalse(TrialMapManager._destination_for(self._ctml(), d, "T3").endswith("needs-review"))
+
+    def test_accept_does_not_refuse_it(self):
+        import yaml
+        import utils.review_helper as rh
+        self.assertNotIn("gene_role_dropped", rh.FLAG_KEYS)
+        c = self._ctml()
+        self.assertFalse([p for p in rh.problems(c, yaml.safe_dump(c)) if "gene_role_dropped" in p])
+
+    def test_index_publishes_genes_not_required(self):
+        import utils.build_trial_index as b
+        self.assertIn("genes_not_required", b.TRIAL_COLUMNS)

@@ -73,7 +73,7 @@ LOG_COLUMNS = ["date", "trial_id", "reviewer", "from_layer", "flags_resolved", "
 # that still holds any of them: deleting the key is how a curator confirms
 # the item, deleting the item is how they reject it.
 FLAG_KEYS = ("gene_unsupported", "diagnosis_off_list", "diagnosis_excluded", "genomic_contradiction",
-             "remap_dropped_diagnoses", "gene_status_contradiction", "gene_role_dropped",
+             "remap_dropped_diagnoses", "gene_status_contradiction",
              "protein_change_unverified",
              "protein_change_check", "fusion_partner_unverified")
 
@@ -96,10 +96,10 @@ ADVICE = {
                           "match tree, or, when a broader diagnosis the trial enrols contains it, add it as "
                           "`oncotree_primary_diagnosis: '!Name'` (quoted) beside that diagnosis. Then delete "
                           "the top-level `diagnosis_excluded:` line.",
-    "gene_role_dropped": "The model read these genes as something other than an entry requirement (risk group, one "
-                         "cohort, conditional, an alternative route, an example, expression or germline) and kept them out "
-                         "of the match tree. Check the sentence; add a gene back only if every patient must carry it, then "
-                         "delete the top-level `gene_role_dropped:` line.",
+    "gene_role_dropped": "Information, not a flag: the model read these genes as something other than an entry "
+                         "requirement (risk group, one cohort, conditional, an alternative route, an example, "
+                         "expression or germline) and kept them out of the match tree. They are published in "
+                         "trials.tsv as genes_not_required. Add a gene back only if every patient must carry it.",
     "gene_status_contradiction": "The match tree requires an alteration in a gene that the inclusion text says "
                                  "must be absent (wild type, negative, 'no ... mutation') or does not matter "
                                  "('with or without'). Remove or negate the criterion, then delete the top-level "
@@ -982,6 +982,12 @@ def analyse(trial_id, ref):
     if not real and not (set(got["diagnoses"]) & WILDCARDS):
         items.append(Item("no_diagnosis", "(none)", flag="no_diagnosis",
                           evidence=[(n, html.escape(t)) for n, t in sections_with_title[2:] if t]))
+    # Genes kept out of the tree by the roles prompt (information only).
+    for entry in _as_set(ctml.get("gene_role_dropped")):
+        gname = str(entry).split(" (")[0]
+        items.append(Item("gene", f"{entry} (kept out of the match tree)",
+                          evidence=evidence(sections_with_title, ref.gene_terms(gname), limit=2),
+                          note="information: not required of every patient per the model; published as genes_not_required"))
     # A re-map dropped these; shown with the text that names them, so the
     # curator can add back the ones the trial enrols.
     for d in _as_set(ctml.get("remap_dropped_diagnoses")):
