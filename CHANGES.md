@@ -514,6 +514,17 @@ BRCA1/2) now count as mentions in _text_mentions_gene and on the review
 sheet, which changes the contradiction resolver's input for 16 gene pairs
 in 5 trials. All 16 are real family mentions in exclusion text.
 
+## Measured and rejected: roles_union (roadmap 2.9b, 2026-09-28)
+
+roles plus a cohort_union role (a gene only some cohorts need in a trial
+where every cohort needs one of the genes; kept in the tree). Same 370
+trials, same frozen pre-refresh trial texts, 3 replicates. Against roles:
+requirements kept 259 -> 260 of 289, trials with a restrictive gene 86 ->
+91, trials sent to review ~203 -> ~201. Of the six strata trials it was
+built for it keeps two (2023-504880-18-00, 2022-502668-20-00); NTRK/ROS1,
+KMT2A/NPM1 and FLT3 are still read as cohort_specific. Not adopted; the
+option stays for re-measurement with a stronger model.
+
 ## Genomic prompt defaults to roles (roadmap 2.9, 2026-09-28)
 
 At the user's decision, config.GENOMIC_PROMPT = "roles" (env
