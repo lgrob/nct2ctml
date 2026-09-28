@@ -2,6 +2,7 @@
 `main.py map` dispatch: which registries run, and where output goes.
 Nothing is mapped; the bulk functions are patched.
 """
+
 import os
 import sys
 import tempfile
@@ -20,14 +21,17 @@ logger.remove()
 
 def _run(*argv):
     # RUNS_PATH None: a dispatch test must not leave a run record in runs/.
-    with patch.object(sys, "argv", ["main.py", *argv]), patch.object(config, "RUNS_PATH", None), \
-         patch.object(main, "map_all") as nct, patch.object(main, "map_all_ctis") as ctis:
+    with (
+        patch.object(sys, "argv", ["main.py", *argv]),
+        patch.object(config, "RUNS_PATH", None),
+        patch.object(main, "map_all") as nct,
+        patch.object(main, "map_all_ctis") as ctis,
+    ):
         main.main()
     return nct, ctis
 
 
 class TestMapDispatch(unittest.TestCase):
-
     def test_source_all_maps_both_registries(self):
         nct, ctis = _run("map", "--all", "--source", "all", "--out", tempfile.mkdtemp())
         self.assertTrue(nct.called and ctis.called)

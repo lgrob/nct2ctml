@@ -16,6 +16,7 @@ Usage:
     python bulk_convert_yaml_to_json.py NCT01 NCT02     # only these
     python bulk_convert_yaml_to_json.py --dry-run       # list, write nothing
 """
+
 import argparse
 import json
 import os
@@ -32,8 +33,7 @@ def convert(nct_ids: list[str], dry_run: bool = False) -> int:
     if nct_ids:
         names = [f"{n}.yaml" for n in nct_ids]
     else:
-        names = sorted(f for f in os.listdir(YAML_DIR)
-                       if f.endswith((".yaml", ".yml")))
+        names = sorted(f for f in os.listdir(YAML_DIR) if f.endswith((".yaml", ".yml")))
     if not names:
         print(f"No reviewed CTML in {YAML_DIR}/ - nothing to promote.")
         return 0
@@ -71,12 +71,15 @@ def convert(nct_ids: list[str], dry_run: bool = False) -> int:
 
 
 def main():
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("nct_ids", nargs="*",
-                    help="NCT IDs to promote. Default: every file in ctml/reviewed.")
-    ap.add_argument("--dry-run", action="store_true",
-                    help="List what would be written without writing it.")
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument(
+        "nct_ids", nargs="*", help="NCT IDs to promote. Default: every file in ctml/reviewed."
+    )
+    ap.add_argument(
+        "--dry-run", action="store_true", help="List what would be written without writing it."
+    )
     args = ap.parse_args()
 
     n = convert(args.nct_ids, args.dry_run)

@@ -3,6 +3,7 @@ Provenance (utils/provenance.py): the _provenance block in every mapped file,
 the record of every model call, replaying a run from that record, and what
 the index makes of both.
 """
+
 import csv
 import json
 import os
@@ -14,12 +15,12 @@ from unittest import mock
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import yaml
 from loguru import logger
 
 import bulk_convert_yaml_to_json as convert
 import config
 import utils.ai_helper as ai
+import yaml
 from src.trial_map_manager import TrialMapManager
 from utils import build_trial_index as bti
 from utils import provenance
@@ -53,8 +54,10 @@ class _Isolated(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
         self.runs = os.path.join(self.tmp, "runs")
-        patches = [mock.patch.object(config, "RUNS_PATH", self.runs),
-                   mock.patch.object(config, "LLM_PLATFORM", "Anthropic")]
+        patches = [
+            mock.patch.object(config, "RUNS_PATH", self.runs),
+            mock.patch.object(config, "LLM_PLATFORM", "Anthropic"),
+        ]
         for p in patches:
             p.start()
             self.addCleanup(p.stop)
@@ -75,7 +78,6 @@ class _Isolated(unittest.TestCase):
 
 
 class TestStamp(_Isolated):
-
     def _saved(self, directory, doc, trial="NCT1"):
         TrialMapManager._save(doc, directory, trial)
         with open(os.path.join(directory, f"{trial}.yaml")) as handle:
@@ -97,8 +99,10 @@ class TestStamp(_Isolated):
         self.assertEqual(sorted(block["reference_sha256"]), provenance.reference_files())
         for key in provenance._REFERENCE_KEYS:
             self.assertIn(getattr(config, key), block["reference_sha256"])
-        self.assertEqual(block["reference_sha256"][config.GENE_LIST_FILE_PATH],
-                         provenance.file_sha256(config.GENE_LIST_FILE_PATH))
+        self.assertEqual(
+            block["reference_sha256"][config.GENE_LIST_FILE_PATH],
+            provenance.file_sha256(config.GENE_LIST_FILE_PATH),
+        )
 
     @unittest.skipUnless(os.path.isdir(os.path.join(ROOT, ".git")), "not a git checkout")
     def test_the_commit_is_recorded(self):
@@ -138,7 +142,6 @@ class TestStamp(_Isolated):
 
 
 class TestRecord(_Isolated):
-
     def test_nothing_is_recorded_outside_a_run(self):
         self.use(FakeModel([{"genes": ["KRAS"]}]))
         ai.send_ai_request("NCT1", "prompt", SCHEMA)
@@ -187,7 +190,9 @@ class TestRecord(_Isolated):
         provenance.finish_run(output="x")
         with open(os.path.join(self.runs, run_id, provenance.RUN_FILE)) as handle:
             info = json.load(handle)
-        self.assertEqual((info["llm_calls"], info["llm_call_errors"], info["trials_with_llm_calls"]), (2, 1, 1))
+        self.assertEqual(
+            (info["llm_calls"], info["llm_call_errors"], info["trials_with_llm_calls"]), (2, 1, 1)
+        )
         self.assertEqual(info["summary"], {"output": "x"})
         self.assertIn("finished_at", info)
         self.assertEqual(sorted(info["reference_sha256"]), provenance.reference_files())
@@ -204,7 +209,6 @@ class TestRecord(_Isolated):
 
 
 class TestReplay(_Isolated):
-
     def _record(self, calls):
         """Record (prompt, answer) pairs in a run; returns its llm_calls.jsonl."""
         self.use(FakeModel([answer for _, answer in calls]))
@@ -222,8 +226,14 @@ class TestReplay(_Isolated):
         path = self._record([("a", {"genes": ["KRAS"]}), ("b", {"genes": ["NRAS"]})])
         replay = self.use(ReplayPlatform("ignored", "", calls_file=path))
         self.assertEqual(replay.model, config.LLM_AI_MODEL)
-        self.assertEqual(ai.parse_ai_response(ai.send_ai_request("NCT1", "b", SCHEMA), "NCT1"), {"genes": ["NRAS"]})
-        self.assertEqual(ai.parse_ai_response(ai.send_ai_request("NCT1", "a", SCHEMA), "NCT1"), {"genes": ["KRAS"]})
+        self.assertEqual(
+            ai.parse_ai_response(ai.send_ai_request("NCT1", "b", SCHEMA), "NCT1"),
+            {"genes": ["NRAS"]},
+        )
+        self.assertEqual(
+            ai.parse_ai_response(ai.send_ai_request("NCT1", "a", SCHEMA), "NCT1"),
+            {"genes": ["KRAS"]},
+        )
 
     def test_a_repeated_prompt_gets_its_answers_in_order_and_the_last_repeats(self):
         path = self._record([("a", {"n": 1}), ("a", {"n": 2})])
@@ -258,8 +268,10 @@ class TestReplay(_Isolated):
     def test_a_replay_caps_schema_enums_as_the_recorded_platform_did(self):
         path = self._record([("a", {})])
         self.use(ReplayPlatform("", "", calls_file=path))
-        with mock.patch.object(config, "LLM_PLATFORM", "Replay"), \
-             mock.patch.object(config, "SCHEMA_ENUM_MAX_VALUES", {"anthropic": None, "replay": 1}):
+        with (
+            mock.patch.object(config, "LLM_PLATFORM", "Replay"),
+            mock.patch.object(config, "SCHEMA_ENUM_MAX_VALUES", {"anthropic": None, "replay": 1}),
+        ):
             self.assertIsNone(ai.max_enum_values())
 
     def test_replay_without_a_file_is_refused(self):
@@ -270,7 +282,6 @@ class TestReplay(_Isolated):
 
 @unittest.skipUnless(os.path.exists(SRC), "reviewed trial not present")
 class TestIndex(_Isolated):
-
     def _build(self, docs):
         layer = os.path.join(self.tmp, "mapped")
         os.makedirs(layer)
@@ -294,12 +305,20 @@ class TestIndex(_Isolated):
     def test_trials_carry_their_provenance_and_the_manifest_counts_drift(self):
         reference = provenance.reference_hashes()
         stale = dict(reference, **{config.GENE_LIST_FILE_PATH: "0" * 64})
-        block = {"run_id": "20260928T000000Z-abcdef", "mapped_at": "2026-09-28T00:00:00Z",
-                 "code": {"commit": "d61a30c" + "0" * 33, "dirty": True},
-                 "llm": {"model": "claude-haiku-4-5-20251001", "genomic_prompt": "roles",
-                         "diagnosis_input": "labelled"},
-                 "reference_sha256": stale}
-        manifest, trials = self._build({"NCT1": self._trial("NCT1", block), "NCT2": self._trial("NCT2")})
+        block = {
+            "run_id": "20260928T000000Z-abcdef",
+            "mapped_at": "2026-09-28T00:00:00Z",
+            "code": {"commit": "d61a30c" + "0" * 33, "dirty": True},
+            "llm": {
+                "model": "claude-haiku-4-5-20251001",
+                "genomic_prompt": "roles",
+                "diagnosis_input": "labelled",
+            },
+            "reference_sha256": stale,
+        }
+        manifest, trials = self._build(
+            {"NCT1": self._trial("NCT1", block), "NCT2": self._trial("NCT2")}
+        )
 
         row = trials["NCT1"]
         self.assertEqual(row["mapped_run"], "20260928T000000Z-abcdef")
@@ -307,17 +326,25 @@ class TestIndex(_Isolated):
         self.assertEqual(row["mapped_commit"], "d61a30c00000+dirty")
         self.assertEqual(row["llm_model"], "claude-haiku-4-5-20251001")
         self.assertEqual(row["prompt_settings"], "genomic_prompt=roles;diagnosis_input=labelled")
-        self.assertEqual({trials["NCT2"][c] for c in ("mapped_run", "mapped_commit", "llm_model")}, {""})
+        self.assertEqual(
+            {trials["NCT2"][c] for c in ("mapped_run", "mapped_commit", "llm_model")}, {""}
+        )
 
         self.assertEqual(manifest["reference_drift"], {config.GENE_LIST_FILE_PATH: 1})
-        self.assertEqual(manifest["trials_by_mapping"], {
-            "claude-haiku-4-5-20251001 genomic_prompt=roles;diagnosis_input=labelled": 1, "unrecorded": 1})
+        self.assertEqual(
+            manifest["trials_by_mapping"],
+            {
+                "claude-haiku-4-5-20251001 genomic_prompt=roles;diagnosis_input=labelled": 1,
+                "unrecorded": 1,
+            },
+        )
         self.assertEqual(manifest["trials_by_commit"], {"d61a30c00000+dirty": 1, "unrecorded": 1})
         self.assertEqual(manifest["reference_sha256"], reference)
         self.assertIn("commit", manifest["code"])
 
     def test_the_build_is_still_byte_identical(self):
         docs = {"NCT1": self._trial("NCT1", {"run_id": "r", "llm": {"model": "m"}})}
+
         def build():
             self._build(docs)
             with open(os.path.join(self.tmp, "index", "trials.tsv")) as handle:
@@ -325,11 +352,11 @@ class TestIndex(_Isolated):
             shutil.rmtree(os.path.join(self.tmp, "mapped"))
             shutil.rmtree(os.path.join(self.tmp, "index"))
             return text
+
         self.assertEqual(build(), build())
 
 
 class TestConvert(unittest.TestCase):
-
     def test_the_block_never_reaches_matchminer(self):
         tmp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, tmp, True)
@@ -337,8 +364,11 @@ class TestConvert(unittest.TestCase):
         os.makedirs(src)
         with open(os.path.join(src, "NCT1.yaml"), "w") as handle:
             yaml.safe_dump({"nct_id": "NCT1", "_provenance": {"run_id": "r"}}, handle)
-        with mock.patch.object(convert, "YAML_DIR", src), mock.patch.object(convert, "JSON_DIR", dst), \
-             mock.patch("builtins.print"):
+        with (
+            mock.patch.object(convert, "YAML_DIR", src),
+            mock.patch.object(convert, "JSON_DIR", dst),
+            mock.patch("builtins.print"),
+        ):
             convert.convert([])
         with open(os.path.join(dst, "NCT1.json")) as handle:
             self.assertEqual(json.load(handle), {"nct_id": "NCT1"})

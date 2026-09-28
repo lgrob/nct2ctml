@@ -2,6 +2,7 @@
 The Anthropic request shape, offline. No request is sent: the client is
 mocked, and only what would be sent and how the reply is read are checked.
 """
+
 import json
 import os
 import sys
@@ -22,7 +23,6 @@ SCHEMA = {"type": "array", "items": {"type": "object"}}
 
 
 class TestRequestBody(unittest.TestCase):
-
     def test_config_pins_a_dated_haiku_snapshot(self):
         self.assertEqual(config.LLM_PLATFORM, "Anthropic")
         self.assertRegex(config.LLM_AI_MODEL, r"^claude-haiku-4-5-\d{8}$")
@@ -58,12 +58,12 @@ class TestRequestBody(unittest.TestCase):
 
 
 def _reply(content, stop="tool_use"):
-    return SimpleNamespace(content=content, stop_reason=stop,
-                           usage=SimpleNamespace(input_tokens=1, output_tokens=1))
+    return SimpleNamespace(
+        content=content, stop_reason=stop, usage=SimpleNamespace(input_tokens=1, output_tokens=1)
+    )
 
 
 class TestReplyParsing(unittest.TestCase):
-
     def _send(self, reply):
         platform = AnthropicPlatform(HAIKU, "")
         platform._client = MagicMock()

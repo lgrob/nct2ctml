@@ -3,6 +3,7 @@ Trial protein changes rewritten as HGVS and checked against the MANE Select
 protein. Every assertion about a residue is checked against the committed
 reference file, not typed from memory.
 """
+
 import os
 import sys
 import unittest
@@ -13,7 +14,6 @@ import utils.protein_change as pc
 
 
 class TestNotation(unittest.TestCase):
-
     def check(self, gene, stated, hgvs, kind=None):
         r = pc.normalise(gene, stated)
         self.assertEqual(r.status, pc.VERIFIED, f"{gene} {stated}: {r.status} {r.detail}")
@@ -29,7 +29,14 @@ class TestNotation(unittest.TestCase):
         self.assertTrue(r.ensembl_protein.startswith("ENSP00000493543"))
 
     def test_spellings_converge(self):
-        for stated in ("V600E", "p.V600E", "p.Val600Glu", "Val600Glu", "p.(Val600Glu)", "p.(V600E)"):
+        for stated in (
+            "V600E",
+            "p.V600E",
+            "p.Val600Glu",
+            "Val600Glu",
+            "p.(Val600Glu)",
+            "p.(V600E)",
+        ):
             self.check("BRAF", stated, "p.Val600Glu")
 
     def test_kras_g12c(self):
@@ -124,18 +131,23 @@ class TestRejections(unittest.TestCase):
         self.assertEqual(pc.normalise("BRAF", "").status, "empty")
 
 
-
 class TestHistoneNumberingEitherWay(unittest.TestCase):
     """NCT07110246 writes H3 changes in HGVS numbering with one-letter codes."""
 
     def test_hgvs_one_letter_is_not_shifted_again(self):
-        for stated, want in (("p.K28M", "p.Lys28Met"), ("p.G35R", "p.Gly35Arg"), ("p.G35V", "p.Gly35Val")):
+        for stated, want in (
+            ("p.K28M", "p.Lys28Met"),
+            ("p.G35R", "p.Gly35Arg"),
+            ("p.G35V", "p.Gly35Val"),
+        ):
             r = pc.normalise("H3-3A", stated)
             self.assertEqual((r.status, r.hgvs, r.numbering), (pc.VERIFIED, want, "hgvs"), stated)
 
     def test_legacy_still_shifted(self):
         r = pc.normalise("H3-3A", "K27M")
-        self.assertEqual((r.status, r.hgvs, r.numbering), (pc.VERIFIED, "p.Lys28Met", "histone_mature"))
+        self.assertEqual(
+            (r.status, r.hgvs, r.numbering), (pc.VERIFIED, "p.Lys28Met", "histone_mature")
+        )
 
     def test_legacy_wins_where_both_readings_fit(self):
         # G34 and G35 are both glycine: "G34R" is the literature G34R.

@@ -7,75 +7,76 @@
 LLM Platform classes for different AI service providers.
 Each platform class encapsulates its specific configuration, request/response handling.
 """
+
 import json
-from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
-from loguru import logger
 import re
+from abc import ABC, abstractmethod
+from typing import Any
+
+from loguru import logger
 
 
 class LLMPlatform(ABC):
     """Base class for LLM platforms."""
-    
+
     def __init__(self, model: str, hostname: str):
         self.model = model
         self.hostname = hostname
-    
+
     @property
     @abstractmethod
     def port(self) -> int:
         """Return the port number for this platform."""
         pass
-    
+
     @property
     @abstractmethod
     def chat_endpoint(self) -> str:
         """Return the chat endpoint path for this platform."""
         pass
-    
+
     @abstractmethod
-    def get_request_body(self, prompt: str, json_schema: Optional[Dict] = None) -> Dict[str, Any]:
+    def get_request_body(self, prompt: str, json_schema: dict | None = None) -> dict[str, Any]:
         """Generate the request body for this platform."""
         pass
-    
+
     @abstractmethod
-    def parse_response(self, ai_response: Dict[str, Any], trial_id: str = "") -> Dict[str, Any]:
+    def parse_response(self, ai_response: dict[str, Any], trial_id: str = "") -> dict[str, Any]:
         """Parse the response from this platform."""
         pass
-    
+
     def get_endpoint_url(self) -> str:
         """Get the full endpoint URL."""
         import urllib.parse
+
         return urllib.parse.urljoin(f"{self.hostname}:{self.port}", self.chat_endpoint)
 
 
 class SGLangPlatform(LLMPlatform):
     """SGLang platform implementation."""
-    
+
     def __init__(self, model: str, hostname: str):
         super().__init__(model, hostname)
         self._port = 30000
-    
+
     @property
     def port(self) -> int:
         return self._port
-    
+
     @property
     def chat_endpoint(self) -> str:
         return "v1/chat/completions"
-    
-    def get_request_body(self, prompt: str, json_schema: Optional[Dict] = None) -> Dict[str, Any]:
+
+    def get_request_body(self, prompt: str, json_schema: dict | None = None) -> dict[str, Any]:
         """Generate SGLang request body."""
-        req_body: Dict[str, Any] = {
+        req_body: dict[str, Any] = {
             "model": self.model,
             "messages": [
                 {"role": "system", "content": "You are a biomedical researcher."},
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": prompt},
             ],
-            "response_format": {
-                "type": "json_object"
-            },
-            "stream": False
+            "response_format": {"type": "json_object"},
+            "stream": False,
         }
 
         model_lower = (self.model or "").lower()
@@ -92,37 +93,47 @@ class SGLangPlatform(LLMPlatform):
             req_body["chat_template_kwargs"] = {"enable_thinking": False}
 
         return req_body
-    
-    def parse_response(self, ai_response: Dict[str, Any], trial_id: str = "") -> Dict[str, Any]:
+
+    def parse_response(self, ai_response: dict[str, Any], trial_id: str = "") -> dict[str, Any]:
         """Parse SGLang response."""
         response_dict = {}
-        try: # todo: simplify it with a find_tag() function or extract_tag()
-            if type(ai_response) is dict and 'choices' in ai_response.keys() and type(ai_response['choices']) is list:
-                answer = ai_response['choices'][0]
-                ai_response_content = self._safe_get(answer, ['message', 'content'])
+        try:  # todo: simplify it with a find_tag() function or extract_tag()
+            if (
+                type(ai_response) is dict
+                and "choices" in ai_response.keys()
+                and type(ai_response["choices"]) is list
+            ):
+                answer = ai_response["choices"][0]
+                ai_response_content = self._safe_get(answer, ["message", "content"])
                 if ai_response_content:
-                    prefix_pos = ai_response_content.find('```json')  # look for ```json in response string
+                    prefix_pos = ai_response_content.find(
+                        "```json"
+                    )  # look for ```json in response string
                     if prefix_pos > -1:
-                        begin_content = ai_response_content.find('```json') + len('```json')
-                        end_content = ai_response_content.find('```', begin_content)
+                        begin_content = ai_response_content.find("```json") + len("```json")
+                        end_content = ai_response_content.find("```", begin_content)
                         response_string = ai_response_content[begin_content:end_content].strip()
                     else:
-                        prefix_pos = ai_response_content.find('</think>')  # else get everything after </think>
+                        prefix_pos = ai_response_content.find(
+                            "</think>"
+                        )  # else get everything after </think>
                         if prefix_pos > -1:
-                            begin_content = ai_response_content.find('</think>') + len('</think>')
+                            begin_content = ai_response_content.find("</think>") + len("</think>")
                             response_string = ai_response_content[begin_content:].strip()
                         else:
                             response_string = ai_response_content
-                    
+
                     sanitized_res = self._sanitize_json_string(response_string)
-                    
+
                     response_dict = json.loads(sanitized_res, strict=False)
                     if isinstance(response_dict, dict) and "error" in response_dict:
                         response_dict.pop("error", None)
         except json.JSONDecodeError as ex:
-            logger.error(f"{trial_id or 'unknown trial'}: the model returned text that is not valid JSON, so this criterion is empty. {ex=} | {sanitized_res[:400]}")
+            logger.error(
+                f"{trial_id or 'unknown trial'}: the model returned text that is not valid JSON, so this criterion is empty. {ex=} | {sanitized_res[:400]}"
+            )
         return response_dict
-    
+
     def _safe_get(self, dict_data, keys):
         """Helper method to safely get nested dictionary values."""
         for key in keys:
@@ -130,19 +141,19 @@ class SGLangPlatform(LLMPlatform):
         return dict_data
 
     def _sanitize_json_string(self, response_string: str) -> str:
-    # Replace backslash-escapes that JSON doesn’t understand (e.g. "\<") with the bare char
-    # Valid escapes per JSON spec: " \ / b f n r t u
-        return re.sub(r'\\(?![\\"\/bfnrtu])', '', response_string.replace('\\\\', '\\'))
-        #return re.sub(r'\\([^"\\/bfnrtu])', r'\1', response_string)
+        # Replace backslash-escapes that JSON doesn’t understand (e.g. "\<") with the bare char
+        # Valid escapes per JSON spec: " \ / b f n r t u
+        return re.sub(r'\\(?![\\"\/bfnrtu])', "", response_string.replace("\\\\", "\\"))
+        # return re.sub(r'\\([^"\\/bfnrtu])', r'\1', response_string)
 
 
 class VLLMPlatform(SGLangPlatform):
     """vLLM platform implementation (uses same format as SGLang)."""
-    
+
     def __init__(self, model: str, hostname: str):
         super().__init__(model, hostname)
         self._port = 8000
-    
+
     @property
     def chat_endpoint(self) -> str:
         return "v1/chat/completions"
@@ -152,7 +163,8 @@ def _ollama_num_ctx() -> int:
     """Context window for Ollama, overridable via config.OLLAMA_NUM_CTX."""
     try:
         import config
-        return getattr(config, 'OLLAMA_NUM_CTX', 16384)
+
+        return getattr(config, "OLLAMA_NUM_CTX", 16384)
     except Exception:
         return 16384
 
@@ -161,25 +173,26 @@ def _ollama_num_predict() -> int:
     """Max tokens Ollama may generate, overridable via config.OLLAMA_NUM_PREDICT."""
     try:
         import config
-        return getattr(config, 'OLLAMA_NUM_PREDICT', 2048)
+
+        return getattr(config, "OLLAMA_NUM_PREDICT", 2048)
     except Exception:
         return 2048
 
 
 class OllamaPlatform(LLMPlatform):
     """Ollama platform implementation."""
-    
+
     def __init__(self, model: str, hostname: str):
         super().__init__(model, hostname)
         self._port = 11434
-    
+
     @property
     def port(self) -> int:
         return self._port
-    
+
     @property
     def chat_endpoint(self) -> str:
-        #return "api/generate"
+        # return "api/generate"
         return "api/chat"
 
     def _safe_get(self, dict_data, keys):
@@ -187,40 +200,32 @@ class OllamaPlatform(LLMPlatform):
             dict_data = dict_data.get(key, {})
         return dict_data
 
-    def get_request_body(self, prompt: str, json_schema: Optional[Dict] = None) -> Dict[str, Any]:
+    def get_request_body(self, prompt: str, json_schema: dict | None = None) -> dict[str, Any]:
 
         if self.chat_endpoint == "api/generate":
             req_body = {
-            "model": self.model,
-            "prompt": prompt,
-            "system": "You are a biomedical researcher specializing in cancer genomics and clinical trials.",
-            "stream": False,
-            "keep_alive": -1,
-            "options": {
-                "think": True,
-                "temperature": 0,
-                "seed": 42,
-                "top_k": 1
+                "model": self.model,
+                "prompt": prompt,
+                "system": "You are a biomedical researcher specializing in cancer genomics and clinical trials.",
+                "stream": False,
+                "keep_alive": -1,
+                "options": {"think": True, "temperature": 0, "seed": 42, "top_k": 1},
             }
-        }
         elif self.chat_endpoint == "api/chat":
             req_body = {
-                "model": self.model,            
+                "model": self.model,
                 "messages": [
                     {
                         "role": "system",
-                        "content": "You are a biomedical researcher specializing in cancer genomics and clinical trials."
+                        "content": "You are a biomedical researcher specializing in cancer genomics and clinical trials.",
                     },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
+                    {"role": "user", "content": prompt},
                 ],
                 "stream": False,
                 "think": False,
                 "keep_alive": "15m",
                 "options": {
-                    #"think": True,
+                    # "think": True,
                     "temperature": 0,
                     "seed": 42,
                     "top_k": 1,
@@ -232,88 +237,91 @@ class OllamaPlatform(LLMPlatform):
                     # loop indefinitely because constrained decoding will not let
                     # it stop until it closes the JSON.
                     "num_predict": _ollama_num_predict(),
-                }
+                },
             }
 
-        if self.model and "qwen3.6" in self.model.lower():  
+        if self.model and "qwen3.6" in self.model.lower():
             req_body["chat_template_kwargs"] = {"enable_thinking": False}
 
         if json_schema is not None:
             req_body["format"] = json_schema
         else:
             req_body["format"] = "json"
-        
+
         return req_body
-    
-    def parse_response(self, ai_response: Dict[str, Any], trial_id: str = "") -> Dict[str, Any]:
-        
+
+    def parse_response(self, ai_response: dict[str, Any], trial_id: str = "") -> dict[str, Any]:
+
         response_dict = {}
         if self.chat_endpoint == "api/generate":
             try:
-                if type(ai_response) is dict and 'response' in ai_response.keys():
-                    ai_response_content = ai_response['response']
+                if type(ai_response) is dict and "response" in ai_response.keys():
+                    ai_response_content = ai_response["response"]
                     response_dict = json.loads(ai_response_content)
             except json.JSONDecodeError as ex:
-                logger.error(f"{trial_id or 'unknown trial'}: the model returned text that is not valid JSON, so this criterion is empty. {ex=}")
-        
+                logger.error(
+                    f"{trial_id or 'unknown trial'}: the model returned text that is not valid JSON, so this criterion is empty. {ex=}"
+                )
+
         elif self.chat_endpoint == "api/chat":
             try:
-                if type(ai_response) is dict and 'message' in ai_response.keys():
-                    ai_response_content = self._safe_get(ai_response, ['message', 'content'])
+                if type(ai_response) is dict and "message" in ai_response.keys():
+                    ai_response_content = self._safe_get(ai_response, ["message", "content"])
                     response_dict = json.loads(ai_response_content)
             except json.JSONDecodeError as ex:
-                logger.error(f"{trial_id or 'unknown trial'}: the model returned text that is not valid JSON, so this criterion is empty. {ex=}")
+                logger.error(
+                    f"{trial_id or 'unknown trial'}: the model returned text that is not valid JSON, so this criterion is empty. {ex=}"
+                )
         return response_dict
 
 
 class LocalAIPlatform(LLMPlatform):
     """Local AI platform implementation (not yet configured)."""
-    
+
     def __init__(self, model: str, hostname: str):
         super().__init__(model, hostname)
         self._port = 49152
-    
+
     @property
     def port(self) -> int:
         return self._port
-    
+
     @property
     def chat_endpoint(self) -> str:
         return "chat/completions"
-    
-    def get_request_body(self, prompt: str, json_schema: Optional[Dict] = None) -> Dict[str, Any]:
+
+    def get_request_body(self, prompt: str, json_schema: dict | None = None) -> dict[str, Any]:
         """Generate Local AI request body."""
         raise NotImplementedError("Local_ai platform is not configured yet.")
-    
-    def parse_response(self, ai_response: Dict[str, Any], trial_id: str = "") -> Dict[str, Any]:
+
+    def parse_response(self, ai_response: dict[str, Any], trial_id: str = "") -> dict[str, Any]:
         """Parse Local AI response."""
         raise NotImplementedError("Local_ai platform is not configured yet.")
 
 
 def create_llm_platform(platform_name: str, model: str, hostname: str) -> LLMPlatform:
     """
-    Function to create an LLM platform instance based on platform name.    
+    Function to create an LLM platform instance based on platform name.
     """
     platform_name_lower = platform_name.lower()
-    
+
     if platform_name_lower == "sglang":
-        print( "Creating SGLang platform..." )
+        print("Creating SGLang platform...")
         return SGLangPlatform(model, hostname)
     elif platform_name_lower == "ollama":
-        print( "Creating Ollama platform..." )
+        print("Creating Ollama platform...")
         return OllamaPlatform(model, hostname)
     elif platform_name_lower == "vllm":
         return VLLMPlatform(model, hostname)
     elif platform_name_lower == "local_ai":
         return LocalAIPlatform(model, hostname)
     elif platform_name_lower == "anthropic":
-        print( "Creating Anthropic platform..." )
+        print("Creating Anthropic platform...")
         return AnthropicPlatform(model, hostname)
     elif platform_name_lower == "replay":
         return ReplayPlatform(model, hostname)
     else:
         raise ValueError(f"Unsupported LLM platform: {platform_name}")
-
 
 
 def decode_tool_result(result, stop_reason=None, trial_id=""):
@@ -346,8 +354,10 @@ def decode_tool_result(result, stop_reason=None, trial_id=""):
     try:
         value, end = json.JSONDecoder(strict=False).raw_decode(result.lstrip())
         if isinstance(value, (dict, list)):
-            logger.warning(f"{trial_id or 'unknown trial'}: tool answer had "
-                           f"{len(result.lstrip()) - end} characters after the JSON; ignored them")
+            logger.warning(
+                f"{trial_id or 'unknown trial'}: tool answer had "
+                f"{len(result.lstrip()) - end} characters after the JSON; ignored them"
+            )
             return value
     except json.JSONDecodeError:
         pass
@@ -370,13 +380,17 @@ def decode_tool_result(result, stop_reason=None, trial_id=""):
         if closers and not in_str:
             try:
                 repaired = json.loads(result + "".join(reversed(closers)), strict=False)
-                logger.warning(f"{trial_id or 'unknown trial'}: tool answer was missing "
-                               f"{''.join(reversed(closers))!r}; closed and decoded")
+                logger.warning(
+                    f"{trial_id or 'unknown trial'}: tool answer was missing "
+                    f"{''.join(reversed(closers))!r}; closed and decoded"
+                )
                 return repaired
             except json.JSONDecodeError:
                 pass
-    logger.error(f"{trial_id or 'unknown trial'}: tool answer is not valid JSON; treated as no answer "
-                 f"| {result[:300]}")
+    logger.error(
+        f"{trial_id or 'unknown trial'}: tool answer is not valid JSON; treated as no answer "
+        f"| {result[:300]}"
+    )
     return None
 
 
@@ -391,7 +405,9 @@ class AnthropicPlatform(LLMPlatform):
     ANTHROPIC_API_KEY (or an `ant auth login` profile) - never hardcode a key.
     """
 
-    SYSTEM_PROMPT = "You are a biomedical researcher specializing in cancer genomics and clinical trials."
+    SYSTEM_PROMPT = (
+        "You are a biomedical researcher specializing in cancer genomics and clinical trials."
+    )
 
     def __init__(self, model: str, hostname: str):
         super().__init__(model, hostname)
@@ -418,9 +434,10 @@ class AnthropicPlatform(LLMPlatform):
         if self.model.startswith(self.NO_ADAPTIVE_OR_EFFORT) and (thinking or effort):
             raise ValueError(
                 f"{self.model} supports neither adaptive thinking nor the effort parameter; "
-                f"set ANTHROPIC_THINKING and ANTHROPIC_EFFORT to None in config.py")
+                f"set ANTHROPIC_THINKING and ANTHROPIC_EFFORT to None in config.py"
+            )
 
-    def get_request_body(self, prompt: str, json_schema: Optional[Dict] = None) -> Dict[str, Any]:
+    def get_request_body(self, prompt: str, json_schema: dict | None = None) -> dict[str, Any]:
         """
         Build the Messages API request kwargs.
 
@@ -436,7 +453,7 @@ class AnthropicPlatform(LLMPlatform):
         effort = getattr(config, "ANTHROPIC_EFFORT", None)
         self._check_settings(thinking, effort)
 
-        body: Dict[str, Any] = {
+        body: dict[str, Any] = {
             "model": self.model,
             "max_tokens": getattr(config, "ANTHROPIC_MAX_TOKENS", 16000),
             "system": self.SYSTEM_PROMPT,
@@ -449,18 +466,24 @@ class AnthropicPlatform(LLMPlatform):
         if effort:
             body["output_config"] = {"effort": effort}
         if json_schema:
-            body["tools"] = [{
-                "name": self.TOOL_NAME,
-                "description": "Report the answer in the required structure.",
-                "input_schema": {"type": "object", "properties": {"result": json_schema},
-                                 "required": ["result"]},
-            }]
+            body["tools"] = [
+                {
+                    "name": self.TOOL_NAME,
+                    "description": "Report the answer in the required structure.",
+                    "input_schema": {
+                        "type": "object",
+                        "properties": {"result": json_schema},
+                        "required": ["result"],
+                    },
+                }
+            ]
             # A forced tool choice is not allowed together with thinking.
-            body["tool_choice"] = ({"type": "auto"} if thinking
-                                   else {"type": "tool", "name": self.TOOL_NAME})
+            body["tool_choice"] = (
+                {"type": "auto"} if thinking else {"type": "tool", "name": self.TOOL_NAME}
+            )
         return body
 
-    def send(self, prompt: str, json_schema: Optional[Dict] = None) -> Dict[str, Any]:
+    def send(self, prompt: str, json_schema: dict | None = None) -> dict[str, Any]:
         """Call the Messages API and return a response dict for parse_response()."""
         import anthropic
 
@@ -496,8 +519,11 @@ class AnthropicPlatform(LLMPlatform):
                 f"Anthropic response hit max_tokens ({body['max_tokens']}); JSON is likely truncated."
             )
 
-        tool_inputs = [block.input for block in response.content
-                       if block.type == "tool_use" and block.name == self.TOOL_NAME]
+        tool_inputs = [
+            block.input
+            for block in response.content
+            if block.type == "tool_use" and block.name == self.TOOL_NAME
+        ]
         if tool_inputs:
             # parse_response expects text; hand it the tool's JSON.
             result = decode_tool_result((tool_inputs[0] or {}).get("result"), response.stop_reason)
@@ -510,35 +536,42 @@ class AnthropicPlatform(LLMPlatform):
         # parse_response reads only "text"; the rest is for the call record
         # (utils/provenance): the request id is what Anthropic support asks for,
         # and the served model confirms the pinned snapshot answered.
-        return {"text": text, "stop_reason": response.stop_reason,
-                "request_id": getattr(response, "_request_id", None),
-                "model": getattr(response, "model", None),
-                "usage": {"input_tokens": response.usage.input_tokens,
-                          "output_tokens": response.usage.output_tokens}}
+        return {
+            "text": text,
+            "stop_reason": response.stop_reason,
+            "request_id": getattr(response, "_request_id", None),
+            "model": getattr(response, "model", None),
+            "usage": {
+                "input_tokens": response.usage.input_tokens,
+                "output_tokens": response.usage.output_tokens,
+            },
+        }
 
-    def parse_response(self, ai_response: Dict[str, Any], trial_id: str = "") -> Dict[str, Any]:
+    def parse_response(self, ai_response: dict[str, Any], trial_id: str = "") -> dict[str, Any]:
         """Extract the JSON object out of the model's text response."""
-        response_dict: Dict[str, Any] = {}
+        response_dict: dict[str, Any] = {}
         content = (ai_response or {}).get("text", "")
         if not content:
             return response_dict
 
         # Strip a ```json fence if the model wrapped its answer in one.
-        prefix_pos = content.find('```json')
+        prefix_pos = content.find("```json")
         if prefix_pos > -1:
-            begin = prefix_pos + len('```json')
-            end = content.find('```', begin)
+            begin = prefix_pos + len("```json")
+            end = content.find("```", begin)
             response_string = content[begin:end].strip()
         else:
             response_string = content.strip()
 
-        sanitized_res = re.sub(r'\\(?![\\\\"/bfnrtu])', '', response_string.replace('\\\\', '\\'))
+        sanitized_res = re.sub(r'\\(?![\\\\"/bfnrtu])', "", response_string.replace("\\\\", "\\"))
         try:
             response_dict = json.loads(sanitized_res, strict=False)
             if isinstance(response_dict, dict):
                 response_dict.pop("error", None)
         except json.JSONDecodeError as ex:
-            logger.error(f"{trial_id or 'unknown trial'}: the model returned text that is not valid JSON, so this criterion is empty. {ex=} | {sanitized_res[:400]}")
+            logger.error(
+                f"{trial_id or 'unknown trial'}: the model returned text that is not valid JSON, so this criterion is empty. {ex=} | {sanitized_res[:400]}"
+            )
         return response_dict
 
 
@@ -564,14 +597,17 @@ class ReplayPlatform(LLMPlatform):
     recorded run are not replayed and fail the same way.
     """
 
-    def __init__(self, model: str, hostname: str, calls_file: Optional[str] = None):
-        import config
+    def __init__(self, model: str, hostname: str, calls_file: str | None = None):
         from collections import defaultdict, deque
+
+        import config
 
         path = calls_file or getattr(config, "LLM_REPLAY_FILE", None)
         if not path:
-            raise ValueError("LLM_PLATFORM = 'Replay' needs LLM_REPLAY_FILE "
-                             "(or NCT2CTML_REPLAY_FILE): a run's llm_calls.jsonl")
+            raise ValueError(
+                "LLM_PLATFORM = 'Replay' needs LLM_REPLAY_FILE "
+                "(or NCT2CTML_REPLAY_FILE): a run's llm_calls.jsonl"
+            )
         self.source = path
         self._answers = defaultdict(deque)
         recorded = set()
@@ -582,9 +618,13 @@ class ReplayPlatform(LLMPlatform):
                 call = json.loads(line)
                 recorded.add((call["platform"], call["model"]))
                 if call.get("error") is None:
-                    self._answers[(call["prompt_sha256"], call["schema_sha256"])].append(call["response"])
+                    self._answers[(call["prompt_sha256"], call["schema_sha256"])].append(
+                        call["response"]
+                    )
         if len(recorded) != 1:
-            raise ValueError(f"{path}: expected the calls of one platform and model, found {sorted(recorded)}")
+            raise ValueError(
+                f"{path}: expected the calls of one platform and model, found {sorted(recorded)}"
+            )
         self.recorded_platform, recorded_model = recorded.pop()
         if self.recorded_platform.lower() == "replay":
             raise ValueError(f"{path} is itself a replay")
@@ -599,18 +639,20 @@ class ReplayPlatform(LLMPlatform):
     def chat_endpoint(self) -> str:
         return ""
 
-    def get_request_body(self, prompt: str, json_schema: Optional[Dict] = None) -> Dict[str, Any]:
+    def get_request_body(self, prompt: str, json_schema: dict | None = None) -> dict[str, Any]:
         raise NotImplementedError("Replay sends no request; send() answers from the recording.")
 
-    def send(self, prompt: str, json_schema: Optional[Dict] = None) -> Any:
+    def send(self, prompt: str, json_schema: dict | None = None) -> Any:
         from utils import provenance
 
         key = (provenance.sha256_text(prompt), provenance.schema_sha256(json_schema))
         answers = self._answers.get(key)
         if not answers:
-            raise ReplayMiss(f"{self.source} has no answer for prompt {key[0][:12]} "
-                             f"(schema {str(key[1])[:12]}): the prompt differs from the recorded run's")
+            raise ReplayMiss(
+                f"{self.source} has no answer for prompt {key[0][:12]} "
+                f"(schema {str(key[1])[:12]}): the prompt differs from the recorded run's"
+            )
         return answers.popleft() if len(answers) > 1 else answers[0]
 
-    def parse_response(self, ai_response: Dict[str, Any], trial_id: str = "") -> Dict[str, Any]:
+    def parse_response(self, ai_response: dict[str, Any], trial_id: str = "") -> dict[str, Any]:
         return self._parser.parse_response(ai_response, trial_id)

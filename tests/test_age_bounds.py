@@ -3,7 +3,7 @@ import os
 import sys
 import unittest
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import src.clinical_trials_gov as ctg
 import src.match_criteria_mapper as mcm
@@ -15,8 +15,12 @@ def _trial(minimum=None, maximum=None):
         eligibility["minimumAge"] = minimum
     if maximum is not None:
         eligibility["maximumAge"] = maximum
-    return {"protocolSection": {"identificationModule": {"nctId": "NCT00000000"},
-                                "eligibilityModule": eligibility}}
+    return {
+        "protocolSection": {
+            "identificationModule": {"nctId": "NCT00000000"},
+            "eligibilityModule": eligibility,
+        }
+    }
 
 
 class TestAgeBounds(unittest.TestCase):
@@ -28,8 +32,7 @@ class TestAgeBounds(unittest.TestCase):
     """
 
     def test_both_bounds_are_emitted(self):
-        self.assertEqual(ctg.map_age_numerical(_trial("1 Year", "14 Years")),
-                         [">=1", "<=15"])
+        self.assertEqual(ctg.map_age_numerical(_trial("1 Year", "14 Years")), [">=1", "<=15"])
 
     def test_either_bound_alone(self):
         self.assertEqual(ctg.map_age_numerical(_trial("18 Years", None)), [">=18"])
@@ -62,15 +65,14 @@ class TestAgeBounds(unittest.TestCase):
         conversion intends - so the one-unit offset on a day-scale maximum
         disappears below its granularity, as it should.
         """
-        self.assertEqual(ctg.map_age_numerical(_trial("18 Days", "70 Days")),
-                         [">=0.05", "<=0.19"])
-        self.assertEqual(ctg.map_age_numerical(_trial("6 Months", "18 Months")),
-                         [">=0.5", "<=1.58"])
+        self.assertEqual(ctg.map_age_numerical(_trial("18 Days", "70 Days")), [">=0.05", "<=0.19"])
+        self.assertEqual(
+            ctg.map_age_numerical(_trial("6 Months", "18 Months")), [">=0.5", "<=1.58"]
+        )
 
     def test_unparseable_bounds_are_dropped_not_fatal(self):
         self.assertEqual(ctg.map_age_numerical(_trial("N/A", "14 Years")), ["<=15"])
-        self.assertEqual(ctg.map_age_numerical(_trial("1 Year", "14 Fortnights")),
-                         [">=1"])
+        self.assertEqual(ctg.map_age_numerical(_trial("1 Year", "14 Fortnights")), [">=1"])
 
 
 class TestAgeBoundsReachCTML(unittest.TestCase):
@@ -97,14 +99,17 @@ class TestAgeBoundsReachCTML(unittest.TestCase):
 
     def test_both_bounds_survive_with_several_diagnoses(self):
         out = mcm.convert_to_ctml_clinical_schema(
-            {"oncotree_primary_diagnosis": ["Neuroblastoma", "Ewing Sarcoma"],
-             "age_numerical": [">=1", "<=14"]})
+            {
+                "oncotree_primary_diagnosis": ["Neuroblastoma", "Ewing Sarcoma"],
+                "age_numerical": [">=1", "<=14"],
+            }
+        )
         self.assertEqual(sorted(self._ages(out)), ["<=14", ">=1"])
 
     def test_both_bounds_survive_with_one_diagnosis(self):
         out = mcm.convert_to_ctml_clinical_schema(
-            {"oncotree_primary_diagnosis": ["Neuroblastoma"],
-             "age_numerical": [">=1", "<=14"]})
+            {"oncotree_primary_diagnosis": ["Neuroblastoma"], "age_numerical": [">=1", "<=14"]}
+        )
         self.assertEqual(sorted(self._ages(out)), ["<=14", ">=1"])
 
     def test_both_bounds_survive_with_no_diagnosis(self):
@@ -113,25 +118,26 @@ class TestAgeBoundsReachCTML(unittest.TestCase):
 
     def test_a_single_bound_keeps_the_old_flat_shape(self):
         out = mcm.convert_to_ctml_clinical_schema(
-            {"oncotree_primary_diagnosis": ["Neuroblastoma"], "age_numerical": [">=1"]})
-        self.assertEqual(out, {"clinical": {"age_numerical": ">=1",
-                                            "oncotree_primary_diagnosis": "Neuroblastoma"}})
+            {"oncotree_primary_diagnosis": ["Neuroblastoma"], "age_numerical": [">=1"]}
+        )
+        self.assertEqual(
+            out,
+            {"clinical": {"age_numerical": ">=1", "oncotree_primary_diagnosis": "Neuroblastoma"}},
+        )
 
     def test_no_bound_at_all_is_unchanged(self):
-        out = mcm.convert_to_ctml_clinical_schema(
-            {"oncotree_primary_diagnosis": ["Neuroblastoma"]})
+        out = mcm.convert_to_ctml_clinical_schema({"oncotree_primary_diagnosis": ["Neuroblastoma"]})
         self.assertEqual(out, {"clinical": {"oncotree_primary_diagnosis": "Neuroblastoma"}})
 
     def test_the_real_neonatal_trial(self):
         """NCT06776952 enrols 18 to 70 days. Without the upper bound it
         matched every child in the database."""
-        path = os.path.join(os.path.dirname(__file__), "..", "cache", "nct",
-                            "NCT06776952.json")
+        path = os.path.join(os.path.dirname(__file__), "..", "cache", "nct", "NCT06776952.json")
         if not os.path.exists(path):
             self.skipTest("cached record not present")
         bounds = ctg.map_age_numerical(json.load(open(path)))
         self.assertEqual(bounds, [">=0.05", "<=0.19"])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

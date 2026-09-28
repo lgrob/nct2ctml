@@ -2,7 +2,7 @@ import os
 import sys
 import unittest
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from loguru import logger
 
@@ -27,49 +27,69 @@ class TestReviewRouting(unittest.TestCase):
 
     def test_a_trial_with_a_diagnosis_goes_to_the_normal_output(self):
         doc = _doc([{"clinical": {"oncotree_primary_diagnosis": "Neuroblastoma"}}])
-        self.assertEqual(
-            TrialMapManager._destination_for(doc, "cache/ctml", "NCT1"), "cache/ctml")
+        self.assertEqual(TrialMapManager._destination_for(doc, "cache/ctml", "NCT1"), "cache/ctml")
 
     def test_a_trial_without_one_goes_to_review(self):
         doc = _doc([{"genomic": {"hugo_symbol": "MYCN", "variant_category": "Mutation"}}])
         self.assertEqual(
-            TrialMapManager._destination_for(doc, "cache/ctml", "NCT2"),
-            config.CTML_REVIEW_PATH)
+            TrialMapManager._destination_for(doc, "cache/ctml", "NCT2"), config.CTML_REVIEW_PATH
+        )
 
     def test_a_wildcard_counts_as_a_diagnosis(self):
         # A basket trial is deliberately broad, not undetermined.
         doc = _doc([{"clinical": {"oncotree_primary_diagnosis": "_SOLID_"}}])
-        self.assertEqual(
-            TrialMapManager._destination_for(doc, "cache/ctml", "NCT3"), "cache/ctml")
+        self.assertEqual(TrialMapManager._destination_for(doc, "cache/ctml", "NCT3"), "cache/ctml")
 
     def test_an_arm_level_diagnosis_counts(self):
         # The diagnosis need not be at trial level to make the trial usable.
-        doc = _doc([{"and": [{"or": [
-            {"clinical": {"oncotree_primary_diagnosis": "Ewing Sarcoma"}}]}]}])
-        self.assertEqual(
-            TrialMapManager._destination_for(doc, "cache/ctml", "NCT4"), "cache/ctml")
+        doc = _doc(
+            [{"and": [{"or": [{"clinical": {"oncotree_primary_diagnosis": "Ewing Sarcoma"}}]}]}]
+        )
+        self.assertEqual(TrialMapManager._destination_for(doc, "cache/ctml", "NCT4"), "cache/ctml")
 
 
 class TestUnverifiedProteinChangeRouting(unittest.TestCase):
     def test_an_unverified_protein_change_goes_to_review(self):
         normal = os.path.join(os.path.dirname(__file__), "ctml-out")
-        ctml = {"match": [{"and": [
-            {"clinical": {"oncotree_primary_diagnosis": "Melanoma"}},
-            {"genomic": {"hugo_symbol": "BRAF", "variant_category": "Mutation",
-                         "protein_change_unverified": "p.V601E",
-                         "protein_change_check": "reference_mismatch"}}]}]}
-        self.assertNotEqual(TrialMapManager._destination_for(ctml, normal, "NCT00000000"),
-                            normal)
+        ctml = {
+            "match": [
+                {
+                    "and": [
+                        {"clinical": {"oncotree_primary_diagnosis": "Melanoma"}},
+                        {
+                            "genomic": {
+                                "hugo_symbol": "BRAF",
+                                "variant_category": "Mutation",
+                                "protein_change_unverified": "p.V601E",
+                                "protein_change_check": "reference_mismatch",
+                            }
+                        },
+                    ]
+                }
+            ]
+        }
+        self.assertNotEqual(TrialMapManager._destination_for(ctml, normal, "NCT00000000"), normal)
 
     def test_a_verified_protein_change_stays_in_the_normal_output(self):
         normal = os.path.join(os.path.dirname(__file__), "ctml-out")
-        ctml = {"match": [{"and": [
-            {"clinical": {"oncotree_primary_diagnosis": "Melanoma"}},
-            {"genomic": {"hugo_symbol": "BRAF", "variant_category": "Mutation",
-                         "protein_change": "p.V600E"}}]}]}
-        self.assertEqual(TrialMapManager._destination_for(ctml, normal, "NCT00000000"),
-                         normal)
+        ctml = {
+            "match": [
+                {
+                    "and": [
+                        {"clinical": {"oncotree_primary_diagnosis": "Melanoma"}},
+                        {
+                            "genomic": {
+                                "hugo_symbol": "BRAF",
+                                "variant_category": "Mutation",
+                                "protein_change": "p.V600E",
+                            }
+                        },
+                    ]
+                }
+            ]
+        }
+        self.assertEqual(TrialMapManager._destination_for(ctml, normal, "NCT00000000"), normal)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

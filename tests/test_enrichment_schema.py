@@ -2,6 +2,7 @@
 Roadmap 6.9: the mutation and CNV enrichment prompts carry a JSON schema, and
 the enriched values are checked in code before they are merged.
 """
+
 import os
 import sys
 import unittest
@@ -19,7 +20,6 @@ CNV = [{"genomic": {"hugo_symbol": "MYCN", "variant_category": "Copy Number Vari
 
 
 class TestSchemas(unittest.TestCase):
-
     def test_both_prompts_send_a_schema(self):
         schema, _ = ai.get_mutation_detail_enrichment_prompt(["EGFR"], "EGFR exon 19 deletion", MUT)
         self.assertIs(schema, ai.MUTATION_ENRICHMENT_SCHEMA)
@@ -33,9 +33,13 @@ class TestSchemas(unittest.TestCase):
             self.skipTest("jsonschema not installed")
         for schema in (ai.MUTATION_ENRICHMENT_SCHEMA, ai.CNV_ENRICHMENT_SCHEMA):
             jsonschema.Draft202012Validator.check_schema(schema)
-        jsonschema.validate({"enriched_cnvs": [{"index": 0, "cnv_call": None}]}, ai.CNV_ENRICHMENT_SCHEMA)
+        jsonschema.validate(
+            {"enriched_cnvs": [{"index": 0, "cnv_call": None}]}, ai.CNV_ENRICHMENT_SCHEMA
+        )
         with self.assertRaises(jsonschema.ValidationError):
-            jsonschema.validate({"enriched_cnvs": [{"index": 0, "cnv_call": "Gain"}]}, ai.CNV_ENRICHMENT_SCHEMA)
+            jsonschema.validate(
+                {"enriched_cnvs": [{"index": 0, "cnv_call": "Gain"}]}, ai.CNV_ENRICHMENT_SCHEMA
+            )
 
     def test_schema_enums_match_what_the_prompt_lists(self):
         _, p = ai.get_mutation_detail_enrichment_prompt(["EGFR"], "x", MUT)
@@ -45,7 +49,6 @@ class TestSchemas(unittest.TestCase):
 
 
 class TestMergeChecks(unittest.TestCase):
-
     def _mut(self, **kw):
         crit = [{"genomic": dict(MUT[0]["genomic"])}]
         ai.merge_enriched_criteria(crit, [dict(index=0, **kw)], "mutation")
@@ -63,7 +66,8 @@ class TestMergeChecks(unittest.TestCase):
 
     def test_values_outside_the_lists_are_not_merged(self):
         g = self._mut(variant_classification="Deletion", exon="19")
-        self.assertNotIn("variant_classification", g); self.assertNotIn("exon", g)
+        self.assertNotIn("variant_classification", g)
+        self.assertNotIn("exon", g)
         for exon in (0, -3, True, 19.5):
             self.assertNotIn("exon", self._mut(variant_classification=None, exon=exon), exon)
         self.assertNotIn("cnv_call", self._cnv("Amplification"))
@@ -76,18 +80,21 @@ class TestMergeChecks(unittest.TestCase):
 
 
 class TestAliasInContradictions(unittest.TestCase):
-
     def test_an_invented_inclusion_loses_to_an_exclusion_written_with_an_alias(self):
         # NCT04775485 (3.1 dry run after the NF-1 alias): the exclusion text says
         # "neurofibromatosis type 1 (NF-1)" and the inclusion prompt invented
         # an NF1 inclusion. Without the alias the exclusion text did not
         # "mention" NF1, so the invented inclusion was kept.
         from src.match_criteria_mapper import resolve_contradictory_genes
+
         inc = [{"genomic": {"hugo_symbol": "NF1", "variant_category": "Any Variation"}}]
         exc = [{"genomic": {"hugo_symbol": "NF1", "variant_category": "!Any Variation"}}]
         keep_inc, keep_exc, notes = resolve_contradictory_genes(
-            inc, exc, "histopathologic verification of malignancy",
-            "Known or suspected diagnosis of neurofibromatosis type 1 (NF-1)")
+            inc,
+            exc,
+            "histopathologic verification of malignancy",
+            "Known or suspected diagnosis of neurofibromatosis type 1 (NF-1)",
+        )
         self.assertEqual((keep_inc, keep_exc), ([], exc))
         self.assertEqual(notes, ["NF1: dropped fabricated inclusion"])
 

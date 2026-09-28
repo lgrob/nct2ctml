@@ -40,8 +40,16 @@ Usage:
         # produced on this path and are not scored.
     python -m bench.benchmark_map --source nct    # one registry: nct | ctis | all
 """
-import argparse, json, os, re, sys, time, yaml
+
+import argparse
+import json
+import os
+import re
+import sys
+import time
 from collections import defaultdict
+
+import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -94,9 +102,9 @@ def conditions_of(trial_id, record):
     """
     if registry_of(trial_id) == "ctis":
         import src.ctis as ctis
+
         return ctis.get_conditions(record)
-    return (record.get("protocolSection", {}).get("conditionsModule", {})
-            .get("conditions", []))
+    return record.get("protocolSection", {}).get("conditionsModule", {}).get("conditions", [])
 
 
 def map_trial(mgr, trial_id, out_dir):
@@ -147,8 +155,13 @@ def facts(doc):
         for g in walk(m, "genomic"):
             if g.get("hugo_symbol"):
                 genes.add(str(g["hugo_symbol"]).strip())
-    return {"diagnoses": diagnoses, "genes": genes, "ages": ages,
-            "age_label": doc.get("age"), "matches": matches}
+    return {
+        "diagnoses": diagnoses,
+        "genes": genes,
+        "ages": ages,
+        "age_label": doc.get("age"),
+        "matches": matches,
+    }
 
 
 def unsatisfiable(matches):
@@ -229,8 +242,7 @@ def score(truth_dir, out_dir, ids):
     for nct in ids:
         tp, op = f"{truth_dir}/{nct}.yaml", f"{out_dir}/{nct}.yaml"
         if not os.path.exists(op):
-            rows.append({"nct_id": nct, "registry": registry_of(nct),
-                         "status": "MISSING OUTPUT"})
+            rows.append({"nct_id": nct, "registry": registry_of(nct), "status": "MISSING OUTPUT"})
             continue
         t, o = facts(yaml.safe_load(open(tp))), facts(yaml.safe_load(open(op)))
         dp, dr, df = prf(o["diagnoses"], t["diagnoses"])
@@ -238,25 +250,52 @@ def score(truth_dir, out_dir, ids):
         gp, gr, gf = prf(o["genes"], t["genes"])
         uns = unsatisfiable(o["matches"])
         ap_, ar_, af_ = prf(o["ages"], t["ages"])
-        rows.append({
-            "nct_id": nct, "registry": registry_of(nct), "status": "ok",
-            "dx_p": dp, "dx_r": dr, "dx_f1": df,
-            "pop_p": pp, "pop_r": pr, "pop_f1": pf,
-            "n_pop_truth": len(wanted), "n_pop_got": len(reached),
-            "pop_missed": sorted(wanted - reached)[:6],
-            "pop_extra": sorted(reached - wanted)[:6],
-            "gene_p": gp, "gene_r": gr, "gene_f1": gf,
-            "n_dx_truth": len(t["diagnoses"]), "n_dx_got": len(o["diagnoses"]),
-            "genes_truth": sorted(t["genes"]), "genes_got": sorted(o["genes"]),
-            "dx_missed": sorted(t["diagnoses"] - o["diagnoses"])[:6],
-            "dx_spurious": sorted(o["diagnoses"] - t["diagnoses"])[:6],
-            "age_truth": t["age_label"], "age_got": o["age_label"],
-            "age_f1": af_, "age_p": ap_, "age_r": ar_,
-            "ages_truth": sorted(t["ages"]), "ages_got": sorted(o["ages"]),
-            "unsatisfiable": sorted(uns),
-        })
-        for k in ("dx_f1", "gene_f1", "age_f1", "dx_p", "dx_r", "gene_p", "gene_r",
-                  "pop_p", "pop_r", "pop_f1"):
+        rows.append(
+            {
+                "nct_id": nct,
+                "registry": registry_of(nct),
+                "status": "ok",
+                "dx_p": dp,
+                "dx_r": dr,
+                "dx_f1": df,
+                "pop_p": pp,
+                "pop_r": pr,
+                "pop_f1": pf,
+                "n_pop_truth": len(wanted),
+                "n_pop_got": len(reached),
+                "pop_missed": sorted(wanted - reached)[:6],
+                "pop_extra": sorted(reached - wanted)[:6],
+                "gene_p": gp,
+                "gene_r": gr,
+                "gene_f1": gf,
+                "n_dx_truth": len(t["diagnoses"]),
+                "n_dx_got": len(o["diagnoses"]),
+                "genes_truth": sorted(t["genes"]),
+                "genes_got": sorted(o["genes"]),
+                "dx_missed": sorted(t["diagnoses"] - o["diagnoses"])[:6],
+                "dx_spurious": sorted(o["diagnoses"] - t["diagnoses"])[:6],
+                "age_truth": t["age_label"],
+                "age_got": o["age_label"],
+                "age_f1": af_,
+                "age_p": ap_,
+                "age_r": ar_,
+                "ages_truth": sorted(t["ages"]),
+                "ages_got": sorted(o["ages"]),
+                "unsatisfiable": sorted(uns),
+            }
+        )
+        for k in (
+            "dx_f1",
+            "gene_f1",
+            "age_f1",
+            "dx_p",
+            "dx_r",
+            "gene_p",
+            "gene_r",
+            "pop_p",
+            "pop_r",
+            "pop_f1",
+        ):
             agg[k].append(rows[-1][k])
     return rows, agg
 
@@ -287,8 +326,10 @@ def registry_means(rows):
 def report(rows, agg, diagnoses_only=False):
     ok = [r for r in rows if r["status"] == "ok"]
     width = 104
-    print(f"\n{'trial':<19}{'reg':<5}{'dx F1':>7}{'dx P':>7}{'dx R':>7}{'pop P':>7}{'pop R':>7}"
-          f"{'gene F1':>9}{'age F1':>8}{'#dx':>6}  flags")
+    print(
+        f"\n{'trial':<19}{'reg':<5}{'dx F1':>7}{'dx P':>7}{'dx R':>7}{'pop P':>7}{'pop R':>7}"
+        f"{'gene F1':>9}{'age F1':>8}{'#dx':>6}  flags"
+    )
     print("-" * width)
     for r in rows:
         if r["status"] != "ok":
@@ -302,11 +343,14 @@ def report(rows, agg, diagnoses_only=False):
             flags.append("age bound missing:" + ",".join(missed_bound))
         if r["n_dx_got"] > 3 * max(r["n_dx_truth"], 1):
             flags.append("dx over-generated")
-        gene_age = (f"{'-':>9}{'-':>8}" if diagnoses_only
-                    else f"{r['gene_f1']:>9.2f}{r['age_f1']:>8.2f}")
-        print(f"{r['nct_id']:<19}{r['registry']:<5}{r['dx_f1']:>7.2f}{r['dx_p']:>7.2f}{r['dx_r']:>7.2f}"
-              f"{r['pop_p']:>7.2f}{r['pop_r']:>7.2f}{gene_age}"
-              f"{r['n_dx_got']:>4}/{r['n_dx_truth']:<2}  {' '.join(flags)}")
+        gene_age = (
+            f"{'-':>9}{'-':>8}" if diagnoses_only else f"{r['gene_f1']:>9.2f}{r['age_f1']:>8.2f}"
+        )
+        print(
+            f"{r['nct_id']:<19}{r['registry']:<5}{r['dx_f1']:>7.2f}{r['dx_p']:>7.2f}{r['dx_r']:>7.2f}"
+            f"{r['pop_p']:>7.2f}{r['pop_r']:>7.2f}{gene_age}"
+            f"{r['n_dx_got']:>4}/{r['n_dx_truth']:<2}  {' '.join(flags)}"
+        )
     if ok:
         means = registry_means(rows)
         print("-" * width)
@@ -314,22 +358,31 @@ def report(rows, agg, diagnoses_only=False):
             if name not in means:
                 continue
             m = means[name]
-            gene_age = (f"{'-':>9}{'-':>8}" if diagnoses_only
-                        else f"{m['gene_f1']:>9.2f}{m['age_f1']:>8.2f}")
-            print(f"{'MEAN':<19}{name:<5}{m['dx_f1']:>7.2f}{m['dx_p']:>7.2f}{m['dx_r']:>7.2f}"
-                  f"{m['pop_p']:>7.2f}{m['pop_r']:>7.2f}{gene_age}{m['n']:>6} trials")
+            gene_age = (
+                f"{'-':>9}{'-':>8}"
+                if diagnoses_only
+                else f"{m['gene_f1']:>9.2f}{m['age_f1']:>8.2f}"
+            )
+            print(
+                f"{'MEAN':<19}{name:<5}{m['dx_f1']:>7.2f}{m['dx_p']:>7.2f}{m['dx_r']:>7.2f}"
+                f"{m['pop_p']:>7.2f}{m['pop_r']:>7.2f}{gene_age}{m['n']:>6} trials"
+            )
         print()
         for name in ("all",) + REGISTRIES:
             if name in means:
                 m = means[name]
-                print(f"exactly right ({name}): {m['exact_dx']} by name, "
-                      f"{m['exact_pop']} by population, of {m['n']}")
+                print(
+                    f"exactly right ({name}): {m['exact_dx']} by name, "
+                    f"{m['exact_pop']} by population, of {m['n']}"
+                )
         print(f"\nscored {len(ok)}/{len(rows)} trials")
-        bad = [r['nct_id'] for r in ok if r['unsatisfiable']]
+        bad = [r["nct_id"] for r in ok if r["unsatisfiable"]]
         if bad:
             print(f"unsatisfiable trees: {len(bad)}  {bad}")
-    print("\nPer-trial detail is in the JSON report; read pop_missed and pop_extra "
-          "before drawing a conclusion from the means.")
+    print(
+        "\nPer-trial detail is in the JSON report; read pop_missed and pop_extra "
+        "before drawing a conclusion from the means."
+    )
 
 
 def write_conditions_baseline(ids, out_dir):
@@ -350,8 +403,10 @@ def write_conditions_baseline(ids, out_dir):
     CTIS registers no keywords or titles for the NCT path's later fallbacks.
     """
     from loguru import logger
+
     logger.remove()
     import src.clinical_trials_gov as ctg
+
     for nct in ids:
         with open(f"{CACHE_DIRS[registry_of(nct)]}/{nct}.json") as handle:
             record = json.load(handle)
@@ -362,31 +417,54 @@ def write_conditions_baseline(ids, out_dir):
         diagnoses, _ = ctg.seed_and_map_diagnosis(nct, conditions, "")
         if not diagnoses:
             diagnoses = sorted(ctg.basket_wildcards(conditions, nct))
-        doc = {"nct_id": nct, "treatment_list": {"step": [{"match": [
-            {"or": [{"clinical": {"oncotree_primary_diagnosis": d}} for d in diagnoses]}]}]}}
+        doc = {
+            "nct_id": nct,
+            "treatment_list": {
+                "step": [
+                    {
+                        "match": [
+                            {
+                                "or": [
+                                    {"clinical": {"oncotree_primary_diagnosis": d}}
+                                    for d in diagnoses
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+        }
         with open(f"{out_dir}/{nct}.yaml", "w") as handle:
             yaml.safe_dump(doc, handle, sort_keys=False)
 
 
 def main():
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--out", default="bench/output")
     ap.add_argument("--truth", default=TRUTH_DIR)
     ap.add_argument("--score-only", action="store_true")
     ap.add_argument("--limit", type=int)
     ap.add_argument("--json", default="bench/report.json")
-    ap.add_argument("--conditions-only", action="store_true",
-                    help="diagnoses from the registry's condition list only; no model, no network")
-    ap.add_argument("--source", choices=("all",) + REGISTRIES, default="all",
-                    help="which registry's curated trials to run and score (default: all)")
+    ap.add_argument(
+        "--conditions-only",
+        action="store_true",
+        help="diagnoses from the registry's condition list only; no model, no network",
+    )
+    ap.add_argument(
+        "--source",
+        choices=("all",) + REGISTRIES,
+        default="all",
+        help="which registry's curated trials to run and score (default: all)",
+    )
     args = ap.parse_args()
     if args.conditions_only and args.out == "bench/output":
         args.out = "bench/output-conditions"
 
     ids = trial_ids(args.truth, args.source)
     if args.limit:
-        ids = ids[:args.limit]
+        ids = ids[: args.limit]
     os.makedirs(args.out, exist_ok=True)
 
     timings = {}
@@ -394,12 +472,15 @@ def main():
         write_conditions_baseline(ids, args.out)
     elif not args.score_only:
         from loguru import logger
+
         logger.remove()
         logger.add(sys.stderr, level="WARNING")
         import src.trial_map_manager as tmm
+
         print(f"platform={config.LLM_PLATFORM}  model={config.LLM_AI_MODEL}")
         print(f"mapping {len(ids)} trials -> {args.out}\n")
         from utils import provenance
+
         run_id = provenance.start_run(command="benchmark")
         print(f"run {run_id}")
         mgr = tmm.TrialMapManager()

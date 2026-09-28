@@ -3,6 +3,7 @@ The three statements of the environment agree: pyproject.toml (the Python
 version and the dependency floors), requirements.txt (the same floors, for
 pip) and requirements.lock (the exact versions the suite was run with).
 """
+
 import os
 import re
 import sys
@@ -48,7 +49,6 @@ with open(os.path.join(ROOT, "pyproject.toml"), "rb") as handle:
 
 
 class TestEnvironment(unittest.TestCase):
-
     def test_pyproject_and_requirements_state_the_same_floors(self):
         declared = {}
         for spec in PROJECT["dependencies"]:
@@ -71,7 +71,7 @@ class TestEnvironment(unittest.TestCase):
 
     def test_this_interpreter_is_one_the_project_supports(self):
         floor = _version(re.fullmatch(r">=([0-9.]+)", PROJECT["requires-python"]).group(1))
-        self.assertGreaterEqual(sys.version_info[:len(floor)], floor)
+        self.assertGreaterEqual(sys.version_info[: len(floor)], floor)
 
     def test_main_refuses_the_python_pyproject_excludes(self):
         with open(os.path.join(ROOT, "main.py")) as handle:

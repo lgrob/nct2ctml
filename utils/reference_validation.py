@@ -34,6 +34,7 @@ model output through that would turn a paediatric trial's disease name into a
 gene criterion, which is far worse than dropping an unrecognised symbol - a
 drop is visible in the log, a wrong rewrite is not.
 """
+
 import bisect
 import csv
 import re
@@ -239,8 +240,10 @@ def _legacy_renames(genes):
         with open(LEGACY_GENE_LIST) as f:
             retired = {line.strip() for line in f if line.strip()} - genes
     except FileNotFoundError:
-        logger.warning(f"no legacy gene list at {LEGACY_GENE_LIST}; retired "
-                       f"symbols will be dropped rather than rewritten")
+        logger.warning(
+            f"no legacy gene list at {LEGACY_GENE_LIST}; retired "
+            f"symbols will be dropped rather than rewritten"
+        )
         return {}
 
     claims = {}
@@ -253,10 +256,8 @@ def _legacy_renames(genes):
 
     unresolved = retired - set(claims)
     if unresolved:
-        logger.debug(f"retired symbols with no unambiguous current name: "
-                     f"{sorted(unresolved)}")
-    return {alias: next(iter(owners)) for alias, owners in claims.items()
-            if len(owners) == 1}
+        logger.debug(f"retired symbols with no unambiguous current name: {sorted(unresolved)}")
+    return {alias: next(iter(owners)) for alias, owners in claims.items() if len(owners) == 1}
 
 
 # Every alias of three characters or fewer is refused. That is where the
@@ -351,17 +352,24 @@ def _panel_aliases(genes):
         if len(owners) != 1:
             continue
         official = next(iter(owners))
-        if (official not in genes or alias in genes or alias.upper() in genes
-                or len(alias) < _REWRITE_MIN_LENGTH
-                or alias in other_genes or alias.upper() in other_genes):
+        if (
+            official not in genes
+            or alias in genes
+            or alias.upper() in genes
+            or len(alias) < _REWRITE_MIN_LENGTH
+            or alias in other_genes
+            or alias.upper() in other_genes
+        ):
             continue
         key = _alias_key(alias)
-        if (len(owners_by_key.get(key, ())) > 1
-                or _CD_ANTIGEN.match(alias)
-                or is_family_stem(alias)
-                or is_fusion_name(alias)
-                or key in blocked_keys
-                or alias in exclusions):
+        if (
+            len(owners_by_key.get(key, ())) > 1
+            or _CD_ANTIGEN.match(alias)
+            or is_family_stem(alias)
+            or is_fusion_name(alias)
+            or key in blocked_keys
+            or alias in exclusions
+        ):
             continue
         kept[alias] = official
     return kept
@@ -373,12 +381,16 @@ def _rewrite_exclusions():
     try:
         handle = open(path, newline="")
     except FileNotFoundError:
-        logger.warning(f"no gene rewrite exclusion list at {path}; only the "
-                       f"Kispi renames will be rewritten")
+        logger.warning(
+            f"no gene rewrite exclusion list at {path}; only the Kispi renames will be rewritten"
+        )
         return None
     with handle:
-        return {row[0].strip() for row in csv.reader(handle, delimiter="\t")
-                if row and row[0].strip() and not row[0].lstrip().startswith("#")}
+        return {
+            row[0].strip()
+            for row in csv.reader(handle, delimiter="\t")
+            if row and row[0].strip() and not row[0].lstrip().startswith("#")
+        }
 
 
 # Spelling differences that carry no information. Registries and Oncotree
@@ -613,8 +625,8 @@ def _expression_only_genes():
     """Genes whose criteria are about protein expression, not an alteration."""
     try:
         import src.trial_config as trial_config
-        return {str(g).strip().upper()
-                for g in getattr(trial_config, "expression_only_genes", ())}
+
+        return {str(g).strip().upper() for g in getattr(trial_config, "expression_only_genes", ())}
     except Exception:
         return set()
 
@@ -643,8 +655,10 @@ def filter_genomic_criteria(genomic_criteria, trial_id=""):
             continue
         name = canonical_gene(symbol)
         if name is None:
-            logger.warning(f"{trial_id}: dropped genomic criterion, "
-                           f"{symbol!r} is not in {config.GENE_LIST_FILE_PATH}")
+            logger.warning(
+                f"{trial_id}: dropped genomic criterion, "
+                f"{symbol!r} is not in {config.GENE_LIST_FILE_PATH}"
+            )
             continue
         if name.upper() in _expression_only_genes():
             logger.warning(
@@ -674,7 +688,8 @@ _CONDITION_QUALIFIER = re.compile(
     r"high[- ]risk|low[- ]risk|intermediate[- ]risk|childhood|paediatric|"
     r"pediatric|adult|primary|malignant|extracranial|extragonadal|"
     r"stage [0-9ivx]+[ab]?|group [a-e])\s+",
-    re.IGNORECASE)
+    re.IGNORECASE,
+)
 
 
 # The same vocabulary appearing after the diagnosis instead of before it, which
@@ -689,7 +704,8 @@ _TRAILING_QUALIFIER = re.compile(
     r"[,\s]+(newly diagnosed|recurrent|refractory|relapsed|relapse|in relapse|"
     r"metastatic|advanced|childhood|paediatric|pediatric|adult|nos|"
     r"ajcc v[0-9]+( and v[0-9]+)*)$",
-    re.IGNORECASE)
+    re.IGNORECASE,
+)
 
 
 def strip_condition_qualifiers(condition):
@@ -760,9 +776,13 @@ def _widen_inferred_nos_leaf(name, condition, trial_id=""):
     if len(descendants.get(name, {name})) > 1:
         return name  # already expands; nothing to fix
     parent = parent_of.get(name)
-    drops_a_qualifier = parent and not _words(name[:-len(", NOS")]) <= _words(parent)
-    if (not parent or parent in level_1_names
-            or len(descendants.get(parent, ())) <= 1 or drops_a_qualifier):
+    drops_a_qualifier = parent and not _words(name[: -len(", NOS")]) <= _words(parent)
+    if (
+        not parent
+        or parent in level_1_names
+        or len(descendants.get(parent, ())) <= 1
+        or drops_a_qualifier
+    ):
         logger.warning(
             f"{trial_id} | Condition {condition!r} resolves only to {name!r}, which "
             f"matches one patient code, and no ancestor widens it without dropping a "

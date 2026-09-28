@@ -54,21 +54,41 @@ anything else outside the grammar below.
 Each of these may be written with or without "p.", in one- or three-letter
 code, and with or without HGVS's parentheses for predicted changes.
 """
+
 import csv
 import os
 import re
 from dataclasses import dataclass, field
 from functools import lru_cache
-from typing import Optional
 
 import config
 
 REFERENCE = config.PROTEIN_REFERENCE_FILE_PATH
 
-THREE = {"A": "Ala", "R": "Arg", "N": "Asn", "D": "Asp", "C": "Cys", "Q": "Gln",
-         "E": "Glu", "G": "Gly", "H": "His", "I": "Ile", "L": "Leu", "K": "Lys",
-         "M": "Met", "F": "Phe", "P": "Pro", "S": "Ser", "T": "Thr", "W": "Trp",
-         "Y": "Tyr", "V": "Val", "U": "Sec", "O": "Pyl"}
+THREE = {
+    "A": "Ala",
+    "R": "Arg",
+    "N": "Asn",
+    "D": "Asp",
+    "C": "Cys",
+    "Q": "Gln",
+    "E": "Glu",
+    "G": "Gly",
+    "H": "His",
+    "I": "Ile",
+    "L": "Leu",
+    "K": "Lys",
+    "M": "Met",
+    "F": "Phe",
+    "P": "Pro",
+    "S": "Ser",
+    "T": "Thr",
+    "W": "Trp",
+    "Y": "Tyr",
+    "V": "Val",
+    "U": "Sec",
+    "O": "Pyl",
+}
 ONE = {v.upper(): k for k, v in THREE.items()}
 
 # Mature histone H3 begins ARTKQTARKSTGGKAPRKQLA; the precursor adds Met.
@@ -81,12 +101,12 @@ VERIFIED = "verified"
 class ProteinChange:
     stated: str
     gene: str
-    status: str                       # "verified" or the reason it is not
-    hgvs: str = ""                    # "p.Val600Glu"; empty unless verified
-    kind: str = ""                    # substitution, deletion, any_change, ...
+    status: str  # "verified" or the reason it is not
+    hgvs: str = ""  # "p.Val600Glu"; empty unless verified
+    kind: str = ""  # substitution, deletion, any_change, ...
     refseq_protein: str = ""
     ensembl_protein: str = ""
-    numbering: str = "hgvs"           # or "histone_mature" when shifted
+    numbering: str = "hgvs"  # or "histone_mature" when shifted
     detail: str = ""
 
     @property
@@ -97,9 +117,9 @@ class ProteinChange:
 @dataclass
 class _Parsed:
     kind: str
-    residues: list = field(default_factory=list)   # [(one-letter, position)]
-    alt: str = ""                                   # one-letter string
-    tail: str = ""                                  # frameshift remainder
+    residues: list = field(default_factory=list)  # [(one-letter, position)]
+    alt: str = ""  # one-letter string
+    tail: str = ""  # frameshift remainder
 
 
 @lru_cache(maxsize=4)
@@ -107,11 +127,13 @@ def load_reference(path=REFERENCE):
     """symbol -> (refseq, ensembl, sequence), read once."""
     reference = {}
     with open(path) as handle:
-        rows = csv.DictReader((line for line in handle if not line.startswith("#")),
-                              delimiter="\t")
+        rows = csv.DictReader((line for line in handle if not line.startswith("#")), delimiter="\t")
         for row in rows:
-            reference[row["symbol"]] = (row["refseq_protein"], row["ensembl_protein"],
-                                        row["sequence"])
+            reference[row["symbol"]] = (
+                row["refseq_protein"],
+                row["ensembl_protein"],
+                row["sequence"],
+            )
     return reference
 
 
@@ -120,7 +142,7 @@ _AA = r"(?:[A-Z][a-z]{2}|[A-Z])"
 _RES = rf"({_AA})(\d+)"
 
 
-def _one_letter(token: str) -> Optional[str]:
+def _one_letter(token: str) -> str | None:
     """One-letter code for a residue token, '*' for stop, None if unknown."""
     if token in ("*", "Ter", "TER"):
         return "*"
@@ -129,7 +151,7 @@ def _one_letter(token: str) -> Optional[str]:
     return ONE.get(token.upper())
 
 
-def _residues(tokens: str) -> Optional[str]:
+def _residues(tokens: str) -> str | None:
     """'HisVal' or 'HV' -> 'HV'; None when any token is not an amino acid."""
     if not tokens:
         return ""
@@ -147,7 +169,7 @@ def _residues(tokens: str) -> Optional[str]:
     return None if None in out else "".join(out)
 
 
-def _parse(text: str) -> Optional[_Parsed]:
+def _parse(text: str) -> _Parsed | None:
     s = text.strip()
     s = re.sub(r"^p\.", "", s)
     if s.startswith("(") and s.endswith(")"):
@@ -157,8 +179,11 @@ def _parse(text: str) -> Optional[_Parsed]:
     m = re.fullmatch(rf"{_RES}_{_RES}(del|dup)", s)
     if m:
         a, b = _one_letter(m[1]), _one_letter(m[3])
-        return _Parsed(m[5] if m[5] == "dup" else "deletion",
-                       [(a, int(m[2])), (b, int(m[4]))]) if a and b else None
+        return (
+            _Parsed(m[5] if m[5] == "dup" else "deletion", [(a, int(m[2])), (b, int(m[4]))])
+            if a and b
+            else None
+        )
     m = re.fullmatch(rf"{_RES}_{_RES}(ins|delins)([A-Za-z*]+)", s)
     if m:
         a, b, alt = _one_letter(m[1]), _one_letter(m[3]), _residues(m[6])
@@ -266,8 +291,10 @@ def normalise(gene: str, stated: str, reference=None) -> ProteinChange:
     # already numbered from the initiator methionine; only the one-letter
     # literature form is on the mature protein.
     if _is_histone_h3(sequence) and not re.search(r"[A-Z][a-z]{2}\d", stated):
+
         def fits(residues):
             return all(1 <= p <= len(sequence) and sequence[p - 1] == a for a, p in residues)
+
         shifted = [(aa, pos + 1) for aa, pos in parsed.residues]
         if fits(shifted) or not fits(parsed.residues):
             parsed.residues = shifted
@@ -280,8 +307,7 @@ def normalise(gene: str, stated: str, reference=None) -> ProteinChange:
             return result
         if sequence[pos - 1] != aa:
             result.status = "reference_mismatch"
-            result.detail = (f"{refseq} has {_three(sequence[pos - 1])}{pos}, "
-                             f"not {_three(aa)}{pos}")
+            result.detail = f"{refseq} has {_three(sequence[pos - 1])}{pos}, not {_three(aa)}{pos}"
             return result
     if len(parsed.residues) == 2:
         (_, start), (_, end) = parsed.residues

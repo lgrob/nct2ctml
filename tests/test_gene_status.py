@@ -1,4 +1,5 @@
 """gene_status_contradiction: genes required although the text says absent or irrelevant (2026-09-27)."""
+
 import os
 import sys
 import unittest
@@ -13,38 +14,81 @@ logger.remove()
 
 
 def tree(*genomic):
-    return {"treatment_list": {"step": [{"match": [{"and": [{"or": [{"genomic": g} for g in genomic]}]}]}]}}
+    return {
+        "treatment_list": {
+            "step": [{"match": [{"and": [{"or": [{"genomic": g} for g in genomic]}]}]}]
+        }
+    }
 
 
 class TestGeneStatus(unittest.TestCase):
-
     def test_wild_type_read_as_mutation_is_found(self):
         # NCT05805605, the case the user reported.
-        t = tree({"hugo_symbol": "NPM1", "variant_category": "Mutation"}, {"hugo_symbol": "FLT3", "variant_category": "Mutation"})
+        t = tree(
+            {"hugo_symbol": "NPM1", "variant_category": "Mutation"},
+            {"hugo_symbol": "FLT3", "variant_category": "Mutation"},
+        )
         inc = "Normal karyotype with mutated NPM1 and wild type FLT-ITD (unless persistently NPM1 positive by PCR)"
         self.assertEqual(set(rh.gene_status_contradictions(t, inc)), {"FLT3"})
 
     def test_negative_and_no_known_mutation(self):
-        self.assertIn("ERBB2", rh.gene_status_contradictions(tree({"hugo_symbol": "ERBB2", "variant_category": "Any Variation"}),
-                                                             "ER < 10%, PR < 10%, and HER2 negative"))
-        self.assertIn("EGFR", rh.gene_status_contradictions(tree({"hugo_symbol": "EGFR", "variant_category": "Any Variation"}),
-                                                            "NSCLC with no known EGFR or ALK positive tumor mutations"))
+        self.assertIn(
+            "ERBB2",
+            rh.gene_status_contradictions(
+                tree({"hugo_symbol": "ERBB2", "variant_category": "Any Variation"}),
+                "ER < 10%, PR < 10%, and HER2 negative",
+            ),
+        )
+        self.assertIn(
+            "EGFR",
+            rh.gene_status_contradictions(
+                tree({"hugo_symbol": "EGFR", "variant_category": "Any Variation"}),
+                "NSCLC with no known EGFR or ALK positive tumor mutations",
+            ),
+        )
 
     def test_status_that_does_not_matter(self):
-        t = tree({"hugo_symbol": "BRAF", "variant_category": "Mutation", "protein_change": "p.V600E"})
-        self.assertIn("BRAF", rh.gene_status_contradictions(t, "Melanoma can be of either mutant or wild-type B-RAF."))
+        t = tree(
+            {"hugo_symbol": "BRAF", "variant_category": "Mutation", "protein_change": "p.V600E"}
+        )
+        self.assertIn(
+            "BRAF",
+            rh.gene_status_contradictions(
+                t, "Melanoma can be of either mutant or wild-type B-RAF."
+            ),
+        )
         t = tree({"hugo_symbol": "NPM1", "variant_category": "Any Variation"})
-        self.assertIn("NPM1", rh.gene_status_contradictions(t, "FLT3-ITD mutation with or without NPM1 mutation"))
+        self.assertIn(
+            "NPM1",
+            rh.gene_status_contradictions(t, "FLT3-ITD mutation with or without NPM1 mutation"),
+        )
 
     def test_two_stated_routes_are_not_flagged(self):
-        t = tree({"hugo_symbol": "MYCN", "variant_category": "Copy Number Variation", "cnv_call": "High Amplification"})
+        t = tree(
+            {
+                "hugo_symbol": "MYCN",
+                "variant_category": "Copy Number Variation",
+                "cnv_call": "High Amplification",
+            }
+        )
         inc = "stage 4 with MYCN amplification, or stage 4 without MYCN amplification aged > 12 months"
         self.assertEqual(rh.gene_status_contradictions(t, inc), {})
 
     def test_a_negated_criterion_is_not_a_requirement(self):
-        t = tree({"hugo_symbol": "CDKN2A", "variant_category": "Copy Number Variation", "cnv_call": "!Homozygous Deletion"},
-                 {"hugo_symbol": "KIT", "variant_category": "!Mutation"})
-        self.assertEqual(rh.gene_status_contradictions(t, "Absence of CDKN2A/B homozygous deletion; without cKIT mutation"), {})
+        t = tree(
+            {
+                "hugo_symbol": "CDKN2A",
+                "variant_category": "Copy Number Variation",
+                "cnv_call": "!Homozygous Deletion",
+            },
+            {"hugo_symbol": "KIT", "variant_category": "!Mutation"},
+        )
+        self.assertEqual(
+            rh.gene_status_contradictions(
+                t, "Absence of CDKN2A/B homozygous deletion; without cKIT mutation"
+            ),
+            {},
+        )
 
     def test_a_positive_requirement_is_not_flagged(self):
         t = tree({"hugo_symbol": "ALK", "variant_category": "Mutation"})

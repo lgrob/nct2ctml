@@ -6,6 +6,7 @@ step only the NCT ones were read. These tests run on the real key and the
 real cache. Nothing is mapped by a model: full mapping is exercised with
 TrialMapManager patched, as tests/test_main_cli.py does for main.py.
 """
+
 import contextlib
 import io
 import json
@@ -26,13 +27,16 @@ import src.clinical_trials_gov as ctg
 
 logger.remove()
 
-CTIS_ID = "2023-505575-69-01"   # conditions: ["Osteosarcoma"]
+CTIS_ID = "2023-505575-69-01"  # conditions: ["Osteosarcoma"]
 
 # The answer key grows as curators accept trials (review_helper accept moves
 # them into ctml/reviewed), so the expected counts are read from it rather
 # than fixed: 50 NCT + 5 CTIS when these tests were written.
-_KEY = sorted(f[:-5] for f in os.listdir(os.path.join(os.path.dirname(__file__), "..", "ctml", "reviewed"))
-              if f.endswith(".yaml"))
+_KEY = sorted(
+    f[:-5]
+    for f in os.listdir(os.path.join(os.path.dirname(__file__), "..", "ctml", "reviewed"))
+    if f.endswith(".yaml")
+)
 N_NCT = sum(t.startswith("NCT") for t in _KEY)
 N_CTIS = len(_KEY) - N_NCT
 N_ALL = len(_KEY)
@@ -40,8 +44,9 @@ NCT_ID = "NCT07440290"
 
 
 def _have_cache():
-    return (os.path.isdir(os.path.join(ROOT, bm.CACHE_DIRS["ctis"]))
-            and os.path.isdir(os.path.join(ROOT, bm.CACHE_DIRS["nct"])))
+    return os.path.isdir(os.path.join(ROOT, bm.CACHE_DIRS["ctis"])) and os.path.isdir(
+        os.path.join(ROOT, bm.CACHE_DIRS["nct"])
+    )
 
 
 def _run_main(*argv):
@@ -51,8 +56,11 @@ def _run_main(*argv):
     os.chdir(ROOT)
     try:
         # RUNS_PATH None: a dispatch test must not leave a run record in runs/.
-        with patch.object(sys, "argv", ["benchmark_map", *argv, "--json", out_json]), \
-             patch.object(bm.config, "RUNS_PATH", None), contextlib.redirect_stdout(io.StringIO()):
+        with (
+            patch.object(sys, "argv", ["benchmark_map", *argv, "--json", out_json]),
+            patch.object(bm.config, "RUNS_PATH", None),
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
             bm.main()
     finally:
         os.chdir(cwd)
@@ -62,7 +70,6 @@ def _run_main(*argv):
 
 
 class TestRegistryOf(unittest.TestCase):
-
     def test_nct_ctis_and_neither(self):
         self.assertEqual(bm.registry_of("NCT04320888"), "nct")
         self.assertEqual(bm.registry_of("2025-520982-39-00"), "ctis")
@@ -71,7 +78,6 @@ class TestRegistryOf(unittest.TestCase):
 
 
 class TestTrialIds(unittest.TestCase):
-
     def test_curated_key_holds_both_registries_nct_first(self):
         ids = bm.trial_ids(os.path.join(ROOT, bm.TRUTH_DIR))
         regs = [bm.registry_of(t) for t in ids]
@@ -87,7 +93,6 @@ class TestTrialIds(unittest.TestCase):
 
 @unittest.skipUnless(_have_cache(), "registry cache not present")
 class TestConditionsOnly(unittest.TestCase):
-
     def test_ctis_conditions_come_from_the_ctis_accessor(self):
         with open(os.path.join(ROOT, bm.CACHE_DIRS["ctis"], CTIS_ID + ".json")) as handle:
             record = json.load(handle)
@@ -98,8 +103,9 @@ class TestConditionsOnly(unittest.TestCase):
         cwd = os.getcwd()
         os.chdir(ROOT)
         try:
-            with patch.object(ctg, "seed_and_map_diagnosis",
-                              wraps=ctg.seed_and_map_diagnosis) as seed:
+            with patch.object(
+                ctg, "seed_and_map_diagnosis", wraps=ctg.seed_and_map_diagnosis
+            ) as seed:
                 bm.write_conditions_baseline([CTIS_ID], out)
         finally:
             os.chdir(cwd)
@@ -118,7 +124,6 @@ class TestConditionsOnly(unittest.TestCase):
 
 
 class TestScoreOnlyIdentity(unittest.TestCase):
-
     def test_key_scored_against_itself_is_perfect_in_both_registries(self):
         rows = _run_main("--score-only", "--out", bm.TRUTH_DIR)
         self.assertEqual(len(rows), N_ALL)
@@ -134,7 +139,6 @@ class TestScoreOnlyIdentity(unittest.TestCase):
 
 
 class TestFullMappingDispatch(unittest.TestCase):
-
     def test_each_registry_goes_to_its_own_mapper(self):
         mgr = MagicMock()
         bm.map_trial(mgr, CTIS_ID, "out")
@@ -163,19 +167,34 @@ class TestFullMappingDispatch(unittest.TestCase):
 
 
 class TestUnsatisfiable(unittest.TestCase):
-
     def test_present_and_absent_in_separate_alternatives_is_satisfiable(self):
         from bench.benchmark_map import unsatisfiable
+
         def g(vc):
             return {"genomic": {"hugo_symbol": "EWSR1", "variant_category": vc}}
-        tree = {"and": [{"clinical": {"age_numerical": ">=1"}},
-                        {"or": [{"and": [g("Structural Variation")]}, {"and": [g("!Structural Variation")]}]}]}
+
+        tree = {
+            "and": [
+                {"clinical": {"age_numerical": ">=1"}},
+                {
+                    "or": [
+                        {"and": [g("Structural Variation")]},
+                        {"and": [g("!Structural Variation")]},
+                    ]
+                },
+            ]
+        }
         self.assertEqual(unsatisfiable([tree]), set())
 
     def test_present_and_absent_in_one_and_is_flagged(self):
         from bench.benchmark_map import unsatisfiable
-        tree = {"and": [{"genomic": {"hugo_symbol": "BRAF", "variant_category": "Mutation"}},
-                        {"genomic": {"hugo_symbol": "BRAF", "variant_category": "!Mutation"}}]}
+
+        tree = {
+            "and": [
+                {"genomic": {"hugo_symbol": "BRAF", "variant_category": "Mutation"}},
+                {"genomic": {"hugo_symbol": "BRAF", "variant_category": "!Mutation"}},
+            ]
+        }
         self.assertEqual(unsatisfiable([tree]), {"BRAF"})
 
 

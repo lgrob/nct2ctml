@@ -4,6 +4,7 @@ The map-time scope filter: which cached trials are oncology trials.
 Cases are real trials from the cache, including the four the first
 vocabulary skipped wrongly.
 """
+
 import csv
 import glob
 import json
@@ -23,13 +24,15 @@ ROOT = os.path.join(os.path.dirname(__file__), "..")
 
 
 def _nct(conditions, title="", official="", keywords=()):
-    return {"protocolSection": {
-        "conditionsModule": {"conditions": list(conditions), "keywords": list(keywords)},
-        "identificationModule": {"briefTitle": title, "officialTitle": official}}}
+    return {
+        "protocolSection": {
+            "conditionsModule": {"conditions": list(conditions), "keywords": list(keywords)},
+            "identificationModule": {"briefTitle": title, "officialTitle": official},
+        }
+    }
 
 
 class TestAssess(unittest.TestCase):
-
     def assertScope(self, data, expected, trial_id="NCT00000000"):
         in_scope, why = scope.assess(trial_id, data, "nct", overrides={})
         self.assertEqual(in_scope, expected, why)
@@ -46,9 +49,13 @@ class TestAssess(unittest.TestCase):
 
     def test_the_official_title_counts(self):
         # NCT05088226: the condition is the procedure; the disease is in the title.
-        self.assertScope(_nct(["Peripheral Blood Stem Cell Transplantation"],
-                              official="Bu/CY Conditioning for Patients With Acute B Cell "
-                                       "Lymphoblast Leukemia"), True)
+        self.assertScope(
+            _nct(
+                ["Peripheral Blood Stem Cell Transplantation"],
+                official="Bu/CY Conditioning for Patients With Acute B Cell Lymphoblast Leukemia",
+            ),
+            True,
+        )
 
     def test_abbreviations_are_case_sensitive(self):
         self.assertScope(_nct(["Relapsed ALL"]), True)
@@ -59,7 +66,6 @@ class TestAssess(unittest.TestCase):
 
 
 class TestOverrides(unittest.TestCase):
-
     def _file(self, body):
         path = os.path.join(tempfile.mkdtemp(), "overrides.tsv")
         with open(path, "w") as handle:
@@ -67,8 +73,9 @@ class TestOverrides(unittest.TestCase):
         return path
 
     def test_an_override_wins_in_both_directions(self):
-        o = scope.load_overrides(self._file("NCT1\tmap\tsupportive care in oncology\n"
-                                            "NCT2\tskip\trollover only\n"))
+        o = scope.load_overrides(
+            self._file("NCT1\tmap\tsupportive care in oncology\nNCT2\tskip\trollover only\n")
+        )
         self.assertTrue(scope.assess("NCT1", _nct(["Warts"]), "nct", o)[0])
         self.assertFalse(scope.assess("NCT2", _nct(["Neuroblastoma"]), "nct", o)[0])
 
@@ -81,7 +88,6 @@ class TestOverrides(unittest.TestCase):
 
 
 class TestReport(unittest.TestCase):
-
     def test_one_registry_does_not_erase_the_other(self):
         path = os.path.join(tempfile.mkdtemp(), "out.tsv")
         scope.write_report([("NCT1", "nct", "r")], path, registry="nct")
@@ -108,82 +114,124 @@ class TestCuratedTrialsAreInScope(unittest.TestCase):
             self.assertTrue(in_scope, f"{trial_id}: {why}")
 
 
-
 class TestPhrasesThatNameNoTumour(unittest.TestCase):
     """Full run 2026-09-25: six trials were in scope only through these phrases."""
 
     def test_masked_phrases_do_not_count(self):
         from utils.oncology_scope import matched_terms
-        for text in ("Anti-Leucine-Rich Glioma-Inactivated 1 (LGI1) Encephalitis",
-                     "patients starting tumour necrosis factor inhibitors", "tumor necrosis factor",
-                     "Memorial Sloan Kettering Cancer Center", "Spina Bifida | Myelomeningocele",
-                     "Monitor the Risk of Malignancy Due to Insertional Oncogenesis"):
+
+        for text in (
+            "Anti-Leucine-Rich Glioma-Inactivated 1 (LGI1) Encephalitis",
+            "patients starting tumour necrosis factor inhibitors",
+            "tumor necrosis factor",
+            "Memorial Sloan Kettering Cancer Center",
+            "Spina Bifida | Myelomeningocele",
+            "Monitor the Risk of Malignancy Due to Insertional Oncogenesis",
+        ):
             self.assertEqual(matched_terms([text]), [], text)
 
     def test_the_rest_of_the_text_still_counts(self):
         from utils.oncology_scope import matched_terms
+
         self.assertTrue(matched_terms(["Glioma-Inactivated 1 and low-grade glioma"]))
         self.assertTrue(matched_terms(["Multiple myeloma"]))
         self.assertTrue(matched_terms(["Cancer Center trial in Wilms tumour"]))
-
 
 
 class TestFollowOnStudies(unittest.TestCase):
     """2023-507041-28-00 (reported 2026-09-26): a follow-up study for patients already treated."""
 
     def _nct(self, brief, official="", conditions=("Leukemia",)):
-        return {"protocolSection": {"identificationModule": {"briefTitle": brief, "officialTitle": official},
-                                    "conditionsModule": {"conditions": list(conditions)}}}
+        return {
+            "protocolSection": {
+                "identificationModule": {"briefTitle": brief, "officialTitle": official},
+                "conditionsModule": {"conditions": list(conditions)},
+            }
+        }
 
     def test_follow_up_and_rollover_titles_are_out_of_scope(self):
         from utils.oncology_scope import assess
-        for title in ("Long-term Follow-up Study for Participants Treated With Gene-Modified Cells",
-                      "Asciminib Roll-over Study", "A Rollover Study for Participants Previously Enrolled",
-                      "Long-Term Follow-Up (LTFU) of Participants Treated with Adoptive Cell Therapies",
-                      "A study of continued treatment with regorafenib"):
+
+        for title in (
+            "Long-term Follow-up Study for Participants Treated With Gene-Modified Cells",
+            "Asciminib Roll-over Study",
+            "A Rollover Study for Participants Previously Enrolled",
+            "Long-Term Follow-Up (LTFU) of Participants Treated with Adoptive Cell Therapies",
+            "A study of continued treatment with regorafenib",
+        ):
             ok, why = assess("NCT0", self._nct(title), "nct", {})
             self.assertFalse(ok, title)
             self.assertIn("follow-on study", why)
 
     def test_follow_up_as_an_endpoint_does_not_count(self):
         from utils.oncology_scope import assess
+
         ok, _ = assess("NCT0", self._nct("Blinatumomab in B-ALL with 5-year follow-up"), "nct", {})
         self.assertTrue(ok)
 
     def test_a_map_override_still_wins(self):
         from utils.oncology_scope import assess
-        ok, why = assess("NCT0", self._nct("Asciminib Roll-over Study"), "nct", {"NCT0": ("map", "curator")})
-        self.assertTrue(ok)
 
+        ok, why = assess(
+            "NCT0", self._nct("Asciminib Roll-over Study"), "nct", {"NCT0": ("map", "curator")}
+        )
+        self.assertTrue(ok)
 
 
 class TestSupportiveCare(unittest.TestCase):
     """NCT06904235 (reported 2026-09-27): supportive-care trials without a tumour condition."""
 
     def _nct(self, conditions, brief="", official=""):
-        return {"protocolSection": {"identificationModule": {"briefTitle": brief, "officialTitle": official},
-                                    "conditionsModule": {"conditions": list(conditions)}}}
+        return {
+            "protocolSection": {
+                "identificationModule": {"briefTitle": brief, "officialTitle": official},
+                "conditionsModule": {"conditions": list(conditions)},
+            }
+        }
 
     def test_supportive_care_without_tumour_conditions_is_out(self):
         from utils.oncology_scope import assess
-        for conds, title in ((["Nausea and Vomiting Chemotherapy-Induced"], "IV NEPA in Paediatric Cancer Patients"),
-                             (["Graft Versus Host Disease"], "Post-transplant cyclophosphamide in haematological malignancies"),
-                             (["Cardiotoxicity"], "Cardioprotection on Chemotherapy-Induced Cardiotoxicity in Childhood Cancer"),
-                             (["Chemotherapy-Induced Neutropenia"], "Telpegfilgrastim in Pediatric Cancer Patients")):
+
+        for conds, title in (
+            (["Nausea and Vomiting Chemotherapy-Induced"], "IV NEPA in Paediatric Cancer Patients"),
+            (
+                ["Graft Versus Host Disease"],
+                "Post-transplant cyclophosphamide in haematological malignancies",
+            ),
+            (
+                ["Cardiotoxicity"],
+                "Cardioprotection on Chemotherapy-Induced Cardiotoxicity in Childhood Cancer",
+            ),
+            (["Chemotherapy-Induced Neutropenia"], "Telpegfilgrastim in Pediatric Cancer Patients"),
+        ):
             ok, why = assess("NCT0", self._nct(conds, title), "nct", {})
             self.assertFalse(ok, conds)
             self.assertIn("supportive care", why)
 
     def test_a_tumour_condition_keeps_the_trial_in(self):
         from utils.oncology_scope import assess
-        ok, _ = assess("NCT0", self._nct(["Acute Lymphoblastic Leukemia"], "Febrile neutropenia during ALL therapy"), "nct", {})
+
+        ok, _ = assess(
+            "NCT0",
+            self._nct(["Acute Lymphoblastic Leukemia"], "Febrile neutropenia during ALL therapy"),
+            "nct",
+            {},
+        )
         self.assertTrue(ok)
 
     def test_ptld_is_a_tumour(self):
         # NCT03394365: EBV-associated post-transplant lymphoproliferative disease.
         from utils.oncology_scope import assess
-        ok, _ = assess("NCT0", self._nct(["Epstein-Barr Virus+ Associated Post-transplant Lymphoproliferative Disease"],
-                                         "EBV-specific T cells for EBV lymphoproliferative disease"), "nct", {})
+
+        ok, _ = assess(
+            "NCT0",
+            self._nct(
+                ["Epstein-Barr Virus+ Associated Post-transplant Lymphoproliferative Disease"],
+                "EBV-specific T cells for EBV lymphoproliferative disease",
+            ),
+            "nct",
+            {},
+        )
         self.assertTrue(ok)
 
 

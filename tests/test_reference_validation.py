@@ -4,19 +4,18 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from loguru import logger
 
 import config
-
 from utils.oncotree import get_lineage
 from utils.reference_validation import (
     _diagnosis_aliases,
-    _widen_inferred_nos_leaf,
     _fold,
     _oncotree,
     _oncotree_folded,
+    _widen_inferred_nos_leaf,
     canonical_diagnosis,
     canonical_gene,
     diagnoses_from_conditions,
@@ -29,7 +28,7 @@ logger.remove()  # the filters log every drop; tests assert on return values
 
 
 def _ref(name):
-    return os.path.join(os.path.dirname(__file__), '..', 'ref', name)
+    return os.path.join(os.path.dirname(__file__), "..", "ref", name)
 
 
 def _genomic(symbol, category="Mutation"):
@@ -45,8 +44,7 @@ class TestCanonicalDiagnosis(unittest.TestCase):
         self.assertEqual(canonical_diagnosis("AML"), "Acute Myeloid Leukemia")
 
     def test_case_is_forgiven(self):
-        self.assertEqual(canonical_diagnosis("acute myeloid leukemia"),
-                         "Acute Myeloid Leukemia")
+        self.assertEqual(canonical_diagnosis("acute myeloid leukemia"), "Acute Myeloid Leukemia")
 
     def test_invented_terms_are_rejected(self):
         # Observed in benchmark output; neither is an Oncotree node.
@@ -66,10 +64,14 @@ class TestCanonicalDiagnosis(unittest.TestCase):
     def test_parent_and_child_are_both_valid(self):
         # BLL is the parent of BLLNOS. Preferring one over the other is a
         # curation decision, not a validity one, so both survive.
-        self.assertEqual(canonical_diagnosis("B-Lymphoblastic Leukemia/Lymphoma"),
-                         "B-Lymphoblastic Leukemia/Lymphoma")
-        self.assertEqual(canonical_diagnosis("B-Lymphoblastic Leukemia/Lymphoma, NOS"),
-                         "B-Lymphoblastic Leukemia/Lymphoma, NOS")
+        self.assertEqual(
+            canonical_diagnosis("B-Lymphoblastic Leukemia/Lymphoma"),
+            "B-Lymphoblastic Leukemia/Lymphoma",
+        )
+        self.assertEqual(
+            canonical_diagnosis("B-Lymphoblastic Leukemia/Lymphoma, NOS"),
+            "B-Lymphoblastic Leukemia/Lymphoma, NOS",
+        )
 
     def test_empty_input(self):
         self.assertIsNone(canonical_diagnosis(""))
@@ -101,10 +103,16 @@ class TestRetiredGeneSymbols(unittest.TestCase):
     """
 
     def test_retired_symbols_are_brought_up_to_date(self):
-        for retired, current in (("H3F3A", "H3-3A"), ("H3F3B", "H3-3B"),
-                                 ("HIST1H3B", "H3C2"), ("WHSC1", "NSD2"),
-                                 ("SEPT9", "SEPTIN9"), ("MKL1", "MRTFA"),
-                                 ("CARS", "CARS1"), ("ACPP", "ACP3")):
+        for retired, current in (
+            ("H3F3A", "H3-3A"),
+            ("H3F3B", "H3-3B"),
+            ("HIST1H3B", "H3C2"),
+            ("WHSC1", "NSD2"),
+            ("SEPT9", "SEPTIN9"),
+            ("MKL1", "MRTFA"),
+            ("CARS", "CARS1"),
+            ("ACPP", "ACP3"),
+        ):
             self.assertEqual(canonical_gene(retired), current, retired)
 
     def test_every_legacy_symbol_resolves(self):
@@ -138,13 +146,22 @@ class TestRetiredGeneSymbols(unittest.TestCase):
         rename, and none of them another gene's current symbol.
         """
         from utils.reference_validation import (
-            _gene_aliases, _legacy_renames, _mane_genes, gene_symbols)
+            _gene_aliases,
+            _legacy_renames,
+            _mane_genes,
+            gene_symbols,
+        )
+
         genes = gene_symbols()
         renames = _legacy_renames(genes)
         other_genes = _mane_genes() - genes
-        bad = [(a, g) for a, g in _gene_aliases().items()
-               if g not in genes or a in genes
-               or (a not in renames and (len(a) < 4 or a in other_genes))]
+        bad = [
+            (a, g)
+            for a, g in _gene_aliases().items()
+            if g not in genes
+            or a in genes
+            or (a not in renames and (len(a) < 4 or a in other_genes))
+        ]
         self.assertEqual(bad, [])
 
 
@@ -158,18 +175,27 @@ class TestWidenedGeneRewrite(unittest.TestCase):
 
     def _clear(self):
         from utils.reference_validation import _gene_aliases
+
         _gene_aliases.cache_clear()
         canonical_gene.cache_clear()
 
     def test_retired_histone_spellings_resolve(self):
         """The motivating case: dropped before, although the table maps both."""
-        for alias, current in (("HIST1H3A", "H3C1"), ("HIST2H3C", "H3C14"),
-                               ("HIST1H3B", "H3C2"), ("HIST1H3C", "H3C3")):
+        for alias, current in (
+            ("HIST1H3A", "H3C1"),
+            ("HIST2H3C", "H3C14"),
+            ("HIST1H3B", "H3C2"),
+            ("HIST1H3C", "H3C3"),
+        ):
             self.assertEqual(canonical_gene(alias), current, alias)
 
     def test_other_long_aliases_resolve(self):
-        for alias, current in (("INI1", "SMARCB1"), ("CRAF", "RAF1"),
-                               ("MEK1", "MAP2K1"), ("HER-2", "ERBB2")):
+        for alias, current in (
+            ("INI1", "SMARCB1"),
+            ("CRAF", "RAF1"),
+            ("MEK1", "MAP2K1"),
+            ("HER-2", "ERBB2"),
+        ):
             self.assertEqual(canonical_gene(alias), current, alias)
 
     def test_the_addendum_blocklist_still_wins(self):
@@ -193,14 +219,24 @@ class TestWidenedGeneRewrite(unittest.TestCase):
     def test_another_genes_symbol_is_not_hijacked(self):
         """TCF4 is a gene in its own right; the table lists it under TCF7L2."""
         from utils.reference_validation import fusion_partner
+
         for symbol in ("TCF4", "PDK1", "TTF1", "MST1", "CAST"):
             self.assertIsNone(canonical_gene(symbol), symbol)
         self.assertEqual(fusion_partner("TCF4"), ("TCF4", "off_panel"))
 
     def test_shape_rules_refuse(self):
-        for alias in ("CD20", "CD117", "CD140a",   # antigens
-                      "PARP", "HDAC", "VEGF", "PTCH", "PSMA",  # family stems
-                      "BCR-ABL", "EWS-FLI1"):      # fusion names
+        for alias in (
+            "CD20",
+            "CD117",
+            "CD140a",  # antigens
+            "PARP",
+            "HDAC",
+            "VEGF",
+            "PTCH",
+            "PSMA",  # family stems
+            "BCR-ABL",
+            "EWS-FLI1",
+        ):  # fusion names
             self.assertIsNone(canonical_gene(alias), alias)
 
     def test_observed_non_gene_usage_is_refused(self):
@@ -210,9 +246,26 @@ class TestWidenedGeneRewrite(unittest.TestCase):
         Philadelphia, ICF1 an informed consent form, ARM1 a trial arm, PD-1
         and CTLA-4 as prior-therapy targets.
         """
-        for alias in ("JMML", "CHOP", "ICF1", "ARM1", "HLRCC", "WAGR", "PD-1",
-                      "CTLA-4", "PD-L2", "OX40", "IL-2", "GMCSF", "VEGFR",
-                      "B7-H3", "NY-ESO-1", "FACE", "TRAIL", "IRIS"):
+        for alias in (
+            "JMML",
+            "CHOP",
+            "ICF1",
+            "ARM1",
+            "HLRCC",
+            "WAGR",
+            "PD-1",
+            "CTLA-4",
+            "PD-L2",
+            "OX40",
+            "IL-2",
+            "GMCSF",
+            "VEGFR",
+            "B7-H3",
+            "NY-ESO-1",
+            "FACE",
+            "TRAIL",
+            "IRIS",
+        ):
             self.assertIsNone(canonical_gene(alias), alias)
 
     def test_every_exclusion_row_is_live(self):
@@ -221,14 +274,14 @@ class TestWidenedGeneRewrite(unittest.TestCase):
         weight that misleads the next reader - the same honesty check the
         diagnosis synonym table has.
         """
-        from utils.reference_validation import (
-            _panel_aliases, _rewrite_exclusions, gene_symbols)
+        from utils.reference_validation import _panel_aliases, _rewrite_exclusions, gene_symbols
+
         rows = _rewrite_exclusions()
-        with tempfile.NamedTemporaryFile('w', suffix='.tsv', delete=False) as handle:
+        with tempfile.NamedTemporaryFile("w", suffix=".tsv", delete=False) as handle:
             handle.write("# empty\n")
             path = handle.name
         try:
-            with patch.object(config, 'GENE_REWRITE_EXCLUSION_FILE_PATH', path):
+            with patch.object(config, "GENE_REWRITE_EXCLUSION_FILE_PATH", path):
                 unfiltered = _panel_aliases(gene_symbols())
         finally:
             os.unlink(path)
@@ -237,8 +290,9 @@ class TestWidenedGeneRewrite(unittest.TestCase):
 
     def test_a_missing_exclusion_list_fails_closed(self):
         """Without it JMML would reach PTPN11, so the widening switches off."""
-        with patch.object(config, 'GENE_REWRITE_EXCLUSION_FILE_PATH',
-                          '/nonexistent/gene_rewrite_exclusions.tsv'):
+        with patch.object(
+            config, "GENE_REWRITE_EXCLUSION_FILE_PATH", "/nonexistent/gene_rewrite_exclusions.tsv"
+        ):
             self._clear()
             try:
                 self.assertIsNone(canonical_gene("JMML"))
@@ -249,28 +303,33 @@ class TestWidenedGeneRewrite(unittest.TestCase):
 
     def test_filter_rewrites_rather_than_drops(self):
         kept = filter_genomic_criteria(
-            [{"genomic": {"hugo_symbol": "HIST1H3A", "variant_category": "Mutation"}},
-             {"genomic": {"hugo_symbol": "JMML", "variant_category": "Mutation"}}])
+            [
+                {"genomic": {"hugo_symbol": "HIST1H3A", "variant_category": "Mutation"}},
+                {"genomic": {"hugo_symbol": "JMML", "variant_category": "Mutation"}},
+            ]
+        )
         self.assertEqual([e["genomic"]["hugo_symbol"] for e in kept], ["H3C1"])
 
 
 class TestFilterDiagnoses(unittest.TestCase):
     def test_drops_unknown_and_keeps_known(self):
-        self.assertEqual(filter_diagnoses(["Leukemia", "Neuroblastoma"]),
-                         ["Neuroblastoma"])
+        self.assertEqual(filter_diagnoses(["Leukemia", "Neuroblastoma"]), ["Neuroblastoma"])
 
     def test_wildcards_survive_filtering(self):
-        self.assertEqual(filter_diagnoses(["_SOLID_", "_LIQUID_", "Leukemia"]),
-                         ["_SOLID_", "_LIQUID_"])
+        self.assertEqual(
+            filter_diagnoses(["_SOLID_", "_LIQUID_", "Leukemia"]), ["_SOLID_", "_LIQUID_"]
+        )
 
     def test_deduplicates_after_canonicalisation(self):
         # The code and the name are the same node, so only one survives.
-        self.assertEqual(filter_diagnoses(["AML", "Acute Myeloid Leukemia"]),
-                         ["Acute Myeloid Leukemia"])
+        self.assertEqual(
+            filter_diagnoses(["AML", "Acute Myeloid Leukemia"]), ["Acute Myeloid Leukemia"]
+        )
 
     def test_order_is_stable(self):
-        self.assertEqual(filter_diagnoses(["Ewing Sarcoma", "Neuroblastoma"]),
-                         ["Ewing Sarcoma", "Neuroblastoma"])
+        self.assertEqual(
+            filter_diagnoses(["Ewing Sarcoma", "Neuroblastoma"]), ["Ewing Sarcoma", "Neuroblastoma"]
+        )
 
     def test_everything_unknown_yields_empty(self):
         self.assertEqual(filter_diagnoses(["Leukemia"]), [])
@@ -278,10 +337,8 @@ class TestFilterDiagnoses(unittest.TestCase):
 
 class TestFilterGenomicCriteria(unittest.TestCase):
     def test_drops_the_invented_symbol_only(self):
-        kept = filter_genomic_criteria(
-            [_genomic(s) for s in ("H3", "H3-3A", "H3-3B", "H3C2")])
-        self.assertEqual([e["genomic"]["hugo_symbol"] for e in kept],
-                         ["H3-3A", "H3-3B", "H3C2"])
+        kept = filter_genomic_criteria([_genomic(s) for s in ("H3", "H3-3A", "H3-3B", "H3C2")])
+        self.assertEqual([e["genomic"]["hugo_symbol"] for e in kept], ["H3-3A", "H3-3B", "H3C2"])
 
     def test_rewrites_case(self):
         kept = filter_genomic_criteria([_genomic("mycn")])
@@ -289,8 +346,7 @@ class TestFilterGenomicCriteria(unittest.TestCase):
 
     def test_negated_categories_are_untouched(self):
         kept = filter_genomic_criteria([_genomic("MYCN", "!Copy Number Variation")])
-        self.assertEqual(kept[0]["genomic"]["variant_category"],
-                         "!Copy Number Variation")
+        self.assertEqual(kept[0]["genomic"]["variant_category"], "!Copy Number Variation")
 
     def test_entry_without_a_symbol_is_left_for_the_completeness_checks(self):
         entry = {"genomic": {"variant_category": "Mutation"}}
@@ -309,36 +365,36 @@ class TestDiagnosesFromConditions(unittest.TestCase):
     """
 
     def test_exact_condition_is_taken(self):
-        self.assertEqual(diagnoses_from_conditions(["Neuroblastoma"]),
-                         ["Neuroblastoma"])
+        self.assertEqual(diagnoses_from_conditions(["Neuroblastoma"]), ["Neuroblastoma"])
 
     def test_qualifiers_are_peeled(self):
+        self.assertEqual(diagnoses_from_conditions(["High-Risk Neuroblastoma"]), ["Neuroblastoma"])
         self.assertEqual(
-            diagnoses_from_conditions(["High-Risk Neuroblastoma"]),
-            ["Neuroblastoma"])
-        self.assertEqual(
-            diagnoses_from_conditions(["Recurrent Childhood Medulloblastoma"]),
-            ["Medulloblastoma"])
+            diagnoses_from_conditions(["Recurrent Childhood Medulloblastoma"]), ["Medulloblastoma"]
+        )
 
     def test_a_real_node_beats_its_own_prefix(self):
         # "Primary" and "Malignant" are peelable qualifiers, but these are the
         # node names. The unmodified string is tried first for exactly this.
-        self.assertEqual(diagnoses_from_conditions(["Primary Brain Tumor"]),
-                         ["Primary Brain Tumor"])
+        self.assertEqual(
+            diagnoses_from_conditions(["Primary Brain Tumor"]), ["Primary Brain Tumor"]
+        )
         self.assertEqual(
             diagnoses_from_conditions(["Malignant Peripheral Nerve Sheath Tumor"]),
-            ["Malignant Peripheral Nerve Sheath Tumor"])
+            ["Malignant Peripheral Nerve Sheath Tumor"],
+        )
 
     def test_non_diagnoses_yield_nothing(self):
         # The commonest condition strings are categories, not Oncotree nodes.
-        self.assertEqual(diagnoses_from_conditions(
-            ["Pediatric Cancer", "Solid Tumor", "Healthy Volunteers"]), [])
+        self.assertEqual(
+            diagnoses_from_conditions(["Pediatric Cancer", "Solid Tumor", "Healthy Volunteers"]), []
+        )
 
     def test_order_stable_and_deduplicated(self):
         self.assertEqual(
-            diagnoses_from_conditions(
-                ["Osteosarcoma", "Recurrent Osteosarcoma", "Ewing Sarcoma"]),
-            ["Osteosarcoma", "Ewing Sarcoma"])
+            diagnoses_from_conditions(["Osteosarcoma", "Recurrent Osteosarcoma", "Ewing Sarcoma"]),
+            ["Osteosarcoma", "Ewing Sarcoma"],
+        )
 
     def test_empty_input(self):
         self.assertEqual(diagnoses_from_conditions([]), [])
@@ -346,34 +402,39 @@ class TestDiagnosesFromConditions(unittest.TestCase):
 
     def test_strip_is_idempotent(self):
         self.assertEqual(
-            strip_condition_qualifiers("Recurrent Metastatic Childhood Melanoma"),
-            "Melanoma")
+            strip_condition_qualifiers("Recurrent Metastatic Childhood Melanoma"), "Melanoma"
+        )
 
     def test_trailing_qualifiers_are_peeled(self):
         # ClinicalTrials.gov puts the qualifier after the diagnosis at least as
         # often as before it.
         for condition, expected in (
-                ("Medulloblastoma Recurrent", "Medulloblastoma"),
-                ("Ependymoma Recurrent", "Ependymoma"),
-                ("Medulloblastoma, Childhood", "Medulloblastoma"),
-                ("Neuroblastoma, Recurrent, Refractory", "Neuroblastoma"),
-                ("Recurrent Childhood Medulloblastoma, Refractory", "Medulloblastoma")):
+            ("Medulloblastoma Recurrent", "Medulloblastoma"),
+            ("Ependymoma Recurrent", "Ependymoma"),
+            ("Medulloblastoma, Childhood", "Medulloblastoma"),
+            ("Neuroblastoma, Recurrent, Refractory", "Neuroblastoma"),
+            ("Recurrent Childhood Medulloblastoma, Refractory", "Medulloblastoma"),
+        ):
             self.assertEqual(strip_condition_qualifiers(condition), expected, condition)
 
     def test_trailing_strip_resolves_real_conditions(self):
-        self.assertEqual(diagnoses_from_conditions(["Medulloblastoma Recurrent"]),
-                         ["Medulloblastoma"])
+        self.assertEqual(
+            diagnoses_from_conditions(["Medulloblastoma Recurrent"]), ["Medulloblastoma"]
+        )
         # A code survives the peel and still resolves to its display name.
-        self.assertEqual(diagnoses_from_conditions(["ATRT Recurrent"]),
-                         ["Atypical Teratoid/Rhabdoid Tumor"])
+        self.assertEqual(
+            diagnoses_from_conditions(["ATRT Recurrent"]), ["Atypical Teratoid/Rhabdoid Tumor"]
+        )
 
     def test_a_node_ending_in_a_qualifier_word_matches_as_itself(self):
         # Several Oncotree names end in "NOS", which the trailing rule would
         # strip. The unmodified string is tried first for exactly this reason.
-        for name in ("B-Lymphoblastic Leukemia/Lymphoma, NOS",
-                     "Mixed Phenotype Acute Leukemia, B/Myeloid, NOS",
-                     "High-Grade B-Cell Lymphoma, NOS",
-                     "Astrocytoma, IDH-Mutant, Grade 3"):
+        for name in (
+            "B-Lymphoblastic Leukemia/Lymphoma, NOS",
+            "Mixed Phenotype Acute Leukemia, B/Myeloid, NOS",
+            "High-Grade B-Cell Lymphoma, NOS",
+            "Astrocytoma, IDH-Mutant, Grade 3",
+        ):
             self.assertEqual(diagnoses_from_conditions([name]), [name], name)
 
 
@@ -385,6 +446,7 @@ class TestAnswerKeyIsNotDamaged(unittest.TestCase):
 
     def test_every_reviewed_diagnosis_and_gene_survives(self):
         import glob
+
         import yaml
 
         def walk(node, want):
@@ -397,20 +459,21 @@ class TestAnswerKeyIsNotDamaged(unittest.TestCase):
                 for value in node:
                     yield from walk(value, want)
 
-        paths = sorted(glob.glob(os.path.join(
-            os.path.dirname(__file__), '..', 'ctml', 'reviewed', '*.yaml')))
+        paths = sorted(
+            glob.glob(os.path.join(os.path.dirname(__file__), "..", "ctml", "reviewed", "*.yaml"))
+        )
         self.assertTrue(paths, "no reviewed trials found")
         rejected = []
         for path in paths:
             doc = yaml.safe_load(open(path))
-            for step in (doc.get('treatment_list') or {}).get('step') or []:
-                for match in step.get('match') or []:
-                    for clinical in walk(match, 'clinical'):
-                        term = clinical.get('oncotree_primary_diagnosis')
+            for step in (doc.get("treatment_list") or {}).get("step") or []:
+                for match in step.get("match") or []:
+                    for clinical in walk(match, "clinical"):
+                        term = clinical.get("oncotree_primary_diagnosis")
                         if term and canonical_diagnosis(term) is None:
                             rejected.append((os.path.basename(path), term))
-                    for genomic in walk(match, 'genomic'):
-                        symbol = genomic.get('hugo_symbol')
+                    for genomic in walk(match, "genomic"):
+                        symbol = genomic.get("hugo_symbol")
                         if symbol and canonical_gene(symbol) is None:
                             rejected.append((os.path.basename(path), symbol))
         self.assertEqual(rejected, [])
@@ -439,8 +502,7 @@ class TestNosFallback(unittest.TestCase):
             ("High-grade Glioma", "High-Grade Glioma, NOS"),
             ("Round Cell Sarcoma", "Round Cell Sarcoma, NOS"),
         ):
-            self.assertEqual(diagnoses_from_conditions([condition]), [expected],
-                             condition)
+            self.assertEqual(diagnoses_from_conditions([condition]), [expected], condition)
 
     def test_an_exact_node_does_not_also_collect_its_nos_sibling(self):
         """
@@ -448,14 +510,13 @@ class TestNosFallback(unittest.TestCase):
         "Medulloblastoma" both the exact node and "Medulloblastoma, NOS", and
         the seed would over-generate instead of reaching further.
         """
-        self.assertEqual(diagnoses_from_conditions(["Medulloblastoma"]),
-                         ["Medulloblastoma"])
-        self.assertEqual(diagnoses_from_conditions(["Neuroblastoma"]),
-                         ["Neuroblastoma"])
+        self.assertEqual(diagnoses_from_conditions(["Medulloblastoma"]), ["Medulloblastoma"])
+        self.assertEqual(diagnoses_from_conditions(["Neuroblastoma"]), ["Neuroblastoma"])
 
     def test_it_composes_with_qualifier_stripping(self):
-        self.assertEqual(diagnoses_from_conditions(["Pediatric Sarcoma, Refractory"]),
-                         ["Sarcoma, NOS"])
+        self.assertEqual(
+            diagnoses_from_conditions(["Pediatric Sarcoma, Refractory"]), ["Sarcoma, NOS"]
+        )
 
     def test_it_invents_nothing(self):
         for condition in ("Neoplasms, Brain", "Asthma", "Healthy Volunteers", ""):
@@ -471,6 +532,7 @@ class TestGeneSynonymMapping(unittest.TestCase):
 
     def setUp(self):
         from utils.reference_validation import gene_synonym_mapping
+
         self.mapping = gene_synonym_mapping()
 
     def test_blocklisted_alias_is_absent(self):
@@ -480,16 +542,17 @@ class TestGeneSynonymMapping(unittest.TestCase):
         would route the same criterion twice.
         """
         self.assertNotIn("PD-L1", self.mapping)
-        self.assertNotIn("!PD-L1", self.mapping,
-                         "the marker itself must not become a searchable term")
+        self.assertNotIn(
+            "!PD-L1", self.mapping, "the marker itself must not become a searchable term"
+        )
 
     def test_blocklist_is_applied_on_the_validation_side_too(self):
         from utils.reference_validation import canonical_gene
+
         self.assertIsNone(canonical_gene("PD-L1"))
 
     def test_ordinary_aliases_still_resolve(self):
-        for alias, official in (("HER2", "ERBB2"), ("p53", "TP53"),
-                                ("WHSC1", "NSD2")):
+        for alias, official in (("HER2", "ERBB2"), ("p53", "TP53"), ("WHSC1", "NSD2")):
             self.assertIn(official, self.mapping.get(alias, []), alias)
 
     def test_multi_gene_rows_arrive_intact(self):
@@ -514,21 +577,26 @@ class TestSingleReader(unittest.TestCase):
         one place and ignored in another.
         """
         import glob
-        root = os.path.join(os.path.dirname(__file__), '..')
+
+        root = os.path.join(os.path.dirname(__file__), "..")
         offenders = []
-        for path in glob.glob(os.path.join(root, '*/*.py')) + glob.glob(os.path.join(root, '*.py')):
+        for path in glob.glob(os.path.join(root, "*/*.py")) + glob.glob(os.path.join(root, "*.py")):
             rel = os.path.relpath(path, root)
             # config.py is where the paths belong; build_gene_synonyms.py
             # writes the tables rather than reading them; this file names them
             # in its own assertions.
-            if rel.startswith(('utils/reference_validation', 'utils/build_gene_synonyms',
-                               'config.py', '.venv')) or rel == os.path.relpath(__file__, root):
+            if rel.startswith(
+                ("utils/reference_validation", "utils/build_gene_synonyms", "config.py", ".venv")
+            ) or rel == os.path.relpath(__file__, root):
                 continue
             text = open(path).read()
-            for literal in ('ref/genes.txt', 'ref/genes_kispi.txt',
-                            'ref/synonym_to_gene_symbol.tsv',
-                            'ref/gene_synonym_addendum.tsv',
-                            'ref/gene_rewrite_exclusions.tsv'):
+            for literal in (
+                "ref/genes.txt",
+                "ref/genes_kispi.txt",
+                "ref/synonym_to_gene_symbol.tsv",
+                "ref/gene_synonym_addendum.tsv",
+                "ref/gene_rewrite_exclusions.tsv",
+            ):
                 if f'"{literal}"' in text or f"'{literal}'" in text:
                     offenders.append(f"{rel}: {literal}")
         self.assertEqual(offenders, [])
@@ -546,22 +614,22 @@ class TestFolding(unittest.TestCase):
 
     def test_hyphen_is_forgiven(self):
         # NCT04655404 registers "High Grade Glioma".
-        self.assertEqual(canonical_diagnosis("High Grade Glioma, NOS"),
-                         "High-Grade Glioma, NOS")
+        self.assertEqual(canonical_diagnosis("High Grade Glioma, NOS"), "High-Grade Glioma, NOS")
 
     def test_apostrophe_is_forgiven(self):
         # NCT04322318 registers "... Kidney Wilms Tumor", never "Wilms'".
         self.assertEqual(canonical_diagnosis("Wilms Tumor"), "Wilms' Tumor")
 
     def test_slash_and_hyphen_are_interchangeable(self):
-        self.assertEqual(canonical_diagnosis("B Lymphoblastic Leukemia Lymphoma"),
-                         "B-Lymphoblastic Leukemia/Lymphoma")
+        self.assertEqual(
+            canonical_diagnosis("B Lymphoblastic Leukemia Lymphoma"),
+            "B-Lymphoblastic Leukemia/Lymphoma",
+        )
 
     def test_british_spelling_is_forgiven(self):
         # The CTIS half of the corpus is European.
         self.assertEqual(canonical_diagnosis("Wilms Tumour"), "Wilms' Tumor")
-        self.assertEqual(canonical_diagnosis("Acute Myeloid Leukaemia"),
-                         "Acute Myeloid Leukemia")
+        self.assertEqual(canonical_diagnosis("Acute Myeloid Leukaemia"), "Acute Myeloid Leukemia")
 
     def test_commas_are_load_bearing_and_survive(self):
         # "Glioma, NOS" and "Glioma" are different nodes; folding must not
@@ -588,17 +656,24 @@ class TestFolding(unittest.TestCase):
 class TestDiagnosisAliases(unittest.TestCase):
     def test_lineage_is_resolved(self):
         # Oncotree has no lineage-free ALL node, so a lineage must be chosen.
-        self.assertEqual(canonical_diagnosis("Acute Lymphoblastic Leukemia"),
-                         "B-Lymphoblastic Leukemia/Lymphoma")
-        self.assertEqual(canonical_diagnosis("T-Cell Acute Lymphoblastic Leukemia"),
-                         "T-Lymphoblastic Leukemia/Lymphoma")
+        self.assertEqual(
+            canonical_diagnosis("Acute Lymphoblastic Leukemia"), "B-Lymphoblastic Leukemia/Lymphoma"
+        )
+        self.assertEqual(
+            canonical_diagnosis("T-Cell Acute Lymphoblastic Leukemia"),
+            "T-Lymphoblastic Leukemia/Lymphoma",
+        )
 
     def test_who_reclassification_is_resolved(self):
         # WHO CNS5 retired DIPG; our Oncotree carries only the successor.
-        self.assertEqual(canonical_diagnosis("Diffuse Intrinsic Pontine Glioma"),
-                         "Diffuse Midline Glioma, H3 K27-Altered")
-        self.assertEqual(canonical_diagnosis("Diffuse Midline Glioma, H3 K27M-Mutant"),
-                         "Diffuse Midline Glioma, H3 K27-Altered")
+        self.assertEqual(
+            canonical_diagnosis("Diffuse Intrinsic Pontine Glioma"),
+            "Diffuse Midline Glioma, H3 K27-Altered",
+        )
+        self.assertEqual(
+            canonical_diagnosis("Diffuse Midline Glioma, H3 K27M-Mutant"),
+            "Diffuse Midline Glioma, H3 K27-Altered",
+        )
 
     def test_european_name_is_resolved(self):
         self.assertEqual(canonical_diagnosis("Nephroblastoma"), "Wilms' Tumor")
@@ -636,13 +711,13 @@ class TestDiagnosisAliases(unittest.TestCase):
         is on exact strings, so a target that is not an Oncotree node matches
         no patient and reads as a correct answer in the log.
         """
-        with tempfile.NamedTemporaryFile('w', suffix='.tsv', delete=False) as handle:
+        with tempfile.NamedTemporaryFile("w", suffix=".tsv", delete=False) as handle:
             handle.write("# comment row\n")
             handle.write("Some Registry Name\tNot An Oncotree Node\twhy\n")
             handle.write("Nephroblastoma\tWilms' Tumor\twhy\n")
             path = handle.name
         try:
-            with patch.object(config, 'DIAGNOSIS_SYNONYM_FILE_PATH', path):
+            with patch.object(config, "DIAGNOSIS_SYNONYM_FILE_PATH", path):
                 _diagnosis_aliases.cache_clear()
                 aliases = _diagnosis_aliases()
             self.assertNotIn(_fold("Some Registry Name"), aliases)
@@ -654,8 +729,9 @@ class TestDiagnosisAliases(unittest.TestCase):
 
     def test_a_missing_table_is_survivable(self):
         """Folding must still work if the file is absent."""
-        with patch.object(config, 'DIAGNOSIS_SYNONYM_FILE_PATH',
-                          '/nonexistent/diagnosis_synonyms.tsv'):
+        with patch.object(
+            config, "DIAGNOSIS_SYNONYM_FILE_PATH", "/nonexistent/diagnosis_synonyms.tsv"
+        ):
             _diagnosis_aliases.cache_clear()
             try:
                 self.assertEqual(_diagnosis_aliases(), {})
@@ -670,16 +746,17 @@ class TestExtendedQualifiers(unittest.TestCase):
         # NCI appends the staging manual to its germ cell conditions.
         self.assertEqual(
             strip_condition_qualifiers("Stage I Testicular Seminoma AJCC v6 and v7"),
-            "Testicular Seminoma")
+            "Testicular Seminoma",
+        )
 
     def test_substage_letters_are_stripped(self):
-        self.assertEqual(strip_condition_qualifiers("Stage IIIB Osteosarcoma"),
-                         "Osteosarcoma")
+        self.assertEqual(strip_condition_qualifiers("Stage IIIB Osteosarcoma"), "Osteosarcoma")
 
     def test_bare_relapse_noun_is_stripped(self):
         # NCT05366218 registers "Acute Lymphoid Leukemia Relapse".
-        self.assertEqual(strip_condition_qualifiers("Acute Lymphoid Leukemia Relapse"),
-                         "Acute Lymphoid Leukemia")
+        self.assertEqual(
+            strip_condition_qualifiers("Acute Lymphoid Leukemia Relapse"), "Acute Lymphoid Leukemia"
+        )
 
     def test_a_real_node_still_beats_stripping(self):
         """
@@ -690,10 +767,11 @@ class TestExtendedQualifiers(unittest.TestCase):
         "Peripheral Nerve Sheath Tumor" and "Primary CNS Melanoma" would
         become "CNS Melanoma", neither of which is what the trial said.
         """
-        self.assertEqual(canonical_diagnosis("Malignant Peripheral Nerve Sheath Tumor"),
-                         "Malignant Peripheral Nerve Sheath Tumor")
-        self.assertEqual(canonical_diagnosis("Primary CNS Melanoma"),
-                         "Primary CNS Melanoma")
+        self.assertEqual(
+            canonical_diagnosis("Malignant Peripheral Nerve Sheath Tumor"),
+            "Malignant Peripheral Nerve Sheath Tumor",
+        )
+        self.assertEqual(canonical_diagnosis("Primary CNS Melanoma"), "Primary CNS Melanoma")
 
 
 class TestConditionSeedRegressions(unittest.TestCase):
@@ -706,35 +784,50 @@ class TestConditionSeedRegressions(unittest.TestCase):
 
     def test_nci_wilms_house_style(self):
         self.assertEqual(
-            diagnoses_from_conditions([
-                'Anaplastic Kidney Wilms Tumor', 'Recurrent Kidney Wilms Tumor',
-                'Stage II Kidney Wilms Tumor']),
-            ["Wilms' Tumor"])
+            diagnoses_from_conditions(
+                [
+                    "Anaplastic Kidney Wilms Tumor",
+                    "Recurrent Kidney Wilms Tumor",
+                    "Stage II Kidney Wilms Tumor",
+                ]
+            ),
+            ["Wilms' Tumor"],
+        )
 
     def test_paediatric_all(self):
         self.assertEqual(
-            diagnoses_from_conditions(['Acute Lymphoblastic Leukemia, Pediatric']),
-            ['B-Lymphoblastic Leukemia/Lymphoma'])
+            diagnoses_from_conditions(["Acute Lymphoblastic Leukemia, Pediatric"]),
+            ["B-Lymphoblastic Leukemia/Lymphoma"],
+        )
 
     def test_all_spelling_variants_collapse_to_one_term(self):
         self.assertEqual(
-            diagnoses_from_conditions([
-                'ALL, Childhood B-Cell', 'Acute Lymphoid Leukemia Relapse',
-                'Acute Lymphocytic Leukemia Refractory']),
-            ['B-Lymphoblastic Leukemia/Lymphoma'])
+            diagnoses_from_conditions(
+                [
+                    "ALL, Childhood B-Cell",
+                    "Acute Lymphoid Leukemia Relapse",
+                    "Acute Lymphocytic Leukemia Refractory",
+                ]
+            ),
+            ["B-Lymphoblastic Leukemia/Lymphoma"],
+        )
 
     def test_retired_dipg_maps_to_its_successor(self):
         self.assertEqual(
-            diagnoses_from_conditions([
-                'Diffuse Intrinsic Pontine Glioma',
-                'Diffuse Midline Glioma, H3 K27M-Mutant',
-                'Recurrent Diffuse Intrinsic Pontine Glioma']),
-            ['Diffuse Midline Glioma, H3 K27-Altered'])
+            diagnoses_from_conditions(
+                [
+                    "Diffuse Intrinsic Pontine Glioma",
+                    "Diffuse Midline Glioma, H3 K27M-Mutant",
+                    "Recurrent Diffuse Intrinsic Pontine Glioma",
+                ]
+            ),
+            ["Diffuse Midline Glioma, H3 K27-Altered"],
+        )
 
     def test_unhyphenated_high_grade_glioma(self):
         self.assertEqual(
-            diagnoses_from_conditions(['High Grade Glioma']),
-            ['High-Grade Glioma, NOS'])
+            diagnoses_from_conditions(["High Grade Glioma"]), ["High-Grade Glioma, NOS"]
+        )
 
 
 class TestNosWidening(unittest.TestCase):
@@ -758,10 +851,10 @@ class TestNosWidening(unittest.TestCase):
         high-grade trial. "Low-Grade Glioma, NOS" sits under "Encapsulated
         Glioma", which is not where low-grade gliomas generally live.
         """
-        self.assertEqual(diagnoses_from_conditions(["High Grade Glioma"]),
-                         ["High-Grade Glioma, NOS"])
-        self.assertEqual(diagnoses_from_conditions(["Low Grade Glioma"]),
-                         ["Low-Grade Glioma, NOS"])
+        self.assertEqual(
+            diagnoses_from_conditions(["High Grade Glioma"]), ["High-Grade Glioma, NOS"]
+        )
+        self.assertEqual(diagnoses_from_conditions(["Low Grade Glioma"]), ["Low-Grade Glioma, NOS"])
 
     def test_widening_stops_below_the_organ_system_root(self):
         """
@@ -786,10 +879,12 @@ class TestNosWidening(unittest.TestCase):
         """
         self.assertEqual(
             canonical_diagnosis("B-Lymphoblastic Leukemia/Lymphoma, NOS"),
-            "B-Lymphoblastic Leukemia/Lymphoma, NOS")
+            "B-Lymphoblastic Leukemia/Lymphoma, NOS",
+        )
         self.assertEqual(
             diagnoses_from_conditions(["B-Lymphoblastic Leukemia/Lymphoma"]),
-            ["B-Lymphoblastic Leukemia/Lymphoma"])
+            ["B-Lymphoblastic Leukemia/Lymphoma"],
+        )
 
     def test_widening_only_ever_reaches_a_real_node(self):
         parent_of, level_1_names, descendants = get_lineage()
@@ -803,5 +898,5 @@ class TestNosWidening(unittest.TestCase):
             self.assertNotIn(_widen_inferred_nos_leaf(leaf, leaf), level_1_names, leaf)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

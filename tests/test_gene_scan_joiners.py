@@ -7,11 +7,12 @@ on whitespace, so on those trials it missed a curated gene in 12 of them;
 now in 2, and both of those name the gene only as a karyotype or a gene
 family (see test_what_the_scan_still_cannot_see).
 """
+
 import os
 import sys
 import unittest
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from loguru import logger
 
@@ -31,36 +32,68 @@ class TestGeneScanJoiners(unittest.TestCase):
     def test_double_colon_fusions(self):
         # NCT06177067
         self.assertEqual(
-            self.scan("NPM1 mutation or fusion, PICALM::MLLT10, DEK::NUP214, UBTF-TD, "
-                      "KAT6A rearrangement (KAT6Ar), or SET::NUP214"),
-            ["DEK", "KAT6A", "MLLT10", "NPM1", "NUP214", "PICALM", "UBTF"])
+            self.scan(
+                "NPM1 mutation or fusion, PICALM::MLLT10, DEK::NUP214, UBTF-TD, "
+                "KAT6A rearrangement (KAT6Ar), or SET::NUP214"
+            ),
+            ["DEK", "KAT6A", "MLLT10", "NPM1", "NUP214", "PICALM", "UBTF"],
+        )
 
     def test_hyphen_fusions(self):
         # NCT05745714, NCT03643276, NCT05180825
         self.assertEqual(
-            self.scan("alterations leading to CRLF2 overexpression "
-                      "(P2RY8-CRLF2, IGH-CRLF2, and CRLF2 F232C)"),
-            ["CRLF2", "P2RY8"])
-        self.assertEqual(self.scan("Ph+ (BCR-ABL1 or t(9;22)-positive) ALL"),
-                         ["ABL1", "BCR"])
-        self.assertIn("BRAF", self.scan(
-            "Determination of a negative BRAFv600 mutation by immunohistochemistry "
-            "or KIAA1549-BRAF fusion"))
+            self.scan(
+                "alterations leading to CRLF2 overexpression "
+                "(P2RY8-CRLF2, IGH-CRLF2, and CRLF2 F232C)"
+            ),
+            ["CRLF2", "P2RY8"],
+        )
+        self.assertEqual(self.scan("Ph+ (BCR-ABL1 or t(9;22)-positive) ALL"), ["ABL1", "BCR"])
+        self.assertIn(
+            "BRAF",
+            self.scan(
+                "Determination of a negative BRAFv600 mutation by immunohistochemistry "
+                "or KIAA1549-BRAF fusion"
+            ),
+        )
         # A partner that is not a gene symbol (USP9X is off the reference) is
         # simply not found; the gene next to it still is.
-        self.assertIn("DDX3X", self.scan(
-            "USP9X truncating mutation or USP9X-DDX3X fusion; STAT5B and DNM2 mutations;"))
+        self.assertIn(
+            "DDX3X",
+            self.scan(
+                "USP9X truncating mutation or USP9X-DDX3X fusion; STAT5B and DNM2 mutations;"
+            ),
+        )
 
     def test_slash_shorthand_for_sibling_genes(self):
         # NCT07012447
         self.assertEqual(
-            self.scan("mutations (including FLT3, DNMT3A, STAG2, IDH1/2, RUNX1, EZH2, WT1, "
-                      "ASXL1/2, SF3B1, TET2, BCOR, BCORL1, and"),
-            ["ASXL1", "ASXL2", "BCOR", "BCORL1", "DNMT3A", "EZH2", "FLT3", "IDH1", "IDH2",
-             "RUNX1", "SF3B1", "STAG2", "TET2", "WT1"])
+            self.scan(
+                "mutations (including FLT3, DNMT3A, STAG2, IDH1/2, RUNX1, EZH2, WT1, "
+                "ASXL1/2, SF3B1, TET2, BCOR, BCORL1, and"
+            ),
+            [
+                "ASXL1",
+                "ASXL2",
+                "BCOR",
+                "BCORL1",
+                "DNMT3A",
+                "EZH2",
+                "FLT3",
+                "IDH1",
+                "IDH2",
+                "RUNX1",
+                "SF3B1",
+                "STAG2",
+                "TET2",
+                "WT1",
+            ],
+        )
         # NCT05745714, NCT07215910
-        self.assertEqual(self.scan("EPOR fusions; JAK1/2/3: Recurrent or novel missense"),
-                         ["EPOR", "JAK1", "JAK2", "JAK3"])
+        self.assertEqual(
+            self.scan("EPOR fusions; JAK1/2/3: Recurrent or novel missense"),
+            ["EPOR", "JAK1", "JAK2", "JAK3"],
+        )
         self.assertEqual(self.scan("(CDKN2A/B and1p/19q co-deletion"), ["CDKN2A", "CDKN2B"])
 
     def test_shorthand_expands_only_to_a_current_symbol(self):
@@ -73,22 +106,30 @@ class TestGeneScanJoiners(unittest.TestCase):
         # CAR -> PRKAR1A, H3 -> histone genes, ALL -> BCR, B7 -> CD80 would all
         # be collisions. NCT04897321, 2023-509392-17-00, 2025-520982-39-00.
         self.assertEqual(self.scan("in the 7 days prior to B7-H3-CAR T-cell infusion"), [])
-        self.assertEqual(self.scan("Chimeric Antigen Receptor T-cell therapy (CAR-T), "
-                                   "adoptive T-cell therapy"), [])
+        self.assertEqual(
+            self.scan("Chimeric Antigen Receptor T-cell therapy (CAR-T), adoptive T-cell therapy"),
+            [],
+        )
         self.assertNotIn("BCR", self.scan("newly diagnosed Ph+ or ABL-class Ph-like B-ALL."))
 
     def test_markdown_escapes(self):
         # NCT07297979: ERG was lost to the escaped bracket.
-        self.assertEqual(self.scan("family gene, eg, FLI1, ETS-related gene \\[ERG\\]) via"),
-                         ["ERG", "FLI1"])
+        self.assertEqual(
+            self.scan("family gene, eg, FLI1, ETS-related gene \\[ERG\\]) via"), ["ERG", "FLI1"]
+        )
         # NCT05183035: unescaping must not let the 2-letter alias SF become HGF.
-        self.assertEqual(self.scan("(shortening fraction \\[SF\\] \\< 25% or "
-                                   "ejection fraction \\[EF\\] \\< 40%)"), [])
+        self.assertEqual(
+            self.scan(
+                "(shortening fraction \\[SF\\] \\< 25% or ejection fraction \\[EF\\] \\< 40%)"
+            ),
+            [],
+        )
 
     def test_proto_oncogene_c_prefix(self):
         # NCT05658640
-        self.assertIn("CBL", self.scan(
-            "PTPN11, MAP2K1, MP2K1 hotspot mutations, cCBL; NF1 del, as detected"))
+        self.assertIn(
+            "CBL", self.scan("PTPN11, MAP2K1, MP2K1 hotspot mutations, cCBL; NF1 del, as detected")
+        )
 
     def test_what_the_scan_still_cannot_see(self):
         # NCT07012447 curates CBFB and PML from karyotypes; the scan does not
@@ -107,5 +148,5 @@ class TestGeneScanJoiners(unittest.TestCase):
         self.assertEqual(self.scan("clinical criteria for the diagnosis of NF-2"), ["NF2"])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

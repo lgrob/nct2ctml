@@ -20,8 +20,8 @@ Two things CTIS does differently, and they are not merely cosmetic:
     criteria text when it states one, and omitted when it does not, rather
     than invented from the code.
 """
+
 import re
-from typing import Dict, List, Optional, Tuple
 
 from loguru import logger
 
@@ -50,19 +50,21 @@ def _part_one(trial_data: dict) -> dict:
 
 
 def get_ct_number(trial_data: dict) -> str:
-    return (trial_data.get("ctNumber")
-            or _g(_part_one(trial_data), "trialDetails", "clinicalTrialIdentifiers", "ctNumber")
-            or "")
+    return (
+        trial_data.get("ctNumber")
+        or _g(_part_one(trial_data), "trialDetails", "clinicalTrialIdentifiers", "ctNumber")
+        or ""
+    )
 
 
-def get_titles(trial_data: dict) -> Tuple[str, str]:
+def get_titles(trial_data: dict) -> tuple[str, str]:
     ids = _g(_part_one(trial_data), "trialDetails", "clinicalTrialIdentifiers") or {}
     full = (ids.get("fullTitle") or "").strip()
     public = (ids.get("publicTitle") or "").strip()
     return (public or full), (full or public)
 
 
-def get_conditions(trial_data: dict) -> List[str]:
+def get_conditions(trial_data: dict) -> list[str]:
     out = []
     for mc in _part_one(trial_data).get("medicalConditions") or []:
         t = (mc.get("medicalCondition") or "").strip()
@@ -71,7 +73,7 @@ def get_conditions(trial_data: dict) -> List[str]:
     return out
 
 
-def split_inclusion_exclusion_criteria(trial_data: dict) -> Tuple[str, str]:
+def split_inclusion_exclusion_criteria(trial_data: dict) -> tuple[str, str]:
     """
     Join CTIS's labelled criteria items into inclusion and exclusion text.
 
@@ -96,9 +98,14 @@ def split_inclusion_exclusion_criteria(trial_data: dict) -> Tuple[str, str]:
 
 def map_age_group(trial_data: dict) -> str:
     """Coarse CTML age label from the EU age-range category codes."""
-    pop = _g(_part_one(trial_data), "trialDetails", "trialInformation", "populationOfTrialSubjects") or {}
-    codes = {str(a.get("ageRangeCategoryCode") or a.get("ageRangeCategory") or "")
-             for a in (pop.get("ageRanges") or [])}
+    pop = (
+        _g(_part_one(trial_data), "trialDetails", "trialInformation", "populationOfTrialSubjects")
+        or {}
+    )
+    codes = {
+        str(a.get("ageRangeCategoryCode") or a.get("ageRangeCategory") or "")
+        for a in (pop.get("ageRanges") or [])
+    }
     paed = AGE_CAT_PAEDIATRIC in codes
     adult = bool(codes & {AGE_CAT_ADULT, AGE_CAT_ELDERLY})
     if paed and adult:
@@ -110,7 +117,7 @@ def map_age_group(trial_data: dict) -> str:
     return "All"
 
 
-def map_age_numerical(ct_number: str, inclusion_text: str) -> List[str]:
+def map_age_numerical(ct_number: str, inclusion_text: str) -> list[str]:
     """
     The trial's age bounds as CTML age_numerical strings, lower first.
 
@@ -132,8 +139,9 @@ def map_age_numerical(ct_number: str, inclusion_text: str) -> List[str]:
     """
     # The bare number, as for every other model call: it is the trial id the
     # call is recorded under (utils/provenance).
-    minimum, maximum = ab.prose_bounds(ab.read_age_bounds(ct_number, inclusion_text),
-                                       f"CTIS: {ct_number}")
+    minimum, maximum = ab.prose_bounds(
+        ab.read_age_bounds(ct_number, inclusion_text), f"CTIS: {ct_number}"
+    )
     return [b for b in (minimum, maximum) if b]
 
 
@@ -156,19 +164,29 @@ def map_ctml_general_fields(trial_schema: dict, trial_data: dict) -> dict:
     trial_schema["age"] = map_age_group(trial_data)
     trial_schema["principal_investigator"] = "NA"
     trial_schema["principal_investigator_institution"] = sponsor
-    trial_schema["sponsor_list"] = {"sponsor": [{
-        "is_principal_sponsor": "Y", "sponsor_name": sponsor,
-        "sponsor_protocol_no": "", "sponsor_roles": "sponsor"}]}
-    trial_schema["drug_list"] = {"drug": [
-        {"drug_name": (p.get("productName") or p.get("name") or "NA")}
-        for p in (p1.get("products") or [])][:12]}
+    trial_schema["sponsor_list"] = {
+        "sponsor": [
+            {
+                "is_principal_sponsor": "Y",
+                "sponsor_name": sponsor,
+                "sponsor_protocol_no": "",
+                "sponsor_roles": "sponsor",
+            }
+        ]
+    }
+    trial_schema["drug_list"] = {
+        "drug": [
+            {"drug_name": (p.get("productName") or p.get("name") or "NA")}
+            for p in (p1.get("products") or [])
+        ][:12]
+    }
     trial_schema["protocol_target_accrual"] = p1.get("rowSubjectCount") or 0
     trial_schema["study_start_date"] = trial_data.get("startDateEU")
     trial_schema["study_completion_date"] = trial_data.get("endDateEU")
     trial_schema["last_updated"] = (trial_data.get("publishDate") or "")[:10] or None
     trial_schema["summary"] = (
-        _g(p1, "trialDetails", "trialInformation", "trialObjective", "mainObjective")
-        or long_title)[:900]
+        _g(p1, "trialDetails", "trialInformation", "trialObjective", "mainObjective") or long_title
+    )[:900]
     return trial_schema
 
 
@@ -180,8 +198,7 @@ def map_prior_treatment_requirements(trial_schema: dict, trial_data: dict) -> di
     return trial_schema
 
 
-def map_ctis_to_ctml(trial_data: dict,
-                     gene_synonym_mapping: Dict[str, List[str]]) -> dict:
+def map_ctis_to_ctml(trial_data: dict, gene_synonym_mapping: dict[str, list[str]]) -> dict:
     """Map one CTIS record to a MatchMiner CTML document."""
     ct = get_ct_number(trial_data)
     trial_schema = cs.get_ctml_schema()
@@ -209,11 +226,17 @@ def map_ctis_to_ctml(trial_data: dict,
     # with no labels, so it could not tell an excluded diagnosis from an
     # eligible one (config.DIAGNOSIS_INPUT).
     import config
+
     mode = getattr(config, "DIAGNOSIS_INPUT", "legacy")
     diagnosis_text = ctg.diagnosis_text(
-        inclusion_text, exclusion_text,
-        title=(get_titles(trial_data)[1] or get_titles(trial_data)[0]) if mode == "inclusion_only" else "",
-        conditions=conditions, legacy="\n".join(conditions + [criteria]))
+        inclusion_text,
+        exclusion_text,
+        title=(get_titles(trial_data)[1] or get_titles(trial_data)[0])
+        if mode == "inclusion_only"
+        else "",
+        conditions=conditions,
+        legacy="\n".join(conditions + [criteria]),
+    )
     seeded, from_eligibility = ctg.seed_and_map_diagnosis(ct, conditions, diagnosis_text)
     diagnoses = sorted(set(seeded) | set(from_eligibility))
 
@@ -244,12 +267,12 @@ def map_ctis_to_ctml(trial_data: dict,
     else:
         logger.info(f"CTIS: {ct} | No numeric age stated in criteria; leaving age_numerical unset")
 
-    clinical_criteria.update(
-        ctg._map_biomarker_statuses(ct, criteria, keywords, level="global"))
+    clinical_criteria.update(ctg._map_biomarker_statuses(ct, criteria, keywords, level="global"))
 
     logger.info(f"CTIS: {ct} | Mapping genomic criteria")
     genomic_ctml = ctg.map_ctml_match_genomic_criteria(
-        ct, gene_synonym_mapping, inclusion_text, exclusion_text)
+        ct, gene_synonym_mapping, inclusion_text, exclusion_text
+    )
 
     clinical_ctml = mcm.convert_to_ctml_clinical_schema(clinical_criteria)
     match_result = mcm.combine_clinical_and_genomic_ctml(clinical_ctml, genomic_ctml)
@@ -262,10 +285,15 @@ def map_ctis_to_ctml(trial_data: dict,
     # CTIS does not publish per-arm eligibility the way ClinicalTrials.gov
     # armGroups does, so criteria stay at step level rather than being split
     # across arms that would be guesses.
-    step[0]["arm"] = [{
-        "arm_code": "Registration", "arm_internal_id": 0,
-        "arm_description": "CTIS record: no per-arm eligibility published.",
-        "arm_suspended": "N", "dose_level": []}]
+    step[0]["arm"] = [
+        {
+            "arm_code": "Registration",
+            "arm_internal_id": 0,
+            "arm_description": "CTIS record: no per-arm eligibility published.",
+            "arm_suspended": "N",
+            "dose_level": [],
+        }
+    ]
     trial_schema["treatment_list"] = {"step": step}
 
     unsat = mcm.find_unsatisfiable_genes(match_result) if match_result else []

@@ -21,6 +21,7 @@ sequences it was checked against:
 
     python -m utils.build_protein_reference --release 1.5
 """
+
 import argparse
 import gzip
 import hashlib
@@ -32,9 +33,11 @@ import config
 from utils.reference_validation import gene_symbols
 
 BASE = "https://ftp.ncbi.nlm.nih.gov/refseq/MANE/MANE_human/release_{release}/"
-FILES = ("MANE.GRCh38.v{release}.summary.txt.gz",
-         "MANE.GRCh38.v{release}.refseq_protein.faa.gz",
-         "MANE.GRCh38.v{release}.ensembl_protein.faa.gz")
+FILES = (
+    "MANE.GRCh38.v{release}.summary.txt.gz",
+    "MANE.GRCh38.v{release}.refseq_protein.faa.gz",
+    "MANE.GRCh38.v{release}.ensembl_protein.faa.gz",
+)
 OUT = config.PROTEIN_REFERENCE_FILE_PATH
 COLUMNS = ["symbol", "hgnc_id", "refseq_protein", "ensembl_protein", "sequence"]
 
@@ -112,12 +115,18 @@ def build(release, source_dir, out=OUT):
         rows.append([symbol, row["HGNC_ID"], row["RefSeq_prot"], row["Ensembl_prot"], sequence])
 
     with open(out, "w") as handle:
-        handle.write(f"# MANE Select GRCh38 v{release} protein sequences; "
-                     f"panel {panel} plus histone H3 genes\n")
+        handle.write(
+            f"# MANE Select GRCh38 v{release} protein sequences; "
+            f"panel {panel} plus histone H3 genes\n"
+        )
         for path in paths:
             handle.write(f"# source {os.path.basename(path)} sha256 {_sha256(path)}\n")
-        handle.write(f"# panel genes without a MANE Select transcript: {', '.join(missing) or 'none'}\n")
-        handle.write(f"# panel genes that are non-coding (no protein): {', '.join(noncoding) or 'none'}\n")
+        handle.write(
+            f"# panel genes without a MANE Select transcript: {', '.join(missing) or 'none'}\n"
+        )
+        handle.write(
+            f"# panel genes that are non-coding (no protein): {', '.join(noncoding) or 'none'}\n"
+        )
         handle.write("\t".join(COLUMNS) + "\n")
         for row in rows:
             handle.write("\t".join(row) + "\n")
@@ -127,8 +136,9 @@ def build(release, source_dir, out=OUT):
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--release", required=True, help="MANE release, e.g. 1.5")
-    parser.add_argument("--source-dir", default="cache/mane",
-                        help="where the MANE files are kept or downloaded to")
+    parser.add_argument(
+        "--source-dir", default="cache/mane", help="where the MANE files are kept or downloaded to"
+    )
     parser.add_argument("--out", default=OUT)
     args = parser.parse_args()
     os.makedirs(args.source_dir, exist_ok=True)

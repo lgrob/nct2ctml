@@ -31,10 +31,8 @@ class TrialCriteriaToGenes:
     ):
         self.trial_criteria = gene_mentions.join_bracketed_stems(trial_criteria or "")
         self.synonym_to_symbol = synonym_to_symbol
-        self.blocked = {
-            b.upper() for b in getattr(_config, 'blocked_gene_synonyms', [])
-        }
-        self.contextual = getattr(_config, 'contextual_gene_synonyms', {}) or {}
+        self.blocked = {b.upper() for b in getattr(_config, "blocked_gene_synonyms", [])}
+        self.contextual = getattr(_config, "contextual_gene_synonyms", {}) or {}
         self._criteria_lower = self.trial_criteria.lower()
 
     # Joiners that put two gene names into one whitespace token: fusion
@@ -48,7 +46,7 @@ class TrialCriteriaToGenes:
     @staticmethod
     def _normalize_token(s: str) -> str:
         s = (s or "").strip()
-        s = s.strip('"\',;:.()[]{}')
+        s = s.strip("\"',;:.()[]{}")
         return s
 
     @staticmethod
@@ -88,7 +86,7 @@ class TrialCriteriaToGenes:
         tokens_raw = (self.trial_criteria or "").split()
         words = [w for w in (self._normalize_token(t) for t in tokens_raw) if w]
 
-        #words = self._generate_candidates(words, max_ngram=max_ngram)
+        # words = self._generate_candidates(words, max_ngram=max_ngram)
         return words
 
     def _lookup_official_symbols(self, token: str) -> list[str]:
@@ -111,8 +109,10 @@ class TrialCriteriaToGenes:
             # Context absent - fall through to the block check below.
 
         if upper in self.blocked:
-            logger.debug(f"Blocked ambiguous synonym: {token} "
-                  f"(would have mapped to {self._as_list(self.synonym_to_symbol.get(token))})")
+            logger.debug(
+                f"Blocked ambiguous synonym: {token} "
+                f"(would have mapped to {self._as_list(self.synonym_to_symbol.get(token))})"
+            )
             return []
 
         if token in self.synonym_to_symbol:
@@ -162,7 +162,7 @@ class TrialCriteriaToGenes:
             if "/" in cleaned and self._is_official(base):
                 for p in parts[1:]:
                     if len(p) <= 2 and p.isalnum():
-                        for cand in (base[:-len(p)] + p, base + p):
+                        for cand in (base[: -len(p)] + p, base + p):
                             if cand != base and self._is_official(cand):
                                 out.append(cand)
                                 break
@@ -176,8 +176,11 @@ class TrialCriteriaToGenes:
         # not CDK + N2A).
         for p in dict.fromkeys([token, cleaned] + parts):
             head = gene_mentions.split_glued(p)
-            if (head and (len(head) > 3 or self._is_official(head))
-                    and not self._lookup_official_symbols(p)):
+            if (
+                head
+                and (len(head) > 3 or self._is_official(head))
+                and not self._lookup_official_symbols(p)
+            ):
                 out.append(head)
         return out
 

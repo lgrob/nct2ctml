@@ -5,6 +5,7 @@ specific Oncotree node the pathology supports.
 
 Every case here is one the name-based metric got wrong on the curated key.
 """
+
 import os
 import sys
 import unittest
@@ -20,7 +21,6 @@ B_ALL_NOS = "B-Lymphoblastic Leukemia/Lymphoma, NOS"
 
 
 class TestCodableNodes(unittest.TestCase):
-
     def setUp(self):
         self.parent, _, self.descendants = get_lineage()
         _, self.codable, self.solid, self.liquid = _population_reference()
@@ -38,8 +38,7 @@ class TestCodableNodes(unittest.TestCase):
 
     def test_only_nos_parents_are_excluded(self):
         excluded = set(self.descendants) - self.codable
-        self.assertEqual(excluded,
-                         {self.parent[n] for n in self.parent if n.endswith(", NOS")})
+        self.assertEqual(excluded, {self.parent[n] for n in self.parent if n.endswith(", NOS")})
 
     def test_wildcards_partition_the_codable_nodes(self):
         solid = diagnosis_population({"_SOLID_"})
@@ -49,7 +48,6 @@ class TestCodableNodes(unittest.TestCase):
 
 
 class TestPopulationScore(unittest.TestCase):
-
     def test_redundant_enumeration_is_the_same_answer(self):
         # NCT04625907: the key lists Rhabdomyosarcoma and its subtypes, the
         # pipeline the parent alone. By name 0.40; by population identical.
@@ -81,8 +79,7 @@ class TestPopulationScore(unittest.TestCase):
         self.assertEqual(population_prf(set(), set())[:3], (1.0, 1.0, 1.0))
 
     def test_unknown_term_matches_only_itself(self):
-        self.assertEqual(diagnosis_population({"Not An Oncotree Node"}),
-                         {"Not An Oncotree Node"})
+        self.assertEqual(diagnosis_population({"Not An Oncotree Node"}), {"Not An Oncotree Node"})
 
 
 if __name__ == "__main__":

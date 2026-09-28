@@ -2,6 +2,7 @@
 Cytogenetic notation -> gene pairs, by the curated table only. Cases are
 strings from cached trial texts.
 """
+
 import os
 import sys
 import unittest
@@ -23,7 +24,6 @@ def one(text):
 
 
 class TestTable(unittest.TestCase):
-
     def test_every_gene_is_a_current_symbol_or_locus(self):
         for notation, rows in tl.table().items():
             for _, a, b, _ in rows:
@@ -38,7 +38,6 @@ class TestTable(unittest.TestCase):
 
 
 class TestParsing(unittest.TestCase):
-
     def test_spacing_colon_and_comma_variants(self):
         for text in ("t(9;22)", "t (9; 22)", "t(9:22)", "t(9,22)"):
             self.assertEqual(tl.find(text)[0].notation, "t(9;22)", text)
@@ -60,10 +59,14 @@ class TestParsing(unittest.TestCase):
 
 
 class TestResolution(unittest.TestCase):
-
     def test_bands_decide_inv16(self):
-        self.assertEqual((one("inv(16)(p13.1q22)").gene_a, one("inv(16)(p13.1q22)").gene_b), ("CBFB", "MYH11"))
-        self.assertEqual((one("inv(16)(p13.3q24.3)").gene_a, one("inv(16)(p13.3q24.3)").gene_b), ("CBFA2T3", "GLIS2"))
+        self.assertEqual(
+            (one("inv(16)(p13.1q22)").gene_a, one("inv(16)(p13.1q22)").gene_b), ("CBFB", "MYH11")
+        )
+        self.assertEqual(
+            (one("inv(16)(p13.3q24.3)").gene_a, one("inv(16)(p13.3q24.3)").gene_b),
+            ("CBFA2T3", "GLIS2"),
+        )
 
     def test_bare_form_takes_the_single_conventional_row(self):
         r = one("inv(16)")
@@ -72,7 +75,9 @@ class TestResolution(unittest.TestCase):
     def test_ambiguous_bare_form_gives_only_the_shared_gene(self):
         r = one("t(8;14)")
         self.assertEqual((r.gene_a, r.gene_b, r.status), ("MYC", "", "gene_level"))
-        self.assertEqual((one("t (8; 14) (q24; q11)").gene_a, one("t (8; 14) (q24; q11)").gene_b), ("TRA", "MYC"))
+        self.assertEqual(
+            (one("t (8; 14) (q24; q11)").gene_a, one("t (8; 14) (q24; q11)").gene_b), ("TRA", "MYC")
+        )
 
     def test_ambiguous_with_nothing_shared_is_unresolved(self):
         self.assertEqual(one("t(12;22)").status, "unresolved")

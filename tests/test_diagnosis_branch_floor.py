@@ -3,7 +3,7 @@ import sys
 import unittest
 from unittest.mock import patch
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from loguru import logger
 
@@ -28,29 +28,36 @@ class TestBranchFloor(unittest.TestCase):
 
         def fake_ai(nct_id, trial_info, oncotree_values):
             offered.append(set(oncotree_values))
-            if len(offered) == 1:                      # stage 1: the wrong branch
+            if len(offered) == 1:  # stage 1: the wrong branch
                 return {"oncotree_diagnoses": ["Adrenal Gland"]}
-            return {"oncotree_diagnoses": sorted(                # stage 2: honest
-                {"Neuroblastoma"} & oncotree_values)}
+            return {
+                "oncotree_diagnoses": sorted(  # stage 2: honest
+                    {"Neuroblastoma"} & oncotree_values
+                )
+            }
 
-        with patch.object(ctg.ai, "get_oncotree_diagnoses_from_trial_info",
-                          side_effect=fake_ai):
+        with patch.object(ctg.ai, "get_oncotree_diagnoses_from_trial_info", side_effect=fake_ai):
             result = ctg.map_eligibility_criteria_to_oncotree_term(
-                "NCT01704716", "high risk neuroblastoma", seed_terms)
+                "NCT01704716", "high risk neuroblastoma", seed_terms
+            )
         return offered, result
 
     def test_without_a_seed_the_answer_is_unreachable(self):
         offered, result = self._run(seed_terms=())
-        self.assertNotIn("Neuroblastoma", offered[1],
-                         "Adrenal Gland's subtree should not contain neuroblastoma")
+        self.assertNotIn(
+            "Neuroblastoma", offered[1], "Adrenal Gland's subtree should not contain neuroblastoma"
+        )
         self.assertEqual(result, [])
 
     def test_a_seeded_term_forces_its_own_branch_in(self):
         offered, result = self._run(seed_terms=["Neuroblastoma"])
         self.assertIn("Neuroblastoma", offered[1])
-        self.assertIn("Ganglioneuroblastoma", offered[1],
-                      "the whole branch is added, not just the seeded term, so "
-                      "siblings the trial did not name outright stay reachable")
+        self.assertIn(
+            "Ganglioneuroblastoma",
+            offered[1],
+            "the whole branch is added, not just the seeded term, so "
+            "siblings the trial did not name outright stay reachable",
+        )
         self.assertEqual(result, ["Neuroblastoma"])
 
     def test_the_wrongly_chosen_branch_is_still_offered(self):
@@ -67,12 +74,12 @@ class TestBranchFloor(unittest.TestCase):
                 return {"oncotree_diagnoses": []}
             return {"oncotree_diagnoses": ["Neuroblastoma"]}
 
-        with patch.object(ctg.ai, "get_oncotree_diagnoses_from_trial_info",
-                          side_effect=fake_ai):
+        with patch.object(ctg.ai, "get_oncotree_diagnoses_from_trial_info", side_effect=fake_ai):
             result = ctg.map_eligibility_criteria_to_oncotree_term(
-                "NCT01704716", "text", ["Neuroblastoma"])
+                "NCT01704716", "text", ["Neuroblastoma"]
+            )
         self.assertEqual(result, ["Neuroblastoma"])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

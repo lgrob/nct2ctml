@@ -34,6 +34,7 @@ malformations), AL amyloidosis, CAR-T long-term follow-up and drug rollover
 studies are out of scope. None of them enrols a patient on a tumour diagnosis
 or variant. Override in the file if that changes.
 """
+
 import csv
 import os
 import re
@@ -44,15 +45,57 @@ import config
 # missing here is a false skip; the four found so far (germinoma, NSCLC,
 # kaposiform hemangioendothelioma, insulinoma) were each a missing stem.
 _STEMS = (
-    "cancer", "tumor", "tumour", "neoplas", "carcino", "sarcom", "lymphom",
-    "leukemi", "leukaemi", "blastom", "gliom", "glioblast", "melanom", "myelom",
-    "germinom", "seminom", "teratom", "astrocytom", "ependymom", "medulloblast",
-    "neuroblast", "nephroblast", "wilms", "retinoblast", "hepatoblast", "rhabdo",
-    "ewing", "malignan", "metasta", "oncolog", "myelodysplas", "histiocyt",
-    "mesotheliom", "craniopharyngiom", "meningiom", "schwannom", "neurofibrom",
-    "pheochromocytom", "paragangliom", "chordom", "myeloprolif", "mastocytos",
-    "hemangioendotheliom", "haemangioendotheliom", "langerhans", "hodgkin",
-    "waldenstr", "macroglobulin", "plasmacyt", "chemotherap", "radiotherap",
+    "cancer",
+    "tumor",
+    "tumour",
+    "neoplas",
+    "carcino",
+    "sarcom",
+    "lymphom",
+    "leukemi",
+    "leukaemi",
+    "blastom",
+    "gliom",
+    "glioblast",
+    "melanom",
+    "myelom",
+    "germinom",
+    "seminom",
+    "teratom",
+    "astrocytom",
+    "ependymom",
+    "medulloblast",
+    "neuroblast",
+    "nephroblast",
+    "wilms",
+    "retinoblast",
+    "hepatoblast",
+    "rhabdo",
+    "ewing",
+    "malignan",
+    "metasta",
+    "oncolog",
+    "myelodysplas",
+    "histiocyt",
+    "mesotheliom",
+    "craniopharyngiom",
+    "meningiom",
+    "schwannom",
+    "neurofibrom",
+    "pheochromocytom",
+    "paragangliom",
+    "chordom",
+    "myeloprolif",
+    "mastocytos",
+    "hemangioendotheliom",
+    "haemangioendotheliom",
+    "langerhans",
+    "hodgkin",
+    "waldenstr",
+    "macroglobulin",
+    "plasmacyt",
+    "chemotherap",
+    "radiotherap",
     "insulinom",
     # Post-transplant lymphoproliferative disease is a lymphoid neoplasm
     # (NCT03394365, EBV-PTLD T-cell therapy); without the stem its conditions
@@ -62,8 +105,26 @@ _STEMS = (
 # Abbreviations, matched case-sensitively as whole words: "ALL" is acute
 # lymphoblastic leukaemia, "all" is not.
 _ABBREVIATIONS = (
-    "NSCLC", "SCLC", "AML", "ALL", "CML", "CLL", "MDS", "JMML", "HCC", "RCC",
-    "DIPG", "DMG", "HGG", "LGG", "GBM", "NHL", "HL", "LCH", "MPNST", "ATRT",
+    "NSCLC",
+    "SCLC",
+    "AML",
+    "ALL",
+    "CML",
+    "CLL",
+    "MDS",
+    "JMML",
+    "HCC",
+    "RCC",
+    "DIPG",
+    "DMG",
+    "HGG",
+    "LGG",
+    "GBM",
+    "NHL",
+    "HL",
+    "LCH",
+    "MPNST",
+    "ATRT",
 )
 _STEM_RX = re.compile("|".join(_STEMS), re.I)
 
@@ -77,7 +138,9 @@ _STEM_RX = re.compile("|".join(_STEMS), re.I)
 # procedure" far too often to be used.
 _FOLLOW_ON_RX = re.compile(
     r"long[\s-]*term[\s-]+follow[\s-]*up|\bLTFU\b|roll[\s-]*over|continued\s+(?:access|treatment)"
-    r"|extension\s+study|continuation\s+study", re.I)
+    r"|extension\s+study|continuation\s+study",
+    re.I,
+)
 
 # Phrases that contain a stem but name no tumour. Masked before the
 # vocabulary is matched, so they cannot put a trial in scope; the rest of
@@ -106,7 +169,9 @@ _SUPPORTIVE_RX = re.compile(
     r"|hearing loss|nephrotox|hepatotox|sinusoidal obstruction|veno-occlusive|\bVOD\b|pancreatitis"
     r"|hypothyroid|osteonecrosis|osteoradionecrosis|fertility|psycholog|quality of life|anxiety|distress"
     r"|nutrition|exercise|physical activity|neurocognit|survivorship|late effects|delirium|sedation"
-    r"|anesthe|anaesthe", re.I)
+    r"|anesthe|anaesthe",
+    re.I,
+)
 
 _NOT_A_TUMOUR = re.compile(
     r"glioma[\s-]+inactivated"
@@ -117,7 +182,8 @@ _NOT_A_TUMOUR = re.compile(
     #   Insertional Oncogenesis" in metachromatic leukodystrophy,
     #   2025-522275-28-00 (reported by the user, 2026-09-26).
     r"|risk\s+of\s+(?:secondary\s+)?malignanc\w*|insertional\s+oncogenesis",
-    re.I)
+    re.I,
+)
 _ABBR_RX = re.compile(r"\b(?:" + "|".join(_ABBREVIATIONS) + r")\b")
 
 OVERRIDES = getattr(config, "SCOPE_OVERRIDES_FILE_PATH", "ref/scope_overrides.tsv")
@@ -138,7 +204,9 @@ def load_report(path=None):
     if not os.path.exists(path):
         return {}
     with open(path, newline="") as handle:
-        return {row["trial_id"]: row.get("reason", "") for row in csv.DictReader(handle, delimiter="\t")}
+        return {
+            row["trial_id"]: row.get("reason", "") for row in csv.DictReader(handle, delimiter="\t")
+        }
 
 
 def load_overrides(path=OVERRIDES):
@@ -147,10 +215,14 @@ def load_overrides(path=OVERRIDES):
         return {}
     overrides = {}
     with open(path, newline="") as handle:
-        for row in csv.DictReader((line for line in handle if not line.startswith("#")), delimiter="\t"):
+        for row in csv.DictReader(
+            (line for line in handle if not line.startswith("#")), delimiter="\t"
+        ):
             decision = (row.get("decision") or "").strip().lower()
             if decision not in ("map", "skip"):
-                raise ValueError(f"{path}: decision for {row.get('trial_id')!r} must be map or skip")
+                raise ValueError(
+                    f"{path}: decision for {row.get('trial_id')!r} must be map or skip"
+                )
             overrides[row["trial_id"].strip()] = (decision, (row.get("reason") or "").strip())
     return overrides
 
@@ -159,11 +231,14 @@ def _nct_texts(trial_data):
     ps = trial_data.get("protocolSection", {})
     cm, im = ps.get("conditionsModule", {}), ps.get("identificationModule", {})
     return (cm.get("conditions") or []), (cm.get("keywords") or []) + [
-        im.get("briefTitle") or "", im.get("officialTitle") or ""]
+        im.get("briefTitle") or "",
+        im.get("officialTitle") or "",
+    ]
 
 
 def _ctis_texts(trial_data):
     import src.ctis as ctis
+
     return ctis.get_conditions(trial_data), list(ctis.get_titles(trial_data))
 
 
@@ -181,11 +256,15 @@ def assess(trial_id, trial_data, registry, overrides=None):
 
     conditions, other = (_nct_texts if registry == "nct" else _ctis_texts)(trial_data)
 
-    import utils.reference_validation as rv
     import src.clinical_trials_gov as ctg
+    import utils.reference_validation as rv
+
     follow_on = _FOLLOW_ON_RX.search(" | ".join(t for t in other if t))
     if follow_on:
-        return False, f"follow-on study ('{follow_on.group(0)}'): enrols only patients from an earlier study"
+        return (
+            False,
+            f"follow-on study ('{follow_on.group(0)}'): enrols only patients from an earlier study",
+        )
 
     oncotree = rv.diagnoses_from_conditions(conditions, trial_id)
     if oncotree:
@@ -194,10 +273,15 @@ def assess(trial_id, trial_data, registry, overrides=None):
         return True, "conditions describe a basket"
     # "Chemotherapy-induced nausea" names a treatment, not a tumour
     # (NCT06904235), so treatment stems do not count here.
-    tumour_in_conditions = [m for m in matched_terms(list(conditions))
-                            if not m.lower().startswith(("chemotherap", "radiotherap"))]
+    tumour_in_conditions = [
+        m
+        for m in matched_terms(list(conditions))
+        if not m.lower().startswith(("chemotherap", "radiotherap"))
+    ]
     if not tumour_in_conditions:
-        supportive = _SUPPORTIVE_RX.search(" | ".join(t for t in list(conditions) + list(other) if t))
+        supportive = _SUPPORTIVE_RX.search(
+            " | ".join(t for t in list(conditions) + list(other) if t)
+        )
         if supportive:
             return False, f"supportive care ('{supportive.group(0)}'): conditions name no tumour"
     terms = matched_terms(list(conditions) + list(other))
@@ -216,8 +300,11 @@ def write_report(rows, path=REPORT, registry=None):
     rows = list(rows)
     if registry and os.path.exists(path):
         with open(path, newline="") as handle:
-            kept = [tuple(r) for r in list(csv.reader(handle, delimiter="\t"))[1:]
-                    if len(r) == 3 and r[1] != registry]
+            kept = [
+                tuple(r)
+                for r in list(csv.reader(handle, delimiter="\t"))[1:]
+                if len(r) == 3 and r[1] != registry
+            ]
         rows += kept
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "w", newline="") as handle:
@@ -232,6 +319,7 @@ def main():
     import argparse
     import glob
     import json
+
     parser = argparse.ArgumentParser(description="List cached trials the map step will skip.")
     parser.add_argument("--nct", default="cache/nct")
     parser.add_argument("--ctis", default="cache/ctis")
@@ -239,7 +327,10 @@ def main():
     args = parser.parse_args()
     overrides = load_overrides()
     skipped, total = [], 0
-    for registry, folder, pattern in (("nct", args.nct, "NCT*.json"), ("ctis", args.ctis, "*.json")):
+    for registry, folder, pattern in (
+        ("nct", args.nct, "NCT*.json"),
+        ("ctis", args.ctis, "*.json"),
+    ):
         for path in sorted(glob.glob(os.path.join(folder, pattern))):
             trial_id = os.path.basename(path)[:-5]
             try:

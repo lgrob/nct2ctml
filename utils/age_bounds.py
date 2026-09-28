@@ -31,6 +31,7 @@ The rules, and why:
 - Any failure of the reading step leaves the structured result unchanged.
   A model outage must never remove a bound.
 """
+
 from loguru import logger
 
 # Conversion to years for the units the prompt allows. Kept in step with
@@ -118,8 +119,9 @@ def stated_exclusive_maximum(result):
     return None
 
 
-def reconcile_with_structured(structured_minimum, structured_maximum,
-                              stated_maximum_years, prose, trial_id=""):
+def reconcile_with_structured(
+    structured_minimum, structured_maximum, stated_maximum_years, prose, trial_id=""
+):
     """
     The trial's age bounds, structured fields first, prose where it decides.
 
@@ -133,7 +135,9 @@ def reconcile_with_structured(structured_minimum, structured_maximum,
 
     minimum = structured_minimum or prose_minimum
     if not structured_minimum and prose_minimum:
-        logger.info(f"{trial_id} | No structured minimum age; using the prose bound {prose_minimum}")
+        logger.info(
+            f"{trial_id} | No structured minimum age; using the prose bound {prose_minimum}"
+        )
 
     maximum = structured_maximum
     if structured_maximum and stated_maximum_years is not None:
@@ -142,11 +146,13 @@ def reconcile_with_structured(structured_minimum, structured_maximum,
             maximum = expression("<", stated_maximum_years)
             logger.info(
                 f"{trial_id} | Prose states the maximum age as exclusive; "
-                f"{structured_maximum} narrowed to {maximum}")
+                f"{structured_maximum} narrowed to {maximum}"
+            )
         elif prose_maximum and prose_maximum != structured_maximum and exclusive is None:
             logger.debug(
                 f"{trial_id} | Prose maximum {prose_maximum} differs from the structured "
-                f"{structured_maximum}; keeping the structured reading")
+                f"{structured_maximum}; keeping the structured reading"
+            )
     elif not structured_maximum and prose_maximum:
         maximum = prose_maximum
         logger.info(f"{trial_id} | No structured maximum age; using the prose bound {maximum}")
@@ -165,6 +171,7 @@ def read_age_bounds(trial_id, inclusion_text):
         return None
     try:
         import utils.ai_helper as ai
+
         result = ai.get_age_bounds(trial_id, inclusion_text)
     except Exception as e:
         logger.warning(f"{trial_id} | Age reading failed ({e}); using structured ages only")

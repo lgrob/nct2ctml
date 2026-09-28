@@ -34,6 +34,7 @@ model said. Keep it with the outputs a result was based on.
 Nothing is recorded without a started run, so tests and one-off imports
 never write to `runs/`. "dirty" ignores untracked files.
 """
+
 import hashlib
 import json
 import os
@@ -41,7 +42,7 @@ import secrets
 import subprocess
 import sys
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from importlib import metadata
 
 from loguru import logger
@@ -53,11 +54,18 @@ _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 # Every reference file the mapper reads at run time, by its config name.
 # ref/local_trial_info.csv has no config entry; TrialMapManager hard-codes it.
 _REFERENCE_KEYS = (
-    "ONCOTREE_TXT_FILE_PATH", "GENE_LIST_FILE_PATH", "LEGACY_GENE_LIST_FILE_PATH",
-    "GENE_SYNONYM_FILE_PATH", "GENE_SYNONYM_ADDENDUM_FILE_PATH",
-    "GENE_REWRITE_EXCLUSION_FILE_PATH", "PROTEIN_REFERENCE_FILE_PATH",
-    "DIAGNOSIS_TEXT_TERMS_FILE_PATH", "TRANSLOCATION_TABLE_FILE_PATH",
-    "MANE_GENES_FILE_PATH", "DIAGNOSIS_SYNONYM_FILE_PATH", "SCOPE_OVERRIDES_FILE_PATH",
+    "ONCOTREE_TXT_FILE_PATH",
+    "GENE_LIST_FILE_PATH",
+    "LEGACY_GENE_LIST_FILE_PATH",
+    "GENE_SYNONYM_FILE_PATH",
+    "GENE_SYNONYM_ADDENDUM_FILE_PATH",
+    "GENE_REWRITE_EXCLUSION_FILE_PATH",
+    "PROTEIN_REFERENCE_FILE_PATH",
+    "DIAGNOSIS_TEXT_TERMS_FILE_PATH",
+    "TRANSLOCATION_TABLE_FILE_PATH",
+    "MANE_GENES_FILE_PATH",
+    "DIAGNOSIS_SYNONYM_FILE_PATH",
+    "SCOPE_OVERRIDES_FILE_PATH",
 )
 LOCAL_TRIAL_INFO_FILE_PATH = "ref/local_trial_info.csv"
 
@@ -73,7 +81,7 @@ _hashes = {}
 
 
 def _now():
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def sha256_text(text):
@@ -120,18 +128,28 @@ def code_version():
     global _git
     if _git is None:
         try:
+
             def git(*args):
-                return subprocess.run(["git", *args], cwd=_ROOT, capture_output=True,
-                                      text=True, check=True, timeout=10).stdout
-            _git = {"commit": git("rev-parse", "HEAD").strip(),
-                    "dirty": bool(git("status", "--porcelain", "--untracked-files=no").strip())}
+                return subprocess.run(
+                    ["git", *args],
+                    cwd=_ROOT,
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                    timeout=10,
+                ).stdout
+
+            _git = {
+                "commit": git("rev-parse", "HEAD").strip(),
+                "dirty": bool(git("status", "--porcelain", "--untracked-files=no").strip()),
+            }
         except (OSError, subprocess.SubprocessError):
             _git = {"commit": None, "dirty": None}
     return dict(_git)
 
 
 def short_commit(code):
-    """"d61a30c1b2e4", "+dirty" appended when the tree had local changes."""
+    """ "d61a30c1b2e4", "+dirty" appended when the tree had local changes."""
     commit = (code or {}).get("commit")
     if not commit:
         return ""
@@ -141,6 +159,7 @@ def short_commit(code):
 def llm_settings():
     """The platform, model and every setting that changes what the model is asked or answers."""
     import utils.ai_helper as ai
+
     platform = ai._llm_platform
     name = str(config.LLM_PLATFORM)
     settings = {
@@ -151,13 +170,17 @@ def llm_settings():
     }
     kind = name.lower()
     if kind == "anthropic":
-        settings.update(temperature=getattr(config, "ANTHROPIC_TEMPERATURE", None),
-                        thinking=getattr(config, "ANTHROPIC_THINKING", None),
-                        effort=getattr(config, "ANTHROPIC_EFFORT", None),
-                        max_tokens=getattr(config, "ANTHROPIC_MAX_TOKENS", None))
+        settings.update(
+            temperature=getattr(config, "ANTHROPIC_TEMPERATURE", None),
+            thinking=getattr(config, "ANTHROPIC_THINKING", None),
+            effort=getattr(config, "ANTHROPIC_EFFORT", None),
+            max_tokens=getattr(config, "ANTHROPIC_MAX_TOKENS", None),
+        )
     elif kind == "ollama":
-        settings.update(num_ctx=getattr(config, "OLLAMA_NUM_CTX", None),
-                        num_predict=getattr(config, "OLLAMA_NUM_PREDICT", None))
+        settings.update(
+            num_ctx=getattr(config, "OLLAMA_NUM_CTX", None),
+            num_predict=getattr(config, "OLLAMA_NUM_PREDICT", None),
+        )
     elif kind == "replay":
         settings.update(recorded_platform=platform.recorded_platform, replay_of=platform.source)
     return settings
@@ -189,12 +212,18 @@ def start_run(command, directory=None):
     """
     global _run
     directory = getattr(config, "RUNS_PATH", "runs") if directory is None else directory
-    run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + secrets.token_hex(3)
+    run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ") + "-" + secrets.token_hex(3)
     llm = llm_settings()
     info = {
-        "run_id": run_id, "command": command, "argv": sys.argv, "started_at": _now(),
-        "code": code_version(), "llm": llm, "reference_sha256": reference_hashes(),
-        "python": sys.version.split()[0], "packages": _package_versions(),
+        "run_id": run_id,
+        "command": command,
+        "argv": sys.argv,
+        "started_at": _now(),
+        "code": code_version(),
+        "llm": llm,
+        "reference_sha256": reference_hashes(),
+        "python": sys.version.split()[0],
+        "packages": _package_versions(),
     }
     run_dir = calls_path = None
     if directory:
@@ -204,10 +233,24 @@ def start_run(command, directory=None):
         # A replay asks no model, so there is nothing new to record.
         if llm["platform"].lower() != "replay":
             calls_path = os.path.join(run_dir, CALLS_FILE)
-    _run = {"id": run_id, "dir": run_dir, "calls_path": calls_path, "info": info,
-            "calls": Counter(), "errors": 0, "record_failures": 0, "schemas": set()}
-    where = calls_path or (run_dir and f"{run_dir} (replay: calls not recorded)") or "nowhere (RUNS_PATH is None)"
-    logger.info(f"Run {run_id} | {llm['platform']} {llm['model']} | model calls recorded in {where}")
+    _run = {
+        "id": run_id,
+        "dir": run_dir,
+        "calls_path": calls_path,
+        "info": info,
+        "calls": Counter(),
+        "errors": 0,
+        "record_failures": 0,
+        "schemas": set(),
+    }
+    where = (
+        calls_path
+        or (run_dir and f"{run_dir} (replay: calls not recorded)")
+        or "nowhere (RUNS_PATH is None)"
+    )
+    logger.info(
+        f"Run {run_id} | {llm['platform']} {llm['model']} | model calls recorded in {where}"
+    )
     return run_id
 
 
@@ -217,13 +260,21 @@ def finish_run(**summary):
     if _run is None:
         return None
     run, _run = _run, None
-    info = dict(run["info"], finished_at=_now(), llm_calls=sum(run["calls"].values()),
-                llm_call_errors=run["errors"], trials_with_llm_calls=len(run["calls"]),
-                record_failures=run["record_failures"], summary=summary)
+    info = dict(
+        run["info"],
+        finished_at=_now(),
+        llm_calls=sum(run["calls"].values()),
+        llm_call_errors=run["errors"],
+        trials_with_llm_calls=len(run["calls"]),
+        record_failures=run["record_failures"],
+        summary=summary,
+    )
     if run["dir"]:
         _write_json(os.path.join(run["dir"], RUN_FILE), info)
     if run["record_failures"]:
-        logger.error(f"Run {run['id']} | {run['record_failures']} model calls could not be recorded")
+        logger.error(
+            f"Run {run['id']} | {run['record_failures']} model calls could not be recorded"
+        )
     return info
 
 
@@ -246,11 +297,17 @@ def record_call(trial_id, prompt, schema, response=None, error=None, elapsed=Non
             _run["schemas"].add(s_sha)
         llm = _run["info"]["llm"]
         line = {
-            "ts": _now(), "run_id": _run["id"], "trial_id": trial_id,
-            "platform": llm["platform"], "model": llm["model"],
-            "prompt_sha256": sha256_text(prompt), "schema_sha256": s_sha,
+            "ts": _now(),
+            "run_id": _run["id"],
+            "trial_id": trial_id,
+            "platform": llm["platform"],
+            "model": llm["model"],
+            "prompt_sha256": sha256_text(prompt),
+            "schema_sha256": s_sha,
             "elapsed_s": None if elapsed is None else round(elapsed, 3),
-            "prompt": prompt, "response": response, "error": error,
+            "prompt": prompt,
+            "response": response,
+            "error": error,
         }
         # Opened per call and flushed on close, so a crash loses at most the call in flight.
         with open(_run["calls_path"], "a", encoding="utf-8") as handle:

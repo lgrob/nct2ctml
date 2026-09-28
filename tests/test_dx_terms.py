@@ -1,4 +1,5 @@
 """Diagnosis text matching knows clinical names, abbreviations and plurals (2026-09-27)."""
+
 import os
 import sys
 import unittest
@@ -13,27 +14,49 @@ logger.remove()
 
 
 class TestDxTerms(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.ref = rh.Reference()
 
     def test_nopho_exclusions_are_found(self):
         # 2024-518254-16-00: APL, MDS and ML-DS were not found before.
-        exc = ("3. Down syndrome (DS). Patients with myeloid leukaemia of Down syndrome ... "
-               "4. Acute promyelocytic leukaemia (APL). 5. Myelodysplastic syndrome (MDS). 6. JMML")
-        dx = ["Acute Myeloid Leukemia", "APL with PML-RARA", "Myelodysplastic Syndromes",
-              "Myeloid Leukemia Associated with Down Syndrome", "Juvenile Myelomonocytic Leukemia"]
-        got = rh.diagnoses_only_in_exclusions(dx, "AML as defined by the protocol", exc, ref=self.ref)
+        exc = (
+            "3. Down syndrome (DS). Patients with myeloid leukaemia of Down syndrome ... "
+            "4. Acute promyelocytic leukaemia (APL). 5. Myelodysplastic syndrome (MDS). 6. JMML"
+        )
+        dx = [
+            "Acute Myeloid Leukemia",
+            "APL with PML-RARA",
+            "Myelodysplastic Syndromes",
+            "Myeloid Leukemia Associated with Down Syndrome",
+            "Juvenile Myelomonocytic Leukemia",
+        ]
+        got = rh.diagnoses_only_in_exclusions(
+            dx, "AML as defined by the protocol", exc, ref=self.ref
+        )
         self.assertEqual(set(got), set(dx[1:]))
 
     def test_plural_and_apostrophe(self):
-        self.assertTrue(rh.find_mentions("unilateral Wilms tumour", self.ref.dx_terms("Wilms' Tumor")))
-        self.assertTrue(rh.find_mentions("a myelodysplastic syndrome", self.ref.dx_terms("Myelodysplastic Syndromes")))
+        self.assertTrue(
+            rh.find_mentions("unilateral Wilms tumour", self.ref.dx_terms("Wilms' Tumor"))
+        )
+        self.assertTrue(
+            rh.find_mentions(
+                "a myelodysplastic syndrome", self.ref.dx_terms("Myelodysplastic Syndromes")
+            )
+        )
 
     def test_short_abbreviations_are_case_sensitive(self):
-        self.assertTrue(rh.find_mentions("relapsed T-ALL", self.ref.dx_terms("T-Lymphoblastic Leukemia/Lymphoma")))
-        self.assertFalse(rh.find_mentions("a cml of fluid", self.ref.dx_terms("Chronic Myeloid Leukemia, BCR-ABL1+")))
+        self.assertTrue(
+            rh.find_mentions(
+                "relapsed T-ALL", self.ref.dx_terms("T-Lymphoblastic Leukemia/Lymphoma")
+            )
+        )
+        self.assertFalse(
+            rh.find_mentions(
+                "a cml of fluid", self.ref.dx_terms("Chronic Myeloid Leukemia, BCR-ABL1+")
+            )
+        )
 
     def test_every_row_names_an_oncotree_node(self):
         self.assertTrue(self.ref.text_terms)
@@ -41,13 +64,13 @@ class TestDxTerms(unittest.TestCase):
 
 
 class TestResolveRemapDrops(unittest.TestCase):
-
     def test_scoped_exclusion_is_not_a_trial_exclusion(self):
         import re
+
         exc = "Exclusion from the randomization part of the study: - Diagnosis of Myelodysplastic syndrome (MDS)."
         ref = rh.Reference()
         s = rh.find_mentions(exc, ref.dx_terms("Myelodysplastic Syndromes"))[0][0]
-        self.assertTrue(re.search(r"randomi[sz]", exc[max(0, s - 250):s], re.I))
+        self.assertTrue(re.search(r"randomi[sz]", exc[max(0, s - 250) : s], re.I))
 
 
 if __name__ == "__main__":

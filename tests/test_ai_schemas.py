@@ -3,7 +3,7 @@ import sys
 import unittest
 from unittest import mock
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from loguru import logger
 
@@ -47,7 +47,10 @@ class TestEveryPromptIsStructured(unittest.TestCase):
 
     def test_the_ollama_platform_sends_it_as_format(self):
         from utils.llm_platforms import OllamaPlatform
-        body = OllamaPlatform("llama3.3:70b", "http://127.0.0.1").get_request_body("p", ai.PDL1_SCHEMA)
+
+        body = OllamaPlatform("llama3.3:70b", "http://127.0.0.1").get_request_body(
+            "p", ai.PDL1_SCHEMA
+        )
         self.assertEqual(body.get("format"), ai.PDL1_SCHEMA)
 
 
@@ -65,15 +68,15 @@ class TestCandidateListsBecomeEnums(unittest.TestCase):
 
     def test_an_off_list_answer_has_no_representation(self):
         schema = ai.oncotree_diagnoses_schema(["Neuroblastoma"])
-        self.assertNotIn(
-            "Lymphoma", schema["properties"]["oncotree_diagnoses"]["items"]["enum"])
+        self.assertNotIn("Lymphoma", schema["properties"]["oncotree_diagnoses"]["items"]["enum"])
 
     def test_level1_keeps_its_escape_hatches(self):
         # clinical_trials_gov skips "" and "other"; a constrained model that
         # cannot say either is forced to pick a branch it does not believe in.
         schema = ai.level1_diagnoses_schema(["Adrenal Gland"])
-        values = (schema["properties"]["oncotree_diagnoses"]["items"]
-                        ["properties"]["oncotree_value"]["enum"])
+        values = schema["properties"]["oncotree_diagnoses"]["items"]["properties"][
+            "oncotree_value"
+        ]["enum"]
         self.assertIn("", values)
         self.assertIn("Other", values)
 
@@ -187,8 +190,7 @@ class TestStatusSchemas(unittest.TestCase):
         # is silently discarded downstream; the enum stops it being generated.
         expected = ["Positive", "Negative", "Unknown", "!Positive", "!Negative"]
         for field in ("her2_status", "er_status", "pr_status"):
-            self.assertEqual(ai.HER2_ER_PR_SCHEMA["properties"][field]["enum"],
-                             expected, field)
+            self.assertEqual(ai.HER2_ER_PR_SCHEMA["properties"][field]["enum"], expected, field)
 
     def test_mmr_fields_are_optional(self):
         # There is no "Unknown" for MMR, so requiring a field would force the
@@ -202,9 +204,10 @@ class TestStatusSchemas(unittest.TestCase):
 
     def test_age_units_are_constrained_to_what_the_code_converts(self):
         from utils.age_bounds import UNIT_IN_YEARS
+
         unit = ai.AGE_BOUNDS_SCHEMA["properties"]["maximum"]["properties"]["unit"]
         self.assertEqual(set(unit["enum"]), set(UNIT_IN_YEARS))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

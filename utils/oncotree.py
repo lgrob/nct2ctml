@@ -1,11 +1,12 @@
-import sys
 import os
+import sys
 
-sys.path.append(os.path.abspath('../'))
+sys.path.append(os.path.abspath("../"))
 
 import csv
 import re
 from collections import defaultdict
+
 import config
 
 # "Acute Myeloid Leukemia (AML)" -> the display name, dropping the trailing
@@ -17,8 +18,8 @@ _LEVEL_VALUE = re.compile(r"\s+\([A-Z0-9_./-]+\)$")
 
 def _get_level_columns(fieldnames):
     return sorted(
-        (f for f in fieldnames if f.startswith('level_')),
-        key=lambda name: int(name.split('_')[1]),
+        (f for f in fieldnames if f.startswith("level_")),
+        key=lambda name: int(name.split("_")[1]),
     )
 
 
@@ -40,7 +41,7 @@ def _parse_level_value(value):
 
 def _read_oncotree_rows():
     with open(config.ONCOTREE_TXT_FILE_PATH) as f:
-        reader = csv.DictReader(f, delimiter='\t')
+        reader = csv.DictReader(f, delimiter="\t")
         level_columns = _get_level_columns(reader.fieldnames)
         rows = list(reader)
     return rows, level_columns
@@ -55,13 +56,11 @@ def get_all_oncotree_data():
     for row in rows:
         level_1 = _parse_level_value(row[level_columns[0]])
         level_1_list.add(level_1)
-        mapping_l1_all[level_1].update(
-            _parse_level_value(row[col]) for col in level_columns[1:]
-        )
+        mapping_l1_all[level_1].update(_parse_level_value(row[col]) for col in level_columns[1:])
 
     for s in mapping_l1_all.values():
-        if '' in s:
-            s.remove('')
+        if "" in s:
+            s.remove("")
     return level_1_list, mapping_l1_all
 
 
@@ -80,8 +79,8 @@ def get_l1_l2_oncotree_data():
             mapping_11_l2[level_1].update({level_2})
 
     for s in mapping_11_l2.values():
-        if '' in s:
-            s.remove('')
+        if "" in s:
+            s.remove("")
 
     return level_1_list, mapping_11_l2
 

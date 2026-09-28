@@ -24,7 +24,6 @@ import json
 import os
 import time
 from datetime import datetime
-from typing import Dict, List, Set
 
 import requests
 from loguru import logger
@@ -41,8 +40,12 @@ class CtisPullManager:
     RETRIEVE_DELAY_SECONDS = 0.2
 
     STATUS_FIELDNAMES = [
-        'ct_number', 'nct_id', 'status', 'countries',
-        'trial_last_updated_date', 'entry_last_updated_date',
+        "ct_number",
+        "nct_id",
+        "status",
+        "countries",
+        "trial_last_updated_date",
+        "entry_last_updated_date",
     ]
 
     def __init__(self, nct_cache_dir: str = "cache/nct"):
@@ -61,35 +64,42 @@ class CtisPullManager:
 
     def _ensure_status_file(self):
         if not os.path.exists(self.status_file):
-            with open(self.status_file, 'w', newline='', encoding='utf-8') as f:
+            with open(self.status_file, "w", newline="", encoding="utf-8") as f:
                 csv.writer(f).writerow(self.STATUS_FIELDNAMES)
             logger.info(f"Created new {self.status_file}")
 
-    def get_existing_ct_numbers(self) -> Set[str]:
+    def get_existing_ct_numbers(self) -> set[str]:
         found = set()
         if os.path.exists(self.status_file):
-            with open(self.status_file, 'r', newline='', encoding='utf-8') as f:
+            with open(self.status_file, newline="", encoding="utf-8") as f:
                 for row in csv.DictReader(f):
-                    if row.get('ct_number'):
-                        found.add(row['ct_number'])
+                    if row.get("ct_number"):
+                        found.add(row["ct_number"])
         return found
 
-    def get_trial_from_status_file(self, ct_number: str) -> Dict:
+    def get_trial_from_status_file(self, ct_number: str) -> dict:
         if not os.path.exists(self.status_file):
             return None
-        with open(self.status_file, 'r', newline='', encoding='utf-8') as f:
+        with open(self.status_file, newline="", encoding="utf-8") as f:
             for row in csv.DictReader(f):
-                if row.get('ct_number') == ct_number:
+                if row.get("ct_number") == ct_number:
                     return row
         return None
 
-    def modify_status_file(self, ct_number: str, nct_id: str, status: str,
-                           countries: str, last_update_date: str, action: str):
+    def modify_status_file(
+        self,
+        ct_number: str,
+        nct_id: str,
+        status: str,
+        countries: str,
+        last_update_date: str,
+        action: str,
+    ):
         """Insert or update one row in ctis_status.csv."""
-        today = datetime.now().strftime('%Y-%m-%d')
+        today = datetime.now().strftime("%Y-%m-%d")
 
-        if action == 'insert':
-            with open(self.status_file, 'a', newline='', encoding='utf-8') as f:
+        if action == "insert":
+            with open(self.status_file, "a", newline="", encoding="utf-8") as f:
                 csv.writer(f).writerow(
                     [ct_number, nct_id, status, countries, last_update_date, today]
                 )
@@ -97,23 +107,23 @@ class CtisPullManager:
             return
 
         rows, updated = [], False
-        with open(self.status_file, 'r', newline='', encoding='utf-8') as f:
+        with open(self.status_file, newline="", encoding="utf-8") as f:
             for row in csv.DictReader(f):
-                if row['ct_number'] == ct_number:
+                if row["ct_number"] == ct_number:
                     if nct_id:
-                        row['nct_id'] = nct_id
+                        row["nct_id"] = nct_id
                     if status:
-                        row['status'] = status
+                        row["status"] = status
                     if countries:
-                        row['countries'] = countries
+                        row["countries"] = countries
                     if last_update_date:
-                        row['trial_last_updated_date'] = last_update_date
-                    row['entry_last_updated_date'] = today
+                        row["trial_last_updated_date"] = last_update_date
+                    row["entry_last_updated_date"] = today
                     updated = True
                 rows.append(row)
 
         if updated:
-            with open(self.status_file, 'w', newline='', encoding='utf-8') as f:
+            with open(self.status_file, "w", newline="", encoding="utf-8") as f:
                 w = csv.DictWriter(f, fieldnames=self.STATUS_FIELDNAMES)
                 w.writeheader()
                 w.writerows(rows)
@@ -123,7 +133,7 @@ class CtisPullManager:
 
     # -- API --------------------------------------------------------------
 
-    def search_trials(self) -> Dict[str, Dict]:
+    def search_trials(self) -> dict[str, dict]:
         """
         Search CTIS for every configured condition term and return the union,
         keyed by CT number.
@@ -132,7 +142,7 @@ class CtisPullManager:
         the only way to get reasonable recall; overlap between terms is
         expected and de-duplicated here.
         """
-        found: Dict[str, Dict] = {}
+        found: dict[str, dict] = {}
 
         for term in self.conditions:
             page = 1
@@ -149,7 +159,7 @@ class CtisPullManager:
                     resp = requests.post(
                         f"{self.api_base_url}/search",
                         json=payload,
-                        headers={'Content-Type': 'application/json'},
+                        headers={"Content-Type": "application/json"},
                         timeout=60,
                     )
                     resp.raise_for_status()
@@ -161,30 +171,30 @@ class CtisPullManager:
                     logger.error(f"CTIS search returned non-JSON for {term!r}: {e}")
                     break
 
-                batch = body.get('data', []) or []
+                batch = body.get("data", []) or []
                 for record in batch:
-                    ct_number = record.get('ctNumber')
+                    ct_number = record.get("ctNumber")
                     if ct_number:
                         found[ct_number] = record
 
-                pagination = body.get('pagination', {}) or {}
+                pagination = body.get("pagination", {}) or {}
                 logger.info(
-                    f"CTIS search {term!r} page {page}/{pagination.get('totalPages','?')} "
+                    f"CTIS search {term!r} page {page}/{pagination.get('totalPages', '?')} "
                     f"-> {len(batch)} records ({len(found)} unique so far)"
                 )
-                if not pagination.get('nextPage'):
+                if not pagination.get("nextPage"):
                     break
                 page += 1
 
         logger.info(f"CTIS search found {len(found)} unique paediatric trials")
         return found
 
-    def fetch_and_cache_trial(self, ct_number: str) -> Dict:
+    def fetch_and_cache_trial(self, ct_number: str) -> dict:
         """Retrieve the full CTIS record and cache it. Returns the record, or None."""
         try:
             resp = requests.get(
                 f"{self.api_base_url}/retrieve/{ct_number}",
-                headers={'Accept': 'application/json'},
+                headers={"Accept": "application/json"},
                 timeout=60,
             )
             resp.raise_for_status()
@@ -201,19 +211,19 @@ class CtisPullManager:
             return None
 
         # CT numbers contain '/' nowhere, but they do contain '-'; safe as a filename.
-        tdh.save_to_file(record, self.cache_dir, ct_number, 'json')
+        tdh.save_to_file(record, self.cache_dir, ct_number, "json")
         logger.info(f"Cached CTIS trial {ct_number}")
         return record
 
     # -- record inspection -------------------------------------------------
 
     @staticmethod
-    def get_member_state_infos(record: dict) -> List[dict]:
+    def get_member_state_infos(record: dict) -> list[dict]:
         """Per-member-state blocks, which carry the authoritative trial status."""
-        parts = tdh.safe_get(record, ['authorizedApplication', 'authorizedPartsII'])
+        parts = tdh.safe_get(record, ["authorizedApplication", "authorizedPartsII"])
         if not isinstance(parts, list):
             return []
-        return [p.get('mscInfo', {}) for p in parts if isinstance(p, dict)]
+        return [p.get("mscInfo", {}) for p in parts if isinstance(p, dict)]
 
     def get_ctis_local_status(self, record: dict) -> str:
         """
@@ -223,25 +233,25 @@ class CtisPullManager:
         all report "Authorised" - so the per-member-state status is used instead.
         """
         for msc in self.get_member_state_infos(record):
-            status = (msc.get('trialStatus') or '').strip().lower()
+            status = (msc.get("trialStatus") or "").strip().lower()
             if status in self.open_statuses:
-                return 'open'
-        return 'closed'
+                return "open"
+        return "closed"
 
     @staticmethod
-    def get_recruiting_countries(record: dict) -> List[str]:
+    def get_recruiting_countries(record: dict) -> list[str]:
         """Member states where recruitment has actually started."""
         countries = []
-        for part in tdh.safe_get(record, ['authorizedApplication', 'authorizedPartsII']) or []:
+        for part in tdh.safe_get(record, ["authorizedApplication", "authorizedPartsII"]) or []:
             if not isinstance(part, dict):
                 continue
-            msc = part.get('mscInfo', {}) or {}
-            if msc.get('hasRecruitmentStarted') and msc.get('mscName'):
-                countries.append(msc['mscName'])
+            msc = part.get("mscInfo", {}) or {}
+            if msc.get("hasRecruitmentStarted") and msc.get("mscName"):
+                countries.append(msc["mscName"])
         return sorted(set(countries))
 
     @staticmethod
-    def get_referenced_nct_ids(record: dict) -> List[str]:
+    def get_referenced_nct_ids(record: dict) -> list[str]:
         """
         Any ClinicalTrials.gov ids mentioned anywhere in the CTIS record.
 
@@ -249,32 +259,34 @@ class CtisPullManager:
         secondary identifiers and free text, so the whole record is scanned.
         """
         import re
-        return sorted(set(re.findall(r'NCT\d{8}', json.dumps(record))))
 
-    def get_cached_nct_ids(self) -> Set[str]:
+        return sorted(set(re.findall(r"NCT\d{8}", json.dumps(record))))
+
+    def get_cached_nct_ids(self) -> set[str]:
         """NCT ids already pulled by the ClinicalTrials.gov pipeline."""
         if not os.path.isdir(self.nct_cache_dir):
             return set()
         return {
-            f[:-5] for f in os.listdir(self.nct_cache_dir)
-            if f.startswith('NCT') and f.endswith('.json')
+            f[:-5]
+            for f in os.listdir(self.nct_cache_dir)
+            if f.startswith("NCT") and f.endswith(".json")
         }
 
     @staticmethod
     def get_last_updated(summary: dict) -> str:
         """CTIS reports dates as DD/MM/YYYY; normalise to ISO for comparison."""
-        raw = (summary.get('lastUpdated') or '').strip()
+        raw = (summary.get("lastUpdated") or "").strip()
         if not raw:
-            return ''
+            return ""
         try:
-            return datetime.strptime(raw, '%d/%m/%Y').strftime('%Y-%m-%d')
+            return datetime.strptime(raw, "%d/%m/%Y").strftime("%Y-%m-%d")
         except ValueError:
             logger.debug(f"Unparseable CTIS lastUpdated {raw!r}")
-            return ''
+            return ""
 
     # -- sync --------------------------------------------------------------
 
-    def sync_trials(self) -> Dict:
+    def sync_trials(self) -> dict:
         """Search CTIS, then retrieve and cache trials that are new or updated."""
         logger.info("Starting CTIS trial synchronization")
 
@@ -283,12 +295,12 @@ class CtisPullManager:
         already_in_nct = self.get_cached_nct_ids()
 
         results = {
-            'searched': len(summaries),
-            'insertions': 0,
-            'updates': 0,
-            'skipped': 0,
-            'failed': 0,
-            'duplicates_of_nct': 0,
+            "searched": len(summaries),
+            "insertions": 0,
+            "updates": 0,
+            "skipped": 0,
+            "failed": 0,
+            "duplicates_of_nct": 0,
         }
 
         for ct_number, summary in summaries.items():
@@ -296,34 +308,38 @@ class CtisPullManager:
 
             if ct_number in existing:
                 prior = self.get_trial_from_status_file(ct_number)
-                if prior and last_updated and last_updated <= (prior.get('trial_last_updated_date') or ''):
-                    results['skipped'] += 1
+                if (
+                    prior
+                    and last_updated
+                    and last_updated <= (prior.get("trial_last_updated_date") or "")
+                ):
+                    results["skipped"] += 1
                     continue
-                action = 'update'
+                action = "update"
             else:
-                action = 'insert'
+                action = "insert"
 
             record = self.fetch_and_cache_trial(ct_number)
             time.sleep(self.RETRIEVE_DELAY_SECONDS)
             if record is None:
-                results['failed'] += 1
+                results["failed"] += 1
                 continue
 
             nct_ids = self.get_referenced_nct_ids(record)
             overlap = [n for n in nct_ids if n in already_in_nct]
             if overlap:
-                results['duplicates_of_nct'] += 1
+                results["duplicates_of_nct"] += 1
                 logger.info(f"{ct_number} is also in the NCT cache as {', '.join(overlap)}")
 
             self.modify_status_file(
                 ct_number=ct_number,
-                nct_id='|'.join(nct_ids),
+                nct_id="|".join(nct_ids),
                 status=self.get_ctis_local_status(record),
-                countries='|'.join(self.get_recruiting_countries(record)),
+                countries="|".join(self.get_recruiting_countries(record)),
                 last_update_date=last_updated,
                 action=action,
             )
-            results['insertions' if action == 'insert' else 'updates'] += 1
+            results["insertions" if action == "insert" else "updates"] += 1
 
         logger.info(f"CTIS synchronization completed: {results}")
         return results
@@ -338,16 +354,18 @@ class CtisPullManager:
         status = self.get_ctis_local_status(record)
         countries = self.get_recruiting_countries(record)
 
-        action = 'update' if self.get_trial_from_status_file(ct_number) else 'insert'
+        action = "update" if self.get_trial_from_status_file(ct_number) else "insert"
         self.modify_status_file(
             ct_number=ct_number,
-            nct_id='|'.join(nct_ids),
+            nct_id="|".join(nct_ids),
             status=status,
-            countries='|'.join(countries),
-            last_update_date='',
+            countries="|".join(countries),
+            last_update_date="",
             action=action,
         )
-        print(f"CTIS trial {ct_number} saved at {self.cache_dir}/{ct_number}.json "
-              f"| status={status} | recruiting in: {', '.join(countries) or 'none reported'}"
-              + (f" | also on ClinicalTrials.gov as {', '.join(nct_ids)}" if nct_ids else ""))
+        print(
+            f"CTIS trial {ct_number} saved at {self.cache_dir}/{ct_number}.json "
+            f"| status={status} | recruiting in: {', '.join(countries) or 'none reported'}"
+            + (f" | also on ClinicalTrials.gov as {', '.join(nct_ids)}" if nct_ids else "")
+        )
         return True

@@ -3,20 +3,34 @@
 # Retargeted from adult oncology in Hong Kong to paediatric oncology.
 # See CHANGES.md for what differs.
 
-intervention_types = ['DRUG','BIOLOGICAL','COMBINATION_PRODUCT']
+intervention_types = ["DRUG", "BIOLOGICAL", "COMBINATION_PRODUCT"]
 # Countries whose recruiting sites make a trial eligible.
 # An empty list means worldwide (no location filter).
 regions = []
 conditions = [
     # general oncology terms (kept from upstream)
-    'cancer', 'tumor', 'tumour', 'carcinoma',
+    "cancer",
+    "tumor",
+    "tumour",
+    "carcinoma",
     # paediatric-specific framing
-    'pediatric cancer', 'paediatric cancer', 'childhood cancer',
+    "pediatric cancer",
+    "paediatric cancer",
+    "childhood cancer",
     # entities that dominate paediatric oncology
-    'leukemia', 'lymphoma', 'neuroblastoma', 'sarcoma',
-    'rhabdomyosarcoma', 'osteosarcoma', 'Ewing sarcoma',
-    'medulloblastoma', 'glioma', 'retinoblastoma',
-    'Wilms tumor', 'hepatoblastoma', 'germ cell tumor',
+    "leukemia",
+    "lymphoma",
+    "neuroblastoma",
+    "sarcoma",
+    "rhabdomyosarcoma",
+    "osteosarcoma",
+    "Ewing sarcoma",
+    "medulloblastoma",
+    "glioma",
+    "retinoblastoma",
+    "Wilms tumor",
+    "hepatoblastoma",
+    "germ cell tumor",
 ]
 
 # ClinicalTrials.gov StdAge values used to restrict the search.
@@ -24,13 +38,13 @@ conditions = [
 # Trials are tagged with every age band they enrol, so ['CHILD'] keeps
 # paediatric-only trials AND mixed child/adult trials, and drops adult-only ones.
 # Set to [] to disable the age filter entirely.
-std_ages = ['CHILD']
+std_ages = ["CHILD"]
 
 # Labels written to the CTML `age` field, derived from the trial's stdAges bands.
 # Confirm these against the vocabulary your MatchMiner instance expects.
-AGE_LABEL_ALL = 'All'
-AGE_LABEL_CHILDREN = 'Children'
-AGE_LABEL_ADULTS = 'Adults'
+AGE_LABEL_ALL = "All"
+AGE_LABEL_CHILDREN = "Children"
+AGE_LABEL_ADULTS = "Adults"
 
 
 # --- CTIS (EU Clinical Trials Information System) -------------------------
@@ -45,10 +59,24 @@ ctis_age_group_codes = [2]
 # CTIS has no structured condition coding, so the search is a free-text OR
 # across these terms, de-duplicated by CT number.
 ctis_conditions = [
-    'cancer', 'tumour', 'tumor', 'carcinoma', 'neoplasm',
-    'leukaemia', 'leukemia', 'lymphoma', 'sarcoma', 'blastoma',
-    'neuroblastoma', 'glioma', 'medulloblastoma', 'rhabdomyosarcoma',
-    'osteosarcoma', 'retinoblastoma', 'hepatoblastoma', 'nephroblastoma',
+    "cancer",
+    "tumour",
+    "tumor",
+    "carcinoma",
+    "neoplasm",
+    "leukaemia",
+    "leukemia",
+    "lymphoma",
+    "sarcoma",
+    "blastoma",
+    "neuroblastoma",
+    "glioma",
+    "medulloblastoma",
+    "rhabdomyosarcoma",
+    "osteosarcoma",
+    "retinoblastoma",
+    "hepatoblastoma",
+    "nephroblastoma",
 ]
 
 # Member-state trial statuses that count as open. CTIS reports exactly four
@@ -60,7 +88,7 @@ ctis_conditions = [
 # 'Authorised' does not by itself mean recruiting; the per-state
 # hasRecruitmentStarted flag drives the `countries` column in ctis_status.csv,
 # so an open trial with no countries listed is authorised but not yet recruiting.
-ctis_open_statuses = ['Authorised']
+ctis_open_statuses = ["Authorised"]
 
 
 # --- Gene synonym disambiguation ----------------------------------------
@@ -103,10 +131,31 @@ ctis_open_statuses = ['Authorised']
 #   NAT  -> BRD2      17 /   8  nucleic acid (amplification) testing
 #   B1   -> MS4A1     15 /   3  randomisation arm B1
 #   IP   -> SDHB      12 /   6  investigational product
-blocked_gene_synonyms = ['ALL', 'CAP', 'H3', 'H4', 'H5',
-                         'CAR', 'II', 'B', 'CSF', 'ICF', 'NHL', 'PN', 'JMML', 'SF', 'MCL', 'MI', 'FSH', 'NAT', 'B1', 'IP',
-                         # trial-arm labels, not genes: 'ARM1' -> ADRM1 (NCT06972641), 'ARMD2' -> ABCA4
-                         'ARM1', 'ARMD2']
+blocked_gene_synonyms = [
+    "ALL",
+    "CAP",
+    "H3",
+    "H4",
+    "H5",
+    "CAR",
+    "II",
+    "B",
+    "CSF",
+    "ICF",
+    "NHL",
+    "PN",
+    "JMML",
+    "SF",
+    "MCL",
+    "MI",
+    "FSH",
+    "NAT",
+    "B1",
+    "IP",
+    # trial-arm labels, not genes: 'ARM1' -> ADRM1 (NCT06972641), 'ARMD2' -> ABCA4
+    "ARM1",
+    "ARMD2",
+]
 
 # Synonyms that resolve only when the criteria text also contains one of the
 # context keywords (case-insensitive). This recovers the true meaning of the
@@ -119,8 +168,8 @@ blocked_gene_synonyms = ['ALL', 'CAP', 'H3', 'H4', 'H5',
 contextual_gene_synonyms = {
     # H3C3 (H3.1, HIST1H3C) carries K27M as H3C2 does; it was missing until
     # 2026-09-27, so 9 published K27M trials lacked it (gene_mentions.H3_K27_GENES).
-    'H3': (['k27', 'k27m', 'g34', 'histone'], ['H3-3A', 'H3-3B', 'H3C2', 'H3C3']),
-    'H4': (['histone'], ['H4C9']),
+    "H3": (["k27", "k27m", "g34", "histone"], ["H3-3A", "H3-3B", "H3C2", "H3C3"]),
+    "H4": (["histone"], ["H4C9"]),
 }
 
 
@@ -145,13 +194,13 @@ contextual_gene_synonyms = {
 # criterion. CD74 is NOT here despite showing up as a false positive - it forms
 # real fusions (CD74-ROS1, CD74-NRG1) that a trial can legitimately require.
 expression_only_genes = [
-    'CD19',    # CAR-T target, flow cytometry
-    'CD22',    # CAR-T target, flow cytometry
-    'CD274',   # PD-L1; has its own pdl1_status field
-    'CD276',   # B7-H3; CAR-T/ADC target by IHC - all 11 cached mentions are expression
-    'MS4A1',   # CD20; antibody/CAR target by flow or IHC - all 62 cached mentions (41 trials) are expression
-    'CTAG1B',  # NY-ESO-1; cancer-testis antigen for TCR therapy, IHC
-    'HLA-A',   # TCR restriction, HLA typing rather than tumour sequencing
-    'HLA-B',
-    'HLA-C',
+    "CD19",  # CAR-T target, flow cytometry
+    "CD22",  # CAR-T target, flow cytometry
+    "CD274",  # PD-L1; has its own pdl1_status field
+    "CD276",  # B7-H3; CAR-T/ADC target by IHC - all 11 cached mentions are expression
+    "MS4A1",  # CD20; antibody/CAR target by flow or IHC - all 62 cached mentions (41 trials) are expression
+    "CTAG1B",  # NY-ESO-1; cancer-testis antigen for TCR therapy, IHC
+    "HLA-A",  # TCR restriction, HLA typing rather than tumour sequencing
+    "HLA-B",
+    "HLA-C",
 ]

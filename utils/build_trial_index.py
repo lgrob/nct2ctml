@@ -88,23 +88,24 @@ were mapped against a version other than the one this build read. A drifted
 trial is not wrong, but its gene or diagnosis vocabulary is older than the
 index's; re-map it or accept that.
 """
+
 import argparse
-from collections import Counter
 import csv
 import hashlib
 import json
 import os
 import re
 import sys
-from datetime import datetime, timezone
+from collections import Counter
+from datetime import UTC, datetime
 from functools import lru_cache
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import yaml
 from loguru import logger
 
 import config
+import yaml
 from utils import protein_change, provenance
 from utils.oncotree import get_all_oncotree_data, get_lineage
 from utils.reference_validation import _oncotree, canonical_gene, fusion_partner
@@ -119,26 +120,70 @@ LIQUID_ROOTS = frozenset({"Lymphoid", "Myeloid"})
 
 _AGE_BOUND = re.compile(r"^\s*(>=|<=|>|<)\s*([0-9]*\.?[0-9]+)\s*$")
 
-DIAGNOSIS_COLUMNS = ["trial_id", "arm_code", "oncotree_code", "oncotree_name",
-                    "source_term", "from_basket", "include"]
-GENOMIC_COLUMNS = ["trial_id", "arm_code", "hugo_symbol", "variant_category",
-                   "cnv_call", "protein_change", "protein_change_stated",
-                   "protein_change_kind", "protein_refseq", "protein_ensembl",
-                   "protein_check", "fusion_partner", "fusion", "fusion_partner_check",
-                   "gene_check", "variant_classification", "include"]
-TRIAL_COLUMNS = ["trial_id", "source", "nct_id", "protocol_no", "short_title",
-                 "phase", "status", "review_status", "reviewed", "source_file", "layer_conflict",
-                 "age_label", "age_min", "age_min_inclusive",
-                 "age_max", "age_max_inclusive", "n_diagnosis_codes", "n_genes", "genes_not_required",
-                 "mapped_at", "mapped_run", "mapped_commit", "llm_model", "prompt_settings"]
+DIAGNOSIS_COLUMNS = [
+    "trial_id",
+    "arm_code",
+    "oncotree_code",
+    "oncotree_name",
+    "source_term",
+    "from_basket",
+    "include",
+]
+GENOMIC_COLUMNS = [
+    "trial_id",
+    "arm_code",
+    "hugo_symbol",
+    "variant_category",
+    "cnv_call",
+    "protein_change",
+    "protein_change_stated",
+    "protein_change_kind",
+    "protein_refseq",
+    "protein_ensembl",
+    "protein_check",
+    "fusion_partner",
+    "fusion",
+    "fusion_partner_check",
+    "gene_check",
+    "variant_classification",
+    "include",
+]
+TRIAL_COLUMNS = [
+    "trial_id",
+    "source",
+    "nct_id",
+    "protocol_no",
+    "short_title",
+    "phase",
+    "status",
+    "review_status",
+    "reviewed",
+    "source_file",
+    "layer_conflict",
+    "age_label",
+    "age_min",
+    "age_min_inclusive",
+    "age_max",
+    "age_max_inclusive",
+    "n_diagnosis_codes",
+    "n_genes",
+    "genes_not_required",
+    "mapped_at",
+    "mapped_run",
+    "mapped_commit",
+    "llm_model",
+    "prompt_settings",
+]
 
 # Input layers, lowest precedence first. The status says what a row is worth:
 # `reviewed` was signed off by a curator, `needs_review` is machine output the
 # mapper itself flagged (no diagnosis, or a protein change that failed its
 # reference check), `mapped` is machine output nobody has looked at yet.
-DEFAULT_LAYERS = [(config.CTML_MAPPED_PATH, "mapped"),
-                  (config.CTML_REVIEW_PATH, "needs_review"),
-                  (config.CTML_REVIEWED_PATH, "reviewed")]
+DEFAULT_LAYERS = [
+    (config.CTML_MAPPED_PATH, "mapped"),
+    (config.CTML_REVIEW_PATH, "needs_review"),
+    (config.CTML_REVIEWED_PATH, "reviewed"),
+]
 
 
 def _name_to_code():
@@ -255,8 +300,9 @@ def _read_trials(source_dir):
             continue
         path = os.path.join(source_dir, filename)
         with open(path) as handle:
-            trials.append((stem, json.load(handle) if extension == ".json"
-                           else yaml.safe_load(handle), path))
+            trials.append(
+                (stem, json.load(handle) if extension == ".json" else yaml.safe_load(handle), path)
+            )
     return trials
 
 
@@ -276,8 +322,16 @@ def _layers(source):
     return list(source)
 
 
-CONFLICT_COLUMNS = ["trial_id", "published_file", "published_status", "published_mtime",
-                    "newer_file", "newer_status", "newer_mtime", "conflict"]
+CONFLICT_COLUMNS = [
+    "trial_id",
+    "published_file",
+    "published_status",
+    "published_mtime",
+    "newer_file",
+    "newer_status",
+    "newer_mtime",
+    "conflict",
+]
 
 
 def _review_backups(layers):
@@ -285,12 +339,14 @@ def _review_backups(layers):
     found = []
     for directory, status in layers:
         if status == "needs_review" and os.path.isdir(directory):
-            found += sorted(os.path.join(directory, f) for f in os.listdir(directory) if ".yaml.prev" in f)
+            found += sorted(
+                os.path.join(directory, f) for f in os.listdir(directory) if ".yaml.prev" in f
+            )
     return found
 
 
 def _mtime(path):
-    return datetime.fromtimestamp(os.path.getmtime(path), timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.fromtimestamp(os.path.getmtime(path), UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _collect(layers):
@@ -319,21 +375,37 @@ def _collect(layers):
     for directory, status in layers:
         for trial_id, trial, path in _read_trials(directory):
             if trial_id in chosen:
-                logger.debug(f"{trial_id} | {status} copy in {directory} replaces "
-                             f"the {chosen[trial_id][2]} copy")
+                logger.debug(
+                    f"{trial_id} | {status} copy in {directory} replaces "
+                    f"the {chosen[trial_id][2]} copy"
+                )
             chosen[trial_id] = (trial, path, status)
             seen.setdefault(trial_id, {})[status] = path
     conflicts = []
     for trial_id, (_, path, status) in sorted(chosen.items()):
         mapped = seen[trial_id].get("mapped")
-        if status == "needs_review" and mapped and os.path.getmtime(mapped) > os.path.getmtime(path):
-            conflicts.append({"trial_id": trial_id, "published_file": path, "published_status": status,
-                              "published_mtime": _mtime(path), "newer_file": mapped,
-                              "newer_status": "mapped", "newer_mtime": _mtime(mapped),
-                              "conflict": "newer_mapped_copy"})
-            logger.warning(f"{trial_id} | a newer clean mapping ({mapped}) exists under the "
-                           f"needs-review copy ({path}); the needs-review copy is published, "
-                           f"and the conflict is listed in layer_conflicts.tsv")
+        if (
+            status == "needs_review"
+            and mapped
+            and os.path.getmtime(mapped) > os.path.getmtime(path)
+        ):
+            conflicts.append(
+                {
+                    "trial_id": trial_id,
+                    "published_file": path,
+                    "published_status": status,
+                    "published_mtime": _mtime(path),
+                    "newer_file": mapped,
+                    "newer_status": "mapped",
+                    "newer_mtime": _mtime(mapped),
+                    "conflict": "newer_mapped_copy",
+                }
+            )
+            logger.warning(
+                f"{trial_id} | a newer clean mapping ({mapped}) exists under the "
+                f"needs-review copy ({path}); the needs-review copy is published, "
+                f"and the conflict is listed in layer_conflicts.tsv"
+            )
     return dict(sorted(chosen.items())), conflicts
 
 
@@ -346,12 +418,18 @@ def _fusion_fields(leaf):
         # Re-checked here too: curated YAML never passed through the mapper.
         resolved, status = fusion_partner(partner)
         if resolved and resolved != gene:
-            return {"fusion_partner": resolved, "fusion": f"{gene}::{resolved}",
-                    "fusion_partner_check": status}
+            return {
+                "fusion_partner": resolved,
+                "fusion": f"{gene}::{resolved}",
+                "fusion_partner_check": status,
+            }
         unverified = partner
     if unverified:
-        return {"fusion_partner": "", "fusion": "",
-                "fusion_partner_check": f"unverified: {unverified}"}
+        return {
+            "fusion_partner": "",
+            "fusion": "",
+            "fusion_partner_check": f"unverified: {unverified}",
+        }
     return {"fusion_partner": "", "fusion": "", "fusion_partner_check": ""}
 
 
@@ -368,30 +446,41 @@ def index_trial(trial_id, trial, descendants, solid, liquid, name_to_code):
                 diagnoses.append((arm_code, term))
         else:
             category = str(leaf.get("variant_category") or "")
-            genomics.append({
-                "arm_code": arm_code,
-                "hugo_symbol": leaf.get("hugo_symbol") or "",
-                "variant_category": category.lstrip("!"),
-                "cnv_call": leaf.get("cnv_call") or "",
-                # An unverified change is carried so the index reports it
-                # (protein_check) instead of silently publishing a gene-level row.
-                "protein_change": leaf.get("protein_change")
-                                  or leaf.get("wildcard_protein_change")
-                                  or leaf.get("protein_change_unverified") or "",
-                "variant_classification": leaf.get("variant_classification") or "",
-                "include": 0 if category.startswith("!") else 1,
-                **_fusion_fields(leaf),
-                # A gene the mapper could not find in the criteria text; the
-                # row stands but a curator has to confirm it.
-                "gene_check": (f"unsupported: {leaf['gene_unsupported']}"
-                               if leaf.get("gene_unsupported") else ""),
-            })
+            genomics.append(
+                {
+                    "arm_code": arm_code,
+                    "hugo_symbol": leaf.get("hugo_symbol") or "",
+                    "variant_category": category.lstrip("!"),
+                    "cnv_call": leaf.get("cnv_call") or "",
+                    # An unverified change is carried so the index reports it
+                    # (protein_check) instead of silently publishing a gene-level row.
+                    "protein_change": leaf.get("protein_change")
+                    or leaf.get("wildcard_protein_change")
+                    or leaf.get("protein_change_unverified")
+                    or "",
+                    "variant_classification": leaf.get("variant_classification") or "",
+                    "include": 0 if category.startswith("!") else 1,
+                    **_fusion_fields(leaf),
+                    # A gene the mapper could not find in the criteria text; the
+                    # row stands but a curator has to confirm it.
+                    "gene_check": (
+                        f"unsupported: {leaf['gene_unsupported']}"
+                        if leaf.get("gene_unsupported")
+                        else ""
+                    ),
+                }
+            )
             partner = genomics[-1]["fusion_partner"]
             # The same fusion seen from the partner's side, when the panel
             # reports the partner: joins then work whichever gene comes first.
             if partner and canonical_gene(partner) == partner:
-                genomics.append(dict(genomics[-1], hugo_symbol=partner,
-                                     fusion_partner=genomics[-1]["hugo_symbol"]))
+                genomics.append(
+                    dict(
+                        genomics[-1],
+                        hugo_symbol=partner,
+                        fusion_partner=genomics[-1]["hugo_symbol"],
+                    )
+                )
 
     for step in (trial.get("treatment_list") or {}).get("step") or []:
         _walk(step.get("match"), on_leaf)
@@ -413,7 +502,8 @@ def index_trial(trial_id, trial, descendants, solid, liquid, name_to_code):
         if str(term).startswith("!"):
             name = str(term)[1:]
             excluded_by_arm.setdefault(arm_code, {}).update(
-                {m: str(term) for m in descendants.get(name, {name})})
+                {m: str(term) for m in descendants.get(name, {name})}
+            )
     diagnosis_rows, seen = [], set()
     for arm_code, term in diagnoses:
         if str(term).startswith("!"):
@@ -426,21 +516,37 @@ def index_trial(trial_id, trial, descendants, solid, liquid, name_to_code):
             members, basket = descendants.get(term, {term}), 0
         for name in sorted(members):
             key = (arm_code, name)
-            if key in seen or name in excluded_by_arm.get(arm_code, {}) or name in excluded_by_arm.get("", {}):
+            if (
+                key in seen
+                or name in excluded_by_arm.get(arm_code, {})
+                or name in excluded_by_arm.get("", {})
+            ):
                 continue
             seen.add(key)
-            diagnosis_rows.append({
-                "trial_id": trial_id, "arm_code": arm_code,
-                "oncotree_code": name_to_code.get(name, ""), "oncotree_name": name,
-                "source_term": term, "from_basket": basket, "include": 1,
-            })
+            diagnosis_rows.append(
+                {
+                    "trial_id": trial_id,
+                    "arm_code": arm_code,
+                    "oncotree_code": name_to_code.get(name, ""),
+                    "oncotree_name": name,
+                    "source_term": term,
+                    "from_basket": basket,
+                    "include": 1,
+                }
+            )
     for arm_code, members in excluded_by_arm.items():
         for name, term in sorted(members.items()):
-            diagnosis_rows.append({
-                "trial_id": trial_id, "arm_code": arm_code,
-                "oncotree_code": name_to_code.get(name, ""), "oncotree_name": name,
-                "source_term": term, "from_basket": 0, "include": 0,
-            })
+            diagnosis_rows.append(
+                {
+                    "trial_id": trial_id,
+                    "arm_code": arm_code,
+                    "oncotree_code": name_to_code.get(name, ""),
+                    "oncotree_name": name,
+                    "source_term": term,
+                    "from_basket": 0,
+                    "include": 0,
+                }
+            )
 
     genomic_rows, seen_genomic = [], set()
     for row in genomics:
@@ -469,7 +575,9 @@ def index_trial(trial_id, trial, descendants, solid, liquid, name_to_code):
         # Genes the text mentions that the roles prompt judged not required of
         # every patient ("FLT3 (cohort_specific); ..."): not matched on, shown to
         # the clinician (roadmap 2.9, option A).
-        "genes_not_required": str(trial.get("gene_role_dropped") or "").replace("\t", " ").replace("\n", " "),
+        "genes_not_required": str(trial.get("gene_role_dropped") or "")
+        .replace("\t", " ")
+        .replace("\n", " "),
         **_provenance_columns(trial.get("_provenance")),
     }
     return trial_row, diagnosis_rows, genomic_rows
@@ -502,14 +610,18 @@ def _provenance_summary(trials, reference):
             commits["unrecorded"] += 1
             continue
         cols = _provenance_columns(block)
-        setups[" ".join(filter(None, (cols["llm_model"], cols["prompt_settings"]))) or "unrecorded"] += 1
+        setups[
+            " ".join(filter(None, (cols["llm_model"], cols["prompt_settings"]))) or "unrecorded"
+        ] += 1
         commits[cols["mapped_commit"] or "unrecorded"] += 1
         for path, digest in (block.get("reference_sha256") or {}).items():
             if path in reference and digest != reference[path]:
                 drift[path] += 1
-    return {"trials_by_mapping": dict(sorted(setups.items())),
-            "trials_by_commit": dict(sorted(commits.items())),
-            "reference_drift": dict(sorted(drift.items()))}
+    return {
+        "trials_by_mapping": dict(sorted(setups.items())),
+        "trials_by_commit": dict(sorted(commits.items())),
+        "reference_drift": dict(sorted(drift.items())),
+    }
 
 
 def _normalise_protein_changes(genomic_rows):
@@ -517,18 +629,30 @@ def _normalise_protein_changes(genomic_rows):
     counts = Counter()
     for row in genomic_rows:
         stated = row["protein_change"]
-        row.update(protein_change="", protein_change_stated=stated, protein_change_kind="",
-                   protein_refseq="", protein_ensembl="", protein_check="")
+        row.update(
+            protein_change="",
+            protein_change_stated=stated,
+            protein_change_kind="",
+            protein_refseq="",
+            protein_ensembl="",
+            protein_check="",
+        )
         if not stated:
             continue
         result = protein_change.normalise(row["hugo_symbol"], stated)
-        row.update(protein_change=result.hgvs, protein_change_kind=result.kind,
-                   protein_refseq=result.refseq_protein,
-                   protein_ensembl=result.ensembl_protein, protein_check=result.status)
+        row.update(
+            protein_change=result.hgvs,
+            protein_change_kind=result.kind,
+            protein_refseq=result.refseq_protein,
+            protein_ensembl=result.ensembl_protein,
+            protein_check=result.status,
+        )
         counts[result.status] += 1
         if not result.verified:
-            logger.warning(f"{row['trial_id']} | {row['hugo_symbol']} {stated!r} not emitted "
-                           f"as HGVS: {result.status} ({result.detail})")
+            logger.warning(
+                f"{row['trial_id']} | {row['hugo_symbol']} {stated!r} not emitted "
+                f"as HGVS: {result.status} ({result.detail})"
+            )
     return dict(sorted(counts.items()))
 
 
@@ -554,13 +678,20 @@ def build(source=None, out_dir="index", strict=False):
     # run - except a trial a curator has moved to ctml/reviewed: an automatic
     # decision does not overrule that, only a skip row does.
     from utils.oncology_scope import load_overrides, load_report
-    excluded = {t: why for t, (decision, why) in load_overrides().items() if decision == "skip" and t in chosen}
+
+    excluded = {
+        t: why
+        for t, (decision, why) in load_overrides().items()
+        if decision == "skip" and t in chosen
+    }
     out_of_scope = {}
     for t, why in load_report().items():
         if t in chosen and t not in excluded:
             if chosen[t][2] == "reviewed":
-                logger.warning(f"{t} | out of scope per the filter ({why}) but reviewed; kept. "
-                               f"Add a skip or map row to ref/scope_overrides.tsv to settle it")
+                logger.warning(
+                    f"{t} | out of scope per the filter ({why}) but reviewed; kept. "
+                    f"Add a skip or map row to ref/scope_overrides.tsv to settle it"
+                )
             else:
                 out_of_scope[t] = why
     for t, why in list(excluded.items()) + list(out_of_scope.items()):
@@ -571,15 +702,22 @@ def build(source=None, out_dir="index", strict=False):
     conflict_of = {c["trial_id"]: c["conflict"] for c in conflicts}
     for trial_id, (trial, path, status) in chosen.items():
         trial_row, diagnoses, genomics = index_trial(
-            trial_id, trial, descendants, solid, liquid, name_to_code)
-        trial_row.update(review_status=status, reviewed=int(status == "reviewed"),
-                         source_file=path, layer_conflict=conflict_of.get(trial_id, ""))
+            trial_id, trial, descendants, solid, liquid, name_to_code
+        )
+        trial_row.update(
+            review_status=status,
+            reviewed=int(status == "reviewed"),
+            source_file=path,
+            layer_conflict=conflict_of.get(trial_id, ""),
+        )
         if not diagnoses:
             # Mirrors trial_map_manager._destination_for: a trial with no
             # diagnosis would match every sample, so it is indexed but flagged
             # rather than dropped - dropping makes it invisible.
-            logger.warning(f"{trial_id} | no diagnosis criterion; indexed with zero "
-                           f"diagnosis rows, so it can never be screened in.")
+            logger.warning(
+                f"{trial_id} | no diagnosis criterion; indexed with zero "
+                f"diagnosis rows, so it can never be screened in."
+            )
         trial_rows.append(trial_row)
         diagnosis_rows.extend(diagnoses)
         genomic_rows.extend(genomics)
@@ -591,21 +729,22 @@ def build(source=None, out_dir="index", strict=False):
 
     os.makedirs(out_dir, exist_ok=True)
     written = {}
-    for name, columns, rows in (("trials.tsv", TRIAL_COLUMNS, trial_rows),
-                                ("trial_diagnosis.tsv", DIAGNOSIS_COLUMNS, diagnosis_rows),
-                                ("trial_genomic.tsv", GENOMIC_COLUMNS, genomic_rows),
-                                ("layer_conflicts.tsv", CONFLICT_COLUMNS, conflicts)):
+    for name, columns, rows in (
+        ("trials.tsv", TRIAL_COLUMNS, trial_rows),
+        ("trial_diagnosis.tsv", DIAGNOSIS_COLUMNS, diagnosis_rows),
+        ("trial_genomic.tsv", GENOMIC_COLUMNS, genomic_rows),
+        ("layer_conflicts.tsv", CONFLICT_COLUMNS, conflicts),
+    ):
         path = os.path.join(out_dir, name)
         with open(path, "w", newline="") as handle:
-            writer = csv.DictWriter(handle, fieldnames=columns, delimiter="\t",
-                                    lineterminator="\n")
+            writer = csv.DictWriter(handle, fieldnames=columns, delimiter="\t", lineterminator="\n")
             writer.writeheader()
             writer.writerows(rows)
         written[name] = {"rows": len(rows), "sha256": _sha256(path)}
 
     reference = provenance.reference_hashes()
     manifest = {
-        "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "layers": [{"directory": d, "review_status": s} for d, s in layers],
         "review_status": dict(sorted(Counter(r["review_status"] for r in trial_rows).items())),
         "trials": len(trial_rows),
@@ -639,14 +778,21 @@ def _sha256(path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--source", default=None,
-                        help="a single directory of CTML files (.json/.yaml); default: "
-                             "the mapped, needs-review and reviewed layers from config.py")
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "--source",
+        default=None,
+        help="a single directory of CTML files (.json/.yaml); default: "
+        "the mapped, needs-review and reviewed layers from config.py",
+    )
     parser.add_argument("--out", default="index", help="output directory")
-    parser.add_argument("--strict", action="store_true",
-                        help="fail if any protein change does not match its reference protein")
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="fail if any protein change does not match its reference protein",
+    )
     args = parser.parse_args()
 
     manifest = build(args.source, args.out, strict=args.strict)
@@ -658,11 +804,17 @@ def main():
     print(f"  layer conflicts        {manifest['layer_conflicts']} (see layer_conflicts.tsv)")
     print(f"  mapped with            {manifest['trials_by_mapping']}")
     if manifest["reference_drift"]:
-        print(f"  reference drift        {manifest['reference_drift']} "
-              f"(trials mapped against another version of these files)")
-    print(f"  review backups         {len(manifest['review_backups'])} (.yaml.prev files in the review queue)")
-    print(f"  excluded (scope)       {len(manifest['excluded_by_scope_override'])} skip rows in ref/scope_overrides.tsv, "
-          f"{len(manifest['excluded_out_of_scope'])} out of scope per ctml/out-of-scope.tsv")
+        print(
+            f"  reference drift        {manifest['reference_drift']} "
+            f"(trials mapped against another version of these files)"
+        )
+    print(
+        f"  review backups         {len(manifest['review_backups'])} (.yaml.prev files in the review queue)"
+    )
+    print(
+        f"  excluded (scope)       {len(manifest['excluded_by_scope_override'])} skip rows in ref/scope_overrides.tsv, "
+        f"{len(manifest['excluded_out_of_scope'])} out of scope per ctml/out-of-scope.tsv"
+    )
 
 
 if __name__ == "__main__":

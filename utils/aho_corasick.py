@@ -1,10 +1,11 @@
-import sys
 import os
+import sys
 
-sys.path.append(os.path.abspath('../'))
+sys.path.append(os.path.abspath("../"))
 import ahocorasick
 
-def search_keywords_in_text(keywords:list, text):
+
+def search_keywords_in_text(keywords: list, text):
     # Create an Aho-Corasick automaton
     A = ahocorasick.Automaton()
 
@@ -21,10 +22,10 @@ def search_keywords_in_text(keywords:list, text):
     found = False
     for end_index, (_, keyword) in A.iter(lower_text):
         start_index = end_index - len(keyword) + 1
-        print(f"Found keyword: '{keyword}' at position {start_index}:{end_index+1}")
+        print(f"Found keyword: '{keyword}' at position {start_index}:{end_index + 1}")
         found = True
         break  # Exit on first match
-    
+
     if not found:
         print("No keywords found.")
     return found

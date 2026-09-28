@@ -29,6 +29,7 @@ agree on what counts as the text naming a gene.
    is a diagnosis that includes tumours with no H3 mutation (EZHIP
    overexpression, K27me3 loss), and EZHIP is never read as an H3 gene.
 """
+
 import re
 
 # One-letter amino acids. B, J, O, U, X and Z are left out of the reference
@@ -46,17 +47,20 @@ _GLUED = re.compile(rf"^(?P<head>.+?)(?:(?P<change>{PROTEIN_CHANGE})|(?P<egfr>{E
 GLUED_TAIL = rf"(?=(?-i:{PROTEIN_CHANGE})(?![A-Za-z0-9]))"
 EGFR_TAIL = rf"(?=(?-i:{EGFR_VARIANT})(?![A-Za-z0-9]))"
 
-H3_K27_GENES = ("H3-3A", "H3-3B", "H3C2", "H3C3")   # H3.3 and H3.1
-H3_G34_GENES = ("H3-3A", "H3-3B")                   # H3.3 only
+H3_K27_GENES = ("H3-3A", "H3-3B", "H3C2", "H3C3")  # H3.3 and H3.1
+H3_G34_GENES = ("H3-3A", "H3-3B")  # H3.3 only
 
 _H3_VARIANT = re.compile(
     r"(?<![A-Za-z0-9.])H3[\s\-]?(?:p\.)?(?P<site>K2[78]|G3[45])"
-    rf"(?:[{_AA}](?:/[{_AA}])*(?![A-Za-z0-9])"                      # K27M, G34R/V
-    r"|[\s\-]?(?:(?i:mutant|mutation|mutated)"                     # G34-mutant
-    rf"|\(\s*[{_AA}](?:\s*/\s*[{_AA}])*\s*\)))")                    # G34 (R/V)
+    rf"(?:[{_AA}](?:/[{_AA}])*(?![A-Za-z0-9])"  # K27M, G34R/V
+    r"|[\s\-]?(?:(?i:mutant|mutation|mutated)"  # G34-mutant
+    rf"|\(\s*[{_AA}](?:\s*/\s*[{_AA}])*\s*\)))"
+)  # G34 (R/V)
 
 
-_BRACKETED_STEM = re.compile(r"\(([A-Za-z]{2,6})\)\s?(\d+(?:[A-Za-z]{1,2}(?:/[A-Za-z0-9]{1,3})*|(?:/[A-Za-z0-9]{1,3})+))(?![A-Za-z0-9])")
+_BRACKETED_STEM = re.compile(
+    r"\(([A-Za-z]{2,6})\)\s?(\d+(?:[A-Za-z]{1,2}(?:/[A-Za-z0-9]{1,3})*|(?:/[A-Za-z0-9]{1,3})+))(?![A-Za-z0-9])"
+)
 
 
 def join_bracketed_stems(text):

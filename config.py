@@ -5,9 +5,8 @@
 
 import os
 
-
-#GPU_SERVER_HOSTNAME = "http://gpu02.sbms.hku.hk"
-#GPU_SERVER_HOSTNAME = "http://127.0.0.1"
+# GPU_SERVER_HOSTNAME = "http://gpu02.sbms.hku.hk"
+# GPU_SERVER_HOSTNAME = "http://127.0.0.1"
 # 127.0.0.1 rather than localhost or 0.0.0.0: proxied sites list
 # 127.0.0.1 in NO_PROXY, and a client aimed at 0.0.0.0 gets routed to the
 # proxy, which cannot reach a port on the compute node.
@@ -17,7 +16,7 @@ GPU_SERVER_HOSTNAME = "http://127.0.0.1"
 # NCT2CTML_LLM_PLATFORM overrides it, e.g. for a replay; every mapped file
 # records the platform it was made with.
 LLM_PLATFORM = os.environ.get("NCT2CTML_LLM_PLATFORM", "Anthropic")
-#LLM_PLATFORM = "Ollama"
+# LLM_PLATFORM = "Ollama"
 
 # Provenance (utils/provenance.py). Each `map` and benchmark run writes
 # RUNS_PATH/<run_id>/run.json and records every model call, prompt and raw
@@ -46,8 +45,8 @@ LLM_AI_MODEL = "claude-haiku-4-5-20251001"
 # effort parameter (the API rejects the request), so both are off; the
 # platform refuses the combination rather than failing mid-run. On models
 # that support them, set ANTHROPIC_THINKING = "adaptive" and an effort level.
-ANTHROPIC_THINKING = None      # None | "adaptive"
-ANTHROPIC_EFFORT = None        # None | low | medium | high | xhigh | max
+ANTHROPIC_THINKING = None  # None | "adaptive"
+ANTHROPIC_EFFORT = None  # None | low | medium | high | xhigh | max
 # 0 for reproducibility. Ignored when thinking is on (the API requires 1).
 ANTHROPIC_TEMPERATURE = 0
 
@@ -80,12 +79,12 @@ GENOMIC_PROMPT = os.environ.get("NCT2CTML_GENOMIC_PROMPT", "roles")
 ANTHROPIC_MAX_TOKENS = 16000
 
 # deepseek library
-#LLM_AI_MODEL = "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B"
-#LLM_AI_MODEL = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
-#LLM_AI_MODEL = "neuralmagic/DeepSeek-R1-Distill-Qwen-32B-quantized.w4a16"
+# LLM_AI_MODEL = "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B"
+# LLM_AI_MODEL = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
+# LLM_AI_MODEL = "neuralmagic/DeepSeek-R1-Distill-Qwen-32B-quantized.w4a16"
 
 # Anthropic model (used when LLM_PLATFORM = "Anthropic")
-#LLM_AI_MODEL = "claude-opus-5"
+# LLM_AI_MODEL = "claude-opus-5"
 
 # --- GPU deployment (LeoMed or any box with >=24 GB VRAM) ------------------
 # Start here. Upstream developed every prompt in utils/ai_helper.py against a
@@ -96,7 +95,7 @@ ANTHROPIC_MAX_TOKENS = 16000
 # qwen3:14b once emitted 30,251 of them on a single call and hung for 3.5h.
 # ~16 GB at Q4, so it fits a 24 GB card with room for real context.
 # Raise OLLAMA_NUM_CTX to 32768 and drop the timeout to ~300 when using this.
-#LLM_AI_MODEL = "gemma3:27b"
+# LLM_AI_MODEL = "gemma3:27b"
 #
 # What is actually running on LeoMed. Benchmarked 2026-09-14 against the
 # curated key: gemma3:27b scored dx F1 0.18 / gene F1 0.09, llama3.3:70b
@@ -107,50 +106,49 @@ ANTHROPIC_MAX_TOKENS = 16000
 # reads the model from here, so an uncommitted edit on the cluster means the
 # repo no longer says what is running.
 # The GPU backend: set LLM_PLATFORM = "Ollama" above and uncomment this.
-#LLM_AI_MODEL = "llama3.3:70b"
+# LLM_AI_MODEL = "llama3.3:70b"
 #
 # The same weights are also reachable through Ollama's HuggingFace
 # passthrough, which is the form upstream's guide uses. Prefer the tag above:
 # it comes from Ollama's own registry, so it needs only registry.ollama.ai
 # rather than huggingface.co as well - one less host for a locked-down
 # network to refuse.
-#LLM_AI_MODEL = "hf.co/unsloth/gemma-3-27b-it-GGUF:Q4_K_M"
+# LLM_AI_MODEL = "hf.co/unsloth/gemma-3-27b-it-GGUF:Q4_K_M"
 #
 # Runner-up for 40 GB+. Likely sharper, but thinking MUST be disabled or it
 # reproduces the hang above on better hardware.
-#LLM_AI_MODEL = "qwen3:32b"
+# LLM_AI_MODEL = "qwen3:32b"
 
 # Laptop fallback. 14B at Q4 is about 9 GB and fits 16 GB of unified memory.
 # Only for exercising the plumbing: it produced 46 oncotree diagnoses where
 # the curated answer was 4, with no overlap. Not a production model.
-#LLM_AI_MODEL = "qwen3:14b"
+# LLM_AI_MODEL = "qwen3:14b"
 
 # gemma library
-#LLM_AI_MODEL = "hf.co/unsloth/gemma-4-31B-it-GGUF:UD-Q4_K_XL"
-#LLM_AI_MODEL = "cyankiwi/gemma-4-31B-it-AWQ-4bit"
-#LLM_AI_MODEL = "gemma4:31b" # from official ollama library instead of hugging face
-#LLM_AI_MODEL = "gemma4:26b" # from official ollama library instead of hugging face
-#LLM_AI_MODEL = "hf.co/unsloth/medgemma-27b-text-it-GGUF:Q4_K_M"
-#LLM_AI_MODEL = "hf.co/unsloth/gemma-3-27b-it-GGUF:Q4_K_M"
-#LLM_AI_MODEL = "hf.co/bartowski/gemma-2-27b-it-GGUF:Q4_K_M"
+# LLM_AI_MODEL = "hf.co/unsloth/gemma-4-31B-it-GGUF:UD-Q4_K_XL"
+# LLM_AI_MODEL = "cyankiwi/gemma-4-31B-it-AWQ-4bit"
+# LLM_AI_MODEL = "gemma4:31b" # from official ollama library instead of hugging face
+# LLM_AI_MODEL = "gemma4:26b" # from official ollama library instead of hugging face
+# LLM_AI_MODEL = "hf.co/unsloth/medgemma-27b-text-it-GGUF:Q4_K_M"
+# LLM_AI_MODEL = "hf.co/unsloth/gemma-3-27b-it-GGUF:Q4_K_M"
+# LLM_AI_MODEL = "hf.co/bartowski/gemma-2-27b-it-GGUF:Q4_K_M"
 
 # Qwen library
-#LLM_AI_MODEL = "Qwen/Qwen3.5-35B-A3B-GPTQ-Int4"
-#LLM_AI_MODEL = "Qwen/Qwen3.6-27B-FP8"
-#LLM_AI_MODEL = "qwen3.6:27b" # from official ollama library instead of hugging face
-#LLM_AI_MODEL = "qwen3.6:35b" # from official ollama library instead of hugging face
+# LLM_AI_MODEL = "Qwen/Qwen3.5-35B-A3B-GPTQ-Int4"
+# LLM_AI_MODEL = "Qwen/Qwen3.6-27B-FP8"
+# LLM_AI_MODEL = "qwen3.6:27b" # from official ollama library instead of hugging face
+# LLM_AI_MODEL = "qwen3.6:35b" # from official ollama library instead of hugging face
 
 # GLM library
-#LLM_AI_MODEL = "hf.co/mradermacher/GLM-4-32B-0414-GGUF:Q4_K_M"
-#LLM_AI_MODEL = "hf.co/lmstudio-community/GLM-Z1-32B-0414-GGUF:Q4_K_M"
+# LLM_AI_MODEL = "hf.co/mradermacher/GLM-4-32B-0414-GGUF:Q4_K_M"
+# LLM_AI_MODEL = "hf.co/lmstudio-community/GLM-Z1-32B-0414-GGUF:Q4_K_M"
 
 # moonshotai library
-#LLM_AI_MODEL = "moonshotai/Moonlight-16B-A3B-Instruct"
-#LLM_AI_MODEL = "hf.co/mmnga/Moonlight-16B-A3B-Instruct-gguf:Q8_0"
+# LLM_AI_MODEL = "moonshotai/Moonlight-16B-A3B-Instruct"
+# LLM_AI_MODEL = "hf.co/mmnga/Moonlight-16B-A3B-Instruct-gguf:Q8_0"
 
 # minimax library
-#LLM_AI_MODEL = "hf.co/mradermacher/SynLogic-32B-GGUF:Q4_K_M"
-
+# LLM_AI_MODEL = "hf.co/mradermacher/SynLogic-32B-GGUF:Q4_K_M"
 
 
 # Where a mapped trial goes when it needs a human before it is usable -

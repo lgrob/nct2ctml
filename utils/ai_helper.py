@@ -6,14 +6,15 @@
 import json
 import re
 import time
-import config
-import requests
-import urllib.parse
 from inspect import cleandoc
+
+import requests
 from loguru import logger
-from utils.llm_platforms import create_llm_platform
+
+import config
 from utils import provenance
-from utils.genomic_patterns import MUTATION_DETAIL_KEYWORDS, CNV_DETAIL_KEYWORDS
+from utils.genomic_patterns import CNV_DETAIL_KEYWORDS, MUTATION_DETAIL_KEYWORDS
+from utils.llm_platforms import create_llm_platform
 
 # Pre-compile patterns for efficiency
 _MUTATION_PATTERNS = [re.compile(pattern, re.IGNORECASE) for pattern in MUTATION_DETAIL_KEYWORDS]
@@ -24,18 +25,18 @@ def has_mutation_details(criteria_text: str) -> bool:
     """
     Check if the criteria text contains keywords suggesting mutation details
     (variant_classification, exon) are present.
-    
+
     Uses simple keyword/regex matching to avoid unnecessary LLM calls.
-    
+
     Args:
         criteria_text: The eligibility criteria text to scan.
-        
+
     Returns:
         True if mutation detail keywords are found, False otherwise.
     """
     if not criteria_text:
         return False
-    
+
     for pattern in _MUTATION_PATTERNS:
         if pattern.search(criteria_text):
             return True
@@ -46,49 +47,64 @@ def has_cnv_details(criteria_text: str) -> bool:
     """
     Check if the criteria text contains keywords suggesting CNV details
     (cnv_call) are present.
-    
+
     Uses simple keyword/regex matching to avoid unnecessary LLM calls.
-    
+
     Args:
         criteria_text: The eligibility criteria text to scan.
-        
+
     Returns:
         True if CNV detail keywords are found, False otherwise.
     """
     if not criteria_text:
         return False
-    
+
     for pattern in _CNV_PATTERNS:
         if pattern.search(criteria_text):
             return True
     return False
 
+
 # Initialize the LLM platform based on config
 _llm_platform = create_llm_platform(
     platform_name=config.LLM_PLATFORM,
     model=config.LLM_AI_MODEL,
-    hostname=config.GPU_SERVER_HOSTNAME
+    hostname=config.GPU_SERVER_HOSTNAME,
 )
 
-def get_level1_diagnosis_from_original_conditions(nct_id:str, original_conditions: dict, level1_oncotree: set) -> dict:    
-    original_conditions_list = list(original_conditions)
-    level1_oncotree_list = list(level1_oncotree) 
-    
-    schema, prompt = get_ai_prompt_level1_for_original_conditions(original_conditions_list, level1_oncotree_list, nct_id)
 
-    logger.debug(f"NCTID: {nct_id} | AI Prompt for Level 1 diagnosis from original conditions: {prompt}")
-        
+def get_level1_diagnosis_from_original_conditions(
+    nct_id: str, original_conditions: dict, level1_oncotree: set
+) -> dict:
+    original_conditions_list = list(original_conditions)
+    level1_oncotree_list = list(level1_oncotree)
+
+    schema, prompt = get_ai_prompt_level1_for_original_conditions(
+        original_conditions_list, level1_oncotree_list, nct_id
+    )
+
+    logger.debug(
+        f"NCTID: {nct_id} | AI Prompt for Level 1 diagnosis from original conditions: {prompt}"
+    )
+
     ai_response = send_ai_request(nct_id, prompt, schema)
     oncotree_diagnoses_dict = parse_ai_response(ai_response, nct_id)
-    return keep_candidates(oncotree_diagnoses_dict, level1_oncotree_list, nct_id, extra=("", "Other"),
-                           keep_valid=False)
+    return keep_candidates(
+        oncotree_diagnoses_dict, level1_oncotree_list, nct_id, extra=("", "Other"), keep_valid=False
+    )
+
 
 def get_oncotree_diagnoses_from_trial_info(nct_id: str, trial_info, oncotree_values: set) -> dict:
-    schema, prompt = get_ai_prompt_oncotree_diagnoses_from_trial_info(trial_info, list(oncotree_values), nct_id)
+    schema, prompt = get_ai_prompt_oncotree_diagnoses_from_trial_info(
+        trial_info, list(oncotree_values), nct_id
+    )
     ai_response = send_ai_request(nct_id, prompt, schema)
     return keep_candidates(parse_ai_response(ai_response, nct_id), oncotree_values, nct_id)
 
-def get_child_level_diagnoses_from_condition(nct_id:str, child_nodes_oncotree:set, nct_condition: str) -> dict:
+
+def get_child_level_diagnoses_from_condition(
+    nct_id: str, child_nodes_oncotree: set, nct_condition: str
+) -> dict:
     child_nodes_oncotree_list = list(child_nodes_oncotree)
 
     schema, prompt = get_ai_prompt_child_values(nct_condition, child_nodes_oncotree_list, nct_id)
@@ -97,28 +113,32 @@ def get_child_level_diagnoses_from_condition(nct_id:str, child_nodes_oncotree:se
     oncotree_diagnoses_dict = parse_ai_response(ai_response, nct_id)
     return keep_candidates(oncotree_diagnoses_dict, child_nodes_oncotree_list, nct_id)
 
-def get_her2_er_pr_status(nct_id:str, eligibilityCriteria: str, keywords: list)-> dict:
+
+def get_her2_er_pr_status(nct_id: str, eligibilityCriteria: str, keywords: list) -> dict:
     schema, prompt = get_her2_er_pr_status_prompt(eligibilityCriteria, keywords)
     ai_response = send_ai_request(nct_id, prompt, schema)
-    her2_er_pr_status_dict = parse_ai_response(ai_response, nct_id)   
+    her2_er_pr_status_dict = parse_ai_response(ai_response, nct_id)
     return her2_er_pr_status_dict
 
-def get_pdl1_status(nct_id:str, eligibilityCriteria: str, keywords: list)-> dict:
+
+def get_pdl1_status(nct_id: str, eligibilityCriteria: str, keywords: list) -> dict:
     schema, prompt = get_pdl1_status_prompt(eligibilityCriteria, keywords)
     ai_response = send_ai_request(nct_id, prompt, schema)
-    pdl1_status_dict = parse_ai_response(ai_response, nct_id)   
+    pdl1_status_dict = parse_ai_response(ai_response, nct_id)
     return pdl1_status_dict
 
-def get_mmr_status(nct_id:str, eligibilityCriteria: str, keywords: list)-> dict:
+
+def get_mmr_status(nct_id: str, eligibilityCriteria: str, keywords: list) -> dict:
     schema, prompt = get_mmr_status_prompt(eligibilityCriteria, keywords)
     ai_response = send_ai_request(nct_id, prompt, schema)
-    mmr_status_dict = parse_ai_response(ai_response, nct_id)   
+    mmr_status_dict = parse_ai_response(ai_response, nct_id)
     return mmr_status_dict
 
-def get_disease_status(nct_id:str, eligibilityCriteria: str, keywords: list)-> dict:
+
+def get_disease_status(nct_id: str, eligibilityCriteria: str, keywords: list) -> dict:
     schema, prompt = get_disease_status_prompt(eligibilityCriteria, keywords)
     ai_response = send_ai_request(nct_id, prompt, schema)
-    disease_status_dict = parse_ai_response(ai_response, nct_id)   
+    disease_status_dict = parse_ai_response(ai_response, nct_id)
     return disease_status_dict
 
 
@@ -142,7 +162,9 @@ def get_age_bounds(trial_id: str, inclusion_criteria: str) -> dict:
     return parse_ai_response(ai_response, trial_id)
 
 
-def get_arm_criteria_mapping(nct_id: str, arm_groups: list, inclusion_criteria: str, exclusion_criteria: str) -> dict:
+def get_arm_criteria_mapping(
+    nct_id: str, arm_groups: list, inclusion_criteria: str, exclusion_criteria: str
+) -> dict:
     """
     Call the LLM to classify eligibility criteria into global vs per-arm text.
 
@@ -170,17 +192,20 @@ def get_arm_criteria_mapping(nct_id: str, arm_groups: list, inclusion_criteria: 
     mapping = parse_ai_response(ai_response, nct_id)
     return mapping
 
+
 # Roadmap 2.9, "roles": genes the model classified as something other than an
 # entry requirement, per trial id: [(gene, role)]. Read by the mapper, which
 # records them as gene_role_dropped on the trial.
 ROLE_DROPS = {}
 
 
-def get_inclusion_genomic_criteria(nct_id:str, genes:list, eligibilityCriteria:str)-> list:
+def get_inclusion_genomic_criteria(nct_id: str, genes: list, eligibilityCriteria: str) -> list:
     json_schema, prompt = get_inclusion_genomic_criteria_prompt(genes, eligibilityCriteria)
     ai_response = send_ai_request(nct_id, prompt, json_schema)
     genomic_criteria = parse_ai_response(ai_response, nct_id)
-    if getattr(config, "GENOMIC_PROMPT", "baseline") in ("roles", "roles_union") and isinstance(genomic_criteria, list):
+    if getattr(config, "GENOMIC_PROMPT", "baseline") in ("roles", "roles_union") and isinstance(
+        genomic_criteria, list
+    ):
         kept = []
         for c in genomic_criteria:
             g = c.get("genomic") if isinstance(c, dict) else None
@@ -192,7 +217,8 @@ def get_inclusion_genomic_criteria(nct_id:str, genes:list, eligibilityCriteria:s
         genomic_criteria = kept
     return genomic_criteria
 
-def get_exclusion_genomic_criteria(nct_id:str, genes:list, eligibilityCriteria:str)-> list:
+
+def get_exclusion_genomic_criteria(nct_id: str, genes: list, eligibilityCriteria: str) -> list:
     json_schema, prompt = get_exclusion_genomic_criteria_prompt(genes, eligibilityCriteria)
     ai_response = send_ai_request(nct_id, prompt, json_schema)
     genomic_criteria = parse_ai_response(ai_response, nct_id)
@@ -208,13 +234,13 @@ def enrich_mutation_details(nct_id: str, mutation_criteria: list, criteria_text:
     the full `mutation_criteria` list and asked to return enrichment objects that
     reference specific entries by their index in that list, so that multiple
     mutations for the same gene can be enriched independently.
-    
+
     Args:
         nct_id: The clinical trial identifier for logging.
         mutation_criteria: List of genomic criteria dicts that have variant_category="Mutation".
                            Each dict should have a "genomic" key with "hugo_symbol".
         criteria_text: The original eligibility criteria text to analyze.
-        
+
     Returns:
         List of enrichment dicts with format:
         [{"index": int, "variant_classification": "type_or_null", "exon": int_or_null}, ...]
@@ -222,38 +248,40 @@ def enrich_mutation_details(nct_id: str, mutation_criteria: list, criteria_text:
     """
     if not mutation_criteria or not criteria_text:
         return []
-    
+
     genes_with_mutations = []
     for criterion in mutation_criteria:
         genomic = criterion.get("genomic", {})
         hugo_symbol = genomic.get("hugo_symbol")
         if hugo_symbol:
             genes_with_mutations.append(hugo_symbol)
-    
+
     if not genes_with_mutations:
         return []
-    
+
     logger.info(f"NCTID: {nct_id} | Enriching mutation details for genes: {genes_with_mutations}")
-    
+
     json_schema, prompt = get_mutation_detail_enrichment_prompt(
         genes_with_mutations, criteria_text, mutation_criteria
     )
-    
+
     try:
         ai_response = send_ai_request(nct_id, prompt, json_schema)
         enrichment_result = parse_ai_response(ai_response, nct_id)
-        
+
         if isinstance(enrichment_result, dict):
             enriched_mutations = enrichment_result.get("enriched_mutations", [])
         elif isinstance(enrichment_result, list):
             enriched_mutations = enrichment_result
         else:
-            logger.warning(f"NCTID: {nct_id} | Unexpected enrichment response format: {type(enrichment_result)}")
+            logger.warning(
+                f"NCTID: {nct_id} | Unexpected enrichment response format: {type(enrichment_result)}"
+            )
             return []
-        
+
         logger.info(f"NCTID: {nct_id} | Mutation enrichment result: {enriched_mutations}")
         return enriched_mutations
-        
+
     except Exception as e:
         logger.error(f"NCTID: {nct_id} | Mutation enrichment failed: {e}")
         return []
@@ -262,16 +290,16 @@ def enrich_mutation_details(nct_id: str, mutation_criteria: list, criteria_text:
 def enrich_cnv_details(nct_id: str, cnv_criteria: list, criteria_text: str) -> list:
     """
     Enrich CNV criteria with cnv_call details.
-    
+
     This function performs a second-pass LLM call to extract the specific CNV type
     for genes already identified as having Copy Number Variations.
-    
+
     Args:
         nct_id: The clinical trial identifier for logging.
         cnv_criteria: List of genomic criteria dicts that have variant_category="Copy Number Variation".
                      Each dict should have a "genomic" key with "hugo_symbol".
         criteria_text: The original eligibility criteria text to analyze.
-        
+
     Returns:
         List of enrichment dicts with format:
         [{"hugo_symbol": "GENE", "cnv_call": "type_or_null"}, ...]
@@ -279,44 +307,48 @@ def enrich_cnv_details(nct_id: str, cnv_criteria: list, criteria_text: str) -> l
     """
     if not cnv_criteria or not criteria_text:
         return []
-    
+
     genes_with_cnv = []
     for criterion in cnv_criteria:
         genomic = criterion.get("genomic", {})
         hugo_symbol = genomic.get("hugo_symbol")
         if hugo_symbol:
             genes_with_cnv.append(hugo_symbol)
-    
+
     if not genes_with_cnv:
         return []
-    
+
     logger.info(f"NCTID: {nct_id} | Enriching CNV details for genes: {genes_with_cnv}")
-    
+
     json_schema, prompt = get_cnv_detail_enrichment_prompt(
         genes_with_cnv, criteria_text, cnv_criteria
     )
-    
+
     try:
         ai_response = send_ai_request(nct_id, prompt, json_schema)
         enrichment_result = parse_ai_response(ai_response, nct_id)
-        
+
         if isinstance(enrichment_result, dict):
             enriched_cnvs = enrichment_result.get("enriched_cnvs", [])
         elif isinstance(enrichment_result, list):
             enriched_cnvs = enrichment_result
         else:
-            logger.warning(f"NCTID: {nct_id} | Unexpected CNV enrichment response format: {type(enrichment_result)}")
+            logger.warning(
+                f"NCTID: {nct_id} | Unexpected CNV enrichment response format: {type(enrichment_result)}"
+            )
             return []
-        
+
         logger.info(f"NCTID: {nct_id} | CNV enrichment result: {enriched_cnvs}")
         return enriched_cnvs
-        
+
     except Exception as e:
         logger.error(f"NCTID: {nct_id} | CNV enrichment failed: {e}")
         return []
 
+
 def parse_ai_response(ai_response, trial_id=""):
     return _llm_platform.parse_response(ai_response, trial_id)
+
 
 def send_ai_request(id, prompt, json_schema=None):
     """
@@ -327,11 +359,17 @@ def send_ai_request(id, prompt, json_schema=None):
     try:
         ai_response = _send_ai_request(id, prompt, json_schema)
     except Exception as ex:
-        provenance.record_call(id, prompt, json_schema, error=f"{type(ex).__name__}: {ex}",
-                               elapsed=time.monotonic() - started)
+        provenance.record_call(
+            id,
+            prompt,
+            json_schema,
+            error=f"{type(ex).__name__}: {ex}",
+            elapsed=time.monotonic() - started,
+        )
         raise
-    provenance.record_call(id, prompt, json_schema, response=ai_response,
-                           elapsed=time.monotonic() - started)
+    provenance.record_call(
+        id, prompt, json_schema, response=ai_response, elapsed=time.monotonic() - started
+    )
     return ai_response
 
 
@@ -339,7 +377,7 @@ def _send_ai_request(id, prompt, json_schema=None):
     # Hosted platforms (e.g. Anthropic) own their transport and auth via an
     # official SDK, so they expose send() instead of going through the
     # unauthenticated hostname:port POST used by the self-hosted platforms.
-    sender = getattr(_llm_platform, 'send', None)
+    sender = getattr(_llm_platform, "send", None)
     if callable(sender):
         logger.debug(f"AI request | ID:{id} | {prompt[:200]}")
         ai_response = sender(prompt, json_schema)
@@ -355,10 +393,13 @@ def _send_ai_request(id, prompt, json_schema=None):
     # Without a timeout a stalled or runaway model blocks the pipeline forever:
     # a local 14B in a constrained-JSON generation loop was observed emitting
     # 30k+ tokens over 3.5 hours on a single call.
-    timeout = getattr(config, 'LLM_REQUEST_TIMEOUT_SECONDS', 600)
-    response = requests.post(endpoint_url, data=req_body_json,
-                             headers={"Content-Type": "application/json"},
-                             timeout=timeout)
+    timeout = getattr(config, "LLM_REQUEST_TIMEOUT_SECONDS", 600)
+    response = requests.post(
+        endpoint_url,
+        data=req_body_json,
+        headers={"Content-Type": "application/json"},
+        timeout=timeout,
+    )
 
     response.raise_for_status()
 
@@ -366,6 +407,7 @@ def _send_ai_request(id, prompt, json_schema=None):
     ai_response = response.json()
     logger.debug(f"AI response | ID:{id} | {ai_response}")
     return ai_response
+
 
 def prompt_list(values):
     """
@@ -408,11 +450,16 @@ def diagnosis_prompt_list(values):
     node does not reorder the rest.
     """
     import hashlib
-    return sorted({v for v in values if v is not None},
-                  key=lambda v: (hashlib.sha256(str(v).encode("utf-8")).hexdigest(), str(v)))
+
+    return sorted(
+        {v for v in values if v is not None},
+        key=lambda v: (hashlib.sha256(str(v).encode("utf-8")).hexdigest(), str(v)),
+    )
 
 
-def get_ai_prompt_level1_for_original_conditions(original_conditions_list, level1_oncotree_list, trial_id=""):
+def get_ai_prompt_level1_for_original_conditions(
+    original_conditions_list, level1_oncotree_list, trial_id=""
+):
     # Sorted so the prompt text does not depend on set order (PYTHONHASHSEED);
     # see prompt_list(). Roadmap 1.9.
     level1_oncotree_list = diagnosis_prompt_list(level1_oncotree_list)
@@ -430,15 +477,20 @@ def get_ai_prompt_level1_for_original_conditions(original_conditions_list, level
         }}"""
     return level1_diagnoses_schema(level1_oncotree_list, trial_id), cleandoc(prompt)
 
+
 def get_ai_prompt_oncotree_diagnoses_from_trial_info(trial_info, oncotree_values, trial_id=""):
     # Sorted so the prompt text does not depend on set order (PYTHONHASHSEED);
     # see prompt_list(). Roadmap 1.9.
     oncotree_values = diagnosis_prompt_list(oncotree_values)
     import config
+
     # Roadmap 2.8: only in "labelled" mode, so legacy prompts stay byte-identical.
-    exclusion_rule = ("\n        - Conditions named under Exclusion Criteria are excluded from the trial: do not "
-                      "return them, unless the Inclusion Criteria (or the Title or Conditions) also name them."
-                      if getattr(config, "DIAGNOSIS_INPUT", "legacy") == "labelled" else "")
+    exclusion_rule = (
+        "\n        - Conditions named under Exclusion Criteria are excluded from the trial: do not "
+        "return them, unless the Inclusion Criteria (or the Title or Conditions) also name them."
+        if getattr(config, "DIAGNOSIS_INPUT", "legacy") == "labelled"
+        else ""
+    )
     prompt = f"""Task: From the TrialInfo, extract OncotreeValues that correspond to medical conditions explicitly mentioned in the text.
         Rules:
         - Only include a diagnosis if the condition or cancer type is explicitly stated in TrialInfo.
@@ -455,6 +507,7 @@ def get_ai_prompt_oncotree_diagnoses_from_trial_info(trial_info, oncotree_values
         }}"""
 
     return oncotree_diagnoses_schema(oncotree_values, trial_id), cleandoc(prompt)
+
 
 def get_ai_prompt_child_values(nct_condition, child_nodes_oncotree_list, trial_id=""):
     # Sorted so the prompt text does not depend on set order (PYTHONHASHSEED);
@@ -477,6 +530,7 @@ def get_ai_prompt_child_values(nct_condition, child_nodes_oncotree_list, trial_i
         """
     return child_values_schema(child_nodes_oncotree_list, trial_id), cleandoc(prompt)
 
+
 def get_her2_er_pr_status_prompt(eligibilityCriteria, keywords):
     prompt = f"""
         Task: From the EligibilityCriteria and TrialKeywords, return the required Her2, PR or ER status.
@@ -494,6 +548,7 @@ def get_her2_er_pr_status_prompt(eligibilityCriteria, keywords):
         """
     return HER2_ER_PR_SCHEMA, cleandoc(prompt)
 
+
 def get_pdl1_status_prompt(eligibilityCriteria, keywords):
     prompt = f"""
         Task: From the EligibilityCriteria and TrialKeywords, return the required PDL1 (PD-L1) status.
@@ -507,6 +562,7 @@ def get_pdl1_status_prompt(eligibilityCriteria, keywords):
         where "value" is in ["High", "Low", "Unknown"].
         """
     return PDL1_SCHEMA, cleandoc(prompt)
+
 
 def get_mmr_status_prompt(eligibilityCriteria, keywords):
     prompt = f"""
@@ -524,6 +580,7 @@ def get_mmr_status_prompt(eligibilityCriteria, keywords):
         and "value2" is in ['MSI-H', 'MSI-L', 'MSS','!MSI-H', '!MSI-L'].
         """
     return MMR_MS_SCHEMA, cleandoc(prompt)
+
 
 def get_disease_status_prompt(eligibilityCriteria, keywords):
     prompt = f"""Task: From the EligibilityCriteria and TrialKeywords, return the required disease statuses of the cancer.
@@ -573,7 +630,9 @@ def get_age_bounds_prompt(inclusion_criteria):
     return AGE_BOUNDS_SCHEMA, cleandoc(prompt)
 
 
-def get_arm_criteria_mapping_prompt(arm_groups: list, inclusion_criteria: str, exclusion_criteria: str) -> str:
+def get_arm_criteria_mapping_prompt(
+    arm_groups: list, inclusion_criteria: str, exclusion_criteria: str
+) -> str:
     """
     Build a focused prompt for mapping global vs per-arm eligibility criteria.
 
@@ -639,6 +698,7 @@ def get_arm_criteria_mapping_prompt(arm_groups: list, inclusion_criteria: str, e
 
     return cleandoc(prompt)
 
+
 # a lot of trial criteria mention exclusion too in inclusion criteria hence the prompt supplies both inclusion and exclusion instructions
 # Shape that _enrich_genomic_criteria expects. Supplied to Ollama as
 # "format", which constrains decoding rather than merely asking for JSON.
@@ -688,8 +748,9 @@ def max_enum_values():
     from the recorded ones and every capped call would miss.
     """
     caps = getattr(config, "SCHEMA_ENUM_MAX_VALUES", {}) or {}
-    platform = str(getattr(_llm_platform, "recorded_platform", None)
-                   or getattr(config, "LLM_PLATFORM", "")).lower()
+    platform = str(
+        getattr(_llm_platform, "recorded_platform", None) or getattr(config, "LLM_PLATFORM", "")
+    ).lower()
     return caps.get(platform, _DEFAULT_MAX_ENUM_VALUES)
 
 
@@ -768,29 +829,36 @@ def keep_candidates(result, allowed, trial_id="", extra=(), keep_valid=True):
             kept.append(dict(item, oncotree_value=same[0]) if isinstance(item, dict) else same[0])
             continue
         from utils.reference_validation import canonical_diagnosis
+
         name = canonical_diagnosis(value) if keep_valid and isinstance(value, str) else None
         if name:
             OFF_LIST_EVENTS["kept_for_review"] += 1
             OFF_LIST_BY_TRIAL.setdefault(trial_id, set()).add(name)
-            logger.warning(f"{trial_id} | diagnosis answer {value!r} was not among the "
-                           f"{len(permitted)} candidates offered; kept, trial goes to review")
+            logger.warning(
+                f"{trial_id} | diagnosis answer {value!r} was not among the "
+                f"{len(permitted)} candidates offered; kept, trial goes to review"
+            )
             kept.append(item)
             continue
         OFF_LIST_EVENTS["dropped"] += 1
-        logger.warning(f"{trial_id} | diagnosis answer {value!r} was not among the "
-                       f"{len(permitted)} candidates offered; dropped")
+        logger.warning(
+            f"{trial_id} | diagnosis answer {value!r} was not among the "
+            f"{len(permitted)} candidates offered; dropped"
+        )
     return dict(result, oncotree_diagnoses=kept)
 
 
 def enum_cap_summary() -> str:
     e = ENUM_CAP_EVENTS
-    return (f"Schema enums: {e['enum']} sent, {e['near_cap']} near the cap, "
-            f"{e['dropped']} dropped over the cap ({max_enum_values()} on "
-            f"{getattr(config, 'LLM_PLATFORM', '?')}); largest list {e['largest']}. "
-            f"Diagnosis answers: {OFF_LIST_EVENTS['checked']} checked against their "
-            f"candidate list, {OFF_LIST_EVENTS['recased']} recased, "
-            f"{OFF_LIST_EVENTS['kept_for_review']} off-list kept for review, "
-            f"{OFF_LIST_EVENTS['dropped']} dropped")
+    return (
+        f"Schema enums: {e['enum']} sent, {e['near_cap']} near the cap, "
+        f"{e['dropped']} dropped over the cap ({max_enum_values()} on "
+        f"{getattr(config, 'LLM_PLATFORM', '?')}); largest list {e['largest']}. "
+        f"Diagnosis answers: {OFF_LIST_EVENTS['checked']} checked against their "
+        f"candidate list, {OFF_LIST_EVENTS['recased']} recased, "
+        f"{OFF_LIST_EVENTS['kept_for_review']} off-list kept for review, "
+        f"{OFF_LIST_EVENTS['dropped']} dropped"
+    )
 
 
 def _one_of(allowed, extra=(), trial_id=""):
@@ -814,9 +882,11 @@ def _one_of(allowed, extra=(), trial_id=""):
     cap = max_enum_values()
     if cap is not None and n > cap:
         ENUM_CAP_EVENTS["dropped"] += 1
-        logger.warning(f"{trial_id} | {n} candidates exceed the schema enum cap of {cap} "
-                       f"on {config.LLM_PLATFORM}; enum dropped, off-list answers are "
-                       f"possible for this call")
+        logger.warning(
+            f"{trial_id} | {n} candidates exceed the schema enum cap of {cap} "
+            f"on {config.LLM_PLATFORM}; enum dropped, off-list answers are "
+            f"possible for this call"
+        )
         return {"type": "string"}
     ENUM_CAP_EVENTS["enum"] += 1
     near = getattr(config, "SCHEMA_ENUM_NEAR_CAP_FRACTION", 0.8)
@@ -829,8 +899,9 @@ def _one_of(allowed, extra=(), trial_id=""):
 def oncotree_diagnoses_schema(allowed, trial_id=""):
     return {
         "type": "object",
-        "properties": {"oncotree_diagnoses": {"type": "array",
-                                              "items": _one_of(allowed, trial_id=trial_id)}},
+        "properties": {
+            "oncotree_diagnoses": {"type": "array", "items": _one_of(allowed, trial_id=trial_id)}
+        },
         "required": ["oncotree_diagnoses"],
     }
 
@@ -841,12 +912,19 @@ def level1_diagnoses_schema(allowed, trial_id=""):
     # constrained model is forced to pick a branch it does not believe in.
     return {
         "type": "object",
-        "properties": {"oncotree_diagnoses": {"type": "array", "items": {
-            "type": "object",
-            "properties": {"cancer_condition": {"type": "string"},
-                           "oncotree_value": _one_of(allowed, ("", "Other"), trial_id)},
-            "required": ["cancer_condition", "oncotree_value"],
-        }}},
+        "properties": {
+            "oncotree_diagnoses": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "cancer_condition": {"type": "string"},
+                        "oncotree_value": _one_of(allowed, ("", "Other"), trial_id),
+                    },
+                    "required": ["cancer_condition", "oncotree_value"],
+                },
+            }
+        },
         "required": ["oncotree_diagnoses"],
     }
 
@@ -854,9 +932,10 @@ def level1_diagnoses_schema(allowed, trial_id=""):
 def child_values_schema(allowed, trial_id=""):
     return {
         "type": "object",
-        "properties": {"cancer_condition": {"type": "string"},
-                       "oncotree_diagnoses": {"type": "array",
-                                              "items": _one_of(allowed, trial_id=trial_id)}},
+        "properties": {
+            "cancer_condition": {"type": "string"},
+            "oncotree_diagnoses": {"type": "array", "items": _one_of(allowed, trial_id=trial_id)},
+        },
         "required": ["oncotree_diagnoses"],
     }
 
@@ -864,15 +943,16 @@ def child_values_schema(allowed, trial_id=""):
 _RECEPTOR_VALUES = ["Positive", "Negative", "Unknown", "!Positive", "!Negative"]
 HER2_ER_PR_SCHEMA = {
     "type": "object",
-    "properties": {name: {"type": "string", "enum": _RECEPTOR_VALUES}
-                   for name in ("her2_status", "er_status", "pr_status")},
+    "properties": {
+        name: {"type": "string", "enum": _RECEPTOR_VALUES}
+        for name in ("her2_status", "er_status", "pr_status")
+    },
     "required": ["her2_status", "er_status", "pr_status"],
 }
 
 PDL1_SCHEMA = {
     "type": "object",
-    "properties": {"pdl1_status": {"type": "string",
-                                   "enum": ["High", "Low", "Unknown"]}},
+    "properties": {"pdl1_status": {"type": "string", "enum": ["High", "Low", "Unknown"]}},
     "required": ["pdl1_status"],
 }
 
@@ -881,12 +961,14 @@ PDL1_SCHEMA = {
 MMR_MS_SCHEMA = {
     "type": "object",
     "properties": {
-        "mmr_status": {"type": "string", "enum": [
-            "MMR-Proficient", "MMR-Deficient", "!MMR-Proficient", "!MMR-Deficient"]},
-        "ms_status": {"type": "string", "enum": [
-            "MSI-H", "MSI-L", "MSS", "!MSI-H", "!MSI-L"]},
+        "mmr_status": {
+            "type": "string",
+            "enum": ["MMR-Proficient", "MMR-Deficient", "!MMR-Proficient", "!MMR-Deficient"],
+        },
+        "ms_status": {"type": "string", "enum": ["MSI-H", "MSI-L", "MSS", "!MSI-H", "!MSI-L"]},
     },
 }
+
 
 def arm_criteria_mapping_schema(arm_labels):
     """
@@ -930,10 +1012,25 @@ def arm_criteria_mapping_schema(arm_labels):
 
 DISEASE_STATUS_SCHEMA = {
     "type": "object",
-    "properties": {"disease_status": {"type": "array", "items": {
-        "type": "string", "enum": [
-            "Untreated", "Localized", "Locally Advanced", "Metastatic",
-            "Advanced", "Recurrent", "Refractory", "Unresectable", "Early Stage"]}}},
+    "properties": {
+        "disease_status": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": [
+                    "Untreated",
+                    "Localized",
+                    "Locally Advanced",
+                    "Metastatic",
+                    "Advanced",
+                    "Recurrent",
+                    "Refractory",
+                    "Unresectable",
+                    "Early Stage",
+                ],
+            },
+        }
+    },
     "required": ["disease_status"],
 }
 
@@ -941,34 +1038,56 @@ DISEASE_STATUS_SCHEMA = {
 # found in free text (the 3.1 dry run saw replies that open with prose). The
 # allowed values are also enforced in merge_enriched_criteria, because the
 # tool call is not strict and a schema enum only guides the model.
-VARIANT_CLASSIFICATIONS = ("In_Frame_Del", "In_Frame_Ins", "Splice_Site", "Missense_Mutation",
-                           "Nonsense_Mutation", "Frame_Shift_Del", "Frame_Shift_Ins")
-CNV_CALLS = ("High Amplification", "Low Amplification", "Homozygous Deletion", "Heterozygous Deletion")
+VARIANT_CLASSIFICATIONS = (
+    "In_Frame_Del",
+    "In_Frame_Ins",
+    "Splice_Site",
+    "Missense_Mutation",
+    "Nonsense_Mutation",
+    "Frame_Shift_Del",
+    "Frame_Shift_Ins",
+)
+CNV_CALLS = (
+    "High Amplification",
+    "Low Amplification",
+    "Homozygous Deletion",
+    "Heterozygous Deletion",
+)
 
 MUTATION_ENRICHMENT_SCHEMA = {
     "type": "object",
-    "properties": {"enriched_mutations": {"type": "array", "items": {
-        "type": "object",
-        "properties": {
-            "index": {"type": "integer"},
-            "variant_classification": {"enum": list(VARIANT_CLASSIFICATIONS) + [None]},
-            "exon": {"type": ["integer", "null"]},
-        },
-        "required": ["index", "variant_classification", "exon"],
-    }}},
+    "properties": {
+        "enriched_mutations": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "index": {"type": "integer"},
+                    "variant_classification": {"enum": list(VARIANT_CLASSIFICATIONS) + [None]},
+                    "exon": {"type": ["integer", "null"]},
+                },
+                "required": ["index", "variant_classification", "exon"],
+            },
+        }
+    },
     "required": ["enriched_mutations"],
 }
 
 CNV_ENRICHMENT_SCHEMA = {
     "type": "object",
-    "properties": {"enriched_cnvs": {"type": "array", "items": {
-        "type": "object",
-        "properties": {
-            "index": {"type": "integer"},
-            "cnv_call": {"enum": list(CNV_CALLS) + [None]},
-        },
-        "required": ["index", "cnv_call"],
-    }}},
+    "properties": {
+        "enriched_cnvs": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "index": {"type": "integer"},
+                    "cnv_call": {"enum": list(CNV_CALLS) + [None]},
+                },
+                "required": ["index", "cnv_call"],
+            },
+        }
+    },
     "required": ["enriched_cnvs"],
 }
 
@@ -989,8 +1108,15 @@ AGE_BOUNDS_SCHEMA = {
 }
 
 
-GENOMIC_ROLES = ["requirement", "risk_group", "cohort_specific", "conditional",
-                 "alternative_route", "example", "expression_or_germline"]
+GENOMIC_ROLES = [
+    "requirement",
+    "risk_group",
+    "cohort_specific",
+    "conditional",
+    "alternative_route",
+    "example",
+    "expression_or_germline",
+]
 # "roles_union" (roadmap 2.9b) adds cohort_union: a gene one cohort needs in a
 # trial where EVERY cohort needs one of the returned genes. Kept in the tree
 # like a requirement, so a strata trial (ALK / MET / ROS1) keeps its genetics.
@@ -1000,6 +1126,7 @@ _KEPT_ROLES = {"requirement", "cohort_union"}
 
 def _with_role(schema, roles=GENOMIC_ROLES):
     import copy
+
     s = copy.deepcopy(schema)
     g = s["items"]["properties"]["genomic"]
     g["properties"]["role"] = {"type": "string", "enum": roles}
@@ -1019,10 +1146,14 @@ GENOMIC_CRITERIA_SCHEMA = {
                     "variant_category": {
                         "type": "string",
                         "enum": [
-                            "Mutation", "Copy Number Variation",
-                            "Structural Variation", "Any Variation",
-                            "!Mutation", "!Copy Number Variation",
-                            "!Structural Variation", "!Any Variation",
+                            "Mutation",
+                            "Copy Number Variation",
+                            "Structural Variation",
+                            "Any Variation",
+                            "!Mutation",
+                            "!Copy Number Variation",
+                            "!Structural Variation",
+                            "!Any Variation",
                         ],
                     },
                     "protein_change": {"type": "string"},
@@ -1039,19 +1170,27 @@ GENOMIC_CRITERIA_SCHEMA = {
                     "variant_classification": {
                         "type": "string",
                         "enum": [
-                            "In_Frame_Del", "In_Frame_Ins", "Splice_Site",
-                            "Missense_Mutation", "Nonsense_Mutation",
-                            "Frame_Shift_Del", "Frame_Shift_Ins",
+                            "In_Frame_Del",
+                            "In_Frame_Ins",
+                            "Splice_Site",
+                            "Missense_Mutation",
+                            "Nonsense_Mutation",
+                            "Frame_Shift_Del",
+                            "Frame_Shift_Ins",
                         ],
                     },
                     "exon": {"type": "integer"},
                     "cnv_call": {
                         "type": "string",
                         "enum": [
-                            "Low Amplification", "High Amplification",
-                            "Homozygous Deletion", "Heterozygous Deletion",
-                            "!Low Amplification", "!High Amplification",
-                            "!Homozygous Deletion", "!Heterozygous Deletion",
+                            "Low Amplification",
+                            "High Amplification",
+                            "Homozygous Deletion",
+                            "Heterozygous Deletion",
+                            "!Low Amplification",
+                            "!High Amplification",
+                            "!Homozygous Deletion",
+                            "!Heterozygous Deletion",
                         ],
                     },
                 },
@@ -1073,27 +1212,36 @@ _NOT_A_REQUIREMENT = """(a) it defines a risk group, a stratification or a treat
        (d) it is one route to entry among routes that are not genetic ("high-risk AML defined by a TP53 mutation, a complex karyotype or therapy-related disease");
        (e) it is only an example inside a broader criterion ("an actionable alteration such as ALK or ROS1" when any actionable alteration qualifies);
        (f) the text is about protein expression (IHC, flow cytometry) or a germline syndrome (neurofibromatosis type 1)."""
-_RULES_TEXT = """    10. ENTRY REQUIREMENTS ONLY. Return a gene only if EVERY patient entering (the trial, or the arm this text describes) must carry the alteration,
+_RULES_TEXT = (
+    """    10. ENTRY REQUIREMENTS ONLY. Return a gene only if EVERY patient entering (the trial, or the arm this text describes) must carry the alteration,
        alone or as one alternative in a list made only of genetic alterations. Do NOT return a gene when:
-       """ + _NOT_A_REQUIREMENT + """
+       """
+    + _NOT_A_REQUIREMENT
+    + """
        If no gene is an entry requirement for every patient, return an empty list [].
        Example: "Part A: any relapsed solid tumour. Part B: solid tumours with a CTNNB1 or APC mutation." -> []
 """
-_ROLES_TEXT = """    10. For EVERY gene you return, set "role" to exactly one of:
+)
+_ROLES_TEXT = (
+    """    10. For EVERY gene you return, set "role" to exactly one of:
        "requirement" - EVERY patient entering (the trial, or the arm this text describes) must carry the alteration, alone or as one
                        alternative in a list made only of genetic alterations;
        "risk_group" (a), "cohort_specific" (b), "conditional" (c), "alternative_route" (d), "example" (e), "expression_or_germline" (f), where:
-       """ + _NOT_A_REQUIREMENT + """
+       """
+    + _NOT_A_REQUIREMENT
+    + """
        Only "requirement" genes decide eligibility; the other roles are kept for a curator. When unsure, prefer the narrower role over "requirement".
        Example: "Part A: any relapsed solid tumour. Part B: solid tumours with a CTNNB1 or APC mutation." ->
        CTNNB1 and APC, both "role": "cohort_specific".
 """
+)
 _ROLES_UNION_TEXT = _ROLES_TEXT.replace(
     """       Only "requirement" genes decide eligibility;""",
     """       "cohort_union" - the gene is needed only by some cohorts, parts or strata, BUT every cohort of the trial needs one of the
                        genes you return (no cohort enters without a genetic alteration). Use it for every gene of such a trial.
        Example: "Stratum 1: ALK fusion. Stratum 2: MET amplification. Stratum 3: ROS1 fusion." -> ALK, MET, ROS1, all "cohort_union".
-       Only "requirement" and "cohort_union" genes decide eligibility;""")
+       Only "requirement" and "cohort_union" genes decide eligibility;""",
+)
 assert _ROLES_UNION_TEXT != _ROLES_TEXT
 
 
@@ -1166,11 +1314,18 @@ def get_inclusion_genomic_criteria_prompt(genes, inclusion_criteria):
     variant = getattr(config, "GENOMIC_PROMPT", "baseline")
     if variant in ("rules", "roles", "roles_union"):
         assert prompt.count(_EXAMPLE_ANCHOR) == 1
-        text = {"rules": _RULES_TEXT, "roles": _ROLES_TEXT, "roles_union": _ROLES_UNION_TEXT}[variant]
+        text = {"rules": _RULES_TEXT, "roles": _ROLES_TEXT, "roles_union": _ROLES_UNION_TEXT}[
+            variant
+        ]
         prompt = prompt.replace(_EXAMPLE_ANCHOR, text + _EXAMPLE_ANCHOR, 1)
-        schema = {"rules": GENOMIC_CRITERIA_SCHEMA, "roles": GENOMIC_ROLE_SCHEMA, "roles_union": GENOMIC_ROLE_UNION_SCHEMA}[variant]
+        schema = {
+            "rules": GENOMIC_CRITERIA_SCHEMA,
+            "roles": GENOMIC_ROLE_SCHEMA,
+            "roles_union": GENOMIC_ROLE_UNION_SCHEMA,
+        }[variant]
         return schema, cleandoc(prompt)
     return GENOMIC_CRITERIA_SCHEMA, cleandoc(prompt)
+
 
 def get_exclusion_genomic_criteria_prompt(genes, exclusion_criteria):
     # Sorted so the prompt text does not depend on set order (PYTHONHASHSEED);
@@ -1223,14 +1378,16 @@ def get_exclusion_genomic_criteria_prompt(genes, exclusion_criteria):
     return GENOMIC_CRITERIA_SCHEMA, cleandoc(prompt)
 
 
-def get_mutation_detail_enrichment_prompt(genes_with_mutations: list, criteria_text: str, existing_criteria: list) -> tuple:
+def get_mutation_detail_enrichment_prompt(
+    genes_with_mutations: list, criteria_text: str, existing_criteria: list
+) -> tuple:
     """
     Generate a focused prompt to enrich mutation criteria with variant_classification and exon details.
     Args:
         genes_with_mutations: List of HUGO gene symbols identified as having Mutations.
         criteria_text: The original eligibility criteria text.
         existing_criteria: The current mutation genomic criteria output from the initial extraction
-                           (only the mutation entries that may need enrichment).        
+                           (only the mutation entries that may need enrichment).
     Returns:
         Tuple of (json_schema, prompt_string).
     """
@@ -1305,14 +1462,16 @@ def get_mutation_detail_enrichment_prompt(genes_with_mutations: list, criteria_t
     return MUTATION_ENRICHMENT_SCHEMA, cleandoc(prompt)
 
 
-def get_cnv_detail_enrichment_prompt(genes_with_cnv: list, criteria_text: str, existing_criteria: list) -> tuple:
+def get_cnv_detail_enrichment_prompt(
+    genes_with_cnv: list, criteria_text: str, existing_criteria: list
+) -> tuple:
     """
     Generate a focused prompt to enrich CNV criteria with cnv_call details.
     Args:
         genes_with_cnv: List of HUGO gene symbols identified as having CNVs.
         criteria_text: The original eligibility criteria text.
         existing_criteria: The current CNV genomic criteria output from the initial extraction
-                           (only the CNV entries that may need enrichment).        
+                           (only the CNV entries that may need enrichment).
     Returns:
         Tuple of (json_schema, prompt_string).
     """
@@ -1362,10 +1521,12 @@ def get_cnv_detail_enrichment_prompt(genes_with_cnv: list, criteria_text: str, e
     return CNV_ENRICHMENT_SCHEMA, cleandoc(prompt)
 
 
-ENRICHMENT_REJECTED = []   # (field, value) the check refused, for measurement
+ENRICHMENT_REJECTED = []  # (field, value) the check refused, for measurement
 
 
-def merge_enriched_criteria(original: list, enriched: list, enrichment_type: str = "mutation") -> list:
+def merge_enriched_criteria(
+    original: list, enriched: list, enrichment_type: str = "mutation"
+) -> list:
     """
     Merge enriched fields into genomic criteria based on list indices.
 
@@ -1374,7 +1535,7 @@ def merge_enriched_criteria(original: list, enriched: list, enrichment_type: str
     The enrichment objects are expected to reference specific entries by their
     index in the `original` list, allowing multiple entries for the same gene to
     be enriched independently.
-    
+
     Args:
         original: List of genomic criteria dicts to be enriched. Typically a filtered
                   sublist of the full genomic_criteria (e.g., only Mutation or only CNV),
@@ -1385,14 +1546,14 @@ def merge_enriched_criteria(original: list, enriched: list, enrichment_type: str
         enrichment_type: Either "mutation" or "cnv" to determine which fields to merge.
                         - "mutation": merges variant_classification and exon
                         - "cnv": merges cnv_call
-        
+
     Returns:
         The original list with enriched fields merged into matching genomic objects.
         Original list is modified in place and also returned for convenience.
     """
     if not original or not enriched:
         return original
-    
+
     # Build a lookup map from index -> enrichment data.
     # The model is instructed to return "index" fields that correspond to the
     # position in the list that was sent for enrichment (e.g., mutation_criteria).
@@ -1401,7 +1562,7 @@ def merge_enriched_criteria(original: list, enriched: list, enrichment_type: str
         idx = item.get("index")
         if isinstance(idx, int) and 0 <= idx < len(original):
             enrichment_map[idx] = item
-    
+
     # Merge enriched fields into original criteria using indices
     for i, criterion in enumerate(original):
         enrichment_data = enrichment_map.get(i)
@@ -1409,7 +1570,7 @@ def merge_enriched_criteria(original: list, enriched: list, enrichment_type: str
             continue
 
         genomic = criterion.get("genomic", {})
-        
+
         # Merge fields based on enrichment type
         if enrichment_type == "mutation":
             # Merge variant_classification if present and not null
@@ -1420,8 +1581,10 @@ def merge_enriched_criteria(original: list, enriched: list, enrichment_type: str
                 genomic["variant_classification"] = variant_classification
             elif variant_classification is not None:
                 ENRICHMENT_REJECTED.append(("variant_classification", variant_classification))
-                logger.warning(f"enrichment: variant_classification {variant_classification!r} "
-                               f"is not an allowed value; not merged")
+                logger.warning(
+                    f"enrichment: variant_classification {variant_classification!r} "
+                    f"is not an allowed value; not merged"
+                )
 
             # Merge exon if it is a positive whole number
             exon = enrichment_data.get("exon")
@@ -1430,7 +1593,7 @@ def merge_enriched_criteria(original: list, enriched: list, enrichment_type: str
             elif exon is not None:
                 ENRICHMENT_REJECTED.append(("exon", exon))
                 logger.warning(f"enrichment: exon {exon!r} is not a positive integer; not merged")
-                
+
         elif enrichment_type == "cnv":
             # Merge cnv_call if present and not null
             cnv_call = enrichment_data.get("cnv_call")
@@ -1438,8 +1601,10 @@ def merge_enriched_criteria(original: list, enriched: list, enrichment_type: str
                 genomic["cnv_call"] = cnv_call
             elif cnv_call is not None:
                 ENRICHMENT_REJECTED.append(("cnv_call", cnv_call))
-                logger.warning(f"enrichment: cnv_call {cnv_call!r} is not an allowed value; not merged")
-    
+                logger.warning(
+                    f"enrichment: cnv_call {cnv_call!r} is not an allowed value; not merged"
+                )
+
     return original
 
 

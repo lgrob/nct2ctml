@@ -30,6 +30,7 @@ no gene criterion of it: they are risk-group definitions and lists of
 examples. That judgement stays with the model and the reviewer. This module
 supplies evidence: which genes a text names in cytogenetic form.
 """
+
 import csv
 import re
 from dataclasses import dataclass
@@ -40,22 +41,27 @@ import config
 _CHROM = r"(?:[0-9]{1,2}|[XYxy])"
 _BAND = r"[pq]\s*[0-9]+(?:\.[0-9]+)?(?:\s*-\s*[0-9]+(?:\.[0-9]+)?)?"
 _PATTERN = re.compile(
-    r"(?<![A-Za-z])(?P<kind>t|inv)\s*\(\s*(?P<c1>" + _CHROM + r")\s*(?:[;:,]\s*(?P<c2>" + _CHROM + r"))?\s*\)"
-    r"(?:\s*\(\s*(?P<b1>" + _BAND + r")\s*[;:,]?\s*(?P<b2>" + _BAND + r")\s*\))?")
+    r"(?<![A-Za-z])(?P<kind>t|inv)\s*\(\s*(?P<c1>"
+    + _CHROM
+    + r")\s*(?:[;:,]\s*(?P<c2>"
+    + _CHROM
+    + r"))?\s*\)"
+    r"(?:\s*\(\s*(?P<b1>" + _BAND + r")\s*[;:,]?\s*(?P<b2>" + _BAND + r")\s*\))?"
+)
 
 
 @dataclass(frozen=True)
 class Rearrangement:
-    notation: str          # canonical, e.g. "t(9;22)" or "inv(16)"
-    bands: tuple           # canonical major bands, e.g. ("q34", "q11"), or ()
-    text: str              # as written
+    notation: str  # canonical, e.g. "t(9;22)" or "inv(16)"
+    bands: tuple  # canonical major bands, e.g. ("q34", "q11"), or ()
+    text: str  # as written
 
 
 @dataclass(frozen=True)
 class Resolution:
     gene_a: str = ""
-    gene_b: str = ""       # "" when gene-level only
-    status: str = ""       # "resolved" | "gene_level" | "unresolved"
+    gene_b: str = ""  # "" when gene-level only
+    status: str = ""  # "resolved" | "gene_level" | "unresolved"
     detail: str = ""
 
 
@@ -75,7 +81,10 @@ def _canonical(kind, c1, c2, b1, b2):
     bands = tuple(_major(b) for b in (b1, b2) if b)
     if kind == "inv" or not c2:
         return f"{kind}({c1.upper()})", bands
-    pairs = [(c1.upper(), bands[0] if bands else ""), (c2.upper(), bands[1] if len(bands) > 1 else "")]
+    pairs = [
+        (c1.upper(), bands[0] if bands else ""),
+        (c2.upper(), bands[1] if len(bands) > 1 else ""),
+    ]
     if _chrom_key(pairs[0][0]) > _chrom_key(pairs[1][0]):
         pairs.reverse()
     notation = f"t({pairs[0][0]};{pairs[1][0]})"
@@ -87,9 +96,10 @@ def find(text):
     out = []
     for m in _PATTERN.finditer(text or ""):
         if m.group("kind").lower() == "t" and not m.group("c2"):
-            continue                      # "t(9)" is not a translocation
-        notation, bands = _canonical(m.group("kind"), m.group("c1"), m.group("c2"),
-                                     m.group("b1"), m.group("b2"))
+            continue  # "t(9)" is not a translocation
+        notation, bands = _canonical(
+            m.group("kind"), m.group("c1"), m.group("c2"), m.group("b1"), m.group("b2")
+        )
         out.append(Rearrangement(notation, bands, m.group(0)))
     return out
 
@@ -110,7 +120,8 @@ def table():
         if len(parsed) != 1 or (row["bands"].strip() and not parsed[0].bands):
             raise ValueError(f"translocation table row does not parse: {written!r}")
         rows.setdefault(parsed[0].notation, []).append(
-            (parsed[0].bands, row["gene_a"].strip(), row["gene_b"].strip(), row["reason"].strip()))
+            (parsed[0].bands, row["gene_a"].strip(), row["gene_b"].strip(), row["reason"].strip())
+        )
     return rows
 
 
@@ -127,16 +138,19 @@ def resolve(r):
         hits = [c for c in candidates if c[0] == r.bands]
         if len(hits) == 1:
             return _from_row(hits[0], f"{r.notation}({';'.join(r.bands)})")
-        return Resolution(status="unresolved",
-                          detail=f"{r.text}: bands {';'.join(r.bands)} match no row for {r.notation}")
+        return Resolution(
+            status="unresolved",
+            detail=f"{r.text}: bands {';'.join(r.bands)} match no row for {r.notation}",
+        )
     bare = [c for c in candidates if not c[0]]
     if len(bare) == 1:
         return _from_row(bare[0], f"{r.notation}, conventional reading")
     genes = [{c[1], c[2]} - {""} for c in candidates]
     shared = set.intersection(*genes) if genes else set()
     if len(shared) == 1:
-        return Resolution(shared.pop(), "", "gene_level",
-                          f"{r.notation} without bands: partner ambiguous")
+        return Resolution(
+            shared.pop(), "", "gene_level", f"{r.notation} without bands: partner ambiguous"
+        )
     return Resolution(status="unresolved", detail=f"{r.notation} without bands is ambiguous")
 
 
@@ -151,6 +165,7 @@ def genes_in(text):
         res = resolve(r)
         for g in (res.gene_a, res.gene_b):
             if g:
-                out.setdefault(g, []).append(f"{r.text.strip()} -> {res.gene_a}"
-                                             + (f"::{res.gene_b}" if res.gene_b else ""))
+                out.setdefault(g, []).append(
+                    f"{r.text.strip()} -> {res.gene_a}" + (f"::{res.gene_b}" if res.gene_b else "")
+                )
     return out

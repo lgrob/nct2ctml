@@ -22,6 +22,7 @@ provenance of each answer stays visible next to it.
     python -m bench.build_reviewed            # write every curated trial
     python -m bench.build_reviewed --check    # verify without writing
 """
+
 import argparse
 import datetime
 import os
@@ -97,16 +98,24 @@ def build(nct_id, curation):
     schema["curated_on"] = curation.get("curated_on", _first_curated_on(nct_id))
     steps = schema.setdefault("treatment_list", {}).setdefault("step", [])
     if not steps:
-        steps.append({"step_internal_id": 1, "step_code": "1",
-                      "step_type": "Registration", "match": [], "arm": []})
+        steps.append(
+            {
+                "step_internal_id": 1,
+                "step_code": "1",
+                "step_type": "Registration",
+                "match": [],
+                "arm": [],
+            }
+        )
     steps[0]["match"] = curation["match"]
     return schema
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--check", action="store_true",
-                    help="validate the curated terms without writing files")
+    ap.add_argument(
+        "--check", action="store_true", help="validate the curated terms without writing files"
+    )
     args = ap.parse_args()
 
     logger.remove()
@@ -126,9 +135,11 @@ def main():
 
     for problem in problems:
         print(f"  INVALID  {problem}")
-    print(f"\n{len(CURATIONS)} curated trials, "
-          f"{len(problems)} invalid term(s)"
-          + ("" if args.check else f", {written} written to {OUT_DIR}"))
+    print(
+        f"\n{len(CURATIONS)} curated trials, "
+        f"{len(problems)} invalid term(s)"
+        + ("" if args.check else f", {written} written to {OUT_DIR}")
+    )
     return 1 if problems else 0
 
 

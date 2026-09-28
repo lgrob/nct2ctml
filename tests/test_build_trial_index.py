@@ -7,6 +7,7 @@ properties a consumer relies on - that an emitted code is always a real
 Oncotree node, and that expansion only ever adds descendants of what the
 curator wrote.
 """
+
 import csv
 import json
 import os
@@ -14,7 +15,7 @@ import sys
 import tempfile
 import unittest
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from loguru import logger
 
@@ -31,7 +32,7 @@ from utils.reference_validation import _oncotree
 
 logger.remove()
 
-REVIEWED = os.path.join(os.path.dirname(__file__), '..', 'ctml', 'reviewed')
+REVIEWED = os.path.join(os.path.dirname(__file__), "..", "ctml", "reviewed")
 
 
 def _trial(match, **fields):
@@ -47,7 +48,8 @@ def _index(trial, trial_id="T1"):
 class TestDiagnosisExpansion(unittest.TestCase):
     def test_a_parent_expands_to_its_descendants(self):
         _, diagnoses, _ = _index(
-            _trial({"clinical": {"oncotree_primary_diagnosis": "Rhabdomyosarcoma"}}))
+            _trial({"clinical": {"oncotree_primary_diagnosis": "Rhabdomyosarcoma"}})
+        )
         names = {row["oncotree_name"] for row in diagnoses}
         self.assertIn("Rhabdomyosarcoma", names)
         self.assertIn("Alveolar Rhabdomyosarcoma", names)
@@ -61,36 +63,40 @@ class TestDiagnosisExpansion(unittest.TestCase):
         _, _, descendants = get_lineage()
         solid, liquid = _basket_members()
         for filename in sorted(os.listdir(REVIEWED)):
-            if not filename.endswith('.yaml'):
+            if not filename.endswith(".yaml"):
                 continue
             import yaml
+
             trial = yaml.safe_load(open(os.path.join(REVIEWED, filename)))
             _, diagnoses, _ = _index(trial, filename[:-5])
             for row in diagnoses:
                 if row["from_basket"]:
                     continue
-                self.assertIn(row["oncotree_name"],
-                              descendants.get(row["source_term"], set()),
-                              f"{filename}: {row['oncotree_name']} is not under "
-                              f"{row['source_term']}")
+                self.assertIn(
+                    row["oncotree_name"],
+                    descendants.get(row["source_term"], set()),
+                    f"{filename}: {row['oncotree_name']} is not under {row['source_term']}",
+                )
 
     def test_every_emitted_name_is_a_real_oncotree_node(self):
         names, _, _ = _oncotree()
         manifest_dir = tempfile.mkdtemp()
         build(REVIEWED, manifest_dir)
-        with open(os.path.join(manifest_dir, 'trial_diagnosis.tsv')) as handle:
-            for row in csv.DictReader(handle, delimiter='\t'):
+        with open(os.path.join(manifest_dir, "trial_diagnosis.tsv")) as handle:
+            for row in csv.DictReader(handle, delimiter="\t"):
                 self.assertIn(row["oncotree_name"], names)
 
     def test_a_leaf_emits_exactly_itself(self):
         _, diagnoses, _ = _index(
-            _trial({"clinical": {"oncotree_primary_diagnosis": "Neuroblastoma"}}))
+            _trial({"clinical": {"oncotree_primary_diagnosis": "Neuroblastoma"}})
+        )
         self.assertEqual([row["oncotree_name"] for row in diagnoses], ["Neuroblastoma"])
 
     def test_the_code_column_is_populated(self):
         """Codes outlive display names; a consumer should be able to join on them."""
         _, diagnoses, _ = _index(
-            _trial({"clinical": {"oncotree_primary_diagnosis": "Neuroblastoma"}}))
+            _trial({"clinical": {"oncotree_primary_diagnosis": "Neuroblastoma"}})
+        )
         self.assertEqual(diagnoses[0]["oncotree_code"], "NBL")
 
 
@@ -103,22 +109,19 @@ class TestBaskets(unittest.TestCase):
         self.assertEqual(solid & liquid, set())
 
     def test_a_liquid_basket_does_not_reach_solid_tumours(self):
-        _, diagnoses, _ = _index(
-            _trial({"clinical": {"oncotree_primary_diagnosis": "_LIQUID_"}}))
+        _, diagnoses, _ = _index(_trial({"clinical": {"oncotree_primary_diagnosis": "_LIQUID_"}}))
         names = {row["oncotree_name"] for row in diagnoses}
         self.assertIn("B-Lymphoblastic Leukemia/Lymphoma", names)
         self.assertNotIn("Neuroblastoma", names)
 
     def test_a_solid_basket_does_not_reach_leukaemias(self):
-        _, diagnoses, _ = _index(
-            _trial({"clinical": {"oncotree_primary_diagnosis": "_SOLID_"}}))
+        _, diagnoses, _ = _index(_trial({"clinical": {"oncotree_primary_diagnosis": "_SOLID_"}}))
         names = {row["oncotree_name"] for row in diagnoses}
         self.assertIn("Neuroblastoma", names)
         self.assertNotIn("B-Lymphoblastic Leukemia/Lymphoma", names)
 
     def test_basket_rows_are_flagged(self):
-        _, diagnoses, _ = _index(
-            _trial({"clinical": {"oncotree_primary_diagnosis": "_SOLID_"}}))
+        _, diagnoses, _ = _index(_trial({"clinical": {"oncotree_primary_diagnosis": "_SOLID_"}}))
         self.assertTrue(all(row["from_basket"] == 1 for row in diagnoses))
 
     def test_liquid_roots_are_real_level_1_nodes(self):
@@ -138,8 +141,7 @@ class TestAgeBounds(unittest.TestCase):
 
     def test_several_bounds_combine_to_the_most_restrictive(self):
         # Sibling clinical nodes under `and` are intersected by the engine.
-        self.assertEqual(_parse_age_bounds([">=1", ">=2", "<=30", "<=21"]),
-                         (2.0, True, 21.0, True))
+        self.assertEqual(_parse_age_bounds([">=1", ">=2", "<=30", "<=21"]), (2.0, True, 21.0, True))
 
     def test_fractional_ages_survive(self):
         self.assertEqual(_parse_age_bounds([">=0.08"]), (0.08, True, None, None))
@@ -150,24 +152,38 @@ class TestAgeBounds(unittest.TestCase):
 
 class TestGenomicRows(unittest.TestCase):
     def test_an_exclusion_is_flagged_not_dropped(self):
-        _, _, genomics = _index(_trial(
-            {"genomic": {"hugo_symbol": "ABL1", "variant_category": "!Any Variation"}}))
+        _, _, genomics = _index(
+            _trial({"genomic": {"hugo_symbol": "ABL1", "variant_category": "!Any Variation"}})
+        )
         self.assertEqual(genomics[0]["include"], 0)
         self.assertEqual(genomics[0]["variant_category"], "Any Variation")
 
     def test_an_inclusion_is_marked_included(self):
-        _, _, genomics = _index(_trial(
-            {"genomic": {"hugo_symbol": "MYCN", "variant_category": "Amplification"}}))
+        _, _, genomics = _index(
+            _trial({"genomic": {"hugo_symbol": "MYCN", "variant_category": "Amplification"}})
+        )
         self.assertEqual(genomics[0]["include"], 1)
 
 
 class TestArmScope(unittest.TestCase):
     def test_an_arm_specific_match_is_attributed_to_its_arm(self):
-        trial = {"treatment_list": {"step": [{
-            "match": [{"clinical": {"oncotree_primary_diagnosis": "Neuroblastoma"}}],
-            "arm": [{"arm_code": "ARM_A", "match": [
-                {"clinical": {"oncotree_primary_diagnosis": "Ewing Sarcoma"}}]}],
-        }]}}
+        trial = {
+            "treatment_list": {
+                "step": [
+                    {
+                        "match": [{"clinical": {"oncotree_primary_diagnosis": "Neuroblastoma"}}],
+                        "arm": [
+                            {
+                                "arm_code": "ARM_A",
+                                "match": [
+                                    {"clinical": {"oncotree_primary_diagnosis": "Ewing Sarcoma"}}
+                                ],
+                            }
+                        ],
+                    }
+                ]
+            }
+        }
         _, diagnoses, _ = _index(trial)
         by_arm = {row["oncotree_name"]: row["arm_code"] for row in diagnoses}
         self.assertEqual(by_arm["Neuroblastoma"], "")
@@ -183,8 +199,7 @@ class TestBuildOutputs(unittest.TestCase):
         first, second = tempfile.mkdtemp(), tempfile.mkdtemp()
         a, b = build(REVIEWED, first), build(REVIEWED, second)
         for name in ("trials.tsv", "trial_diagnosis.tsv", "trial_genomic.tsv"):
-            self.assertEqual(a["outputs"][name]["sha256"], b["outputs"][name]["sha256"],
-                             name)
+            self.assertEqual(a["outputs"][name]["sha256"], b["outputs"][name]["sha256"], name)
 
     def test_the_manifest_records_the_vocabulary_it_was_built_against(self):
         out = tempfile.mkdtemp()
@@ -196,6 +211,7 @@ class TestBuildOutputs(unittest.TestCase):
 
     def test_a_skip_override_removes_the_trial_from_the_index(self):
         import utils.oncology_scope as scope
+
         kept = scope.load_overrides
         first = sorted(f for f in os.listdir(REVIEWED) if f.endswith(".yaml"))[0][:-5]
         scope.load_overrides = lambda path=None: {first: ("skip", "not paediatric oncology")}
@@ -210,12 +226,19 @@ class TestBuildOutputs(unittest.TestCase):
 
     def test_the_out_of_scope_report_drops_machine_output_but_not_reviewed_trials(self):
         import utils.oncology_scope as scope
+
         first = sorted(f for f in os.listdir(REVIEWED) if f.endswith(".yaml"))[0][:-5]
         mapped_dir = tempfile.mkdtemp()
-        with open(os.path.join(REVIEWED, first + ".yaml")) as src, open(os.path.join(mapped_dir, "NCT0SCOPE.yaml"), "w") as dst:
+        with (
+            open(os.path.join(REVIEWED, first + ".yaml")) as src,
+            open(os.path.join(mapped_dir, "NCT0SCOPE.yaml"), "w") as dst,
+        ):
             dst.write(src.read().replace(first, "NCT0SCOPE"))
         kept_report, kept_overrides = scope.load_report, scope.load_overrides
-        scope.load_report = lambda path=None: {first: "filter says no", "NCT0SCOPE": "filter says no"}
+        scope.load_report = lambda path=None: {
+            first: "filter says no",
+            "NCT0SCOPE": "filter says no",
+        }
         scope.load_overrides = lambda path=None: {}
         try:
             manifest = build([(mapped_dir, "mapped"), (REVIEWED, "reviewed")], tempfile.mkdtemp())
@@ -224,10 +247,34 @@ class TestBuildOutputs(unittest.TestCase):
         self.assertEqual(manifest["excluded_out_of_scope"], {"NCT0SCOPE": "filter says no"})
 
     def test_an_excluded_diagnosis_removes_its_subtree_and_is_published_as_include_0(self):
-        trial = {"nct_id": "NCT0NEG", "treatment_list": {"step": [{"arm": [], "match": [{"and": [
-            {"clinical": {"oncotree_primary_diagnosis": "Acute Myeloid Leukemia"}},
-            {"clinical": {"oncotree_primary_diagnosis": "!APL with PML-RARA"}}]}]}]}}
+        trial = {
+            "nct_id": "NCT0NEG",
+            "treatment_list": {
+                "step": [
+                    {
+                        "arm": [],
+                        "match": [
+                            {
+                                "and": [
+                                    {
+                                        "clinical": {
+                                            "oncotree_primary_diagnosis": "Acute Myeloid Leukemia"
+                                        }
+                                    },
+                                    {
+                                        "clinical": {
+                                            "oncotree_primary_diagnosis": "!APL with PML-RARA"
+                                        }
+                                    },
+                                ]
+                            }
+                        ],
+                    }
+                ]
+            },
+        }
         import yaml
+
         src = tempfile.mkdtemp()
         with open(os.path.join(src, "NCT0NEG.yaml"), "w") as fh:
             yaml.safe_dump(trial, fh)
@@ -245,9 +292,9 @@ class TestBuildOutputs(unittest.TestCase):
         out = tempfile.mkdtemp()
         build(REVIEWED, out)
         with open(os.path.join(out, "trials.tsv")) as handle:
-            known = {row["trial_id"] for row in csv.DictReader(handle, delimiter='\t')}
+            known = {row["trial_id"] for row in csv.DictReader(handle, delimiter="\t")}
         with open(os.path.join(out, "trial_diagnosis.tsv")) as handle:
-            for row in csv.DictReader(handle, delimiter='\t'):
+            for row in csv.DictReader(handle, delimiter="\t"):
                 self.assertIn(row["trial_id"], known)
 
 
@@ -258,7 +305,7 @@ class TestProteinChanges(unittest.TestCase):
         out = tempfile.mkdtemp()
         manifest = build(source_dir, out, strict=strict)
         with open(os.path.join(out, "trial_genomic.tsv")) as handle:
-            return manifest, list(csv.DictReader(handle, delimiter='\t'))
+            return manifest, list(csv.DictReader(handle, delimiter="\t"))
 
     def test_curated_k27m_is_published_as_lys28met(self):
         manifest, rows = self._genomic(REVIEWED)
@@ -266,18 +313,39 @@ class TestProteinChanges(unittest.TestCase):
         self.assertTrue(stated)
         for r in stated:
             self.assertEqual(r["protein_check"], "verified", r)
-        k27m = {r["hugo_symbol"]: r["protein_change"] for r in stated
-                if r["protein_change_stated"] == "p.K27M"}
-        self.assertEqual(k27m, {"H3-3A": "p.Lys28Met", "H3-3B": "p.Lys28Met",
-                                "H3C2": "p.Lys28Met"})
+        k27m = {
+            r["hugo_symbol"]: r["protein_change"]
+            for r in stated
+            if r["protein_change_stated"] == "p.K27M"
+        }
+        self.assertEqual(k27m, {"H3-3A": "p.Lys28Met", "H3-3B": "p.Lys28Met", "H3C2": "p.Lys28Met"})
         self.assertEqual(len(manifest["protein_reference_sha256"]), 64)
 
     def _one_trial_dir(self, protein):
         source = tempfile.mkdtemp()
-        doc = {"nct_id": "NCT00000001", "treatment_list": {"step": [{"match": [{"and": [
-            {"clinical": {"oncotree_primary_diagnosis": "Melanoma"}},
-            {"genomic": {"hugo_symbol": "BRAF", "variant_category": "Mutation",
-                         "protein_change": protein}}]}]}]}}
+        doc = {
+            "nct_id": "NCT00000001",
+            "treatment_list": {
+                "step": [
+                    {
+                        "match": [
+                            {
+                                "and": [
+                                    {"clinical": {"oncotree_primary_diagnosis": "Melanoma"}},
+                                    {
+                                        "genomic": {
+                                            "hugo_symbol": "BRAF",
+                                            "variant_category": "Mutation",
+                                            "protein_change": protein,
+                                        }
+                                    },
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+        }
         with open(os.path.join(source, "NCT00000001.json"), "w") as handle:
             json.dump(doc, handle)
         return source
@@ -295,8 +363,10 @@ class TestProteinChanges(unittest.TestCase):
 
     def test_strict_builds_when_every_change_verifies(self):
         _, rows = self._genomic(self._one_trial_dir("p.V600E"), strict=True)
-        self.assertEqual((rows[0]["protein_change"], rows[0]["protein_ensembl"]),
-                         ("p.Val600Glu", "ENSP00000493543.1"))
+        self.assertEqual(
+            (rows[0]["protein_change"], rows[0]["protein_ensembl"]),
+            ("p.Val600Glu", "ENSP00000493543.1"),
+        )
 
 
 class TestLayers(unittest.TestCase):
@@ -306,8 +376,12 @@ class TestLayers(unittest.TestCase):
     def _dir(*trials):
         d = tempfile.mkdtemp()
         for trial_id, term in trials:
-            doc = {"nct_id": trial_id, "treatment_list": {"step": [{"match": [
-                {"clinical": {"oncotree_primary_diagnosis": term}}]}]}}
+            doc = {
+                "nct_id": trial_id,
+                "treatment_list": {
+                    "step": [{"match": [{"clinical": {"oncotree_primary_diagnosis": term}}]}]
+                },
+            }
             with open(os.path.join(d, f"{trial_id}.json"), "w") as handle:
                 json.dump(doc, handle)
         return d
@@ -316,16 +390,18 @@ class TestLayers(unittest.TestCase):
         out = tempfile.mkdtemp()
         manifest = build(layers, out)
         with open(os.path.join(out, "trials.tsv")) as handle:
-            rows = {r["trial_id"]: r for r in csv.DictReader(handle, delimiter='\t')}
+            rows = {r["trial_id"]: r for r in csv.DictReader(handle, delimiter="\t")}
         with open(os.path.join(out, "trial_diagnosis.tsv")) as handle:
-            dx = [r for r in csv.DictReader(handle, delimiter='\t')]
+            dx = [r for r in csv.DictReader(handle, delimiter="\t")]
         return manifest, rows, dx
 
     def test_a_reviewed_copy_replaces_the_mapped_one(self):
         mapped = self._dir(("NCT1", "Melanoma"), ("NCT2", "Neuroblastoma"))
         reviewed = self._dir(("NCT1", "Osteosarcoma"))
         manifest, rows, dx = self._trials([(mapped, "mapped"), (reviewed, "reviewed")])
-        self.assertEqual((rows["NCT1"]["review_status"], rows["NCT1"]["reviewed"]), ("reviewed", "1"))
+        self.assertEqual(
+            (rows["NCT1"]["review_status"], rows["NCT1"]["reviewed"]), ("reviewed", "1")
+        )
         self.assertEqual((rows["NCT2"]["review_status"], rows["NCT2"]["reviewed"]), ("mapped", "0"))
         nct1 = {r["source_term"] for r in dx if r["trial_id"] == "NCT1"}
         self.assertEqual(nct1, {"Osteosarcoma"})
@@ -338,10 +414,11 @@ class TestLayers(unittest.TestCase):
         self.assertEqual({r["review_status"] for r in rows.values()}, {"reviewed"})
 
     def test_a_missing_layer_contributes_nothing_rather_than_failing(self):
-        _, rows, _ = self._trials([("/nonexistent/dir", "mapped"),
-                                   (self._dir(("NCT1", "Melanoma")), "reviewed")])
+        _, rows, _ = self._trials(
+            [("/nonexistent/dir", "mapped"), (self._dir(("NCT1", "Melanoma")), "reviewed")]
+        )
         self.assertEqual(list(rows), ["NCT1"])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

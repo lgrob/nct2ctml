@@ -12,19 +12,20 @@ This module handles the mapping of NCT trial data to CTML format.
 import csv
 import os
 import re
-import yaml
 from datetime import datetime
-from typing import Dict, List
+
 from loguru import logger
-import src.clinical_trials_gov as ctg
-import src.match_criteria_mapper as mcm
-import src.ctis as ctis
-import utils.ai_helper as ai
-import src.trial_data_helper as tdh
-import utils.reference_validation as rv
-import utils.oncology_scope as scope
-from utils import provenance
+
 import config
+import src.clinical_trials_gov as ctg
+import src.ctis as ctis
+import src.match_criteria_mapper as mcm
+import src.trial_data_helper as tdh
+import utils.ai_helper as ai
+import utils.oncology_scope as scope
+import utils.reference_validation as rv
+import yaml
+from utils import provenance
 
 # The _provenance block as yaml.dump writes it: a top-level key, last, with
 # its content indented below it.
@@ -33,13 +34,12 @@ _PROVENANCE_BLOCK = re.compile(r"^_provenance:.*\n(?:[ -].*\n?)*", re.M)
 
 class TrialMapManager:
     """Manager for trial data mapping to CTML format"""
-    
+
     def __init__(self):
-        self.local_trial_file = 'ref/local_trial_info.csv'
-        self.trial_status_file = 'cache/nct/trial_status.csv'
-       
-    
-    def get_gene_synonym_mapping(self) -> Dict[str, List[str]]:
+        self.local_trial_file = "ref/local_trial_info.csv"
+        self.trial_status_file = "cache/nct/trial_status.csv"
+
+    def get_gene_synonym_mapping(self) -> dict[str, list[str]]:
         """
         alias -> [official symbols] for finding genes named in criteria text.
 
@@ -51,60 +51,66 @@ class TrialMapManager:
         """
         return rv.gene_synonym_mapping()
 
-    def load_trial_status_dict(self) -> Dict[str, Dict]:
+    def load_trial_status_dict(self) -> dict[str, dict]:
         """Load trial status information into a dictionary"""
         trial_status_dict = {}
         if os.path.exists(self.trial_status_file):
-            with open(self.trial_status_file, 'r', newline='', encoding='utf-8') as file:
+            with open(self.trial_status_file, newline="", encoding="utf-8") as file:
                 reader = csv.DictReader(file)
                 for row in reader:
-                    trial_status_dict[row['nct_id']] = row
+                    trial_status_dict[row["nct_id"]] = row
         return trial_status_dict
-    
-    def load_local_trial_dict(self) -> Dict[str, Dict]:
+
+    def load_local_trial_dict(self) -> dict[str, dict]:
         """Load local trial info into a consolidated dictionary with key as nct_id"""
         local_trial_dict = {}
         if os.path.exists(self.local_trial_file):
-            with open(self.local_trial_file, 'r', newline='', encoding='utf-8') as file:
+            with open(self.local_trial_file, newline="", encoding="utf-8") as file:
                 reader = csv.DictReader(file)
                 for row in reader:
-                    nct_id = row['nct_id']
-                    local_protocol_id = row['local_protocol_ids'].strip()
-                    pi_name = row['pi_name'].strip()
-                    pi_institution = row['pi_institution'].strip()
-                    
+                    nct_id = row["nct_id"]
+                    local_protocol_id = row["local_protocol_ids"].strip()
+                    pi_name = row["pi_name"].strip()
+                    pi_institution = row["pi_institution"].strip()
+
                     # Only process trials with valid NCT IDs (skip 'NA' entries)
-                    if nct_id != 'NA':
+                    if nct_id != "NA":
                         if nct_id not in local_trial_dict:
                             local_trial_dict[nct_id] = {
-                                'nct_id': nct_id,
-                                'local_protocol_ids': local_protocol_id,
-                                'pi_names': pi_name,
-                                'pi_institutions': pi_institution
+                                "nct_id": nct_id,
+                                "local_protocol_ids": local_protocol_id,
+                                "pi_names": pi_name,
+                                "pi_institutions": pi_institution,
                             }
                         else:
                             # Append multiple local_protocol_ids with pipe separator
-                            existing_protocols = local_trial_dict[nct_id]['local_protocol_ids']
+                            existing_protocols = local_trial_dict[nct_id]["local_protocol_ids"]
                             if local_protocol_id not in existing_protocols:
-                                local_trial_dict[nct_id]['local_protocol_ids'] = f"{existing_protocols}|{local_protocol_id}"
-                            
+                                local_trial_dict[nct_id]["local_protocol_ids"] = (
+                                    f"{existing_protocols}|{local_protocol_id}"
+                                )
+
                             # Append multiple pi_names with pipe separator
-                            existing_pi_names = local_trial_dict[nct_id]['pi_names']
+                            existing_pi_names = local_trial_dict[nct_id]["pi_names"]
                             if pi_name not in existing_pi_names:
-                                local_trial_dict[nct_id]['pi_names'] = f"{existing_pi_names}|{pi_name}"
-                            
+                                local_trial_dict[nct_id]["pi_names"] = (
+                                    f"{existing_pi_names}|{pi_name}"
+                                )
+
                             # Append multiple pi_institutions with pipe separator
-                            existing_pi_institutions = local_trial_dict[nct_id]['pi_institutions']
+                            existing_pi_institutions = local_trial_dict[nct_id]["pi_institutions"]
                             if pi_institution not in existing_pi_institutions:
-                                local_trial_dict[nct_id]['pi_institutions'] = f"{existing_pi_institutions}|{pi_institution}"
-        
+                                local_trial_dict[nct_id]["pi_institutions"] = (
+                                    f"{existing_pi_institutions}|{pi_institution}"
+                                )
+
         return local_trial_dict
-    
+
     def _add_local_trial_info(self, mapped_ctml: dict, nct_id: str) -> None:
         """
         Add local trial information to the mapped CTML data.
         This method handles the common logic for both map_all_trials and map_single_trial.
-        
+
         Parameters
         ----------
         mapped_ctml : dict
@@ -113,112 +119,131 @@ class TrialMapManager:
             The NCT ID to look up in local trial info
         """
         if os.path.exists(self.local_trial_file):
-            with open(self.local_trial_file, 'r', newline='', encoding='utf-8') as file:
+            with open(self.local_trial_file, newline="", encoding="utf-8") as file:
                 reader = csv.DictReader(file)
                 local_protocol_ids_list = []
                 local_pi_names_list = []
                 local_pi_institutions_list = []
-                
+
                 for row in reader:
-                    if row['nct_id'] == nct_id:
-                        local_protocol_ids_list.append(row['local_protocol_ids'].strip())
-                        local_pi_names_list.append(row['pi_name'].strip())
-                        local_pi_institutions_list.append(row['pi_institution'].strip())
-                
+                    if row["nct_id"] == nct_id:
+                        local_protocol_ids_list.append(row["local_protocol_ids"].strip())
+                        local_pi_names_list.append(row["pi_name"].strip())
+                        local_pi_institutions_list.append(row["pi_institution"].strip())
+
                 if local_protocol_ids_list:
                     # Convert protocol IDs to list (handle any existing pipe separators)
-                    local_protocol_ids_str = '|'.join(local_protocol_ids_list)
-                    local_protocol_ids_list_final = tdh.convert_protocol_ids_to_list(local_protocol_ids_str)
-                    mapped_ctml['protocol_ids'] = local_protocol_ids_list_final
+                    local_protocol_ids_str = "|".join(local_protocol_ids_list)
+                    local_protocol_ids_list_final = tdh.convert_protocol_ids_to_list(
+                        local_protocol_ids_str
+                    )
+                    mapped_ctml["protocol_ids"] = local_protocol_ids_list_final
                     logger.info(f"Added local protocol IDs: {local_protocol_ids_list_final}")
-                    
+
                     # Handle PI names - convert pipe to comma and append to existing if present
-                    local_pi_names = ', '.join(local_pi_names_list)
-                    if mapped_ctml['principal_investigator']:
-                        mapped_ctml['principal_investigator'] = f"{mapped_ctml['principal_investigator']}, {local_pi_names}"
+                    local_pi_names = ", ".join(local_pi_names_list)
+                    if mapped_ctml["principal_investigator"]:
+                        mapped_ctml["principal_investigator"] = (
+                            f"{mapped_ctml['principal_investigator']}, {local_pi_names}"
+                        )
                     else:
-                        mapped_ctml['principal_investigator'] = local_pi_names
+                        mapped_ctml["principal_investigator"] = local_pi_names
                     logger.info(f"Added local PI names: {local_pi_names}")
-                    
+
                     # Handle PI institutions - convert pipe to comma and append to existing if present
-                    local_pi_institutions = ', '.join(local_pi_institutions_list)
-                    if mapped_ctml['principal_investigator_institution']:
-                        mapped_ctml['principal_investigator_institution'] = f"{mapped_ctml['principal_investigator_institution']}, {local_pi_institutions}"
+                    local_pi_institutions = ", ".join(local_pi_institutions_list)
+                    if mapped_ctml["principal_investigator_institution"]:
+                        mapped_ctml["principal_investigator_institution"] = (
+                            f"{mapped_ctml['principal_investigator_institution']}, {local_pi_institutions}"
+                        )
                     else:
-                        mapped_ctml['principal_investigator_institution'] = local_pi_institutions
+                        mapped_ctml["principal_investigator_institution"] = local_pi_institutions
                     logger.info(f"Added local PI institutions: {local_pi_institutions}")
-                    
+
                 else:
-                    mapped_ctml['protocol_ids'] = []
+                    mapped_ctml["protocol_ids"] = []
                     logger.info("No local trial info found")
         else:
-            mapped_ctml['protocol_ids'] = []
+            mapped_ctml["protocol_ids"] = []
             logger.info("Local trial info file not found")
-    
+
     def _get_cutoff_date(self, cutoff_days: int = None) -> datetime:
         """
         Get the cutoff date for mapping trials.
-        
+
         Parameters
         ----------
         cutoff_days : int, optional
             Number of days back to consider. If None, uses config default.
-            
+
         Returns
         -------
         datetime
             Cutoff date
         """
-        import config
         from datetime import datetime, timedelta
-        
+
+        import config
+
         if cutoff_days is None:
             cutoff_days = config.MAPPING_CUTOFF_DAYS
-        
+
         cutoff_date = datetime.now() - timedelta(days=cutoff_days)
         return cutoff_date
-    
-    def map_all_trials(self, nct_files_path: str, ctml_files_path: str, cutoff_days: int = None) -> Dict[str, int]:
+
+    def map_all_trials(
+        self, nct_files_path: str, ctml_files_path: str, cutoff_days: int = None
+    ) -> dict[str, int]:
         """Map all NCT files to CTML format with local trial info integration"""
-        logger.info("Using ctml_files_path: {}".format(ctml_files_path))
+        logger.info(f"Using ctml_files_path: {ctml_files_path}")
         cutoff_date = self._get_cutoff_date(cutoff_days)
         gene_synonym_mapping = self.get_gene_synonym_mapping()
-        
+
         # Load data dictionaries
         trial_status_dict = self.load_trial_status_dict()
         local_trial_dict = self.load_local_trial_dict()
-        
+
         logger.info(f"Loaded {len(trial_status_dict)} trial status records")
         logger.info(f"Loaded {len(local_trial_dict)} local trial records")
-        logger.info(f"Using cutoff date: {cutoff_date.strftime('%Y-%m-%d')} (trials updated within last {cutoff_days or 'config default'} days)")
-        
+        logger.info(
+            f"Using cutoff date: {cutoff_date.strftime('%Y-%m-%d')} (trials updated within last {cutoff_days or 'config default'} days)"
+        )
+
         processed_count = 0
         skipped_count = 0
         out_of_scope = []
         scope_overrides = scope.load_overrides() if config.SKIP_OUT_OF_SCOPE_AT_MAP else {}
         ai.reset_enum_cap_events()
-        
+
         for file_name in os.listdir(nct_files_path):
-            if os.path.isfile(os.path.join(nct_files_path, file_name)) and file_name.endswith('.json'):
-                nct_id = file_name.split('.')[0]
-                
+            if os.path.isfile(os.path.join(nct_files_path, file_name)) and file_name.endswith(
+                ".json"
+            ):
+                nct_id = file_name.split(".")[0]
+
                 # Check if this trial was updated within the cutoff period in trial_status.csv
                 if nct_id in trial_status_dict:
-                    entry_last_updated_date_str = trial_status_dict[nct_id]['entry_last_updated_date']
-                    
-                    # Convert string date to datetime object for comparison                    
-                    entry_last_updated_date = datetime.strptime(entry_last_updated_date_str, '%Y-%m-%d')
+                    entry_last_updated_date_str = trial_status_dict[nct_id][
+                        "entry_last_updated_date"
+                    ]
+
+                    # Convert string date to datetime object for comparison
+                    entry_last_updated_date = datetime.strptime(
+                        entry_last_updated_date_str, "%Y-%m-%d"
+                    )
                     if entry_last_updated_date < cutoff_date:
-                        logger.info(f"Skipping NCT ID: {nct_id} - last updated: {entry_last_updated_date_str}, cutoff: {cutoff_date.strftime('%Y-%m-%d')}")
+                        logger.info(
+                            f"Skipping NCT ID: {nct_id} - last updated: {entry_last_updated_date_str}, cutoff: {cutoff_date.strftime('%Y-%m-%d')}"
+                        )
                         skipped_count += 1
                         continue
                 else:
                     logger.info(f"Skipping NCT ID: {nct_id} - not found in trial_status.csv")
                     skipped_count += 1
                     continue
-                
+
                 try:
-                    trial_data = tdh.read_from_file(nct_files_path, nct_id, 'json')
+                    trial_data = tdh.read_from_file(nct_files_path, nct_id, "json")
                     if config.SKIP_OUT_OF_SCOPE_AT_MAP:
                         in_scope, why = scope.assess(nct_id, trial_data, "nct", scope_overrides)
                         if not in_scope:
@@ -227,9 +252,9 @@ class TrialMapManager:
                             skipped_count += 1
                             continue
 
-                    logger.info(f"Mapping NCT ID: {nct_id}")   
+                    logger.info(f"Mapping NCT ID: {nct_id}")
                     logger.info("-----------------------")
-                    
+
                     # Map to CTML format
                     ai.OFF_LIST_BY_TRIAL.pop(nct_id, None)
                     mapped_ctml = ctg.map_nct_to_ctml(trial_data, gene_synonym_mapping)
@@ -239,43 +264,53 @@ class TrialMapManager:
                     self._record_role_drops(mapped_ctml, nct_id)
                     self._add_unspecified_all_lineage(mapped_ctml, trial_data, "nct", nct_id)
                     self._flag_gene_status(mapped_ctml, trial_data, "nct", nct_id)
-                    
+
                     # Add local trial info if available
                     if nct_id in local_trial_dict:
                         local_info = local_trial_dict[nct_id]
-                        
+
                         # Add local protocol IDs - convert to list
-                        local_protocol_ids_str = local_info['local_protocol_ids']
-                        local_protocol_ids_list = tdh.convert_protocol_ids_to_list(local_protocol_ids_str)
-                        mapped_ctml['protocol_ids'] = local_protocol_ids_list
+                        local_protocol_ids_str = local_info["local_protocol_ids"]
+                        local_protocol_ids_list = tdh.convert_protocol_ids_to_list(
+                            local_protocol_ids_str
+                        )
+                        mapped_ctml["protocol_ids"] = local_protocol_ids_list
                         logger.info(f"Added local protocol IDs: {local_protocol_ids_list}")
-                        
+
                         # Handle PI names - convert pipe to comma and append to existing if present
-                        local_pi_names = local_info['pi_names'].replace('|', ', ')
-                        if mapped_ctml['principal_investigator']:
-                            mapped_ctml['principal_investigator'] = f"{mapped_ctml['principal_investigator']}, {local_pi_names}"
+                        local_pi_names = local_info["pi_names"].replace("|", ", ")
+                        if mapped_ctml["principal_investigator"]:
+                            mapped_ctml["principal_investigator"] = (
+                                f"{mapped_ctml['principal_investigator']}, {local_pi_names}"
+                            )
                         else:
-                            mapped_ctml['principal_investigator'] = local_pi_names
+                            mapped_ctml["principal_investigator"] = local_pi_names
                         logger.info(f"Added local PI names: {local_pi_names}")
-                        
+
                         # Handle PI institutions - convert pipe to comma and append to existing if present
-                        local_pi_institutions = local_info['pi_institutions'].replace('|', ', ')
-                        if mapped_ctml['principal_investigator_institution']:
-                            mapped_ctml['principal_investigator_institution'] = f"{mapped_ctml['principal_investigator_institution']}, {local_pi_institutions}"
+                        local_pi_institutions = local_info["pi_institutions"].replace("|", ", ")
+                        if mapped_ctml["principal_investigator_institution"]:
+                            mapped_ctml["principal_investigator_institution"] = (
+                                f"{mapped_ctml['principal_investigator_institution']}, {local_pi_institutions}"
+                            )
                         else:
-                            mapped_ctml['principal_investigator_institution'] = local_pi_institutions
+                            mapped_ctml["principal_investigator_institution"] = (
+                                local_pi_institutions
+                            )
                         logger.info(f"Added local PI institutions: {local_pi_institutions}")
 
                         # Handle case when we need to explicity record status as closed
                         # This will be needed if we are inserting an already closed trial, which has a local trial too, just to record it
-                        if trial_status_dict[nct_id]['status'].lower() == 'closed':
-                            mapped_ctml['status'] = 'closed'
-                            logger.info(f"nct_id: {nct_id} | Set trial status to closed  based on trial_status.csv")
-                        
+                        if trial_status_dict[nct_id]["status"].lower() == "closed":
+                            mapped_ctml["status"] = "closed"
+                            logger.info(
+                                f"nct_id: {nct_id} | Set trial status to closed  based on trial_status.csv"
+                            )
+
                     else:
                         # Fall back to reading from file for this specific trial
                         self._add_local_trial_info(mapped_ctml, nct_id)
-                    
+
                     # Save CTML files. Until 2026-09-24 this path wrote to
                     # ctml_files_path directly, so `map --all` never routed an
                     # NCT trial to review; single-trial and CTIS mapping did.
@@ -284,33 +319,32 @@ class TrialMapManager:
 
                     processed_count += 1
                     logger.info(f"Successfully mapped and saved {nct_id} to {destination}")
-                    
+
                 except Exception as ex:
                     logger.error(f"nct_id: {nct_id} | Unexpected {ex=}, {type(ex)=}")
-        
+
         if config.SKIP_OUT_OF_SCOPE_AT_MAP:
             scope.write_report(out_of_scope, config.SCOPE_REPORT_FILE_PATH, registry="nct")
-            logger.info(f"{len(out_of_scope)} trials out of scope, listed in "
-                        f"{config.SCOPE_REPORT_FILE_PATH}")
+            logger.info(
+                f"{len(out_of_scope)} trials out of scope, listed in "
+                f"{config.SCOPE_REPORT_FILE_PATH}"
+            )
         logger.info(f"Mapping completed. Processed: {processed_count}, Skipped: {skipped_count}")
         # How often a candidate list outgrew the schema enum cap this run.
         logger.info(ai.enum_cap_summary())
-        
-        return {
-            'processed': processed_count,
-            'skipped': skipped_count
-        }
-    
-    def map_all_ctis_trials(self, ctis_files_path: str, ctml_files_path: str) -> Dict[str, int]:
+
+        return {"processed": processed_count, "skipped": skipped_count}
+
+    def map_all_ctis_trials(self, ctis_files_path: str, ctml_files_path: str) -> dict[str, int]:
         """Map every cached CTIS trial, skipping out-of-scope ones as for NCT."""
-        numbers = sorted(f[:-5] for f in os.listdir(ctis_files_path) if f.endswith('.json'))
+        numbers = sorted(f[:-5] for f in os.listdir(ctis_files_path) if f.endswith(".json"))
         overrides = scope.load_overrides() if config.SKIP_OUT_OF_SCOPE_AT_MAP else {}
         out_of_scope, done, failed = [], 0, 0
         ai.reset_enum_cap_events()
         for n, ct in enumerate(numbers, 1):
             if config.SKIP_OUT_OF_SCOPE_AT_MAP:
                 try:
-                    trial_data = tdh.read_from_file(ctis_files_path, ct, 'json')
+                    trial_data = tdh.read_from_file(ctis_files_path, ct, "json")
                 except Exception as e:
                     logger.error(f"CTIS: {ct} | could not read cached record: {e}")
                     failed += 1
@@ -326,9 +360,11 @@ class TrialMapManager:
         if config.SKIP_OUT_OF_SCOPE_AT_MAP:
             scope.write_report(out_of_scope, config.SCOPE_REPORT_FILE_PATH, registry="ctis")
         logger.info(ai.enum_cap_summary())
-        return {'processed': done, 'failed': failed, 'skipped': len(out_of_scope)}
+        return {"processed": done, "failed": failed, "skipped": len(out_of_scope)}
 
-    def map_single_ctis_trial(self, ct_number: str, ctis_files_path: str, ctml_files_path: str) -> bool:
+    def map_single_ctis_trial(
+        self, ct_number: str, ctis_files_path: str, ctml_files_path: str
+    ) -> bool:
         """
         Map one CTIS record to CTML.
 
@@ -338,12 +374,12 @@ class TrialMapManager:
         """
         try:
             logger.info(f"Mapping CTIS number: {ct_number}")
-            trial_data = tdh.read_from_file(ctis_files_path, ct_number, 'json')
+            trial_data = tdh.read_from_file(ctis_files_path, ct_number, "json")
         except FileNotFoundError:
-            logger.error(f'File {ct_number}.json not found at {ctis_files_path}')
+            logger.error(f"File {ct_number}.json not found at {ctis_files_path}")
             return False
         except Exception as e:
-            logger.exception(f'Error reading file {ct_number}.json: {e}')
+            logger.exception(f"Error reading file {ct_number}.json: {e}")
             return False
 
         gene_synonym_mapping = self.get_gene_synonym_mapping()
@@ -390,9 +426,10 @@ class TrialMapManager:
         differs on every run, and a backup is about the curator's content.
         """
         import config
+
         mapped_ctml.pop("_provenance", None)
         target = os.path.join(destination, f"{trial_id}.yaml")
-        review = os.path.realpath(getattr(config, 'CTML_REVIEW_PATH', 'ctml/needs-review'))
+        review = os.path.realpath(getattr(config, "CTML_REVIEW_PATH", "ctml/needs-review"))
         if os.path.realpath(destination) == review and os.path.exists(target):
             new = yaml.dump(mapped_ctml, sort_keys=False)
             with open(target) as handle:
@@ -403,10 +440,12 @@ class TrialMapManager:
                     n += 1
                     backup = f"{target}.prev.{n}"
                 os.replace(target, backup)
-                logger.warning(f"{trial_id} | the review copy differs from the new mapping; "
-                               f"kept as {backup} before writing the new one")
+                logger.warning(
+                    f"{trial_id} | the review copy differs from the new mapping; "
+                    f"kept as {backup} before writing the new one"
+                )
         mapped_ctml["_provenance"] = provenance.for_trial(trial_id)
-        tdh.save_to_file(mapped_ctml, destination, trial_id, 'yaml')
+        tdh.save_to_file(mapped_ctml, destination, trial_id, "yaml")
         return target
 
     @staticmethod
@@ -422,7 +461,9 @@ class TrialMapManager:
         found = mcm.find_unsatisfiable_genes(mapped_ctml.get("treatment_list"))
         if found:
             mapped_ctml["genomic_contradiction"] = "; ".join(found)
-            logger.warning(f"{trial_id} | match tree requires and forbids {', '.join(found)}: matches nobody")
+            logger.warning(
+                f"{trial_id} | match tree requires and forbids {', '.join(found)}: matches nobody"
+            )
 
     @staticmethod
     def _record_role_drops(mapped_ctml: dict, trial_id: str) -> None:
@@ -441,7 +482,9 @@ class TrialMapManager:
             mapped_ctml["gene_role_dropped"] = "; ".join(seen)
 
     @staticmethod
-    def _add_unspecified_all_lineage(mapped_ctml: dict, trial_data: dict, registry: str, trial_id: str) -> None:
+    def _add_unspecified_all_lineage(
+        mapped_ctml: dict, trial_data: dict, registry: str, trial_id: str
+    ) -> None:
         """
         A trial for "acute lymphoblastic leukaemia" with no lineage wording
         gets T-ALL beside B-ALL (utils.review_helper.all_lineage_unspecified):
@@ -451,24 +494,31 @@ class TrialMapManager:
             return
         try:
             from utils import review_helper as rh
+
             if registry == "ctis":
                 import src.ctis as ctis
+
                 inc, exc = ctis.split_inclusion_exclusion_criteria(trial_data)
                 context = list(ctis.get_titles(trial_data)) + list(ctis.get_conditions(trial_data))
             else:
                 inc, exc = ctg.split_inclusion_exclusion_criteria(trial_data)
                 ps = trial_data.get("protocolSection", {})
                 im = ps.get("identificationModule", {})
-                context = [im.get("briefTitle") or "", im.get("officialTitle") or ""] + \
-                    list(ps.get("conditionsModule", {}).get("conditions") or [])
+                context = [im.get("briefTitle") or "", im.get("officialTitle") or ""] + list(
+                    ps.get("conditionsModule", {}).get("conditions") or []
+                )
             if rh.all_lineage_unspecified(rh.collect(mapped_ctml)["diagnoses"], inc, exc, context):
                 n = rh.add_sibling_diagnosis(mapped_ctml.get("treatment_list"), rh.B_ALL, rh.T_ALL)
-                logger.info(f"{trial_id} | ALL named without lineage: T-ALL added beside B-ALL ({n})")
-        except Exception as e:   # a check must never lose the trial
+                logger.info(
+                    f"{trial_id} | ALL named without lineage: T-ALL added beside B-ALL ({n})"
+                )
+        except Exception as e:  # a check must never lose the trial
             logger.warning(f"{trial_id} | ALL-lineage rule skipped: {type(e).__name__}: {e}")
 
     @staticmethod
-    def _flag_gene_status(mapped_ctml: dict, trial_data: dict, registry: str, trial_id: str) -> None:
+    def _flag_gene_status(
+        mapped_ctml: dict, trial_data: dict, registry: str, trial_id: str
+    ) -> None:
         """
         Write genes the tree requires although the inclusion text says they
         must be absent or do not matter into the CTML as
@@ -480,20 +530,26 @@ class TrialMapManager:
             return
         try:
             from utils import review_helper as rh
+
             if registry == "ctis":
                 import src.ctis as ctis
+
                 inc, _ = ctis.split_inclusion_exclusion_criteria(trial_data)
             else:
                 inc, _ = ctg.split_inclusion_exclusion_criteria(trial_data)
             found = rh.gene_status_contradictions(mapped_ctml, inc)
             if found:
                 mapped_ctml["gene_status_contradiction"] = "; ".join(sorted(found))
-                logger.warning(f"{trial_id} | genes required although the text says absent or irrelevant: {', '.join(sorted(found))}")
-        except Exception as e:   # a check must never lose the trial
+                logger.warning(
+                    f"{trial_id} | genes required although the text says absent or irrelevant: {', '.join(sorted(found))}"
+                )
+        except Exception as e:  # a check must never lose the trial
             logger.warning(f"{trial_id} | gene-status check skipped: {type(e).__name__}: {e}")
 
     @staticmethod
-    def _flag_excluded_diagnoses(mapped_ctml: dict, trial_data: dict, registry: str, trial_id: str) -> None:
+    def _flag_excluded_diagnoses(
+        mapped_ctml: dict, trial_data: dict, registry: str, trial_id: str
+    ) -> None:
         """
         Write diagnoses named only in the exclusion criteria into the CTML as
         diagnosis_excluded, which routes the trial to review. Deterministic:
@@ -502,27 +558,36 @@ class TrialMapManager:
         if not isinstance(mapped_ctml, dict):
             return
         from utils import review_helper as rh
+
         try:
-            TrialMapManager._flag_excluded_diagnoses_inner(mapped_ctml, trial_data, registry, trial_id, rh)
-        except Exception as e:   # a check must never lose the trial
+            TrialMapManager._flag_excluded_diagnoses_inner(
+                mapped_ctml, trial_data, registry, trial_id, rh
+            )
+        except Exception as e:  # a check must never lose the trial
             logger.warning(f"{trial_id} | exclusion check skipped: {type(e).__name__}: {e}")
 
     @staticmethod
     def _flag_excluded_diagnoses_inner(mapped_ctml, trial_data, registry, trial_id, rh):
         if registry == "ctis":
             import src.ctis as ctis
+
             inc, exc = ctis.split_inclusion_exclusion_criteria(trial_data)
             context = list(ctis.get_titles(trial_data)) + list(ctis.get_conditions(trial_data))
         else:
             inc, exc = ctg.split_inclusion_exclusion_criteria(trial_data)
             ps = trial_data.get("protocolSection", {})
             im = ps.get("identificationModule", {})
-            context = [im.get("briefTitle") or "", im.get("officialTitle") or ""] + \
-                list(ps.get("conditionsModule", {}).get("conditions") or [])
-        found = rh.diagnoses_only_in_exclusions(rh.collect(mapped_ctml)["diagnoses"], inc, exc, context)
+            context = [im.get("briefTitle") or "", im.get("officialTitle") or ""] + list(
+                ps.get("conditionsModule", {}).get("conditions") or []
+            )
+        found = rh.diagnoses_only_in_exclusions(
+            rh.collect(mapped_ctml)["diagnoses"], inc, exc, context
+        )
         if found:
             mapped_ctml["diagnosis_excluded"] = "; ".join(found)
-            logger.warning(f"{trial_id} | diagnoses named only in the exclusion criteria: {', '.join(found)}")
+            logger.warning(
+                f"{trial_id} | diagnoses named only in the exclusion criteria: {', '.join(found)}"
+            )
 
     @staticmethod
     def _record_off_list(mapped_ctml: dict, trial_id: str) -> None:
@@ -579,33 +644,45 @@ class TrialMapManager:
         reasons = []
         if not TrialMapManager._has_diagnosis(mapped_ctml):
             reasons.append("no diagnosis criterion, so as it stands it would match every patient")
-        if 'protein_change_unverified' in keys:
+        if "protein_change_unverified" in keys:
             reasons.append("a protein change did not match its reference protein")
-        if 'gene_unsupported' in keys:
+        if "gene_unsupported" in keys:
             reasons.append("a gene the model returned is not named in the criteria text")
-        if 'diagnosis_off_list' in keys:
-            reasons.append("a diagnosis was answered outside the candidate list the model was offered")
-        if 'genomic_contradiction' in keys:
-            reasons.append("the match tree requires and forbids the same gene, so it matches nobody")
-        if 'diagnosis_excluded' in keys:
+        if "diagnosis_off_list" in keys:
+            reasons.append(
+                "a diagnosis was answered outside the candidate list the model was offered"
+            )
+        if "genomic_contradiction" in keys:
+            reasons.append(
+                "the match tree requires and forbids the same gene, so it matches nobody"
+            )
+        if "diagnosis_excluded" in keys:
             reasons.append("a diagnosis is named only in the exclusion criteria")
         # gene_role_dropped does not route to review (user decision 2026-09-28,
         # option A): a gene kept out of the tree can only widen matching, never
         # lose a patient. It is published in trials.tsv (genes_not_required).
-        if 'gene_status_contradiction' in keys:
-            reasons.append("a gene is required although the text says it must be absent or does not matter")
+        if "gene_status_contradiction" in keys:
+            reasons.append(
+                "a gene is required although the text says it must be absent or does not matter"
+            )
         if not reasons:
             import config
-            stale = os.path.join(getattr(config, 'CTML_REVIEW_PATH', 'ctml/needs-review'), f"{trial_id}.yaml")
+
+            stale = os.path.join(
+                getattr(config, "CTML_REVIEW_PATH", "ctml/needs-review"), f"{trial_id}.yaml"
+            )
             if os.path.exists(stale):
                 # Decision D6: the review copy is kept (a curator may be editing
                 # it) and still wins in the index, which reports the conflict.
-                logger.warning(f"{trial_id} | mapped cleanly, but {stale} from an earlier run "
-                               f"is kept; the index publishes it and lists the conflict in "
-                               f"layer_conflicts.tsv until a curator resolves it")
+                logger.warning(
+                    f"{trial_id} | mapped cleanly, but {stale} from an earlier run "
+                    f"is kept; the index publishes it and lists the conflict in "
+                    f"layer_conflicts.tsv until a curator resolves it"
+                )
             return ctml_files_path
         import config  # imported here, as elsewhere in this module
-        review_path = getattr(config, 'CTML_REVIEW_PATH', 'ctml/needs-review')
+
+        review_path = getattr(config, "CTML_REVIEW_PATH", "ctml/needs-review")
         os.makedirs(review_path, exist_ok=True)
         logger.warning(
             f"{trial_id} | Writing to {review_path} instead of {ctml_files_path}: "
@@ -615,19 +692,19 @@ class TrialMapManager:
 
     def map_single_trial(self, nct_id: str, nct_files_path: str, ctml_files_path: str) -> bool:
         """Map a specific NCT ID to CTML format with local trial info integration"""
-        logger.info("Using ctml_files_path: {}".format(ctml_files_path))
+        logger.info(f"Using ctml_files_path: {ctml_files_path}")
         try:
-            logger.info(f"Mapping NCT ID: {nct_id}")   
-            logger.info("-----------------------")                 
-            trial_data = tdh.read_from_file(nct_files_path, nct_id, 'json')
+            logger.info(f"Mapping NCT ID: {nct_id}")
+            logger.info("-----------------------")
+            trial_data = tdh.read_from_file(nct_files_path, nct_id, "json")
         except FileNotFoundError:
-            logger.error(f'File {nct_id}.json not found at {nct_files_path}')
+            logger.error(f"File {nct_id}.json not found at {nct_files_path}")
             return False
         except Exception as e:
             # Log full traceback so we get file/line information
-            logger.exception(f'Error reading file {nct_id}.json: {e}')
+            logger.exception(f"Error reading file {nct_id}.json: {e}")
             return False
-        
+
         gene_synonym_mapping = self.get_gene_synonym_mapping()
         try:
             # Map to CTML format
@@ -639,7 +716,7 @@ class TrialMapManager:
             self._record_role_drops(mapped_ctml, nct_id)
             self._add_unspecified_all_lineage(mapped_ctml, trial_data, "nct", nct_id)
             self._flag_gene_status(mapped_ctml, trial_data, "nct", nct_id)
-            
+
             # Add local trial info if available
             self._add_local_trial_info(mapped_ctml, nct_id)
 
@@ -649,7 +726,7 @@ class TrialMapManager:
 
             logger.info(f"Successfully mapped and saved {nct_id} to {destination}")
             return True
-            
+
         except Exception as ex:
             logger.exception(f"nct_id: {nct_id} | Unexpected error while mapping: {ex}")
             return False
@@ -658,21 +735,22 @@ class TrialMapManager:
 def main():
     """Simple entry point for testing"""
     manager = TrialMapManager()
-    
+
     # Test mapping all trials
-    nct_files_path = 'cache/nct'
+    nct_files_path = "cache/nct"
     ctml_files_path = config.CTML_MAPPED_PATH
-        
+
     # Ensure directories exist
     os.makedirs(ctml_files_path, exist_ok=True)
-    
+
     if os.path.exists(nct_files_path):
         results = manager.map_all_trials(nct_files_path, ctml_files_path)
-        print(f"Mapping completed. Processed: {results['processed']}, Skipped: {results['skipped']}")
+        print(
+            f"Mapping completed. Processed: {results['processed']}, Skipped: {results['skipped']}"
+        )
     else:
         print(f"NCT files directory not found: {nct_files_path}")
 
 
 if __name__ == "__main__":
     main()
-

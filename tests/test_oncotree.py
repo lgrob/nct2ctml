@@ -13,7 +13,6 @@ from utils.oncotree import (
 
 
 class TestOncotree(unittest.TestCase):
-
     def test_get_level_columns(self):
         fieldnames = ["level_3", "level_1", "metamaintype", "level_2"]
         self.assertEqual(_get_level_columns(fieldnames), ["level_1", "level_2", "level_3"])
@@ -28,12 +27,18 @@ class TestOncotree(unittest.TestCase):
         of its own, and merged those that shared a prefix.
         """
         for raw, expected in (
-            ("B-Lymphoblastic Leukemia/Lymphoma with t(9;22)(q34.1;q11.2);BCR-ABL1 (BLLBCRABL1)",
-             "B-Lymphoblastic Leukemia/Lymphoma with t(9;22)(q34.1;q11.2);BCR-ABL1"),
-            ("AML with t(8;21)(q22;q22.1);RUNX1-RUNX1T1 (AMLRUNX1RUNX1T1)",
-             "AML with t(8;21)(q22;q22.1);RUNX1-RUNX1T1"),
-            ("Primary Mediastinal (Thymic) Large B-Cell Lymphoma (PMBL)",
-             "Primary Mediastinal (Thymic) Large B-Cell Lymphoma"),
+            (
+                "B-Lymphoblastic Leukemia/Lymphoma with t(9;22)(q34.1;q11.2);BCR-ABL1 (BLLBCRABL1)",
+                "B-Lymphoblastic Leukemia/Lymphoma with t(9;22)(q34.1;q11.2);BCR-ABL1",
+            ),
+            (
+                "AML with t(8;21)(q22;q22.1);RUNX1-RUNX1T1 (AMLRUNX1RUNX1T1)",
+                "AML with t(8;21)(q22;q22.1);RUNX1-RUNX1T1",
+            ),
+            (
+                "Primary Mediastinal (Thymic) Large B-Cell Lymphoma (PMBL)",
+                "Primary Mediastinal (Thymic) Large B-Cell Lymphoma",
+            ),
             ("MDS with Isolated Del(5q) (MDS5Q)", "MDS with Isolated Del(5q)"),
         ):
             self.assertEqual(_parse_level_value(raw), expected)
@@ -46,8 +51,8 @@ class TestOncotree(unittest.TestCase):
         restructuring - exactly the paediatric neuro-oncology terms. Pin the
         node count so a silent swap of ref/oncotree_file.txt is visible.
         """
-        import glob
         import os
+
         level_1, mapping = get_all_oncotree_data()
         names = set(level_1)
         for children in mapping.values():
@@ -55,8 +60,7 @@ class TestOncotree(unittest.TestCase):
         self.assertEqual(len(names), 879)
 
         root = os.path.join(os.path.dirname(__file__), "..")
-        docs = ["README.md", "doc/nct_to_ctml_mapping_guide.md",
-                "doc/trial_creation_guide.md"]
+        docs = ["README.md", "doc/nct_to_ctml_mapping_guide.md", "doc/trial_creation_guide.md"]
         for rel in docs:
             text = open(os.path.join(root, rel)).read()
             self.assertNotIn("oncotree_2021_11_02", text, rel)
@@ -70,7 +74,7 @@ class TestOncotree(unittest.TestCase):
 
     def test_get_all_oncotree_data(self):
         level_1_list, mapping_l1_all = get_all_oncotree_data()
-        self.assertIn("Breast", level_1_list)        
+        self.assertIn("Breast", level_1_list)
         self.assertGreater(len(mapping_l1_all["Breast"]), 0)
 
         self.assertIn("APL with PML-RARA", mapping_l1_all["Myeloid"])
@@ -101,8 +105,7 @@ class TestOfferedNames(unittest.TestCase):
         return names
 
     def test_every_offered_name_is_valid(self):
-        rejected = sorted(n for n in self._offered()
-                          if rv.canonical_diagnosis(n) is None)
+        rejected = sorted(n for n in self._offered() if rv.canonical_diagnosis(n) is None)
         self.assertEqual(rejected, [])
 
     def test_level_1_categories_are_unchanged(self):
@@ -110,8 +113,9 @@ class TestOfferedNames(unittest.TestCase):
         self.assertEqual(len(level_1), 32)
 
     def test_the_five_b_all_subtypes_stay_distinct(self):
-        subtypes = {n for n in self._offered()
-                    if n.startswith("B-Lymphoblastic Leukemia/Lymphoma with t(")}
+        subtypes = {
+            n for n in self._offered() if n.startswith("B-Lymphoblastic Leukemia/Lymphoma with t(")
+        }
         self.assertEqual(len(subtypes), 5, sorted(subtypes))
 
     def test_haematological_subtypes_are_reachable(self):

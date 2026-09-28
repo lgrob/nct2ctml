@@ -3,16 +3,15 @@
 # Retargeted from adult oncology in Hong Kong to paediatric oncology.
 # See CHANGES.md for what differs.
 
-from typing import Dict, TypedDict
-
 import re
+from typing import TypedDict
 
 from loguru import logger
 
 import config
+import src.trial_data_helper as tdh
 import utils.aho_corasick as ac
 import utils.gene_mentions as gene_mentions
-import src.trial_data_helper as tdh
 import utils.protein_change as pc
 import utils.reference_validation as rv
 import utils.translocations as translocations
@@ -49,7 +48,7 @@ class ArmCriteriaText(TypedDict, total=False):
         return combined_text.strip()
 
 
-ArmCriteriaBlocks = Dict[str, ArmCriteriaText]
+ArmCriteriaBlocks = dict[str, ArmCriteriaText]
 """
 Normalized arm-level eligibility criteria, keyed by CTML arm identifier.
 
@@ -114,7 +113,11 @@ def _clean_protein_change_fields(genomic_criteria: list, trial_id: str = "") -> 
 
         protein_change = genomic.get("protein_change")
         # Remove null/empty so YAML never serializes `protein_change: null`
-        if protein_change is None or str(protein_change).strip() == "" or str(protein_change).strip().lower() == "null":
+        if (
+            protein_change is None
+            or str(protein_change).strip() == ""
+            or str(protein_change).strip().lower() == "null"
+        ):
             genomic.pop("protein_change", None)
             continue
 
@@ -132,7 +135,8 @@ def _clean_protein_change_fields(genomic_criteria: list, trial_id: str = "") -> 
         logger.warning(
             f"{trial_id} | {genomic.get('hugo_symbol')} protein change {stated!r} did not "
             f"verify ({result.status}: {result.detail}); kept as protein_change_unverified, "
-            f"so the criterion is gene-level until a curator resolves it")
+            f"so the criterion is gene-level until a curator resolves it"
+        )
 
     return genomic_criteria
 
@@ -153,8 +157,10 @@ def _orient_fusions(genomic_criteria: list, trial_id: str = "") -> list:
         gene, partner = genomic.get("hugo_symbol"), genomic["fusion_partner"]
         if rv.canonical_gene(gene) is None and rv.canonical_gene(partner) is not None:
             genomic["hugo_symbol"], genomic["fusion_partner"] = partner, gene
-            logger.info(f"{trial_id} | {gene}::{partner}: {gene} is off-panel, so the "
-                        f"criterion is written on {partner} with partner {gene}")
+            logger.info(
+                f"{trial_id} | {gene}::{partner}: {gene} is off-panel, so the "
+                f"criterion is written on {partner} with partner {gene}"
+            )
     return genomic_criteria
 
 
@@ -190,13 +196,16 @@ def _clean_fusion_partners(genomic_criteria: list, trial_id: str = "") -> list:
             genomic["fusion_partner"] = partner
             continue
         genomic["fusion_partner_unverified"] = stated
-        logger.warning(f"{trial_id} | {genomic.get('hugo_symbol')} fusion partner {stated!r} "
-                       f"not kept ({problem}); the criterion means any fusion of the gene")
+        logger.warning(
+            f"{trial_id} | {genomic.get('hugo_symbol')} fusion partner {stated!r} "
+            f"not kept ({problem}); the criterion means any fusion of the gene"
+        )
     return genomic_criteria
 
 
-def _flag_unsupported_genes(genomic_criteria: list, scanned_genes, criteria_text: str = "",
-                            trial_id: str = "") -> list:
+def _flag_unsupported_genes(
+    genomic_criteria: list, scanned_genes, criteria_text: str = "", trial_id: str = ""
+) -> list:
     """
     Flag, in place, each gene the model returned that the text scan did not find.
 
@@ -242,19 +251,28 @@ def _flag_unsupported_genes(genomic_criteria: list, scanned_genes, criteria_text
         named = [genomic.get("hugo_symbol"), genomic.get("fusion_partner")]
         # Written verbatim as a whole word, or glued to its protein change
         # ("EGFRvIII", "BRAFV600E"): see utils/gene_mentions.
-        missing = [g for g in named if g and g not in supported
-                   and not re.search(gene_mentions.name_pattern(g), criteria_text or "")]
+        missing = [
+            g
+            for g in named
+            if g
+            and g not in supported
+            and not re.search(gene_mentions.name_pattern(g), criteria_text or "")
+        ]
         if not missing:
             continue
         genomic["gene_unsupported"] = ", ".join(missing)
-        logger.warning(f"{trial_id} | {', '.join(missing)} returned by the model but not "
-                       f"found in the criteria text; kept as gene_unsupported for review")
+        logger.warning(
+            f"{trial_id} | {', '.join(missing)} returned by the model but not "
+            f"found in the criteria text; kept as gene_unsupported for review"
+        )
     return genomic_criteria
 
 
 _REARRANGED = r"(?:-?r\b|[\s-]+(?:rearrang\w*|translocat\w*|fusion|re-?arrang\w*))"
-_OTHER_ALTERATION = (r"(?:[\s-]+(?:mutation|mutated|mutant|variant|amplif\w*|deletion|deleted|duplication|ITD|TKD|PTD|"
-                     r"alteration|aberration|abnormalit\w*|activating|kinase domain)|[\s-]*(?:p\.)?[A-Z]\d{2,4}[A-Z*]?\b)")
+_OTHER_ALTERATION = (
+    r"(?:[\s-]+(?:mutation|mutated|mutant|variant|amplif\w*|deletion|deleted|duplication|ITD|TKD|PTD|"
+    r"alteration|aberration|abnormalit\w*|activating|kinase domain)|[\s-]*(?:p\.)?[A-Z]\d{2,4}[A-Z*]?\b)"
+)
 
 
 def is_rearrangement_only(gene: str, text: str) -> bool:
@@ -263,8 +281,9 @@ def is_rearrangement_only(gene: str, text: str) -> bool:
     rearranged", "NUP98 fusion") and never with another alteration.
     """
     g = re.escape(gene)
-    if not re.search(rf"(?<![A-Za-z0-9]){g}{_REARRANGED}", text or "", re.I) or \
-            re.search(rf"(?<![A-Za-z0-9]){g}{_OTHER_ALTERATION}", text or "", re.I):
+    if not re.search(rf"(?<![A-Za-z0-9]){g}{_REARRANGED}", text or "", re.I) or re.search(
+        rf"(?<![A-Za-z0-9]){g}{_OTHER_ALTERATION}", text or "", re.I
+    ):
         return False
     # A sentence naming the gene with an alteration word it shares with a list
     # ("rearrangements or mutations", "KMT2A, NPM1 or nucleoporin alterations",
@@ -273,13 +292,23 @@ def is_rearrangement_only(gene: str, text: str) -> bool:
     for sentence in re.split(r"[.;\n•*]|\s\d+\.\s", text or ""):
         if not re.search(rf"(?<![A-Za-z0-9]){g}(?![A-Za-z0-9])", sentence):
             continue
-        rest = re.sub(r"(?<![A-Za-z0-9])(?!" + g + r")[A-Z][A-Z0-9-]{1,9}[\s-]*(?:mutations?|mutated|mutant|alterations?|m|c)\b", " ", sentence)
-        if re.search(r"mutation|mutated|mutant|alteration|abnormalit|aberration|variant", rest, re.I):
+        rest = re.sub(
+            r"(?<![A-Za-z0-9])(?!"
+            + g
+            + r")[A-Z][A-Z0-9-]{1,9}[\s-]*(?:mutations?|mutated|mutant|alterations?|m|c)\b",
+            " ",
+            sentence,
+        )
+        if re.search(
+            r"mutation|mutated|mutant|alteration|abnormalit|aberration|variant", rest, re.I
+        ):
             return False
     return True
 
 
-def rearranged_as_structural(genomic_criteria: list, criteria_text: str, trial_id: str = "") -> list:
+def rearranged_as_structural(
+    genomic_criteria: list, criteria_text: str, trial_id: str = ""
+) -> list:
     """
     A gene the text names only as rearranged is a Structural Variation, not
     'Any Variation' (which also matches point mutations) or 'Mutation'.
@@ -291,15 +320,21 @@ def rearranged_as_structural(genomic_criteria: list, criteria_text: str, trial_i
             continue
         vc = str(g.get("variant_category", ""))
         neg = "!" if vc.startswith("!") else ""
-        if vc.lstrip("!") in ("Any Variation", "Mutation") and not g.get("protein_change") \
-                and is_rearrangement_only(g["hugo_symbol"], criteria_text):
+        if (
+            vc.lstrip("!") in ("Any Variation", "Mutation")
+            and not g.get("protein_change")
+            and is_rearrangement_only(g["hugo_symbol"], criteria_text)
+        ):
             g["variant_category"] = neg + "Structural Variation"
-            logger.info(f"{trial_id} | {g['hugo_symbol']} named only as rearranged: {vc} -> {g['variant_category']}")
+            logger.info(
+                f"{trial_id} | {g['hugo_symbol']} named only as rearranged: {vc} -> {g['variant_category']}"
+            )
     return genomic_criteria
 
 
-def _postprocess_genomic_criteria(genomic_criteria: list, trial_id: str = "",
-                                  scanned_genes=None, criteria_text: str = "") -> list:
+def _postprocess_genomic_criteria(
+    genomic_criteria: list, trial_id: str = "", scanned_genes=None, criteria_text: str = ""
+) -> list:
     """
     Post-process genomic criteria:
 
@@ -327,19 +362,22 @@ def _postprocess_genomic_criteria(genomic_criteria: list, trial_id: str = "",
     if criteria_text:
         genomic_criteria = rearranged_as_structural(genomic_criteria, criteria_text, trial_id)
     if scanned_genes is not None:
-        genomic_criteria = _flag_unsupported_genes(genomic_criteria, scanned_genes,
-                                                   criteria_text, trial_id)
+        genomic_criteria = _flag_unsupported_genes(
+            genomic_criteria, scanned_genes, criteria_text, trial_id
+        )
 
     return genomic_criteria
+
 
 def get_keywords_from_conditions(conditions_list):
     all_keywords = set()
     for cond in conditions_list:
-        cond_keywords = [word for part in cond.split(',') for word in part.split() if word]
+        cond_keywords = [word for part in cond.split(",") for word in part.split() if word]
         for cond_keyword in cond_keywords:
             if cond_keyword.lower() not in config.keywords_to_remove:
                 all_keywords.add(cond_keyword)
     return all_keywords
+
 
 def _split_extra_age_bounds(clinical_critera):
     """
@@ -378,14 +416,16 @@ def _and_together(result, extra_nodes):
 def convert_to_ctml_clinical_schema(clinical_critera, trial_id: str = "") -> dict:
     clinical_critera = dict(clinical_critera or {})
     extra_age_nodes = _split_extra_age_bounds(clinical_critera)
-    return _and_together(
-        _convert_clinical_block(clinical_critera, trial_id), extra_age_nodes)
+    return _and_together(_convert_clinical_block(clinical_critera, trial_id), extra_age_nodes)
 
 
 def _convert_clinical_block(clinical_critera, trial_id: str = "") -> dict:
     # Extract the diagnosis list
     diagnoses = []
-    if "oncotree_primary_diagnosis" in clinical_critera and clinical_critera["oncotree_primary_diagnosis"]:
+    if (
+        "oncotree_primary_diagnosis" in clinical_critera
+        and clinical_critera["oncotree_primary_diagnosis"]
+    ):
         raw_diagnoses = clinical_critera.pop("oncotree_primary_diagnosis")
         if not isinstance(raw_diagnoses, list):
             raw_diagnoses = [raw_diagnoses]
@@ -440,8 +480,17 @@ def _base_category(variant_category: str) -> str:
 # Wording in the inclusion text that signals genuine alternative cohorts,
 # i.e. the trial enrols patients both with and without the alteration.
 _COHORT_NEGATION_CUES = (
-    "without", "non-amplified", "not amplified", "negative for", "absence of",
-    "lack of", "wild-type", "wildtype", "wild type", "non-mutated", "unmutated",
+    "without",
+    "non-amplified",
+    "not amplified",
+    "negative for",
+    "absence of",
+    "lack of",
+    "wild-type",
+    "wildtype",
+    "wild type",
+    "non-mutated",
+    "unmutated",
 )
 
 
@@ -473,9 +522,9 @@ def _text_mentions_gene(text: str, gene: str) -> bool:
     return any(gene in genes for _, _, genes in gene_mentions.histone_variants(text))
 
 
-def resolve_contradictory_genes(inclusions: list, exclusions: list,
-                                inclusion_text: str = "",
-                                exclusion_text: str = "") -> tuple[list, list, list]:
+def resolve_contradictory_genes(
+    inclusions: list, exclusions: list, inclusion_text: str = "", exclusion_text: str = ""
+) -> tuple[list, list, list]:
     """
     Reconcile genes that are required and forbidden at the same time.
 
@@ -525,6 +574,7 @@ def resolve_contradictory_genes(inclusions: list, exclusions: list,
     Returns (inclusions, exclusions, notes) where notes describes what was
     dropped and why, for the manual review step.
     """
+
     def gene_of(alteration):
         return (alteration.get("genomic", {}) or {}).get("hugo_symbol")
 
@@ -610,6 +660,7 @@ def find_unsatisfiable_genes(match_node) -> list:
         if isinstance(node, dict):
             if "and" in node and isinstance(node["and"], list):
                 positive, negative = {}, {}
+
                 def collect(n):
                     # Only through nested 'and': the branches of an 'or' are
                     # alternatives, so "EWSR1 fusion, or round cell sarcoma
@@ -622,14 +673,16 @@ def find_unsatisfiable_genes(match_node) -> list:
                             g = n["genomic"].get("hugo_symbol")
                             c = n["genomic"].get("variant_category")
                             if g:
-                                (negative if _negated(c) else positive).setdefault(
-                                    g, set()).add(_base_category(c))
+                                (negative if _negated(c) else positive).setdefault(g, set()).add(
+                                    _base_category(c)
+                                )
                             partner = n["genomic"].get("fusion_partner")
                             if partner and not _negated(c):
                                 positive.setdefault(partner, set()).add(_base_category(c))
                         if isinstance(n.get("and"), list):
                             for child in n["and"]:
                                 collect(child)
+
                 for branch in node["and"]:
                     collect(branch)
                 for gene, neg_cats in negative.items():
@@ -648,43 +701,57 @@ def find_unsatisfiable_genes(match_node) -> list:
     return sorted(set(findings))
 
 
-def convert_to_ctml_genomic_schema(inclusion_genomic_criteria: list, exclusion_genomic_criteria: list,
-                                   inclusion_text: str = "", exclusion_text: str = "",
-                                   trial_id: str = "", scanned_genes=None) -> dict:
+def convert_to_ctml_genomic_schema(
+    inclusion_genomic_criteria: list,
+    exclusion_genomic_criteria: list,
+    inclusion_text: str = "",
+    exclusion_text: str = "",
+    trial_id: str = "",
+    scanned_genes=None,
+) -> dict:
     inclusions = []
     exclusions = []
     # The text the scan ran on (clinical_trials_gov.map_ctml_match_genomic_criteria).
     scanned_text = (inclusion_text or "") + "\n" + (exclusion_text or "")
     print(tdh.get_all_keys(inclusion_genomic_criteria))
     print(tdh.get_all_keys(exclusion_genomic_criteria))
-    if inclusion_genomic_criteria and all(key in tdh.get_all_keys(inclusion_genomic_criteria) for key in ["hugo_symbol", "variant_category"]):
+    if inclusion_genomic_criteria and all(
+        key in tdh.get_all_keys(inclusion_genomic_criteria)
+        for key in ["hugo_symbol", "variant_category"]
+    ):
         # post processing
         inclusion_genomic_criteria = _postprocess_genomic_criteria(
-            inclusion_genomic_criteria, trial_id, scanned_genes, scanned_text)
+            inclusion_genomic_criteria, trial_id, scanned_genes, scanned_text
+        )
         for alteration in inclusion_genomic_criteria:
             variant_category = alteration["genomic"]["variant_category"]
             # if variant_category begins with !, add alteration to exclusions, without removing !
-            if variant_category.startswith('!'):
+            if variant_category.startswith("!"):
                 if alteration not in exclusions:
                     exclusions.append(alteration)
             else:
                 if alteration not in inclusions:
                     inclusions.append(alteration)
-    
-    if exclusion_genomic_criteria and all(key in tdh.get_all_keys(exclusion_genomic_criteria) for key in ["hugo_symbol", "variant_category"]):
+
+    if exclusion_genomic_criteria and all(
+        key in tdh.get_all_keys(exclusion_genomic_criteria)
+        for key in ["hugo_symbol", "variant_category"]
+    ):
         # post processing
         exclusion_genomic_criteria = _postprocess_genomic_criteria(
-            exclusion_genomic_criteria, trial_id, scanned_genes, scanned_text)
+            exclusion_genomic_criteria, trial_id, scanned_genes, scanned_text
+        )
         for alteration in exclusion_genomic_criteria:
             if alteration not in exclusions:
                 exclusions.append(alteration)
 
     inclusions, exclusions, contradiction_notes = resolve_contradictory_genes(
-        inclusions, exclusions, inclusion_text, exclusion_text)
+        inclusions, exclusions, inclusion_text, exclusion_text
+    )
     if contradiction_notes:
         print(f"Contradictory gene constraints resolved: {contradiction_notes}")
 
-    #combine inclusions with a top level 'or' and exclusions with a top level 'and'
+    # combine inclusions with a top level 'or' and exclusions with a top level 'and'
     if inclusions:
         if len(inclusions) == 1:
             inclusion_genomic_criteria_ctml = inclusions[0]
@@ -693,7 +760,7 @@ def convert_to_ctml_genomic_schema(inclusion_genomic_criteria: list, exclusion_g
     else:
         inclusion_genomic_criteria_ctml = {}
 
-    print(f'inclusion_genomic_criteria_ctml: {inclusion_genomic_criteria_ctml}')
+    print(f"inclusion_genomic_criteria_ctml: {inclusion_genomic_criteria_ctml}")
 
     if exclusions:
         if len(exclusions) == 1:
@@ -703,11 +770,13 @@ def convert_to_ctml_genomic_schema(inclusion_genomic_criteria: list, exclusion_g
     else:
         exclusion_genomic_criteria_ctml = {}
 
-    print(f'exclusion_genomic_criteria_ctml: {exclusion_genomic_criteria_ctml}')
+    print(f"exclusion_genomic_criteria_ctml: {exclusion_genomic_criteria_ctml}")
 
-    #combine both inclusion and exclusion criteria under a top level 'and'
+    # combine both inclusion and exclusion criteria under a top level 'and'
     if inclusion_genomic_criteria_ctml and exclusion_genomic_criteria_ctml:
-        inclusion_exclusion_genomic_criteria_ctml = {"and": [inclusion_genomic_criteria_ctml, exclusion_genomic_criteria_ctml]}
+        inclusion_exclusion_genomic_criteria_ctml = {
+            "and": [inclusion_genomic_criteria_ctml, exclusion_genomic_criteria_ctml]
+        }
         return inclusion_exclusion_genomic_criteria_ctml
     elif inclusion_genomic_criteria_ctml:
         return inclusion_genomic_criteria_ctml
@@ -715,15 +784,15 @@ def convert_to_ctml_genomic_schema(inclusion_genomic_criteria: list, exclusion_g
         return exclusion_genomic_criteria_ctml
     return {}
 
+
 def combine_clinical_and_genomic_ctml(clinical_ctml, genomic_ctml):
-    if clinical_ctml and len(clinical_ctml) > 0  \
-        and genomic_ctml and len(genomic_ctml) > 0:
-        match_result = {"and": []} 
+    if clinical_ctml and len(clinical_ctml) > 0 and genomic_ctml and len(genomic_ctml) > 0:
+        match_result = {"and": []}
         match_result["and"].append(clinical_ctml)
         match_result["and"].append(genomic_ctml)
         logger.debug(f"combined clinical and genomic CTML: {match_result}")
         return match_result
-    elif clinical_ctml and len(clinical_ctml) > 0 :
+    elif clinical_ctml and len(clinical_ctml) > 0:
         match_result = clinical_ctml
         logger.debug(f"using only clinical CTML: {match_result}")
         return match_result
@@ -732,14 +801,16 @@ def combine_clinical_and_genomic_ctml(clinical_ctml, genomic_ctml):
         logger.debug(f"using only genomic CTML: {match_result}")
         return match_result
 
-def check_if_eligibility_criteria_contains_gene_info(genes:list, eligibility):
+
+def check_if_eligibility_criteria_contains_gene_info(genes: list, eligibility):
     print("looking for gene keywords")
     contains = ac.search_keywords_in_text(genes, eligibility)
     return contains
 
-def check_if_eligibility_criteria_contains_pdl1_info(nct_keywords:list, eligibility):
-    pdl1_keywords_to_check = ['pdl1', 'pd-l1']
-    nct_keywords_string = ', '.join(nct_keywords)
+
+def check_if_eligibility_criteria_contains_pdl1_info(nct_keywords: list, eligibility):
+    pdl1_keywords_to_check = ["pdl1", "pd-l1"]
+    nct_keywords_string = ", ".join(nct_keywords)
     print("looking for PDL1 keywords")
     contains = ac.search_keywords_in_text(pdl1_keywords_to_check, nct_keywords_string)
     if contains:
@@ -747,10 +818,20 @@ def check_if_eligibility_criteria_contains_pdl1_info(nct_keywords:list, eligibil
     else:
         contains = ac.search_keywords_in_text(pdl1_keywords_to_check, eligibility)
         return contains
-    
-def check_if_eligibility_criteria_contains_mmr_info(nct_keywords:list, eligibility):
-    mmr_keywords_to_check = ['mmr', 'Mismatch Repair', 'msi', 'msi-h','dMMR','msi-l','MSI-high','MSI-low']
-    nct_keywords_string = ', '.join(nct_keywords)
+
+
+def check_if_eligibility_criteria_contains_mmr_info(nct_keywords: list, eligibility):
+    mmr_keywords_to_check = [
+        "mmr",
+        "Mismatch Repair",
+        "msi",
+        "msi-h",
+        "dMMR",
+        "msi-l",
+        "MSI-high",
+        "MSI-low",
+    ]
+    nct_keywords_string = ", ".join(nct_keywords)
     print("looking for MMR keywords")
     contains = ac.search_keywords_in_text(mmr_keywords_to_check, nct_keywords_string)
     if contains:

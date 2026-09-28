@@ -6,6 +6,7 @@ The structured maximumAge is in completed units for most sponsors and an
 exclusive bound for about one in three; only the prose says which. Each case
 below is a trial the repository's own docs cite.
 """
+
 import os
 import sys
 import unittest
@@ -24,20 +25,27 @@ def _trial(minimum=None, maximum=None):
         eligibility["minimumAge"] = minimum
     if maximum is not None:
         eligibility["maximumAge"] = maximum
-    return {"protocolSection": {"identificationModule": {"nctId": "NCT00000000"},
-                                "eligibilityModule": eligibility}}
+    return {
+        "protocolSection": {
+            "identificationModule": {"nctId": "NCT00000000"},
+            "eligibilityModule": eligibility,
+        }
+    }
 
 
 def _prose(low=None, low_unit="years", low_inc=True, high=None, high_unit="years", high_inc=True):
-    return {"minimum": {"value": low, "unit": low_unit, "inclusive": low_inc},
-            "maximum": {"value": high, "unit": high_unit, "inclusive": high_inc}}
+    return {
+        "minimum": {"value": low, "unit": low_unit, "inclusive": low_inc},
+        "maximum": {"value": high, "unit": high_unit, "inclusive": high_inc},
+    }
 
 
 class TestStructuredAndProse(unittest.TestCase):
-
     def test_no_prose_is_the_structured_reading_unchanged(self):
-        self.assertEqual(ctg.map_age_numerical(_trial("1 Year", "17 Years")),
-                         ctg.map_age_numerical(_trial("1 Year", "17 Years"), None))
+        self.assertEqual(
+            ctg.map_age_numerical(_trial("1 Year", "17 Years")),
+            ctg.map_age_numerical(_trial("1 Year", "17 Years"), None),
+        )
         self.assertEqual(ctg.map_age_numerical(_trial("1 Year", "17 Years")), [">=1", "<=18"])
 
     def test_an_exclusive_prose_bound_narrows_the_structured_maximum(self):
@@ -76,7 +84,6 @@ class TestStructuredAndProse(unittest.TestCase):
 
 
 class TestProseBounds(unittest.TestCase):
-
     def test_absent_bounds_are_none(self):
         self.assertEqual(ab.prose_bounds(_prose()), (None, None))
         self.assertEqual(ab.prose_bounds(None), (None, None))
@@ -99,7 +106,6 @@ class TestProseBounds(unittest.TestCase):
 
 
 class TestReadingFailures(unittest.TestCase):
-
     def test_a_model_failure_is_none_not_an_exception(self):
         with patch("utils.ai_helper.get_age_bounds", side_effect=ConnectionError("down")):
             self.assertIsNone(ab.read_age_bounds("NCT00000000", "Age 1 to 21 years"))
@@ -111,12 +117,13 @@ class TestReadingFailures(unittest.TestCase):
 
 
 class TestCtisBothBounds(unittest.TestCase):
-
     def test_ctis_now_gets_a_maximum(self):
-        with patch("utils.ai_helper.get_age_bounds",
-                   return_value=_prose(low=1, high=18, high_inc=False)):
-            self.assertEqual(ctis.map_age_numerical("2023-500000-00-00", "Age 1 to <18 years"),
-                             [">=1", "<18"])
+        with patch(
+            "utils.ai_helper.get_age_bounds", return_value=_prose(low=1, high=18, high_inc=False)
+        ):
+            self.assertEqual(
+                ctis.map_age_numerical("2023-500000-00-00", "Age 1 to <18 years"), [">=1", "<18"]
+            )
 
     def test_ctis_with_no_stated_age_gets_none(self):
         with patch("utils.ai_helper.get_age_bounds", return_value=_prose()):

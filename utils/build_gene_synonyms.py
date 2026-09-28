@@ -87,11 +87,13 @@ class NcbiClient:
                 r.raise_for_status()
                 return r.json()
             except (requests.RequestException, ValueError) as e:
-                backoff = 2 ** attempt
+                backoff = 2**attempt
                 if attempt == attempts - 1:
                     logger.error(f"{endpoint} failed after {attempts} attempts: {e}")
                     return None
-                logger.warning(f"{endpoint} attempt {attempt + 1} failed ({e}); retrying in {backoff}s")
+                logger.warning(
+                    f"{endpoint} attempt {attempt + 1} failed ({e}); retrying in {backoff}s"
+                )
                 time.sleep(backoff)
         return None
 
@@ -121,10 +123,13 @@ def find_gene_ids(client: NcbiClient, symbol: str) -> list[str]:
     distinct genes. Only ids are returned here; the caller keeps the record
     whose official symbol matches, so a wrong locus is dropped, not blended in.
     """
-    data = client.get("esearch.fcgi", {
-        "db": "gene",
-        "term": f"{symbol}[Gene Name] AND Homo sapiens[Organism] AND alive[Property]",
-    })
+    data = client.get(
+        "esearch.fcgi",
+        {
+            "db": "gene",
+            "term": f"{symbol}[Gene Name] AND Homo sapiens[Organism] AND alive[Property]",
+        },
+    )
     if not data:
         return []
     return data.get("esearchresult", {}).get("idlist", [])
@@ -134,7 +139,7 @@ def fetch_summaries(client: NcbiClient, gene_ids: list[str]) -> dict:
     """Batch esummary so one request covers up to ESUMMARY_BATCH genes."""
     out = {}
     for i in range(0, len(gene_ids), ESUMMARY_BATCH):
-        chunk = gene_ids[i:i + ESUMMARY_BATCH]
+        chunk = gene_ids[i : i + ESUMMARY_BATCH]
         data = client.get("esummary.fcgi", {"db": "gene", "id": ",".join(chunk)})
         if not data:
             continue
@@ -246,24 +251,33 @@ def invert(records: dict, symbols: list[str]) -> tuple[dict, list]:
 
 
 def main():
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--api-key", default=os.environ.get("NCBI_API_KEY"),
-                    help="NCBI API key (or set NCBI_API_KEY). Raises the rate limit 3->10/s.")
-    ap.add_argument("--email", default=os.environ.get("NCBI_EMAIL"),
-                    help="Contact address NCBI requires (or set NCBI_EMAIL).")
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument(
+        "--api-key",
+        default=os.environ.get("NCBI_API_KEY"),
+        help="NCBI API key (or set NCBI_API_KEY). Raises the rate limit 3->10/s.",
+    )
+    ap.add_argument(
+        "--email",
+        default=os.environ.get("NCBI_EMAIL"),
+        help="Contact address NCBI requires (or set NCBI_EMAIL).",
+    )
     ap.add_argument("--genes", default=DEFAULT_GENES, help=f"Symbol list (default {DEFAULT_GENES})")
     ap.add_argument("--limit", type=int, help="Only process the first N symbols, for a trial run.")
     args = ap.parse_args()
 
     if not args.email:
-        sys.exit("An email address is required: pass --email or set NCBI_EMAIL. "
-                 "NCBI uses it to contact you before blocking abusive traffic.")
+        sys.exit(
+            "An email address is required: pass --email or set NCBI_EMAIL. "
+            "NCBI uses it to contact you before blocking abusive traffic."
+        )
 
     with open(args.genes) as f:
         symbols = [line.strip() for line in f if line.strip()]
     if args.limit:
-        symbols = symbols[:args.limit]
+        symbols = symbols[: args.limit]
 
     client = NcbiClient(email=args.email, api_key=args.api_key)
     logger.info(f"rate limit {'10/s (api key)' if args.api_key else '3/s (no api key)'}")
@@ -286,8 +300,11 @@ def main():
         for alias, genes, reason in collisions:
             f.write(f"{alias}\t{','.join(genes)}\t{reason}\n")
 
-    renamed = [(s, r["official"]) for s, r in records.items()
-               if r.get("official") and r["official"].upper() != s.upper()]
+    renamed = [
+        (s, r["official"])
+        for s, r in records.items()
+        if r.get("official") and r["official"].upper() != s.upper()
+    ]
 
     print(f"\nsymbols processed      : {len(records)}")
     print(f"unresolved             : {sum(1 for r in records.values() if not r.get('official'))}")
@@ -297,12 +314,16 @@ def main():
     for old, new in renamed[:10]:
         print(f"    {old} -> {new}")
     if collisions:
-        print("\nfirst collisions (review these, then add to blocked_gene_synonyms "
-              "or contextual_gene_synonyms in src/trial_config.py):")
+        print(
+            "\nfirst collisions (review these, then add to blocked_gene_synonyms "
+            "or contextual_gene_synonyms in src/trial_config.py):"
+        )
         for alias, genes, reason in collisions[:10]:
             print(f"    {alias:<12} {','.join(genes):<24} {reason}")
-    print(f"\nNothing was overwritten. Diff {OUT_MAPPING} against "
-          f"ref/synonym_to_gene_symbol.tsv before adopting it.")
+    print(
+        f"\nNothing was overwritten. Diff {OUT_MAPPING} against "
+        f"ref/synonym_to_gene_symbol.tsv before adopting it."
+    )
 
 
 if __name__ == "__main__":

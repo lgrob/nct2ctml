@@ -1,4 +1,5 @@
 """Short NCBI aliases that mean something else in trial text (2026-09-27)."""
+
 import os
 import sys
 import unittest
@@ -15,11 +16,14 @@ SYN = rv.gene_synonym_mapping()
 
 
 def scan(text):
-    return set(TrialCriteriaToGenes(trial_criteria=text, synonym_to_symbol=SYN).extract_official_gene_symbols())
+    return set(
+        TrialCriteriaToGenes(
+            trial_criteria=text, synonym_to_symbol=SYN
+        ).extract_official_gene_symbols()
+    )
 
 
 class TestBlockedAliases(unittest.TestCase):
-
     def test_clinical_abbreviations_are_not_genes(self):
         cases = {
             "Relapse after anti-CD19 CAR T-cell therapy": "PRKAR1A",
@@ -47,9 +51,9 @@ class TestBlockedAliases(unittest.TestCase):
 
 
 class TestCd20IsExpression(unittest.TestCase):
-
     def test_ms4a1_is_expression_only(self):
         from src import trial_config
+
         self.assertIn("MS4A1", trial_config.expression_only_genes)
 
 

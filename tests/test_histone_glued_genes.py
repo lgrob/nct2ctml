@@ -10,6 +10,7 @@ never become support: an arbitrary letter run after a gene (CD19CAR, IL2RA),
 and the H3 K27-altered diagnosis, which includes tumours with no H3 mutation
 (2023-508617-16-00 writes "DMG-H3K27a").
 """
+
 import csv
 import os
 import sys
@@ -28,11 +29,18 @@ from src.trial_criteria_to_genes import TrialCriteriaToGenes
 
 logger.remove()
 
-NCT07306299 = ("IV glioma harboring one or more of the following mutations: H3.3K27M, H3.1K27M, "
-               "H3.3G34R, BRAF V600E, PIK3CA H1047R, IDH1 R132H, or EGFRvIII.")
+NCT07306299 = (
+    "IV glioma harboring one or more of the following mutations: H3.3K27M, H3.1K27M, "
+    "H3.3G34R, BRAF V600E, PIK3CA H1047R, IDH1 R132H, or EGFRvIII."
+)
 
-H3_ALTERED = ["DMG-H3K27a", "diffuse midline glioma, H3K27-altered", "H3K27me3 loss",
-              "loss of H3K28 trimethylation together with EZHIP overexpression", "EZHIP positive"]
+H3_ALTERED = [
+    "DMG-H3K27a",
+    "diffuse midline glioma, H3K27-altered",
+    "H3K27me3 loss",
+    "loss of H3K28 trimethylation together with EZHIP overexpression",
+    "EZHIP positive",
+]
 
 
 def scan(text):
@@ -46,10 +54,12 @@ def flagged(gene, text):
 
 
 class TestCuratedHistoneAliases(unittest.TestCase):
-
     def test_addendum_rows(self):
-        rows = {r[0]: r[1] for r in csv.reader(open(config.GENE_SYNONYM_ADDENDUM_FILE_PATH), delimiter="\t")
-                if len(r) >= 2}
+        rows = {
+            r[0]: r[1]
+            for r in csv.reader(open(config.GENE_SYNONYM_ADDENDUM_FILE_PATH), delimiter="\t")
+            if len(r) >= 2
+        }
         self.assertEqual(rows["H3.3"], "H3-3A,H3-3B")
         self.assertEqual(rows["H3.1"], "H3C2,H3C3")
 
@@ -77,12 +87,20 @@ class TestCuratedHistoneAliases(unittest.TestCase):
 
 
 class TestGluedChange(unittest.TestCase):
-
     def test_split(self):
-        for token, head in [("H3.3K27M", "H3.3"), ("BRAFV600E", "BRAF"), ("KRASG12C", "KRAS"),
-                            ("IDH1R132H", "IDH1"), ("PIK3CAH1047R", "PIK3CA"), ("BRAFp.V600E", "BRAF"),
-                            ("NRASQ61*", "NRAS"), ("TP53R213X", "TP53"), ("EGFRvIII", "EGFR"),
-                            ("EGFRvII", "EGFR"), ("EGFRvIV", "EGFR")]:
+        for token, head in [
+            ("H3.3K27M", "H3.3"),
+            ("BRAFV600E", "BRAF"),
+            ("KRASG12C", "KRAS"),
+            ("IDH1R132H", "IDH1"),
+            ("PIK3CAH1047R", "PIK3CA"),
+            ("BRAFp.V600E", "BRAF"),
+            ("NRASQ61*", "NRAS"),
+            ("TP53R213X", "TP53"),
+            ("EGFRvIII", "EGFR"),
+            ("EGFRvII", "EGFR"),
+            ("EGFRvIV", "EGFR"),
+        ]:
             self.assertEqual(gm.split_glued(token), head, token)
 
     def test_no_split_of_a_letter_run(self):
@@ -94,17 +112,23 @@ class TestGluedChange(unittest.TestCase):
         # split a token that is itself a gene name. Measured on the current
         # ref files, no name in the synonym table splits into a head that
         # the scan would accept as another gene.
-        self.assertEqual(scan("CDKN2A, KMT2A, DNMT3A, KDM6A deletion"),
-                         ["CDKN2A", "DNMT3A", "KDM6A", "KMT2A"])
+        self.assertEqual(
+            scan("CDKN2A, KMT2A, DNMT3A, KDM6A deletion"), ["CDKN2A", "DNMT3A", "KDM6A", "KMT2A"]
+        )
         mapping = rv.gene_synonym_mapping()
         official = {s for v in mapping.values() for x in v for s in x.split(",")}
-        clashes = [(y, h) for y in mapping for h in [gm.split_glued(y)]
-                   if h and h in mapping and (len(h) > 3 or h in official)]
+        clashes = [
+            (y, h)
+            for y in mapping
+            for h in [gm.split_glued(y)]
+            if h and h in mapping and (len(h) > 3 or h in official)
+        ]
         self.assertEqual(clashes, [])
 
     def test_scan_nct07306299(self):
-        self.assertEqual(scan(NCT07306299),
-                         ["BRAF", "EGFR", "H3-3A", "H3-3B", "H3C2", "H3C3", "IDH1", "PIK3CA"])
+        self.assertEqual(
+            scan(NCT07306299), ["BRAF", "EGFR", "H3-3A", "H3-3B", "H3C2", "H3C3", "IDH1", "PIK3CA"]
+        )
 
     def test_scan_glued(self):
         self.assertEqual(scan("KRASG12C or BRAFV600E"), ["BRAF", "KRAS"])
@@ -130,10 +154,11 @@ class TestGluedChange(unittest.TestCase):
 
 
 class TestHistoneVariants(unittest.TestCase):
-
     def test_mutation_forms(self):
         for text in ["H3K27M", "H3 K27M", "H3-K27M", "H3K28M", "H3K27I mutation", "H3K27M-mutant"]:
-            self.assertEqual(gm.histone_variant_genes(text), ["H3-3A", "H3-3B", "H3C2", "H3C3"], text)
+            self.assertEqual(
+                gm.histone_variant_genes(text), ["H3-3A", "H3-3B", "H3C2", "H3C3"], text
+            )
         for text in ["H3G34R/V", "H3 G34R", "H3G34-mutant", "H3G34 (R/V) mutation", "H3G35R"]:
             self.assertEqual(gm.histone_variant_genes(text), ["H3-3A", "H3-3B"], text)
 
@@ -163,7 +188,9 @@ class TestHistoneVariants(unittest.TestCase):
     def test_mutation_is_support(self):
         # NCT04196413, NCT05476939, NCT05843253
         self.assertIsNone(flagged("H3C2", "H3K27M or H3K27I mutation. Confirmed by CLIA test."))
-        self.assertIsNone(flagged("H3C3", "Histological diagnosis of DIPG (i.e. H3K28M or EZHIP positive"))
+        self.assertIsNone(
+            flagged("H3C3", "Histological diagnosis of DIPG (i.e. H3K28M or EZHIP positive")
+        )
         self.assertIsNone(flagged("H3-3A", "For Stratum E: H3G34 (R/V) mutation"))
 
     def test_gene_family_only(self):
@@ -172,7 +199,6 @@ class TestHistoneVariants(unittest.TestCase):
 
 
 class TestReviewSheetAgrees(unittest.TestCase):
-
     def setUp(self):
         self.ref = rh.Reference()
 
