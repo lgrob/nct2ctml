@@ -58,7 +58,10 @@ DIAGNOSIS_INPUT = os.environ.get("NCT2CTML_DIAGNOSIS_INPUT", "labelled")
 # (each gene is classified; only requirements enter the match tree, the rest
 # are recorded as gene_role_dropped and route the trial to review).
 # NCT2CTML_GENOMIC_PROMPT overrides it (used by the measurement harness).
-GENOMIC_PROMPT = os.environ.get("NCT2CTML_GENOMIC_PROMPT", "baseline")
+# Default "roles" since 2026-09-28 (roadmap 2.9, 370 trials x 3 replicates):
+# trials requiring a gene of every patient that the text does not require
+# 191 -> 86; every gene kept out is recorded for review. See CHANGES.md.
+GENOMIC_PROMPT = os.environ.get("NCT2CTML_GENOMIC_PROMPT", "roles")
 ANTHROPIC_MAX_TOKENS = 16000
 
 # deepseek library

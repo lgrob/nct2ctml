@@ -514,6 +514,14 @@ BRCA1/2) now count as mentions in _text_mentions_gene and on the review
 sheet, which changes the contradiction resolver's input for 16 gene pairs
 in 5 trials. All 16 are real family mentions in exclusion text.
 
+## Genomic prompt defaults to roles (roadmap 2.9, 2026-09-28)
+
+At the user's decision, config.GENOMIC_PROMPT = "roles" (env
+NCT2CTML_GENOMIC_PROMPT overrides). Each gene the model returns carries a
+role; only "requirement" enters the match tree, the rest are recorded as
+gene_role_dropped and route the trial to review. Measurement below. Takes
+effect at the next map run; existing output is unchanged until re-mapped.
+
 ## Measured: genomic prompt variants (roadmap 2.9, 2026-09-28)
 
 Test set: 849 required genes in the 370 indexed trials that require a gene,
