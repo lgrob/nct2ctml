@@ -1,0 +1,21 @@
+# Project metadata and, later, tool configuration. Not an installable package:
+# the code runs from the checkout (python main.py ...), so there is no
+# [build-system]. Install with requirements.lock (exact versions) or
+# requirements.txt (floors); tests/test_environment.py checks that both agree
+# with the dependencies below.
+
+[project]
+name = "nct2ctml"
+version = "0.1.0"
+description = "Registry trials to CTML and a flat query index, for paediatric oncology (Kispi fork)"
+license = "Apache-2.0"
+# Tested on 3.12 and 3.13 (2026-09-28). main.py refuses anything older.
+requires-python = ">=3.12"
+dependencies = [
+    "requests>=2.32.0",
+    "loguru>=0.7.0",
+    "PyYAML>=6.0.0",
+    "pyahocorasick>=2.1.0",
+    # Only for LLM_PLATFORM = "Anthropic"; imported lazily.
+    "anthropic>=1.4.0",
+]

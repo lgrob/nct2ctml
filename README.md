@@ -19,14 +19,25 @@ modified files carry a notice at the top.
 
 ## Installation
 
+Python 3.12 or newer (`pyproject.toml`; tested on 3.12 and 3.13). Install
+from the lock file, which pins every package at the version the test suite
+was run with:
+
 ```bash
 git clone <this fork> nct2ctml
 cd nct2ctml
-pip install -r requirements.txt
+python3.12 -m venv .venv
+./.venv/bin/pip install -r requirements.lock
 ```
 
-`anthropic` in `requirements.txt` is needed only for the Anthropic backend; it
-is imported lazily, so the self-hosted backends run without it.
+`requirements.txt` states only the minimum versions (the same as
+`pyproject.toml`). Use it to try newer packages, not to reproduce a run.
+After changing it, regenerate the lock as its header describes;
+`tests/test_environment.py` fails while the three files disagree. Each run
+records the Python and package versions it used in `runs/<run_id>/run.json`.
+
+`anthropic` is needed only for the Anthropic backend; it is imported lazily,
+so the self-hosted backends run without it.
 
 ## Sources
 
@@ -77,9 +88,13 @@ regenerates without mapping; a per-trial decision in `ref/scope_overrides.tsv`
 wins in either direction. Mapping one trial by id never skips.
 
 `sync_trials.sh` runs `pull --all`, `map --all` and the index build once, for
-both registries (`SOURCE=nct ./sync_trials.sh` for one). It activates a conda
-environment through a site-specific `~/.init_conda`, so read it before using
-it elsewhere.
+both registries (`SOURCE=nct ./sync_trials.sh` for one). It uses
+`./.venv/bin/python` unless `PYTHON` names another interpreter, and does not
+create or update the environment. It stops at the first failing step and runs
+only one sync at a time: a second one started while the first is running
+exits with status 75 (the lock is `cache/sync.lock`, and a lock left behind by
+a killed run is taken over). It can be started from any directory, as cron
+does.
 
 `ref/local_trial_info.csv` is currently header-only. It is the only route by
 which a closed trial is pulled, so while it is empty no closed trials are.

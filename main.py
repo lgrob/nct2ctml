@@ -3,6 +3,14 @@
 # Retargeted from adult oncology in Hong Kong to paediatric oncology.
 # See CHANGES.md for what differs.
 
+import sys
+
+# pyproject.toml's requires-python. Checked before anything else is imported,
+# so an old interpreter fails with this message rather than a SyntaxError.
+if sys.version_info < (3, 12):
+    sys.exit(f"nct2ctml needs Python 3.12 or newer; this is {sys.version.split()[0]} "
+             f"({sys.executable}). See pyproject.toml.")
+
 from loguru import logger
 import argparse
 import os

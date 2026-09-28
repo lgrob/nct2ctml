@@ -489,6 +489,44 @@ files.
   `tests/test_match_criteria_mapper.py` gained cases for contradiction
   resolution and fabricated inclusions.
 
+## Environment pinned; sync script portable (2026-09-28)
+
+Step 4 of `doc/improvement_plan.md`. The Python version was stated nowhere:
+`.venv` ran 3.13, while `sync_trials.sh` created a 3.12 conda environment and
+installed whatever versions were newest that day.
+
+- `pyproject.toml` (new) states `requires-python = ">=3.12"` and the same
+  dependency floors as `requirements.txt`. It is not an installable package;
+  there is no build system. The suite was run on 3.12.7, in a fresh venv
+  built from the lock, and on 3.13.0: 570 tests pass on both. `main.py`
+  refuses an older interpreter with a clear message instead of failing
+  somewhere inside an import.
+- `requirements.lock` (new) pins all 22 packages, direct and transitive, at
+  the versions the suite passed with. The README now installs from it.
+  `requirements.txt` keeps the floors.
+- `tests/test_environment.py` (new, 5 tests) fails when the three files
+  disagree: the floors, a requirement missing from the lock or pinned below
+  its floor, a line in the lock that is not an exact pin, or `main.py`'s
+  version guard.
+- `sync_trials.sh` rewritten. It now:
+  - no longer sources `~/.init_conda` and no longer creates a conda
+    environment. It uses `PYTHON` (default `./.venv/bin/python`), as
+    `scripts/run_ollama_mapping.sh` already did, and never installs
+    anything. **Anyone running it through conda must set
+    `PYTHON="$(conda run -n nct2ctml which python)"`.**
+  - runs with `set -euo pipefail` and stops at the first failing step, with
+    that step's exit code.
+  - takes a lock (`cache/sync.lock`, via `mkdir`, because `flock` is missing
+    on macOS), so a second sync exits with 75. A lock left by a killed run is
+    detected from its pid and taken over.
+  - `cd`s to its own directory, so cron can start it from anywhere.
+  - is now executable in git (it was `100644`, although the README said to
+    run `./sync_trials.sh`).
+
+  Tested with a stand-in interpreter covering: a normal run, a failing
+  step, two overlapping runs, a stale lock, a missing interpreter, and a
+  start from another directory.
+
 ## Provenance: what produced each file, every model call recorded, runs replayable (2026-09-28)
 
 Before this change, a mapped trial carried nothing about how it was made.

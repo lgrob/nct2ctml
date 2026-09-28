@@ -55,7 +55,7 @@ cd "$REPO"
 
 if [ ! -x "$PY" ]; then
   echo "FATAL: no interpreter at $PY. Create the venv first:"
-  echo "  python -m venv .venv && ./.venv/bin/pip install -r requirements.txt"
+  echo "  python3.12 -m venv .venv && ./.venv/bin/pip install -r requirements.lock"
   exit 1
 fi
 # config.py selects the Anthropic API as the production backend. This script

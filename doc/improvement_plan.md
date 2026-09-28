@@ -46,7 +46,7 @@ Baseline at the time of the review: 543 offline tests pass in ~13 s
   Steps 1-3 done 2026-09-28 (see CHANGES.md, "Provenance"), including replay:
   `NCT2CTML_LLM_PLATFORM=Replay NCT2CTML_REPLAY_FILE=runs/<id>/llm_calls.jsonl`.
 
-- [ ] **4. Pin the environment.**
+- [x] **4. Pin the environment.**
   - `pyproject.toml` with `requires-python` (`.venv` runs 3.13,
     [sync_trials.sh](../sync_trials.sh) creates 3.12).
   - Keep `requirements.txt` as floors; add a lock file (`uv lock` or
@@ -55,6 +55,10 @@ Baseline at the time of the review: 543 offline tests pass in ~13 s
   - `sync_trials.sh`: `set -euo pipefail`, no dependency on `~/.init_conda`
     (take the interpreter from a variable), and `flock` so two cron runs
     cannot overlap.
+
+  Done 2026-09-28: `pyproject.toml`, `requirements.lock` (from the tested
+  venv; no uv or pip-compile here, so no hashes), `tests/test_environment.py`,
+  and `sync_trials.sh` with a `mkdir` lock (macOS has no `flock`).
 
 - [ ] **5. Add a fetch/verify script for reference data.**
   `ref/oncotree_file.txt` is "placed by hand; no script fetches it". Add
