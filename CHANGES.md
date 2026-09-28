@@ -514,6 +514,17 @@ BRCA1/2) now count as mentions in _text_mentions_gene and on the review
 sheet, which changes the contradiction resolver's input for 16 gene pairs
 in 5 trials. All 16 are real family mentions in exclusion text.
 
+## Second full mapping run (roadmap 3.2, 2026-09-28)
+
+1,080 trials re-mapped at d61a30c on registries refreshed the same day, 0
+failed calls, about $26. Recall-first integration: 911 published, 169 in
+review (73 held because they lose a patient code). Index: 916 mapped, 174
+needs review, 56 reviewed. On the 370 labelled gene trials, trials requiring
+a gene the text does not require of every patient: 203 -> 99 (published 158
+-> 81). A first attempt was discarded unapplied because the measurement
+harness cached failed calls as empty answers; fixed. Report:
+doc/run_2026-09-28.md.
+
 ## Genes kept out of the match tree are published, not queued (2026-09-28)
 
 User decision (option A). gene_role_dropped no longer routes a trial to
