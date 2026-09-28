@@ -7,7 +7,7 @@ import sys
 
 # pyproject.toml's requires-python. Checked before anything else is imported,
 # so an old interpreter fails with this message rather than a SyntaxError.
-if sys.version_info < (3, 12):
+if sys.version_info < (3, 12):  # noqa: UP036 - enforces requires-python
     sys.exit(f"nct2ctml needs Python 3.12 or newer; this is {sys.version.split()[0]} "
              f"({sys.executable}). See pyproject.toml.")
 

@@ -91,7 +91,7 @@ def build(release, source_dir, out=OUT):
     with gzip.open(summary_path, "rt") as handle:
         header = handle.readline().lstrip("#").rstrip("\n").split("\t")
         for line in handle:
-            row = dict(zip(header, line.rstrip("\n").split("\t")))
+            row = dict(zip(header, line.rstrip("\n").split("\t"), strict=True))
             if row["MANE_status"] == "MANE Select":
                 select[row["symbol"]] = row
                 every_gene[row["symbol"]] = row["HGNC_ID"]

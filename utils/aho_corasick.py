@@ -19,7 +19,7 @@ def search_keywords_in_text(keywords:list, text):
 
     # Search through the entire text, not just split words
     found = False
-    for end_index, (idx, keyword) in A.iter(lower_text):
+    for end_index, (_, keyword) in A.iter(lower_text):
         start_index = end_index - len(keyword) + 1
         print(f"Found keyword: '{keyword}' at position {start_index}:{end_index+1}")
         found = True

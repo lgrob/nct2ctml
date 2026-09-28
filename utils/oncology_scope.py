@@ -147,7 +147,7 @@ def load_overrides(path=OVERRIDES):
         return {}
     overrides = {}
     with open(path, newline="") as handle:
-        for row in csv.DictReader((l for l in handle if not l.startswith("#")), delimiter="\t"):
+        for row in csv.DictReader((line for line in handle if not line.startswith("#")), delimiter="\t"):
             decision = (row.get("decision") or "").strip().lower()
             if decision not in ("map", "skip"):
                 raise ValueError(f"{path}: decision for {row.get('trial_id')!r} must be map or skip")

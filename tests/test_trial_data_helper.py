@@ -601,7 +601,6 @@ class TestTrialDataHelper(unittest.TestCase):
     def test_remove_unused_keys_modifies_original_dict(self):
         """Test that the method modifies the original dictionary (in-place modification)"""
         original_data = self.sample_trial_data.copy()
-        original_keys = set(original_data["protocolSection"].keys())
         
         result = remove_unused_keys(original_data)
         

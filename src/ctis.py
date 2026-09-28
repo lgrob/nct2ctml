@@ -174,8 +174,8 @@ def map_ctml_general_fields(trial_schema: dict, trial_data: dict) -> dict:
 
 def map_prior_treatment_requirements(trial_schema: dict, trial_data: dict) -> dict:
     inclusion, exclusion = split_inclusion_exclusion_criteria(trial_data)
-    reqs = [l for l in inclusion.split("\n") if l.strip()]
-    reqs += [f"Exclude - {l}" for l in exclusion.split("\n") if l.strip()]
+    reqs = [line for line in inclusion.split("\n") if line.strip()]
+    reqs += [f"Exclude - {line}" for line in exclusion.split("\n") if line.strip()]
     trial_schema["prior_treatment_requirements"] = reqs
     return trial_schema
 

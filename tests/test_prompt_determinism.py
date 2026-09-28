@@ -54,7 +54,7 @@ class TestPromptDeterminism(unittest.TestCase):
 class TestPromptList(unittest.TestCase):
 
     def test_sorted_deduplicated_and_none_free(self):
-        self.assertEqual(ai.prompt_list({"b", "a", None, "a"}), ["a", "b"])
+        self.assertEqual(ai.prompt_list(["b", "a", None, "a"]), ["a", "b"])
 
     def test_diagnosis_candidates_are_printed_in_the_fixed_shuffle(self):
         import hashlib

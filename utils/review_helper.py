@@ -567,7 +567,7 @@ def fix_genomic_notation(apply=False):
             before = [(id(g), g.get("variant_category")) for g in _genomic_nodes(ctml.get("treatment_list"))]
             nodes = list(_genomic_nodes(ctml.get("treatment_list")))
             mcm.rearranged_as_structural([{"genomic": g} for g in nodes], inc + "\n" + exc, t)
-            rearr = sorted({g["hugo_symbol"] for g, (_, vc) in zip(nodes, before) if g.get("variant_category") != vc})
+            rearr = sorted({g["hugo_symbol"] for g, (_, vc) in zip(nodes, before, strict=True) if g.get("variant_category") != vc})
             if n_h3 or rearr:
                 found.append((t, layer, n_h3, rearr))
                 if apply:
@@ -648,7 +648,7 @@ def resolve_remap_drops(apply=False):
             s, e, _ = find_mentions(exc, ref.dx_terms(x))[0]
             ev.append(f"{x}: ...{' '.join(exc[max(0, s - 50):e + 20].split())}...")
         lines = raw.split("\n")
-        k = next(i for i, l in enumerate(lines) if l.startswith("remap_dropped_diagnoses:"))
+        k = next(i for i, line in enumerate(lines) if line.startswith("remap_dropped_diagnoses:"))
         if left:
             lines[k] = yaml.safe_dump({"remap_dropped_diagnoses": "; ".join(left)}, width=1000).rstrip("\n")
         else:

@@ -1,4 +1,3 @@
-import re
 # Modified by Kinderspital Zurich (Kispi) from the original
 # nct2ctml, Copyright 2026 The University of Hong Kong, Apache-2.0.
 # Retargeted from adult oncology in Hong Kong to paediatric oncology.
@@ -8,13 +7,10 @@ import re
 This script contains methods that deal with extraction and manipulation
 of data from clinicaltrials.gov
 """
-import sys
-import os
 import csv
 import json
+import re
 from typing import Dict, List
-
-sys.path.append(os.path.abspath("../"))
 
 import src.trial_config as config
 import requests

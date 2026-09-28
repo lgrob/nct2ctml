@@ -273,7 +273,7 @@ def is_rearrangement_only(gene: str, text: str) -> bool:
     for sentence in re.split(r"[.;\n•*]|\s\d+\.\s", text or ""):
         if not re.search(rf"(?<![A-Za-z0-9]){g}(?![A-Za-z0-9])", sentence):
             continue
-        rest = re.sub(r"(?<![A-Za-z0-9])(?!%s)[A-Z][A-Z0-9-]{1,9}[\s-]*(?:mutations?|mutated|mutant|alterations?|m|c)\b" % g, " ", sentence)
+        rest = re.sub(r"(?<![A-Za-z0-9])(?!" + g + r")[A-Z][A-Z0-9-]{1,9}[\s-]*(?:mutations?|mutated|mutant|alterations?|m|c)\b", " ", sentence)
         if re.search(r"mutation|mutated|mutant|alteration|abnormalit|aberration|variant", rest, re.I):
             return False
     return True

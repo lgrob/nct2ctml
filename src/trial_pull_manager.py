@@ -175,7 +175,7 @@ class TrialPullManager:
     def fetch_and_cache_trial(self, nct_id: str) -> bool:
         """Fetch individual trial data and cache it"""
         try:        
-            NCT_STUDY_ENDPOINT = "studies/{0}".format(nct_id)
+            NCT_STUDY_ENDPOINT = f"studies/{nct_id}"
             endpoint_url = urllib.parse.urljoin(self.api_base_url, NCT_STUDY_ENDPOINT)
             
             response = requests.get(endpoint_url)
@@ -202,7 +202,7 @@ class TrialPullManager:
         Pull a single trial by NCT ID, apply local filters, and cache if eligible.        
         """
         try:
-            NCT_STUDY_ENDPOINT = "studies/{0}".format(nct_id)
+            NCT_STUDY_ENDPOINT = f"studies/{nct_id}"
             endpoint_url = urllib.parse.urljoin(self.api_base_url, NCT_STUDY_ENDPOINT)
             response = requests.get(endpoint_url)
             response.raise_for_status()
@@ -396,7 +396,7 @@ class TrialPullManager:
                             local_trial_dict[nct_id]['local_protocol_ids'] = f"{existing_protocols}|{local_protocol_id}"
         
         # Now process the consolidated local trial information
-        for key, trial_info in local_trial_dict.items():
+        for trial_info in local_trial_dict.values():
             if trial_info['nct_id'] == 'NA':
                 # Handle local-only trials (no NCT ID)
                 local_protocol_ids = trial_info['local_protocol_ids']

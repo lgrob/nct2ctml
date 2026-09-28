@@ -109,8 +109,8 @@ class TestRetiredGeneSymbols(unittest.TestCase):
 
     def test_every_legacy_symbol_resolves(self):
         """No symbol Kispi listed should be lost to a rename."""
-        genes = {l.strip() for l in open(_ref("genes.txt")) if l.strip()}
-        legacy = {l.strip() for l in open(_ref("genes_kispi.txt")) if l.strip()}
+        genes = {line.strip() for line in open(_ref("genes.txt")) if line.strip()}
+        legacy = {line.strip() for line in open(_ref("genes_kispi.txt")) if line.strip()}
         unresolved = [s for s in legacy - genes if canonical_gene(s) is None]
         self.assertEqual(unresolved, [])
 

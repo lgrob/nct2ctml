@@ -166,7 +166,8 @@ class TestUnsatisfiable(unittest.TestCase):
 
     def test_present_and_absent_in_separate_alternatives_is_satisfiable(self):
         from bench.benchmark_map import unsatisfiable
-        g = lambda vc: {"genomic": {"hugo_symbol": "EWSR1", "variant_category": vc}}
+        def g(vc):
+            return {"genomic": {"hugo_symbol": "EWSR1", "variant_category": vc}}
         tree = {"and": [{"clinical": {"age_numerical": ">=1"}},
                         {"or": [{"and": [g("Structural Variation")]}, {"and": [g("!Structural Variation")]}]}]}
         self.assertEqual(unsatisfiable([tree]), set())

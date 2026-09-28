@@ -245,7 +245,7 @@ class TestFlagUnsupportedGenes(_Layers):
 
     def test_a_gene_supported_only_by_a_blocked_alias_is_flagged_and_moved(self):
         found = self._run("DNMT3B", "Must sign the Informed Consent Form (ICF). Neuroblastoma.", apply=True)
-        self.assertEqual([(t, l, g) for t, l, g, _ in found], [("NCT0TEST", "mapped", ["DNMT3B"])])
+        self.assertEqual([(t, layer, g) for t, layer, g, _ in found], [("NCT0TEST", "mapped", ["DNMT3B"])])
         self.assertFalse(os.path.exists(os.path.join(rh.MAPPED_DIR, "NCT0TEST.yaml")))
         moved = open(os.path.join(rh.REVIEW_DIR, "NCT0TEST.yaml")).read()
         self.assertIn("gene_unsupported: DNMT3B", moved)
