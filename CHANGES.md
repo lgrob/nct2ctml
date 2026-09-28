@@ -514,6 +514,30 @@ BRCA1/2) now count as mentions in _text_mentions_gene and on the review
 sheet, which changes the contradiction resolver's input for 16 gene pairs
 in 5 trials. All 16 are real family mentions in exclusion text.
 
+## Measured: genomic prompt variants (roadmap 2.9, 2026-09-28)
+
+Test set: 849 required genes in the 370 indexed trials that require a gene,
+labelled against the text by reviewer sub-agents; 227 genes labelled twice
+agree 227/227 on "every patient must carry it" (92.5% on the exact role).
+A restrictive gene is a non-requirement (risk group, one cohort, conditional,
+one route among non-genetic routes, example, expression, germline...) that
+the mapping requires of every patient: it makes patients miss the trial.
+3 replicates per variant, Haiku 4.5, only the inclusion genomic call
+re-sampled; about $47.
+
+| | baseline | rules | roles |
+|---|---|---|---|
+| trials with a restrictive gene | 191 | 103 | 86 |
+| requirements kept (of 289) | 273 | 264 | 259 |
+| trials sent to review | 83 | 67 | 203 |
+
+Paired: rules -88 trials [-105, -73], roles -105 [-122, -89]. roles loses
+requirements mainly where each cohort needs a different gene, and records
+every dropped gene as gene_role_dropped for review; rules drops some
+silently (NCT06284486, NCT06316960, NCT07354074, 2024-515245-42-00).
+Default stays baseline pending the user's decision and label spot check.
+Report: genomic_prompt_report.md.
+
 ## Re-map of the 17 trials split at the wrong heading (roadmap 7.7, 2026-09-28)
 
 The 17 non-reviewed trials whose ClinicalTrials.gov criteria were split
