@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from loguru import logger
 
 import src.text_rules as text_rules
-import utils.review_helper as rh
+import utils.review.common as common
 
 logger.remove()
 
@@ -107,7 +107,7 @@ class TestGeneStatus(unittest.TestCase):
         self.assertIn("EWSR1", text_rules.gene_status_contradictions(t, inc))
 
     def test_accept_refuses_the_flag(self):
-        self.assertIn("gene_status_contradiction", rh.FLAG_KEYS)
+        self.assertIn("gene_status_contradiction", common.FLAG_KEYS)
 
 
 if __name__ == "__main__":

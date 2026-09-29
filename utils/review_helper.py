@@ -48,7 +48,6 @@ import os
 import random
 import re
 import sys
-from dataclasses import dataclass, field
 
 import yaml
 from loguru import logger
@@ -59,94 +58,11 @@ import src.text_rules as text_rules
 import utils.gene_mentions as gene_mentions
 import utils.protein_change as protein_change
 import utils.reference_validation as rv
+import utils.review.common as common
 import utils.translocations as translocations
 from utils.oncotree import get_lineage
 
-MAPPED_DIR = "cache/ctml"
-REVIEW_DIR = "ctml/needs-review"
-REVIEWED_DIR = "ctml/reviewed"
-LOG_FILE = "ctml/review_log.tsv"
-SHEET_DIR = "review_sheets"
-LOG_COLUMNS = ["date", "trial_id", "reviewer", "from_layer", "flags_resolved", "sha256", "note"]
-
-# Keys the mapper writes to mark an item for review. `accept` refuses a file
-# that still holds any of them: deleting the key is how a curator confirms
-# the item, deleting the item is how they reject it.
-FLAG_KEYS = (
-    "gene_unsupported",
-    "diagnosis_off_list",
-    "diagnosis_excluded",
-    "genomic_contradiction",
-    "remap_dropped_diagnoses",
-    "gene_status_contradiction",
-    "protein_change_unverified",
-    "protein_change_check",
-    "fusion_partner_unverified",
-)
-
-WILDCARDS = {"_SOLID_", "_LIQUID_"}
-
-
-ADVICE = {
-    "no_diagnosis": "No diagnosis: as it stands the trial matches every patient. Add "
-    "oncotree_primary_diagnosis entries, or _SOLID_ / _LIQUID_ for a basket trial.",
-    "gene_unsupported": "The model returned a gene the text scan did not find. If the text requires it, "
-    "delete the `gene_unsupported:` line; if not, delete the whole genomic criterion.",
-    "diagnosis_off_list": "A diagnosis was answered outside the candidate list the model was offered. "
-    "Keep or remove that diagnosis in the match tree, then delete the top-level "
-    "`diagnosis_off_list:` line.",
-    "diagnosis_excluded": "This diagnosis is named in the exclusion criteria and nowhere in the inclusion "
-    "criteria, title or conditions: the trial probably excludes it. Delete it from the "
-    "match tree, or, when a broader diagnosis the trial enrols contains it, add it as "
-    "`oncotree_primary_diagnosis: '!Name'` (quoted) beside that diagnosis. Then delete "
-    "the top-level `diagnosis_excluded:` line.",
-    "gene_role_dropped": "Information, not a flag: the model read these genes as something other than an entry "
-    "requirement (risk group, one cohort, conditional, an alternative route, an example, "
-    "expression or germline) and kept them out of the match tree. They are published in "
-    "trials.tsv as genes_not_required. Add a gene back only if every patient must carry it.",
-    "gene_status_contradiction": "The match tree requires an alteration in a gene that the inclusion text says "
-    "must be absent (wild type, negative, 'no ... mutation') or does not matter "
-    "('with or without'). Remove or negate the criterion, then delete the top-level "
-    "`gene_status_contradiction:` line.",
-    "remap_dropped_diagnoses": "A re-map (2026-09-27) dropped these diagnoses, and the exclusion text does not "
-    "explain it, so patients who matched before would no longer match. The previous "
-    "version is kept as <trial>.yaml.prev. Add back the ones the trial enrols, then "
-    "delete the top-level `remap_dropped_diagnoses:` line.",
-    "genomic_contradiction": "The match tree requires and forbids the same gene under one AND, so it matches "
-    "nobody. Often an exclusion written for the whole gene ('!Any Variation') where the "
-    "text excludes one variant, or a gene also required as a fusion partner. Narrow or "
-    "remove the exclusion, then delete the top-level `genomic_contradiction:` line.",
-    "protein_change_unverified": "The stated protein change does not match the reference protein. Write the "
-    "correct change as `protein_change:` (it is re-checked), or drop it; then "
-    "delete `protein_change_unverified:` and `protein_change_check:`.",
-    "fusion_partner_unverified": "The fusion partner is not an official gene symbol. Replace the line with "
-    "`fusion_partner: <symbol>` or delete it.",
-}
-
-
 # --------------------------------------------------------------------- data
-
-
-@dataclass
-class Item:
-    kind: str  # diagnosis | gene | age | protein | partner | no_diagnosis
-    value: str
-    flag: str = ""  # a FLAG_KEYS entry, or "no_diagnosis"
-    side: str = ""  # inclusion | exclusion (genomic include flag)
-    evidence: list = field(default_factory=list)  # [(section, snippet html)]
-    note: str = ""
-
-
-def _layer_of(trial_id):
-    for d, layer in (
-        (REVIEW_DIR, "needs_review"),
-        (MAPPED_DIR, "mapped"),
-        (REVIEWED_DIR, "reviewed"),
-    ):
-        p = os.path.join(d, f"{trial_id}.yaml")
-        if os.path.exists(p):
-            return p, layer
-    raise SystemExit(f"{trial_id}: not found in {REVIEW_DIR}, {MAPPED_DIR} or {REVIEWED_DIR}")
 
 
 def eligibility_text(trial_id):
@@ -174,25 +90,6 @@ def registry_ages(record):
 # ----------------------------------------------------------------- evidence
 
 
-def _as_list(value):
-    """
-    A flag value as a list of names in the order the file gives them: a list,
-    or a string joined with '; '. Duplicates dropped. Iterate this, not
-    _as_set: a set's order follows PYTHONHASHSEED, so a sheet listed the
-    same trial's genes in a different order on every run.
-    """
-    if isinstance(value, list):
-        names = [str(v) for v in value]
-    else:
-        names = [v.strip() for v in str(value).split(";") if v.strip()] if value else []
-    return list(dict.fromkeys(names))
-
-
-def _as_set(value):
-    """A flag value as a set of names, for membership tests."""
-    return set(_as_list(value))
-
-
 def flag_exclusions(apply=False):
     """
     Apply the diagnosis_excluded check to CTML already written (mapped and
@@ -207,7 +104,7 @@ def flag_exclusions(apply=False):
         t for t, (dec, _) in scope.load_overrides().items() if dec == "skip"
     }
     found = []
-    for d, layer in ((MAPPED_DIR, "mapped"), (REVIEW_DIR, "needs_review")):
+    for d, layer in ((common.MAPPED_DIR, "mapped"), (common.REVIEW_DIR, "needs_review")):
         if not os.path.isdir(d):
             continue
         for f in sorted(os.listdir(d)):
@@ -216,7 +113,7 @@ def flag_exclusions(apply=False):
             t = f[:-5]
             if t in out_of_scope:
                 continue  # not in the index; no point queueing it
-            if os.path.exists(os.path.join(REVIEWED_DIR, f)):
+            if os.path.exists(os.path.join(common.REVIEWED_DIR, f)):
                 continue  # a curated copy exists and is what the index publishes
             path = os.path.join(d, f)
             raw = open(path).read()
@@ -238,7 +135,7 @@ def flag_exclusions(apply=False):
                 continue
             found.append((t, layer, hit))
             if apply:
-                target = os.path.join(REVIEW_DIR, f)
+                target = os.path.join(common.REVIEW_DIR, f)
                 if layer == "mapped" and os.path.exists(target):
                     continue  # a review copy exists and wins; leave both for the curator
                 text = (
@@ -248,7 +145,7 @@ def flag_exclusions(apply=False):
                         {"diagnosis_excluded": "; ".join(hit)}, allow_unicode=True, width=1000
                     )
                 )
-                os.makedirs(REVIEW_DIR, exist_ok=True)
+                os.makedirs(common.REVIEW_DIR, exist_ok=True)
                 with open(target, "w") as fh:
                     fh.write(text)
                 if layer == "mapped":
@@ -272,10 +169,10 @@ def clear_stale_gene_flags(apply=False):
 
     syn = rv.gene_synonym_mapping()
     out = []
-    for f in sorted(os.listdir(REVIEW_DIR)):
+    for f in sorted(os.listdir(common.REVIEW_DIR)):
         if not f.endswith(".yaml"):
             continue
-        t, path = f[:-5], os.path.join(REVIEW_DIR, f)
+        t, path = f[:-5], os.path.join(common.REVIEW_DIR, f)
         raw = open(path).read()
         ctml = yaml.safe_load(raw)
         if (
@@ -319,7 +216,7 @@ def clear_stale_gene_flags(apply=False):
         out.append((t, clear, moved))
         if apply:
             if moved:
-                with open(os.path.join(MAPPED_DIR, f), "w") as fh:
+                with open(os.path.join(common.MAPPED_DIR, f), "w") as fh:
                     fh.write(text_out)
                 os.remove(path)
             else:
@@ -343,15 +240,15 @@ def fix_genomic_notation(apply=False):
         t for t, (d, _) in scope.load_overrides().items() if d == "skip"
     }
     found = []
-    for d, layer in ((MAPPED_DIR, "mapped"), (REVIEW_DIR, "needs_review")):
+    for d, layer in ((common.MAPPED_DIR, "mapped"), (common.REVIEW_DIR, "needs_review")):
         for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
             if not f.endswith(".yaml"):
                 continue
             t, path = f[:-5], os.path.join(d, f)
             if (
                 t in out_of_scope
-                or os.path.exists(os.path.join(REVIEWED_DIR, f))
-                or (layer == "mapped" and os.path.exists(os.path.join(REVIEW_DIR, f)))
+                or os.path.exists(os.path.join(common.REVIEWED_DIR, f))
+                or (layer == "mapped" and os.path.exists(os.path.join(common.REVIEW_DIR, f)))
             ):
                 continue
             raw = open(path).read()
@@ -394,15 +291,15 @@ def fix_all_lineage(apply=False):
         t for t, (d, _) in scope.load_overrides().items() if d == "skip"
     }
     found = []
-    for d, layer in ((MAPPED_DIR, "mapped"), (REVIEW_DIR, "needs_review")):
+    for d, layer in ((common.MAPPED_DIR, "mapped"), (common.REVIEW_DIR, "needs_review")):
         for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
             if not f.endswith(".yaml"):
                 continue
             t, path = f[:-5], os.path.join(d, f)
             if (
                 t in out_of_scope
-                or os.path.exists(os.path.join(REVIEWED_DIR, f))
-                or (layer == "mapped" and os.path.exists(os.path.join(REVIEW_DIR, f)))
+                or os.path.exists(os.path.join(common.REVIEWED_DIR, f))
+                or (layer == "mapped" and os.path.exists(os.path.join(common.REVIEW_DIR, f)))
             ):
                 continue
             raw = open(path).read()
@@ -439,13 +336,13 @@ def resolve_remap_drops(apply=False):
     """
     ref = text_rules._shared_reference()
     out = []
-    for f in sorted(os.listdir(REVIEW_DIR)):
+    for f in sorted(os.listdir(common.REVIEW_DIR)):
         if not f.endswith(".yaml"):
             continue
-        t, path = f[:-5], os.path.join(REVIEW_DIR, f)
+        t, path = f[:-5], os.path.join(common.REVIEW_DIR, f)
         raw = open(path).read()
         ctml = yaml.safe_load(raw)
-        dropped = _as_set((ctml or {}).get("remap_dropped_diagnoses"))
+        dropped = common._as_set((ctml or {}).get("remap_dropped_diagnoses"))
         if not dropped:
             continue
         try:
@@ -494,7 +391,7 @@ def resolve_remap_drops(apply=False):
         )
         out.append((t, ok, left, moved, ev))
         if apply:
-            with open(os.path.join(MAPPED_DIR, f) if moved else path, "w") as fh:
+            with open(os.path.join(common.MAPPED_DIR, f) if moved else path, "w") as fh:
                 fh.write(text_out)
             if moved:
                 os.remove(path)
@@ -516,16 +413,16 @@ def flag_gene_status(apply=False):
         t for t, (d, _) in scope.load_overrides().items() if d == "skip"
     }
     found = []
-    for d, layer in ((MAPPED_DIR, "mapped"), (REVIEW_DIR, "needs_review")):
+    for d, layer in ((common.MAPPED_DIR, "mapped"), (common.REVIEW_DIR, "needs_review")):
         if not os.path.isdir(d):
             continue
         for f in sorted(os.listdir(d)):
             if not f.endswith(".yaml"):
                 continue
             t = f[:-5]
-            if t in out_of_scope or os.path.exists(os.path.join(REVIEWED_DIR, f)):
+            if t in out_of_scope or os.path.exists(os.path.join(common.REVIEWED_DIR, f)):
                 continue
-            if layer == "mapped" and os.path.exists(os.path.join(REVIEW_DIR, f)):
+            if layer == "mapped" and os.path.exists(os.path.join(common.REVIEW_DIR, f)):
                 continue  # the review copy is what the index publishes
             path = os.path.join(d, f)
             raw = open(path).read()
@@ -550,7 +447,7 @@ def flag_gene_status(apply=False):
                         width=1000,
                     )
                 )
-                with open(os.path.join(REVIEW_DIR, f), "w") as fh:
+                with open(os.path.join(common.REVIEW_DIR, f), "w") as fh:
                     fh.write(text)
                 if layer == "mapped":
                     os.remove(path)
@@ -587,14 +484,14 @@ def flag_unsupported_genes(apply=False):
         t for t, (dec, _) in scope.load_overrides().items() if dec == "skip"
     }
     found = []
-    for d, layer in ((MAPPED_DIR, "mapped"), (REVIEW_DIR, "needs_review")):
+    for d, layer in ((common.MAPPED_DIR, "mapped"), (common.REVIEW_DIR, "needs_review")):
         if not os.path.isdir(d):
             continue
         for f in sorted(os.listdir(d)):
             if not f.endswith(".yaml"):
                 continue
             t = f[:-5]
-            if t in out_of_scope or os.path.exists(os.path.join(REVIEWED_DIR, f)):
+            if t in out_of_scope or os.path.exists(os.path.join(common.REVIEWED_DIR, f)):
                 continue
             path = os.path.join(d, f)
             raw = open(path).read()
@@ -647,12 +544,12 @@ def flag_unsupported_genes(apply=False):
             )
             found.append((t, layer, [m for _, m in new], action))
             if apply and not edited:
-                target = os.path.join(REVIEW_DIR, f)
+                target = os.path.join(common.REVIEW_DIR, f)
                 if layer == "mapped" and os.path.exists(target):
                     continue
                 for g, missing in new:
                     g["gene_unsupported"] = missing
-                os.makedirs(REVIEW_DIR, exist_ok=True)
+                os.makedirs(common.REVIEW_DIR, exist_ok=True)
                 with open(target, "w") as fh:
                     fh.write(yaml.dump(ctml, sort_keys=False))
                 if layer == "mapped":
@@ -760,7 +657,7 @@ def evidence(sections, terms, limit=4, gene=None):
 
 
 def analyse(trial_id, ref):
-    path, layer = _layer_of(trial_id)
+    path, layer = common._layer_of(trial_id)
     raw = open(path).read()
     ctml = yaml.safe_load(raw)
     inc, exc, record = eligibility_text(trial_id)
@@ -775,8 +672,8 @@ def analyse(trial_id, ref):
     items = []
 
     # Diagnoses.
-    off_list = _as_set(ctml.get("diagnosis_off_list"))
-    excluded_flag = _as_set(ctml.get("diagnosis_excluded"))
+    off_list = common._as_set(ctml.get("diagnosis_off_list"))
+    excluded_flag = common._as_set(ctml.get("diagnosis_excluded"))
     only_excluded = set(
         text_rules.diagnoses_only_in_exclusions(
             got["diagnoses"],
@@ -786,10 +683,10 @@ def analyse(trial_id, ref):
             ref,
         )
     )
-    real = [d for d in dict.fromkeys(got["diagnoses"]) if d not in WILDCARDS]
-    if not real and not (set(got["diagnoses"]) & WILDCARDS):
+    real = [d for d in dict.fromkeys(got["diagnoses"]) if d not in common.WILDCARDS]
+    if not real and not (set(got["diagnoses"]) & common.WILDCARDS):
         items.append(
-            Item(
+            common.Item(
                 "no_diagnosis",
                 "(none)",
                 flag="no_diagnosis",
@@ -797,10 +694,10 @@ def analyse(trial_id, ref):
             )
         )
     # Genes kept out of the tree by the roles prompt (information only).
-    for entry in _as_list(ctml.get("gene_role_dropped")):
+    for entry in common._as_list(ctml.get("gene_role_dropped")):
         gname = str(entry).split(" (")[0]
         items.append(
-            Item(
+            common.Item(
                 "gene",
                 f"{entry} (kept out of the match tree)",
                 evidence=evidence(sections_with_title, ref.gene_terms(gname), limit=2),
@@ -809,9 +706,9 @@ def analyse(trial_id, ref):
         )
     # A re-map dropped these; shown with the text that names them, so the
     # curator can add back the ones the trial enrols.
-    for d in _as_list(ctml.get("remap_dropped_diagnoses")):
+    for d in common._as_list(ctml.get("remap_dropped_diagnoses")):
         items.append(
-            Item(
+            common.Item(
                 "diagnosis",
                 f"{d} (dropped by the re-map)",
                 flag="remap_dropped_diagnoses",
@@ -820,7 +717,7 @@ def analyse(trial_id, ref):
             )
         )
     for d in dict.fromkeys(got["diagnoses"]):
-        it = Item(
+        it = common.Item(
             "diagnosis",
             d,
             flag="diagnosis_off_list"
@@ -829,7 +726,7 @@ def analyse(trial_id, ref):
             if d in excluded_flag
             else "",
         )
-        if d in WILDCARDS:
+        if d in common.WILDCARDS:
             it.note = "basket wildcard"
         elif str(d).startswith("!"):
             it.note = "excluded diagnosis (with its subtypes)"
@@ -859,9 +756,9 @@ def analyse(trial_id, ref):
     # Genes required although the text says absent / irrelevant.
     if ctml.get("gene_status_contradiction"):
         live = text_rules.gene_status_contradictions(ctml, inc, ref)
-        for gname in _as_list(ctml.get("gene_status_contradiction")):
+        for gname in common._as_list(ctml.get("gene_status_contradiction")):
             items.append(
-                Item(
+                common.Item(
                     "gene",
                     f"{gname} (required, but the text says absent or irrelevant)",
                     flag="gene_status_contradiction",
@@ -875,7 +772,7 @@ def analyse(trial_id, ref):
         sym = str(g.get("hugo_symbol", ""))
         side = "exclusion" if str(g.get("variant_category", "")).startswith("!") else "inclusion"
         label = f"{sym} {g.get('variant_category', '')}".strip()
-        it = Item(
+        it = common.Item(
             "gene",
             label,
             flag="gene_unsupported" if g.get("gene_unsupported") else "",
@@ -922,7 +819,7 @@ def analyse(trial_id, ref):
             if sym in official:
                 note += f" - the same gene as {sym}, so the pair is {sym}::{sym}: probably wrong"
             items.append(
-                Item(
+                common.Item(
                     "partner",
                     f"{sym}::{partner_raw}",
                     flag="fusion_partner_unverified",
@@ -933,7 +830,7 @@ def analyse(trial_id, ref):
             )
         elif g.get("fusion_partner"):
             items.append(
-                Item(
+                common.Item(
                     "partner",
                     f"{sym}::{g['fusion_partner']}",
                     side=side,
@@ -970,7 +867,7 @@ def analyse(trial_id, ref):
                         f"probably put on the wrong gene"
                     )
             items.append(
-                Item(
+                common.Item(
                     "protein",
                     f"{sym} {stated}",
                     side=side,
@@ -983,7 +880,7 @@ def analyse(trial_id, ref):
     # Ages.
     lo, hi = registry_ages(record)
     items.append(
-        Item(
+        common.Item(
             "age",
             " and ".join(got["ages"]) or "(no age bound)",
             note=f"registry: min {lo or '-'}, max {hi or '-'}" if record else "",
@@ -1079,7 +976,7 @@ def render(a):
                 if i.note
                 else ""
             )
-            + f"<div class='ev'>{html.escape(ADVICE.get(i.flag, ''))}</div>"
+            + f"<div class='ev'>{html.escape(common.ADVICE.get(i.flag, ''))}</div>"
             + "".join(f"<div class='ev'>[{n}] {s}</div>" for n, s in i.evidence[:4])
             + ("" if i.evidence else "<div class='ev bad'>no supporting passage found</div>")
             + "</div>"
@@ -1134,7 +1031,7 @@ def render_index(rows, heading):
     return "\n".join(h + ["</table>"])
 
 
-def write_sheets(trial_ids, heading, out_dir=SHEET_DIR):
+def write_sheets(trial_ids, heading, out_dir=common.SHEET_DIR):
     ref = text_rules.Reference()
     os.makedirs(out_dir, exist_ok=True)
     rows = []
@@ -1155,7 +1052,7 @@ def problems(ctml, raw):
     from src.trial_map_manager import TrialMapManager
 
     out = []
-    for k in FLAG_KEYS:
+    for k in common.FLAG_KEYS:
         if re.search(rf"^\s*{k}\s*:", raw, re.M):
             out.append(f"still flagged: {k}")
     import src.match_criteria_mapper as mcm
@@ -1164,7 +1061,7 @@ def problems(ctml, raw):
         out.append(f"requires and forbids {gene} under one AND: matches nobody")
     if not TrialMapManager._has_diagnosis(ctml):
         out.append("no diagnosis")
-    ref_names = set(get_lineage()[2]) | WILDCARDS
+    ref_names = set(get_lineage()[2]) | common.WILDCARDS
     got = text_rules.collect(ctml)
     for d in got["diagnoses"]:
         # "!Name" excludes that diagnosis and its subtypes (quote it in YAML:
@@ -1189,9 +1086,9 @@ def problems(ctml, raw):
 
 
 def accept(trial_id, reviewer, note="", replace=False, today=None):
-    path, layer = _layer_of(trial_id)
+    path, layer = common._layer_of(trial_id)
     if layer == "reviewed":
-        raise SystemExit(f"{trial_id} is already in {REVIEWED_DIR}")
+        raise SystemExit(f"{trial_id} is already in {common.REVIEWED_DIR}")
     if not reviewer.strip():
         raise SystemExit("--reviewer is required")
     raw = open(path).read()
@@ -1199,7 +1096,7 @@ def accept(trial_id, reviewer, note="", replace=False, today=None):
     found = problems(ctml, raw)
     if found:
         raise SystemExit(f"{trial_id} not accepted:\n  - " + "\n  - ".join(found))
-    target = os.path.join(REVIEWED_DIR, f"{trial_id}.yaml")
+    target = os.path.join(common.REVIEWED_DIR, f"{trial_id}.yaml")
     if os.path.exists(target) and not replace:
         raise SystemExit(
             f"{target} exists; pass --replace to supersede it (the old copy is kept as .prev)"
@@ -1213,16 +1110,16 @@ def accept(trial_id, reviewer, note="", replace=False, today=None):
     resolved = _flags_at_entry(trial_id)
     if os.path.exists(target):
         os.replace(target, target + ".prev")
-    os.makedirs(REVIEWED_DIR, exist_ok=True)
+    os.makedirs(common.REVIEWED_DIR, exist_ok=True)
     with open(target, "w") as fh:
         fh.write(raw)
     if layer == "needs_review":
         os.remove(path)
-    new_log = not os.path.exists(LOG_FILE)
-    with open(LOG_FILE, "a", newline="") as fh:
+    new_log = not os.path.exists(common.LOG_FILE)
+    with open(common.LOG_FILE, "a", newline="") as fh:
         w = csv.writer(fh, delimiter="\t", lineterminator="\n")
         if new_log:
-            w.writerow(LOG_COLUMNS)
+            w.writerow(common.LOG_COLUMNS)
         w.writerow(
             [
                 today,
@@ -1260,9 +1157,9 @@ def exclude(trial_id, reviewer, reason, today=None):
     layers = [
         layer
         for d, layer in (
-            (REVIEW_DIR, "needs_review"),
-            (MAPPED_DIR, "mapped"),
-            (REVIEWED_DIR, "reviewed"),
+            (common.REVIEW_DIR, "needs_review"),
+            (common.MAPPED_DIR, "mapped"),
+            (common.REVIEWED_DIR, "reviewed"),
         )
         if os.path.exists(os.path.join(d, f"{trial_id}.yaml"))
     ]
@@ -1274,11 +1171,11 @@ def exclude(trial_id, reviewer, reason, today=None):
             + ("" if text.endswith("\n") else "\n")
             + f"{trial_id}\tskip\t{reason} ({reviewer}, {today})\n"
         )
-    new_log = not os.path.exists(LOG_FILE)
-    with open(LOG_FILE, "a", newline="") as fh:
+    new_log = not os.path.exists(common.LOG_FILE)
+    with open(common.LOG_FILE, "a", newline="") as fh:
         w = csv.writer(fh, delimiter="\t", lineterminator="\n")
         if new_log:
-            w.writerow(LOG_COLUMNS)
+            w.writerow(common.LOG_COLUMNS)
         w.writerow([today, trial_id, reviewer, ",".join(layers) or "none", "excluded", "", reason])
     return layers
 
@@ -1292,19 +1189,19 @@ def _flags_at_entry(trial_id):
     """
     backups = (
         sorted(
-            (f for f in os.listdir(REVIEW_DIR) if f.startswith(f"{trial_id}.yaml.prev")),
+            (f for f in os.listdir(common.REVIEW_DIR) if f.startswith(f"{trial_id}.yaml.prev")),
             key=lambda f: (len(f), f),
         )
-        if os.path.isdir(REVIEW_DIR)
+        if os.path.isdir(common.REVIEW_DIR)
         else []
     )
-    for p in ([os.path.join(REVIEW_DIR, backups[0])] if backups else []) + [
-        os.path.join(MAPPED_DIR, f"{trial_id}.yaml"),
-        os.path.join(REVIEW_DIR, f"{trial_id}.yaml"),
+    for p in ([os.path.join(common.REVIEW_DIR, backups[0])] if backups else []) + [
+        os.path.join(common.MAPPED_DIR, f"{trial_id}.yaml"),
+        os.path.join(common.REVIEW_DIR, f"{trial_id}.yaml"),
     ]:
         if os.path.exists(p):
             raw = open(p).read()
-            return [k for k in FLAG_KEYS if re.search(rf"^\s*{k}\s*:", raw, re.M)]
+            return [k for k in common.FLAG_KEYS if re.search(rf"^\s*{k}\s*:", raw, re.M)]
     return []
 
 
@@ -1323,10 +1220,14 @@ def _not_in_index():
 def _queue_ids():
     """The review queue as the index sees it: no out-of-scope trials, none already reviewed."""
     gone = _not_in_index()
-    reviewed = {f[:-5] for f in os.listdir(REVIEWED_DIR)} if os.path.isdir(REVIEWED_DIR) else set()
+    reviewed = (
+        {f[:-5] for f in os.listdir(common.REVIEWED_DIR)}
+        if os.path.isdir(common.REVIEWED_DIR)
+        else set()
+    )
     return sorted(
         f[:-5]
-        for f in os.listdir(REVIEW_DIR)
+        for f in os.listdir(common.REVIEW_DIR)
         if f.endswith(".yaml") and f[:-5] not in gone and f[:-5] not in reviewed
     )
 
@@ -1334,10 +1235,13 @@ def _queue_ids():
 def audit_sample(n, seed):
     """n random mapped trials that are neither reviewed nor in the queue (roadmap 3.4)."""
     skip = {
-        f[:-5] for d in (REVIEWED_DIR, REVIEW_DIR) if os.path.isdir(d) for f in os.listdir(d)
+        f[:-5]
+        for d in (common.REVIEWED_DIR, common.REVIEW_DIR)
+        if os.path.isdir(d)
+        for f in os.listdir(d)
     } | _not_in_index()
     pool = sorted(
-        f[:-5] for f in os.listdir(MAPPED_DIR) if f.endswith(".yaml") and f[:-5] not in skip
+        f[:-5] for f in os.listdir(common.MAPPED_DIR) if f.endswith(".yaml") and f[:-5] not in skip
     )
     return sorted(random.Random(seed).sample(pool, min(n, len(pool)))), len(pool)
 
@@ -1406,7 +1310,7 @@ def main(argv=None):
         rows = write_sheets(
             args.trials or _queue_ids(), "Review queue" if not args.trials else "Selected trials"
         )
-        print(f"{len(rows)} sheets in {SHEET_DIR}/ - open {SHEET_DIR}/index.html")
+        print(f"{len(rows)} sheets in {common.SHEET_DIR}/ - open {common.SHEET_DIR}/index.html")
     elif args.cmd == "audit":
         ids, pool = audit_sample(args.n, args.seed)
         out = f"ctml/audit_{datetime.date.today():%Y-%m-%d}.tsv"
@@ -1418,13 +1322,13 @@ def main(argv=None):
         write_sheets(
             ids,
             f"Audit sample: {len(ids)} of {pool} mapped trials (seed {args.seed})",
-            out_dir=os.path.join(SHEET_DIR, "audit"),
+            out_dir=os.path.join(common.SHEET_DIR, "audit"),
         )
         print(
-            f"{len(ids)} of {pool} mapped trials -> {out}; sheets in {SHEET_DIR}/audit/index.html"
+            f"{len(ids)} of {pool} mapped trials -> {out}; sheets in {common.SHEET_DIR}/audit/index.html"
         )
     elif args.cmd == "check":
-        path, layer = _layer_of(args.trial)
+        path, layer = common._layer_of(args.trial)
         raw = open(path).read()
         found = problems(yaml.safe_load(raw), raw)
         print(
@@ -1433,7 +1337,7 @@ def main(argv=None):
         )
     elif args.cmd == "accept":
         print(
-            f"accepted -> {accept(args.trial, args.reviewer, args.note, args.replace)}; logged in {LOG_FILE}"
+            f"accepted -> {accept(args.trial, args.reviewer, args.note, args.replace)}; logged in {common.LOG_FILE}"
         )
     elif args.cmd == "flag-exclusions":
         found = flag_exclusions(apply=args.apply)
@@ -1513,7 +1417,7 @@ def main(argv=None):
     elif args.cmd == "exclude":
         layers = exclude(args.trial, args.reviewer, args.reason)
         print(
-            f"{args.trial} excluded (ref/scope_overrides.tsv; logged in {LOG_FILE}); "
+            f"{args.trial} excluded (ref/scope_overrides.tsv; logged in {common.LOG_FILE}); "
             f"its copies in {', '.join(layers) or 'no layer'} are left in place and dropped at the next index build"
         )
 

@@ -51,7 +51,7 @@ def install_offline_guard():
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 # Where the review layer paths live; tests redirect them only through
 # temporary_layers(), so a move of these constants changes this one line.
-REVIEW_PATHS_MODULE = "utils.review_helper"
+REVIEW_PATHS_MODULE = "utils.review.common"
 # What no test may change. Checked by tests/test_zz_no_writes.py, which runs
 # last, against the state recorded when the tests package was imported.
 PROTECTED = ("ctml", "cache/ctml", "ref", "index", "runs", "review_sheets")

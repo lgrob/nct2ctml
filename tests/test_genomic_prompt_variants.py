@@ -9,6 +9,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from loguru import logger
 
+import utils.review.common as common
+
 logger.remove()
 
 
@@ -150,7 +152,7 @@ class TestGeneRoleDroppedIsInformation(unittest.TestCase):
 
         import utils.review_helper as rh
 
-        self.assertNotIn("gene_role_dropped", rh.FLAG_KEYS)
+        self.assertNotIn("gene_role_dropped", common.FLAG_KEYS)
         c = self._ctml()
         self.assertFalse([p for p in rh.problems(c, yaml.safe_dump(c)) if "gene_role_dropped" in p])
 

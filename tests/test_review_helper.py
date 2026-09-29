@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from loguru import logger
 
 import src.text_rules as text_rules
+import utils.review.common as common
 import utils.review_helper as rh
 from tests.support import temporary_layers
 
@@ -278,8 +279,8 @@ class TestDiagnosesOnlyInExclusions(unittest.TestCase):
         )
 
     def test_off_list_flag_with_several_names(self):
-        self.assertEqual(rh._as_set("A; B"), {"A", "B"})
-        self.assertEqual(rh._as_set(["A"]), {"A"})
+        self.assertEqual(common._as_set("A; B"), {"A", "B"})
+        self.assertEqual(common._as_set(["A"]), {"A"})
 
 
 class TestContradictions(unittest.TestCase):
@@ -431,10 +432,10 @@ class TestFlagOrder(unittest.TestCase):
     """Sheets list a flag's names in the file's order, not a set's (which follows the hash seed)."""
 
     def test_names_keep_the_file_order_without_duplicates(self):
-        self.assertEqual(rh._as_list("FLT3 (x); BCR (y); FLT3 (x)"), ["FLT3 (x)", "BCR (y)"])
-        self.assertEqual(rh._as_list(["b", "a", "b"]), ["b", "a"])
-        self.assertEqual(rh._as_list(None), [])
-        self.assertEqual(rh._as_set("a; b"), {"a", "b"})
+        self.assertEqual(common._as_list("FLT3 (x); BCR (y); FLT3 (x)"), ["FLT3 (x)", "BCR (y)"])
+        self.assertEqual(common._as_list(["b", "a", "b"]), ["b", "a"])
+        self.assertEqual(common._as_list(None), [])
+        self.assertEqual(common._as_set("a; b"), {"a", "b"})
 
 
 if __name__ == "__main__":
