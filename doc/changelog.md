@@ -8,6 +8,9 @@ All 16 steps are done. `doc/improvement_plan.md` is removed; it is in git
 history at `2a3f65e`. Where this log says "step N of doc/improvement_plan.md",
 that is the file meant. Its open items moved to
 [open_issues.md](open_issues.md), "Follow-ups from the improvement plan".
+`doc/plan_step11_split_modules.md`, the sub-plan for step 11, is removed too
+(in git history at `35c0ad8`); what the refactor found is in the step 11
+entries below.
 
 ## Type checking with mypy (improvement plan step 12, 2026-09-29)
 
