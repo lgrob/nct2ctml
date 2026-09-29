@@ -8,6 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from loguru import logger
 
 import utils.ai_helper as ai
+import utils.llm.prompts.genomic as genomic_prompts
 import utils.llm.schema as llm_schema
 import utils.llm.transport as transport
 
@@ -32,8 +33,8 @@ class TestEveryPromptIsStructured(unittest.TestCase):
             ai.get_mmr_status_prompt("c", []),
             ai.get_disease_status_prompt("c", []),
             ai.get_age_bounds_prompt("c"),
-            ai.get_inclusion_genomic_criteria_prompt(["MYCN"], "c"),
-            ai.get_exclusion_genomic_criteria_prompt(["MYCN"], "c"),
+            genomic_prompts.get_inclusion_genomic_criteria_prompt(["MYCN"], "c"),
+            genomic_prompts.get_exclusion_genomic_criteria_prompt(["MYCN"], "c"),
         ]
         for schema, prompt in builders:
             self.assertIsInstance(schema, dict)

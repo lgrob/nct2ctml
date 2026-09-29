@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from loguru import logger
 
+import utils.llm.prompts.genomic as genomic_prompts
 import utils.llm.transport as transport
 import utils.review.common as common
 import utils.review.gate as gate
@@ -47,21 +48,21 @@ class TestGenomicPromptVariants(unittest.TestCase):
         load(None)
 
     def test_baseline_has_no_rule_10_and_no_role(self):
-        ai = load("baseline")
-        s, p = ai.get_inclusion_genomic_criteria_prompt({"APC"}, "APC mutation")
+        load("baseline")
+        s, p = genomic_prompts.get_inclusion_genomic_criteria_prompt({"APC"}, "APC mutation")
         self.assertNotIn("10. ", p)
         self.assertNotIn("role", s["items"]["properties"]["genomic"]["properties"])
 
     def test_rules_and_roles_prompts(self):
-        ai = load("rules")
-        s, p = ai.get_inclusion_genomic_criteria_prompt({"APC"}, "APC mutation")
+        load("rules")
+        s, p = genomic_prompts.get_inclusion_genomic_criteria_prompt({"APC"}, "APC mutation")
         self.assertIn("ENTRY REQUIREMENTS ONLY", p)
-        ai = load("roles")
-        s, p = ai.get_inclusion_genomic_criteria_prompt({"APC"}, "APC mutation")
+        load("roles")
+        s, p = genomic_prompts.get_inclusion_genomic_criteria_prompt({"APC"}, "APC mutation")
         self.assertIn("role", s["items"]["properties"]["genomic"]["required"])
 
     def test_roles_keeps_only_requirements(self):
-        ai = load("roles")
+        load("roles")
         transport.send_ai_request = lambda i, p, s=None: [
             {
                 "genomic": {
@@ -79,15 +80,17 @@ class TestGenomicPromptVariants(unittest.TestCase):
             },
         ]
         transport.parse_ai_response = lambda r, trial_id="": r
-        out = ai.get_inclusion_genomic_criteria("T1", ["APC", "BRAF"], "text")
+        out = genomic_prompts.get_inclusion_genomic_criteria("T1", ["APC", "BRAF"], "text")
         self.assertEqual(
             [c["genomic"] for c in out], [{"hugo_symbol": "BRAF", "variant_category": "Mutation"}]
         )
-        self.assertEqual(ai.ROLE_DROPS.pop("T1"), [("APC", "cohort_specific")])
+        self.assertEqual(genomic_prompts.ROLE_DROPS.pop("T1"), [("APC", "cohort_specific")])
 
     def test_roles_union_keeps_cohort_union(self):
-        ai = load("roles_union")
-        s, p = ai.get_inclusion_genomic_criteria_prompt({"ALK"}, "Stratum 1: ALK fusion")
+        load("roles_union")
+        s, p = genomic_prompts.get_inclusion_genomic_criteria_prompt(
+            {"ALK"}, "Stratum 1: ALK fusion"
+        )
         self.assertIn(
             "cohort_union", s["items"]["properties"]["genomic"]["properties"]["role"]["enum"]
         )
@@ -108,9 +111,9 @@ class TestGenomicPromptVariants(unittest.TestCase):
             },
         ]
         transport.parse_ai_response = lambda r, trial_id="": r
-        out = ai.get_inclusion_genomic_criteria("T2", ["ALK", "APC"], "text")
+        out = genomic_prompts.get_inclusion_genomic_criteria("T2", ["ALK", "APC"], "text")
         self.assertEqual([c["genomic"]["hugo_symbol"] for c in out], ["ALK"])
-        self.assertEqual(ai.ROLE_DROPS.pop("T2"), [("APC", "cohort_specific")])
+        self.assertEqual(genomic_prompts.ROLE_DROPS.pop("T2"), [("APC", "cohort_specific")])
 
 
 if __name__ == "__main__":

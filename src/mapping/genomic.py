@@ -10,8 +10,8 @@ from loguru import logger
 
 import src.match_criteria_mapper as mcm
 import src.trial_criteria_to_genes as ctg
-import utils.ai_helper as ai
 import utils.llm.prompts.enrichment as enrichment_prompts
+import utils.llm.prompts.genomic as genomic_prompts
 
 
 def map_ctml_match_genomic_criteria(
@@ -45,7 +45,7 @@ def map_ctml_match_genomic_criteria(
 
         # Pass 1: Initial extraction of genomic criteria
         if inclusion_text:
-            inlcusion_genomic_criteria = ai.get_inclusion_genomic_criteria(
+            inlcusion_genomic_criteria = genomic_prompts.get_inclusion_genomic_criteria(
                 nct_id, gene_symbols, inclusion_text
             )
             print(f"inlcusion_genomic_criteria: {inlcusion_genomic_criteria}")
@@ -57,7 +57,7 @@ def map_ctml_match_genomic_criteria(
             print(f"inclusion_genomic_criteria after enrichment: {inlcusion_genomic_criteria}")
 
         if exclusion_text:
-            exclusion_genomic_criteria = ai.get_exclusion_genomic_criteria(
+            exclusion_genomic_criteria = genomic_prompts.get_exclusion_genomic_criteria(
                 nct_id, gene_symbols, exclusion_text
             )
             print(f"exclusion_genomic_criteria: {exclusion_genomic_criteria}")

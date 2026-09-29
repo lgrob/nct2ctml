@@ -21,6 +21,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from loguru import logger
 
 import utils.ai_helper as ai
+import utils.llm.prompts.genomic as genomic_prompts
 import utils.llm.schema as llm_schema
 
 logger.remove()
@@ -101,7 +102,9 @@ class TestPromptList(unittest.TestCase):
         self.assertEqual(before, after)
 
     def test_gene_list_is_printed_sorted(self):
-        _, p = ai.get_inclusion_genomic_criteria_prompt({"TP53", "ALK", "BRAF"}, "text")
+        _, p = genomic_prompts.get_inclusion_genomic_criteria_prompt(
+            {"TP53", "ALK", "BRAF"}, "text"
+        )
         self.assertIn("['ALK', 'BRAF', 'TP53']", p)
 
 

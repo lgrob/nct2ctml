@@ -24,6 +24,7 @@ import src.match_criteria_mapper as mcm
 import src.text_rules as text_rules
 import src.trial_data_helper as tdh
 import utils.ai_helper as ai
+import utils.llm.prompts.genomic as genomic_prompts
 import utils.llm.schema as llm_schema
 import utils.oncology_scope as scope
 import utils.reference_validation as rv
@@ -475,7 +476,9 @@ class TrialMapManager:
         expression/germline were kept out of the match tree; record them so a
         curator sees them (routes the trial to review).
         """
-        drops = ai.ROLE_DROPS.pop(trial_id, None) if hasattr(ai, "ROLE_DROPS") else None
+        drops = (
+            genomic_prompts.ROLE_DROPS.pop(trial_id, None) if hasattr(ai, "ROLE_DROPS") else None
+        )
         if drops and isinstance(mapped_ctml, dict):
             seen = []
             for g, role in drops:

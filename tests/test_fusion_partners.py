@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from loguru import logger
 
-import utils.ai_helper as ai
+import utils.llm.prompts.genomic as genomic_prompts
 import utils.reference_validation as rv
 from src.match_criteria_mapper import _clean_fusion_partners
 from utils.build_trial_index import build
@@ -82,7 +82,9 @@ class TestMapperCheck(unittest.TestCase):
 
     def test_the_model_can_say_it(self):
         # llama.cpp builds its grammar from declared properties.
-        props = ai.GENOMIC_CRITERIA_SCHEMA["items"]["properties"]["genomic"]["properties"]
+        props = genomic_prompts.GENOMIC_CRITERIA_SCHEMA["items"]["properties"]["genomic"][
+            "properties"
+        ]
         self.assertIn("fusion_partner", props)
 
 
