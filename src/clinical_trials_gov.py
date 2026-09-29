@@ -21,7 +21,7 @@ import src.match_criteria_mapper as mcm
 import src.trial_config as config
 import src.trial_data_helper as tdh
 import utils.age_bounds as ab
-import utils.ai_helper as ai
+import utils.llm.prompts.arms as arm_prompts
 import utils.llm.prompts.diagnosis as dx_prompts
 import utils.oncotree as onct
 from src.match_criteria_mapper import ArmCriteriaBlocks, ArmCriteriaText
@@ -237,7 +237,7 @@ def get_arm_criteria_blocks_for_trial(
     )
     inclusion_text, exclusion_text = split_inclusion_exclusion_criteria(trial_data)
 
-    arm_mapping = ai.get_arm_criteria_mapping(
+    arm_mapping = arm_prompts.get_arm_criteria_mapping(
         nct_id=nct_id,
         arm_groups=arm_groups,
         inclusion_criteria=inclusion_text,

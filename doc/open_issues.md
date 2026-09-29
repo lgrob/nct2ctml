@@ -534,6 +534,7 @@ but it is the thing to check first.
 
 - `src/trial_pull_manager.py:329` — trials in `trial_status.csv` that the API
   stops returning are unhandled (upstream `TODO`).
-- `utils/ai_helper.get_arm_criteria_mapping_prompt` is the one prompt still
-  sent without a JSON schema, carrying an explicit "intentionally ... for now"
-  comment. It has the same silent-discard exposure as the nine that were fixed.
+- ~~`utils/ai_helper.get_arm_criteria_mapping_prompt` is the one prompt still
+  sent without a JSON schema.~~ Stale: it is sent with
+  `arm_criteria_mapping_schema` (see "Cleanup" above), now in
+  `utils/llm/prompts/arms.py`. Found 2026-09-29 while moving it.
