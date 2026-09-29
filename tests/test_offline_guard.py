@@ -13,6 +13,7 @@ from unittest import mock
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import utils.ai_helper as ai
+import utils.llm.prompts.biomarkers as biomarker_prompts
 import utils.llm.transport as transport
 from tests.support import LIVE, OfflinePlatform
 
@@ -36,10 +37,10 @@ class TestOfflineGuard(unittest.TestCase):
         # patches nothing, and the real path runs - into the guard.
         with mock.patch.object(ai, "send_ai_request_moved", create=True, new=lambda *a: {}):
             with self.assertRaises(RuntimeError):
-                ai.get_pdl1_status("NCT0", "PD-L1 positive", ["PD-L1"])
+                biomarker_prompts.get_pdl1_status("NCT0", "PD-L1 positive", ["PD-L1"])
 
     def test_building_a_request_still_works(self):
-        body = transport._llm_platform.get_request_body("p", ai.PDL1_SCHEMA)
+        body = transport._llm_platform.get_request_body("p", biomarker_prompts.PDL1_SCHEMA)
         self.assertTrue(body)
 
 

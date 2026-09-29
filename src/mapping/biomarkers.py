@@ -9,7 +9,7 @@ Moved from src/clinical_trials_gov.py on 2026-09-29 (step 11, phase 2).
 from loguru import logger
 
 import src.match_criteria_mapper as mcm
-import utils.ai_helper as ai
+import utils.llm.prompts.biomarkers as biomarker_prompts
 
 
 def _map_biomarker_statuses(
@@ -31,7 +31,7 @@ def _map_biomarker_statuses(
 
 
 def map_her2_er_pr_status(nct_id: str, eligibilityCriteria: str, keywords: list):
-    result = ai.get_her2_er_pr_status(nct_id, eligibilityCriteria, keywords)
+    result = biomarker_prompts.get_her2_er_pr_status(nct_id, eligibilityCriteria, keywords)
     filtered_her2_er_pr_dict = {
         k: v
         for k, v in result.items()
@@ -45,7 +45,7 @@ def map_pdl1_status(nct_id: str, eligibilityCriteria: str, keywords: list):
         keywords, eligibilityCriteria
     )
     if contains_pdl1_info:
-        result = ai.get_pdl1_status(nct_id, eligibilityCriteria, keywords)
+        result = biomarker_prompts.get_pdl1_status(nct_id, eligibilityCriteria, keywords)
         filtered_pdl1_status_dict = {
             k: v for k, v in result.items() if v.lower() in ["high", "low"]
         }
@@ -59,7 +59,7 @@ def map_mmr_ms_status(nct_id: str, eligibilityCriteria: str, keywords: list):
         keywords, eligibilityCriteria
     )
     if contains_mmr_info:
-        mmr_ms_status_dict = ai.get_mmr_status(nct_id, eligibilityCriteria, keywords)
+        mmr_ms_status_dict = biomarker_prompts.get_mmr_status(nct_id, eligibilityCriteria, keywords)
         if "mmr_status" in mmr_ms_status_dict:
             mmr_value = mmr_ms_status_dict["mmr_status"]
             if mmr_value in [
@@ -78,5 +78,5 @@ def map_mmr_ms_status(nct_id: str, eligibilityCriteria: str, keywords: list):
 
 
 def map_disease_status(nct_id: str, eligibilityCriteria: str, keywords: list):
-    result = ai.get_disease_status(nct_id, eligibilityCriteria, keywords)
+    result = biomarker_prompts.get_disease_status(nct_id, eligibilityCriteria, keywords)
     return result

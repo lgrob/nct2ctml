@@ -9,6 +9,7 @@ from loguru import logger
 
 import config
 import utils.ai_helper as ai
+import utils.llm.prompts.biomarkers as biomarker_prompts
 import utils.llm.prompts.diagnosis as dx_prompts
 import utils.llm.prompts.genomic as genomic_prompts
 import utils.llm.schema as llm_schema
@@ -32,10 +33,10 @@ class TestEveryPromptIsStructured(unittest.TestCase):
             ),
             dx_prompts.get_ai_prompt_oncotree_diagnoses_from_trial_info("t", ["Neuroblastoma"]),
             dx_prompts.get_ai_prompt_child_values("neuroblastoma", ["Neuroblastoma"]),
-            ai.get_her2_er_pr_status_prompt("c", []),
-            ai.get_pdl1_status_prompt("c", []),
-            ai.get_mmr_status_prompt("c", []),
-            ai.get_disease_status_prompt("c", []),
+            biomarker_prompts.get_her2_er_pr_status_prompt("c", []),
+            biomarker_prompts.get_pdl1_status_prompt("c", []),
+            biomarker_prompts.get_mmr_status_prompt("c", []),
+            biomarker_prompts.get_disease_status_prompt("c", []),
             ai.get_age_bounds_prompt("c"),
             genomic_prompts.get_inclusion_genomic_criteria_prompt(["MYCN"], "c"),
             genomic_prompts.get_exclusion_genomic_criteria_prompt(["MYCN"], "c"),
@@ -48,17 +49,17 @@ class TestEveryPromptIsStructured(unittest.TestCase):
     def test_the_schema_reaches_the_request_body(self):
         # Where the schema goes depends on the platform: Ollama's `format`,
         # the Anthropic forced tool's input. Either way it must be sent.
-        body = transport._llm_platform.get_request_body("p", ai.PDL1_SCHEMA)
+        body = transport._llm_platform.get_request_body("p", biomarker_prompts.PDL1_SCHEMA)
         sent = body.get("format") or body["tools"][0]["input_schema"]["properties"]["result"]
-        self.assertEqual(sent, ai.PDL1_SCHEMA)
+        self.assertEqual(sent, biomarker_prompts.PDL1_SCHEMA)
 
     def test_the_ollama_platform_sends_it_as_format(self):
         from utils.llm_platforms import OllamaPlatform
 
         body = OllamaPlatform("llama3.3:70b", "http://127.0.0.1").get_request_body(
-            "p", ai.PDL1_SCHEMA
+            "p", biomarker_prompts.PDL1_SCHEMA
         )
-        self.assertEqual(body.get("format"), ai.PDL1_SCHEMA)
+        self.assertEqual(body.get("format"), biomarker_prompts.PDL1_SCHEMA)
 
 
 class TestCandidateListsBecomeEnums(unittest.TestCase):
@@ -199,12 +200,14 @@ class TestStatusSchemas(unittest.TestCase):
         # is silently discarded downstream; the enum stops it being generated.
         expected = ["Positive", "Negative", "Unknown", "!Positive", "!Negative"]
         for field in ("her2_status", "er_status", "pr_status"):
-            self.assertEqual(ai.HER2_ER_PR_SCHEMA["properties"][field]["enum"], expected, field)
+            self.assertEqual(
+                biomarker_prompts.HER2_ER_PR_SCHEMA["properties"][field]["enum"], expected, field
+            )
 
     def test_mmr_fields_are_optional(self):
         # There is no "Unknown" for MMR, so requiring a field would force the
         # model to invent proficient or deficient.
-        self.assertNotIn("required", ai.MMR_MS_SCHEMA)
+        self.assertNotIn("required", biomarker_prompts.MMR_MS_SCHEMA)
 
     def test_either_age_bound_may_be_null(self):
         for end in ("minimum", "maximum"):
