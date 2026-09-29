@@ -116,10 +116,6 @@ class TestGenomicPromptVariants(unittest.TestCase):
         self.assertEqual(genomic_prompts.ROLE_DROPS.pop("T2"), [("APC", "cohort_specific")])
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class TestGeneRoleDroppedIsInformation(unittest.TestCase):
     """Option A (user, 2026-09-28): genes kept out are published, not queued."""
 
@@ -171,3 +167,36 @@ class TestGeneRoleDroppedIsInformation(unittest.TestCase):
         import utils.build_trial_index as b
 
         self.assertIn("genes_not_required", b.TRIAL_COLUMNS)
+
+
+class TestRoleDropsReachTheTrial(unittest.TestCase):
+    """
+    The genes the roles prompt keeps out of the tree reach the mapped trial as
+    gene_role_dropped (published as genes_not_required). Moving ROLE_DROPS in
+    step 11 briefly broke this: the mapper checked hasattr(ai_helper,
+    "ROLE_DROPS"), which was then always False, and dropped every record.
+    """
+
+    def test_recorded_drops_are_written_once_each(self):
+        from src.trial_map_manager import TrialMapManager
+
+        genomic_prompts.ROLE_DROPS["T9"] = [
+            ("FLT3", "cohort_specific"),
+            ("BCR", "example"),
+            ("FLT3", "cohort_specific"),
+        ]
+        ctml = {"nct_id": "T9"}
+        TrialMapManager._record_role_drops(ctml, "T9")
+        self.assertEqual(ctml["gene_role_dropped"], "FLT3 (cohort_specific); BCR (example)")
+        self.assertNotIn("T9", genomic_prompts.ROLE_DROPS)
+
+    def test_no_drops_writes_nothing(self):
+        from src.trial_map_manager import TrialMapManager
+
+        ctml = {"nct_id": "T10"}
+        TrialMapManager._record_role_drops(ctml, "T10")
+        self.assertNotIn("gene_role_dropped", ctml)
+
+
+if __name__ == "__main__":
+    unittest.main()
