@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from loguru import logger
 
-import utils.ai_helper as ai
+import utils.llm.prompts.diagnosis as dx_prompts
 import utils.llm.prompts.genomic as genomic_prompts
 import utils.llm.schema as llm_schema
 
@@ -85,9 +85,9 @@ class TestPromptList(unittest.TestCase):
         want = sorted(names, key=lambda v: hashlib.sha256(v.encode()).hexdigest())
         self.assertEqual(llm_schema.diagnosis_prompt_list(names), want)
         for build in (
-            lambda v: ai.get_ai_prompt_oncotree_diagnoses_from_trial_info("x", v, "T"),
-            lambda v: ai.get_ai_prompt_child_values("x", v, "T"),
-            lambda v: ai.get_ai_prompt_level1_for_original_conditions(["x"], v, "T"),
+            lambda v: dx_prompts.get_ai_prompt_oncotree_diagnoses_from_trial_info("x", v, "T"),
+            lambda v: dx_prompts.get_ai_prompt_child_values("x", v, "T"),
+            lambda v: dx_prompts.get_ai_prompt_level1_for_original_conditions(["x"], v, "T"),
         ):
             self.assertIn(str(want), build(names)[1])
 

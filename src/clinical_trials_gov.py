@@ -22,6 +22,7 @@ import src.trial_config as config
 import src.trial_data_helper as tdh
 import utils.age_bounds as ab
 import utils.ai_helper as ai
+import utils.llm.prompts.diagnosis as dx_prompts
 import utils.oncotree as onct
 from src.match_criteria_mapper import ArmCriteriaBlocks, ArmCriteriaText
 
@@ -613,7 +614,7 @@ def _map_global_diagnosis_from_conditions_and_extra_info(trial_data: dict) -> se
     else:
         level_1_diagnosis, l1_to_all_mapping = onct.get_all_oncotree_data()
         logger.debug(f"NCTID: {nct_id} | Stage 1 - Original Conditions:{conditions_list}")
-        level1_oncotree_values_dict = ai.get_level1_diagnosis_from_original_conditions(
+        level1_oncotree_values_dict = dx_prompts.get_level1_diagnosis_from_original_conditions(
             nct_id, conditions_list, level_1_diagnosis
         )
         logger.debug(
@@ -632,7 +633,7 @@ def _map_global_diagnosis_from_conditions_and_extra_info(trial_data: dict) -> se
                 f"NCTID: {nct_id} | Stage 3 - Condition = {nct_condition}. Child values = {child_oncotree_values}"
             )
             if len(child_oncotree_values) > 0:
-                oncotree_diagnoses_result = ai.get_child_level_diagnoses_from_condition(
+                oncotree_diagnoses_result = dx_prompts.get_child_level_diagnoses_from_condition(
                     nct_id, child_oncotree_values, nct_condition
                 )
                 if (
@@ -659,7 +660,7 @@ def _map_global_diagnosis_from_conditions_and_extra_info(trial_data: dict) -> se
             extra_info.append(brief_title)
 
             all_level_oncotree_values = set()
-            level1_oncotree_values_dict = ai.get_oncotree_diagnoses_from_trial_info(
+            level1_oncotree_values_dict = dx_prompts.get_oncotree_diagnoses_from_trial_info(
                 nct_id, extra_info, level_1_diagnosis
             )
             level1_diagnoses = level1_oncotree_values_dict.get("oncotree_diagnoses", [])
@@ -677,7 +678,7 @@ def _map_global_diagnosis_from_conditions_and_extra_info(trial_data: dict) -> se
                     f"NCTID: {nct_id} | Stage 3 - Diagnoses = {level1_diagnoses}. Child values = {all_level_oncotree_values}"
                 )
                 if all_level_oncotree_values:
-                    oncotree_diagnoses_result = ai.get_oncotree_diagnoses_from_trial_info(
+                    oncotree_diagnoses_result = dx_prompts.get_oncotree_diagnoses_from_trial_info(
                         nct_id, extra_info, all_level_oncotree_values
                     )
                     if (

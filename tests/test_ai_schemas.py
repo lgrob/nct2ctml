@@ -7,7 +7,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from loguru import logger
 
+import config
 import utils.ai_helper as ai
+import utils.llm.prompts.diagnosis as dx_prompts
 import utils.llm.prompts.genomic as genomic_prompts
 import utils.llm.schema as llm_schema
 import utils.llm.transport as transport
@@ -25,9 +27,11 @@ class TestEveryPromptIsStructured(unittest.TestCase):
 
     def test_all_builders_return_a_schema_and_a_prompt(self):
         builders = [
-            ai.get_ai_prompt_level1_for_original_conditions(["Neuroblastoma"], ["Adrenal Gland"]),
-            ai.get_ai_prompt_oncotree_diagnoses_from_trial_info("t", ["Neuroblastoma"]),
-            ai.get_ai_prompt_child_values("neuroblastoma", ["Neuroblastoma"]),
+            dx_prompts.get_ai_prompt_level1_for_original_conditions(
+                ["Neuroblastoma"], ["Adrenal Gland"]
+            ),
+            dx_prompts.get_ai_prompt_oncotree_diagnoses_from_trial_info("t", ["Neuroblastoma"]),
+            dx_prompts.get_ai_prompt_child_values("neuroblastoma", ["Neuroblastoma"]),
             ai.get_her2_er_pr_status_prompt("c", []),
             ai.get_pdl1_status_prompt("c", []),
             ai.get_mmr_status_prompt("c", []),
@@ -65,18 +69,18 @@ class TestCandidateListsBecomeEnums(unittest.TestCase):
     """
 
     def test_allowed_values_become_an_enum(self):
-        schema = ai.oncotree_diagnoses_schema(["Neuroblastoma", "Ganglioneuroblastoma"])
+        schema = dx_prompts.oncotree_diagnoses_schema(["Neuroblastoma", "Ganglioneuroblastoma"])
         items = schema["properties"]["oncotree_diagnoses"]["items"]
         self.assertEqual(items["enum"], ["Ganglioneuroblastoma", "Neuroblastoma"])
 
     def test_an_off_list_answer_has_no_representation(self):
-        schema = ai.oncotree_diagnoses_schema(["Neuroblastoma"])
+        schema = dx_prompts.oncotree_diagnoses_schema(["Neuroblastoma"])
         self.assertNotIn("Lymphoma", schema["properties"]["oncotree_diagnoses"]["items"]["enum"])
 
     def test_level1_keeps_its_escape_hatches(self):
         # clinical_trials_gov skips "" and "other"; a constrained model that
         # cannot say either is forced to pick a branch it does not believe in.
-        schema = ai.level1_diagnoses_schema(["Adrenal Gland"])
+        schema = dx_prompts.level1_diagnoses_schema(["Adrenal Gland"])
         values = schema["properties"]["oncotree_diagnoses"]["items"]["properties"][
             "oncotree_value"
         ]["enum"]
@@ -86,15 +90,17 @@ class TestCandidateListsBecomeEnums(unittest.TestCase):
     def test_a_very_large_candidate_list_drops_the_enum(self):
         # Ollama compiles `format` into a grammar; hundreds of alternatives are
         # slow to build. The shape is still enforced, only the values are not.
-        with mock.patch.object(ai.config, "LLM_PLATFORM", "Ollama"):
-            schema = ai.oncotree_diagnoses_schema([f"Term {i}" for i in range(500)])
+        with mock.patch.object(config, "LLM_PLATFORM", "Ollama"):
+            schema = dx_prompts.oncotree_diagnoses_schema([f"Term {i}" for i in range(500)])
         items = schema["properties"]["oncotree_diagnoses"]["items"]
         self.assertNotIn("enum", items)
         self.assertEqual(items["type"], "string")
 
     def test_an_empty_candidate_list_is_not_an_empty_enum(self):
         # An empty enum would make every answer invalid.
-        items = ai.oncotree_diagnoses_schema([])["properties"]["oncotree_diagnoses"]["items"]
+        items = dx_prompts.oncotree_diagnoses_schema([])["properties"]["oncotree_diagnoses"][
+            "items"
+        ]
         self.assertNotIn("enum", items)
 
 
@@ -124,8 +130,8 @@ class TestEnumCap(unittest.TestCase):
         return [r["message"] for r in self.logs if r["level"].name == level]
 
     def test_over_the_cap_warns_with_trial_and_size_and_counts(self):
-        with mock.patch.object(ai.config, "LLM_PLATFORM", "Ollama"):
-            items = _items(ai.oncotree_diagnoses_schema(self._terms(438), "NCT02508038"))
+        with mock.patch.object(config, "LLM_PLATFORM", "Ollama"):
+            items = _items(dx_prompts.oncotree_diagnoses_schema(self._terms(438), "NCT02508038"))
         self.assertNotIn("enum", items)
         warnings = self._levels("WARNING")
         self.assertEqual(len(warnings), 1)
@@ -136,51 +142,51 @@ class TestEnumCap(unittest.TestCase):
         self.assertIn("1 dropped", llm_schema.enum_cap_summary())
 
     def test_the_cap_itself_still_gets_an_enum(self):
-        with mock.patch.object(ai.config, "LLM_PLATFORM", "Ollama"):
-            items = _items(ai.oncotree_diagnoses_schema(self._terms(400)))
+        with mock.patch.object(config, "LLM_PLATFORM", "Ollama"):
+            items = _items(dx_prompts.oncotree_diagnoses_schema(self._terms(400)))
         self.assertEqual(len(items["enum"]), 400)
         self.assertEqual(self._levels("WARNING"), [])
 
     def test_near_the_cap_is_info_not_warning(self):
         # 370 is the largest list the Haiku benchmark replay sent (NCT02813135).
-        with mock.patch.object(ai.config, "LLM_PLATFORM", "Ollama"):
-            items = _items(ai.oncotree_diagnoses_schema(self._terms(370), "NCT02813135"))
+        with mock.patch.object(config, "LLM_PLATFORM", "Ollama"):
+            items = _items(dx_prompts.oncotree_diagnoses_schema(self._terms(370), "NCT02813135"))
         self.assertEqual(len(items["enum"]), 370)
         self.assertEqual(self._levels("WARNING"), [])
         self.assertTrue(any("NCT02813135" in m and "370" in m for m in self._levels("INFO")))
         self.assertEqual(llm_schema.ENUM_CAP_EVENTS["near_cap"], 1)
 
     def test_a_small_list_logs_nothing(self):
-        with mock.patch.object(ai.config, "LLM_PLATFORM", "Ollama"):
-            ai.oncotree_diagnoses_schema(self._terms(226))
+        with mock.patch.object(config, "LLM_PLATFORM", "Ollama"):
+            dx_prompts.oncotree_diagnoses_schema(self._terms(226))
         self.assertEqual(self.logs, [])
         self.assertEqual(llm_schema.ENUM_CAP_EVENTS["enum"], 1)
 
     def test_anthropic_keeps_the_enum_for_the_whole_oncotree(self):
         # The forced tool call is not strict, so no grammar is compiled; 847 is
         # every Oncotree descendant, the largest list the diagnosis path builds.
-        with mock.patch.object(ai.config, "LLM_PLATFORM", "Anthropic"):
-            items = _items(ai.oncotree_diagnoses_schema(self._terms(847), "t"))
+        with mock.patch.object(config, "LLM_PLATFORM", "Anthropic"):
+            items = _items(dx_prompts.oncotree_diagnoses_schema(self._terms(847), "t"))
         self.assertEqual(len(items["enum"]), 847)
         self.assertEqual(self._levels("WARNING"), [])
         self.assertEqual(llm_schema.ENUM_CAP_EVENTS["dropped"], 0)
 
     def test_the_caps_are_pinned_per_backend(self):
-        caps = ai.config.SCHEMA_ENUM_MAX_VALUES
+        caps = config.SCHEMA_ENUM_MAX_VALUES
         for platform in ("ollama", "local_ai", "vllm", "sglang"):
             self.assertEqual(caps[platform], 400)
         self.assertIsNone(caps["anthropic"])
 
     def test_an_unlisted_platform_falls_back_to_400(self):
-        with mock.patch.object(ai.config, "LLM_PLATFORM", "SomethingNew"):
+        with mock.patch.object(config, "LLM_PLATFORM", "SomethingNew"):
             self.assertEqual(llm_schema.max_enum_values(), 400)
 
     def test_every_diagnosis_builder_names_the_trial(self):
         big = self._terms(401)
-        with mock.patch.object(ai.config, "LLM_PLATFORM", "Ollama"):
-            ai.get_ai_prompt_level1_for_original_conditions(["c"], big, "T-L1")
-            ai.get_ai_prompt_oncotree_diagnoses_from_trial_info("x", big, "T-S2")
-            ai.get_ai_prompt_child_values("c", big, "T-CH")
+        with mock.patch.object(config, "LLM_PLATFORM", "Ollama"):
+            dx_prompts.get_ai_prompt_level1_for_original_conditions(["c"], big, "T-L1")
+            dx_prompts.get_ai_prompt_oncotree_diagnoses_from_trial_info("x", big, "T-S2")
+            dx_prompts.get_ai_prompt_child_values("c", big, "T-CH")
         warnings = " ".join(self._levels("WARNING"))
         for tid in ("T-L1", "T-S2", "T-CH"):
             self.assertIn(tid, warnings)

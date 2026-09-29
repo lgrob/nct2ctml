@@ -11,7 +11,7 @@ from loguru import logger
 
 import config
 import src.mapping.diagnosis as diagnosis
-import utils.ai_helper as ai
+import utils.llm.prompts.diagnosis as dx_prompts
 
 logger.remove()
 
@@ -47,7 +47,7 @@ class TestPromptRule(unittest.TestCase):
     def test_only_labelled_adds_the_exclusion_rule(self):
         for mode, expected in (("legacy", False), ("inclusion_only", False), ("labelled", True)):
             with mock.patch.object(config, "DIAGNOSIS_INPUT", mode):
-                _, p = ai.get_ai_prompt_oncotree_diagnoses_from_trial_info(
+                _, p = dx_prompts.get_ai_prompt_oncotree_diagnoses_from_trial_info(
                     "x", ["Acute Myeloid Leukemia"], "T"
                 )
             self.assertEqual("excluded from the trial" in p, expected, mode)

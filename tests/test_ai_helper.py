@@ -14,7 +14,7 @@ import os
 import unittest
 
 import utils.reference_validation as rv
-from utils.ai_helper import get_child_level_diagnoses_from_condition
+from utils.llm.prompts.diagnosis import get_child_level_diagnoses_from_condition
 from utils.llm.prompts.genomic import get_inclusion_genomic_criteria
 
 

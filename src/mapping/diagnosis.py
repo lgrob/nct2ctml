@@ -10,7 +10,7 @@ Moved from src/clinical_trials_gov.py on 2026-09-29 (step 11, phase 2).
 from loguru import logger
 
 import src.trial_data_helper as tdh
-import utils.ai_helper as ai
+import utils.llm.prompts.diagnosis as dx_prompts
 import utils.oncotree as onct
 import utils.reference_validation as rv
 
@@ -32,7 +32,7 @@ def map_eligibility_criteria_to_oncotree_term(
     returned exactly that pair, with no error raised.
     """
     level_1_diagnosis, l1_to_all_mapping = onct.get_all_oncotree_data()
-    level1_oncotree_values_dict = ai.get_oncotree_diagnoses_from_trial_info(
+    level1_oncotree_values_dict = dx_prompts.get_oncotree_diagnoses_from_trial_info(
         nct_id, eligibility_criteria, level_1_diagnosis
     )
     level1_diagnoses = level1_oncotree_values_dict.get("oncotree_diagnoses", [])
@@ -64,7 +64,7 @@ def map_eligibility_criteria_to_oncotree_term(
         )
         return []
 
-    oncotree_diagnoses_result = ai.get_oncotree_diagnoses_from_trial_info(
+    oncotree_diagnoses_result = dx_prompts.get_oncotree_diagnoses_from_trial_info(
         nct_id, eligibility_criteria, all_level_oncotree_values
     )
     if oncotree_diagnoses_result and "oncotree_diagnoses" in oncotree_diagnoses_result.keys():
