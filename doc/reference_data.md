@@ -13,6 +13,10 @@ The files in `ref/`, where each comes from, and how they are checked. Moved from
 | `ref/synonym_collisions.tsv` | aliases claimed by more than one gene, quarantined rather than guessed. |
 | `ref/diagnosis_synonyms.tsv` | curated registry disease spellings that folding cannot reach, each with its reason. |
 | `ref/mane_genes.tsv` | symbol and HGNC id of every MANE Select v1.5 gene (19,364); validates fusion partners. Written by the same builder. |
+| `ref/diagnosis_text_terms.tsv` | how eligibility text names an Oncotree diagnosis, for text matching only (`src/text_rules.Reference.dx_terms`): the exclusion-only check and the review sheets. |
+| `ref/gene_rewrite_exclusions.tsv` | aliases `canonical_gene` must never rewrite to a panel gene although the synonym table maps them to one (JMML, CHOP, PD-1). |
+| `ref/translocation_fusions.tsv` | cytogenetic rearrangement to the gene pair it creates (`t(9;22)` to BCR::ABL1), each row with its reason; read by `utils/translocations.py`. |
+| `ref/local_trial_info.csv` | local protocol ids and PIs per trial; header-only for now, and the only route by which a closed trial is pulled. |
 | `ref/scope_overrides.tsv` | per-trial overrides of the map-time oncology scope filter, each with its reason. |
 | `ref/mane_select_proteins.tsv` | MANE Select GRCh38 v1.5 protein sequences for the panel and every histone H3 gene, with RefSeq and Ensembl accessions; the header records each source file's SHA-256. Rebuilt per MANE release with `python -m utils.build_protein_reference --release 1.5`. |
 

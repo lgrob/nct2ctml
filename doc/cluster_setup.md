@@ -69,11 +69,20 @@ Modelfile, but you must copy the manifests as well as the blobs.
 
 ## 3. Config
 
-    LLM_PLATFORM = "Ollama"
-    LLM_AI_MODEL = "gemma3:27b"
-    GPU_SERVER_HOSTNAME = "http://localhost"    # server runs in the same job
-    OLLAMA_NUM_CTX = 32768                      # 8192 was a 16 GB laptop limit
-    LLM_REQUEST_TIMEOUT_SECONDS = 300           # 1200 assumed 2.4 tok/s
+`config.py` stays as committed (the Anthropic backend); set the GPU backend
+in the job's environment instead, so the repository never says one thing
+while the cluster runs another:
+
+    export NCT2CTML_LLM_PLATFORM=Ollama
+    export NCT2CTML_LLM_AI_MODEL=llama3.3:70b      # or gemma3:27b; see doc/llm_backends.md
+    export NCT2CTML_OLLAMA_NUM_CTX=32768           # 8192 was a 16 GB laptop limit
+    export NCT2CTML_LLM_REQUEST_TIMEOUT_SECONDS=300  # 1200 assumed 2.4 tok/s
+
+`GPU_SERVER_HOSTNAME` already defaults to `http://127.0.0.1`, which is right
+for a server in the same job (`localhost` or `0.0.0.0` can be routed to a
+proxy; `config.py` says why). `scripts/run_ollama_mapping.sh` refuses to run
+unless the platform is Ollama, and exports the model it pulled. Every
+override is logged at startup and recorded in the run's `run.json`.
 
 `OLLAMA_NUM_CTX` matters: the longest criteria text in the corpus is ~4,900
 tokens before the prompt wrapper, gene list and oncotree terms are added, and

@@ -5,7 +5,7 @@ harness runs the pipeline over the same trials and scores the result, so the
 question "can the LLM curate CTML?" is settled with numbers rather than
 impressions.
 
-55 trials (50 from ClinicalTrials.gov, 5 from CTIS), spanning paediatric leukaemia, lymphoma, CNS tumours,
+56 trials (50 from ClinicalTrials.gov, 6 from CTIS; the sixth CTIS key was accepted through review on 2026-09-26), spanning paediatric leukaemia, lymphoma, CNS tumours,
 neuroblastoma, bone and soft-tissue sarcoma, renal, liver, germ cell,
 retinoblastoma, histiocytosis and tumour-agnostic baskets. 24 of the 50 carry
 a genomic criterion; the other 26 deliberately do not, because the commonest
@@ -81,9 +81,9 @@ for example, fails it: five ALL trials lose B-ALL, and population recall
 drops from 0.78 to 0.70.
 
 Every mode covers both registries: the 50 curated ClinicalTrials.gov keys and
-the 5 CTIS keys (EU CT numbers). `--source nct|ctis|all` (default `all`)
+the 6 CTIS keys (EU CT numbers). `--source nct|ctis|all` (default `all`)
 restricts a run to one registry. Each report row carries its registry, and
-the summary gives a mean for each, because 5 CTIS trials barely move the
+the summary gives a mean for each, because 6 CTIS trials barely move the
 overall mean. Conditions-only on 2026-09-24: NCT dx F1 0.74 (pop P 0.92,
 R 0.78); CTIS dx F1 0.17 (pop P 0.40, R 0.27). CTIS writes conditions as
 sentences ("Relapsed Acute Lymphoblastic Leukemia (ALL)"), so 3 of the 5

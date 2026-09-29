@@ -1,7 +1,7 @@
 # Development roadmap
 
-First written 2026-09-24 at commit `4f87483`. Updated 2026-09-24 at `8ecaef7`
-(branch `kispi-paediatric`, 19 commits ahead of `origin`, not pushed). Goal: a
+First written 2026-09-24 at commit `4f87483`. Status updated 2026-09-29
+(branch `kispi-paediatric`, pushed to `origin`). Goal: a
 versioned trial index that Kispi's genomics pipeline joins directly, good
 enough to support trial screening in a clinical setting.
 
@@ -27,17 +27,20 @@ Standing rules for every step:
 
 ---
 
-## Status on 2026-09-24
+## Status on 2026-09-29
 
 | Phase | State |
 |---|---|
-| 0 - Now | 0.3 done. **0.1 (push) is overdue:** 28 commits exist only on this machine. 0.2 and 0.4 open. |
+| 0 - Now | 0.1, 0.2 and 0.3 done. Open: 0.4 (live SDK smoke test, needs an API key). |
 | 1 - Deterministic fixes | 1.1-1.5, 1.7, 1.8, 1.9 done; 1.4b measured and not adopted. Open: 1.6 (curator time). |
 | 2 - Stage-2 diagnosis | Closed as measured: no narrowing arm (2.4) and no model swap (2.3, 2.6) beats production without losing curated diagnoses. Production stage 2 stays. Open: 2.7 (quote grounding) and optional 2.5. |
-| 3 - Full run | 3.0-3.2 done through the analysis environment (3.2: 1,171/1,171 trials, 1,021 mapped / 95 review / 55 reviewed, NCT recall 0.951; doc/runs/2026-09-25-3.2-full-run.md). 3.3 and 3.4 await the go-ahead; 0.4 (SDK smoke test) still needs an API key. |
-| 4-7 | Not started. 4.1-4.2 can start on synthetic fixtures at any time. |
+| 3 - Full run | 3.0-3.2 done: first full run 2026-09-25 (1,171/1,171 trials; doc/runs/2026-09-25-3.2-full-run.md), second 2026-09-28 at `d61a30c` on refreshed registries (1,080/1,080; 911 published, 169 in review; doc/runs/2026-09-28-3.2-second-full-run.md). 3.3: the release tool exists (`utils/release_index.py`), no release made yet. 3.4 awaits the go-ahead; 0.4 still needs an API key. |
+| 4-5 | Not started. 4.1-4.2 can start on synthetic fixtures at any time. |
+| 6 - Hardening | 6.3 done (CI); 6.2 tooling done, first release pending; 6.4 procedure written, not yet run on a real reference update; 6.6 run records done, `print()` in library code still open; 6.9 done. |
+| 7 | 7.7 done; the rest as capacity allows. |
 
-The offline suite has 431 tests (2 live-model tests are opt-in). Conditions-only
+The offline suite has 620 tests (2 live-model tests are opt-in); CI runs
+lint, types, tests and reference data on every push. Conditions-only
 benchmark: NCT diagnosis F1 0.74, population P 0.92 / R 0.78; CTIS diagnosis F1
 0.17. Production diagnosis path on Haiku (roadmap 1.9 baseline, 3 runs):
 population recall 0.942, precision 0.798, name F1 0.741.
@@ -48,7 +51,7 @@ population recall 0.942, precision 0.798, name F1 0.741.
 
 | # | Step | Done when |
 |---|---|---|
-| 0.1 | **Push `kispi-paediatric` to `origin`.** Do this first: the branch carries all of the Phase 1 and Phase 2 work. | `git status` shows the branch level with `origin`. |
+| 0.1 | **Done 2026-09-29.** `kispi-paediatric` pushed to `origin`. | `git status` shows the branch level with `origin`. |
 | 0.2 | **Done 2026-09-25.** Annotated tag `v0.1-prerun` on `cd51dd0`, with the 1.9 and 3.1 baseline numbers in the tag message. | Tag exists. Later benchmark deltas are quoted against it. |
 | 0.3 | **Done.** Mapping backend: Anthropic API, `claude-haiku-4-5-20251001`, forced-tool JSON, temperature 0, no thinking. Confirmed by 2.3 and 2.6. | Written in `config.py`; request shape tested offline. |
 | 0.4 | Live smoke test: map 3 benchmark trials with a real `ANTHROPIC_API_KEY` and compare with the benchmark scorer. This is the first live call through `utils/llm_platforms.py`; all measurements so far went through the replay harness. | 3 trials mapped, no API errors, cost per trial logged. |
@@ -112,7 +115,7 @@ the other arms from the part-1 cache).
 | 3.1 | **Done 2026-09-24** through the analysis environment's model access (no API key yet): 55/55, NCT diagnosis recall 0.938, gene F1 0.599, age F1 0.919, $0.10/trial at list price; found and fixed the H3 HGVS one-letter rejection. Originally: Dry run on the 55 benchmark trials with the final code and backend. | First real `bench/report.json` (replacing the identity calibration); cost and time per trial recorded; diagnosis recall within the 1.9 baseline range (0.942). | 0.4 |
 | 3.1a | Consider the Message Batches API for 3.2: asynchronous and cheaper per token than live calls, and the run does not need live answers. Needs a batch submit/collect path in `llm_platforms`. | Decision recorded with the cost difference. | 3.1 |
 | 3.2 | **Done 2026-09-25** (`2104df7`, doc/runs/2026-09-25-3.2-full-run.md), **re-run 2026-09-28** at `d61a30c` on refreshed registries (doc/runs/2026-09-28-3.2-second-full-run.md): 1,080/1,080, 0 failed calls, about $26; 911 published, 169 in review. First run: 1,171/1,171, 0 failed calls, about $85 at list price; three defects found and fixed. Full run: `map --all --source all` over the in-scope corpus (about 1,170 trials). | Every in-scope trial is in `cache/ctml` or `ctml/needs-review`; failures listed; enum-cap and off-list counts from the run log reported. | 3.1 |
-| 3.3 | Build the index from the three layers and tag it as the first release (`index-2026.MM.DD`) with its manifest. | Manifest checksums recorded; review-status counts reported. | 3.2 |
+| 3.3 | **Tooling done 2026-09-28** (`python -m utils.release_index create`; doc/index_guide.md). A release builds from `ctml/reviewed` only, with `--strict`, and is rebuildable from its tag. Still open: making the first one. Originally: build the index from the three layers and tag it as the first release (`index-2026.MM.DD`) with its manifest. | Manifest checksums recorded; review-status counts reported. | 3.2 |
 | 3.4 | Audit the run: count needs-review reasons (no diagnosis, unverified protein change, unsupported gene), fusion partners, out-of-scope skips, and spot-check **60** unreviewed trials at random against their text (decided 2026-09-25: 0 errors in 20 still allows up to ~14% at 95%, 0 in 60 about 5%). A first pass flags disagreements with the text; a curator decides each one. | Audit note in `doc/`, with an estimated error rate and its 95% interval for unreviewed rows. | 3.3 |
 
 If 2.7 lands before 3.2, it goes into the full run; it does not block it.
@@ -146,11 +149,11 @@ something a diagnostic lab can defend.
 | # | Step | Done when | Depends on |
 |---|---|---|---|
 | 6.1 | **Intended use statement:** the index is a screening aid; eligibility is decided on the protocol by a clinician. Agree the regulatory framing with QA **[D5]**. | Signed-off one-page document. | [D5] |
-| 6.2 | **Release process:** index releases are tagged and immutable, with a manifest (inputs, reference checksums, code commit, model id, benchmark scores). Reports cite a release. | Script produces a release; one release made. | 3.3 |
-| 6.3 | **Regression gates in CI:** offline suite, the `--conditions-only` benchmark at a floor (NCT F1 0.74), `build_trial_index --strict` on reviewed trials. | CI fails on a drop below the recorded floor. | - |
-| 6.4 | **Reference update procedure** for OncoTree, MANE (`build_protein_reference`), the panel, the synonym tables, the rewrite exclusions and the translocation table: rebuild, diff, benchmark, release. | Written procedure; one dry run on the next MANE release. | - |
+| 6.2 | **Tooling done 2026-09-28** (`utils/release_index.py`: clean-tree check, strict reviewed-only build, `release.json` with input and output hashes, reproducible archive, tag recording its hash, `verify --rebuild`); no release made yet. Originally: **Release process:** index releases are tagged and immutable, with a manifest (inputs, reference checksums, code commit, model id, benchmark scores). Reports cite a release. | Script produces a release; one release made. | 3.3 |
+| 6.3 | **Done 2026-09-28.** `.github/workflows/`: lint, types (mypy), tests on 3.12 and 3.13 with the model-free benchmark compared per trial against `bench/baseline_conditions_nct.json`, a strict reviewed-only build (inside the release tests), and reference data. Originally: **Regression gates in CI:** offline suite, the `--conditions-only` benchmark at a floor (NCT F1 0.74), `build_trial_index --strict` on reviewed trials. | CI fails on a drop below the recorded floor. | - |
+| 6.4 | **Procedure written 2026-09-28** (CONTRIBUTING.md, "Changing reference data"; `ref/SOURCES.tsv` and `utils/verify_refs.py`); the dry run on the next MANE release is still open. Originally: **Reference update procedure** for OncoTree, MANE (`build_protein_reference`), the panel, the synonym tables, the rewrite exclusions and the translocation table: rebuild, diff, benchmark, release. | Written procedure; one dry run on the next MANE release. | - |
 | 6.5 | **Test coverage** for `src/clinical_trials_gov.py`, `src/ctis.py`, `utils/llm_platforms.py` (mocked model). | Each has tests on its main paths. | - |
-| 6.6 | **Logging:** replace the `print()` calls in library code with loguru at levels; keep one run log per mapping run with the model id and prompt versions. | No `print` in `src/`/`utils/` library paths; the run log is archived with each release. | - |
+| 6.6 | **Half done 2026-09-28:** every run writes `runs/<run_id>/run.json` (model, prompt variants, overrides, reference hashes) and records every model call (doc/provenance.md). Still open: the `print()` calls in library code. Originally: **Logging:** replace the `print()` calls in library code with loguru at levels; keep one run log per mapping run with the model id and prompt versions. | No `print` in `src/`/`utils/` library paths; the run log is archived with each release. | - |
 | 6.7 | **Remove upstream leftovers:** MatchMiner-only schema fields, Hong Kong recruitment text, and the README's `ctml/pending` hand-authoring path if local trials are not planned. | Leftovers gone, README and workflow diagram updated, tests green. | - |
 | 6.8 | **Harness in the repo:** move the replay harness (`stage2_harness_v3`) into `bench/replay/` with its caches' checksums, so every Phase 2 number can be re-run from the repository. | `python -m bench.replay --arm baseline` reproduces a recorded replicate from its cache exactly. | - |
 
@@ -185,7 +188,7 @@ something a diagnostic lab can defend.
 
 ## Suggested order
 
-1. 0.1 (push) now, then 0.2.
+1. ~~0.1 (push), then 0.2~~ - done.
 2. 0.4 (needs the API key).
 3. 3.1 dry run, then 3.2-3.4.
 4. 2.7 alongside 3.1, entering the full run only if it is measured in time.

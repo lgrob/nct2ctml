@@ -1,7 +1,7 @@
 # How eligibility text names an Oncotree diagnosis, for TEXT MATCHING ONLY.
 # Tab-delimited: Oncotree display name, term, why.
 #
-# Used by utils/review_helper (Reference.dx_terms): the exclusion-diagnosis
+# Used by src/text_rules.py (Reference.dx_terms): the exclusion-diagnosis
 # check, the re-map recall guard and the review sheets. The mapper never reads
 # this file, so no mapping changes when a row is added. Singular/plural, an
 # apostrophe and British spelling are handled in code and need no row.

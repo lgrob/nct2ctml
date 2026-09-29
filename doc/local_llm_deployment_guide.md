@@ -1,5 +1,11 @@
 # Local LLM Deployment Guide
 
+> Upstream's guide for its own GPU server at HKU, kept as upstream wrote it.
+> For this fork: the production backend is the Anthropic API
+> ([llm_backends.md](llm_backends.md)), and a GPU cluster run is described
+> in [cluster_setup.md](cluster_setup.md). Where this guide says to set a
+> variable in `config.py`, `NCT2CTML_<NAME>` in the environment does the same.
+
 This document collects commands for running several local LLMs on GPU02 (gpu02.sbms.hku.hk).
 
 ## 1. `sglang` server (Qwen 3.5 35B, GPTQ Int4)
