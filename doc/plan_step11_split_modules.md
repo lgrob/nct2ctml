@@ -148,7 +148,7 @@ Done 2026-09-29, in 8 commits, each checked with the snapshot:
 
 ## Phase 2: `src/clinical_trials_gov.py` - registry-independent code gets a home (about half a day)
 
-- [ ] **2.1 Move the logic both registries share to `src/mapping/`:**
+- [x] **2.1 Move the logic both registries share to `src/mapping/`:**
   - `diagnosis.py`: `seed_and_map_diagnosis`, `basket_wildcards`,
     `_basket_wildcards`, `map_eligibility_criteria_to_oncotree_term`,
     `map_global_diagnosis_to_oncotree_term`, `diagnosis_text`;
@@ -159,29 +159,40 @@ Done 2026-09-29, in 8 commits, each checked with the snapshot:
 
   `src/ctis.py`, the benchmark and `utils/oncology_scope.py` then import
   from `src/mapping/`, not from the NCT module.
-- [ ] **2.2** `src/clinical_trials_gov.py` keeps what reads a
+- [x] **2.2** `src/clinical_trials_gov.py` keeps what reads a
   ClinicalTrials.gov document: general fields, ages from the structured
   fields, biomarker fields, prior treatment, and the `map_nct_to_ctml`
   orchestration. About 550 lines.
-- [ ] **2.3 Teach `scripts/merge_upstream.py` about the moves.** A small
+- [x] **2.3 Teach `scripts/merge_upstream.py` about the moves.** A small
   table of which upstream function now lives where, so that a conflict in a
   moved function names the file to carry the change to.
 
 **Done when** `src/ctis.py` does not import `src.clinical_trials_gov`, and
 the snapshot is unchanged.
 
+Done 2026-09-29.
+- `src/mapping/diagnosis.py`, `genomic.py` and `biomarkers.py`.
+- `split_inclusion_exclusion_criteria` and `exclusion_heading` stayed in the
+  NCT module: the first reads the ClinicalTrials.gov document (CTIS has its
+  own), and the second has no other caller. So there is no
+  `criteria_text.py`.
+- `clinical_trials_gov.py` is 811 lines, not the estimated 550. The
+  general-field and arm-level mapping that stays there is all NCT-specific.
+- 2.3 has no table: `merge_upstream.py` finds where each changed function
+  lives by scanning the tree.
+
 ## Phase 3: `utils/ai_helper.py` - one module per prompt (about a day)
 
-- [ ] **3.1 Transport first,** as `utils/llm/transport.py`: the platform
+- [x] **3.1 Transport first,** as `utils/llm/transport.py`: the platform
   instance, `send_ai_request` with its call recording, and
   `parse_ai_response`. Every prompt module calls it through the module
   (`transport.send_ai_request(...)`), so one patch target covers all
   prompts. Move the test and probe patches to it in the same commit.
-- [ ] **3.2 Schema machinery** as `utils/llm/schema.py`: `max_enum_values`,
+- [x] **3.2 Schema machinery** as `utils/llm/schema.py`: `max_enum_values`,
   `ENUM_CAP_EVENTS`, `OFF_LIST_EVENTS`, `OFF_LIST_BY_TRIAL`,
   `keep_candidates`, `_one_of`, `prompt_list`, `diagnosis_prompt_list`. The
   counters are module state, so they must live in exactly one module.
-- [ ] **3.3 One module per prompt family,** each with its prompt text,
+- [x] **3.3 One module per prompt family,** each with its prompt text,
   schema and calling wrapper next to each other:
   `utils/llm/prompts/diagnosis.py` (level 1, Oncotree, child values),
   `biomarkers.py` (HER2/ER/PR, PD-L1, MMR, disease status), `age.py`,
@@ -189,11 +200,29 @@ the snapshot is unchanged.
   `ROLE_DROPS`), and `enrichment.py` (mutation and CNV detail, the
   `has_*_details` checks, `merge_enriched_criteria`). One commit per family.
   Every prompt's text must stay byte-identical, which the snapshot checks.
-- [ ] **3.4 Remove `utils/ai_helper.py`** once nothing imports it. About 20
+- [x] **3.4 Remove `utils/ai_helper.py`** once nothing imports it. About 20
   names are used by `src/`; update those imports in the same commit.
 
 **Done when** no prompt module exceeds about 300 lines, `ai_helper.py` is
 gone, and the snapshot is unchanged.
+
+Done 2026-09-29.
+- `utils/llm/transport.py`, `schema.py` and `prompts/{diagnosis, biomarkers,
+  age, arms, genomic, enrichment}.py`; `ai_helper.py` removed.
+- Over the 300-line target: `genomic.py` (337) and `enrichment.py` (479).
+  Each is one prompt family with long prompt text, left whole.
+- Found on the way, each fixed in its own commit:
+  - `ROLE_DROPS` stopped reaching the trial after the genomic move, through
+    a `hasattr(ai_helper, ...)` the move tool could not see (fixed in
+    `e886db1`; no map run was affected). The snapshot missed it because the
+    stub model named no gene. The stub now answers TP53, and with it the
+    whole of phases 2 and 3 was checked against `c00f5a3`: identical for
+    all 1,180 trials.
+  - `test_genomic_prompt_variants` leaked its stub into later tests once a
+    reload no longer undid it.
+  - The probes' platform refusal pointed at the old module and would have
+    guarded nothing.
+  - A stale open issue: the arm prompt already has a schema.
 
 ## Decisions to take before starting
 

@@ -129,7 +129,7 @@ than against either rule, so the benchmark's age column measures this honestly:
 expect about 0.76, with 11 of the 16 disagreements being exactly this.
 
 **Addressed 2026-09-23** together with the next entry: the model now reads
-both bounds from the inclusion text (`utils.ai_helper.get_age_bounds`), and
+both bounds from the inclusion text (`utils.llm.prompts.age.get_age_bounds`), and
 a structured maximum is narrowed to `<N` when the prose states an exclusive
 bound at the same N (`utils/age_bounds.py`). Measured with the production
 prompt on claude-haiku-4-5 over the 50 NCT keys: age F1 **0.763 -> 0.919**,
@@ -406,7 +406,7 @@ See "The rewrite set is narrower than it needs to be" below.
 *Addressed 2026-09-24: the cap is set per backend and logged when it fires
 (doc/changelog.md). On the benchmark it never fired (max 370). Open: without
 `strict`, the Anthropic enum is advisory; see roadmap 1.8.*
-`utils/ai_helper._MAX_ENUM_VALUES` drops the enum from a schema above 400
+`utils/llm/schema.max_enum_values()` drops the enum from a schema above 400
 candidates, on the reasoning that llama.cpp compiles `format` into a grammar
 and hundreds of alternatives are slow to build. The threshold has never been
 measured on a GPU. With the branch floor now unioning several Oncotree

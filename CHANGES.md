@@ -44,6 +44,10 @@ A summary. Each item is in the changelog unless a decision or run is named.
     and can be replayed.
   - The environment is pinned (`pyproject.toml`, `requirements.lock`).
   - The reference data is pinned by hash (`ref/SOURCES.tsv`).
+- **Code layout.** Mapping shared by both registries is in `src/mapping/`,
+  the model code in `utils/llm/` (which replaced `utils/ai_helper.py`), the
+  rules the mapper applies after the model in `src/text_rules.py`, and the
+  review tool in `utils/review/`.
 - **Tooling.** ruff lint and format, and CI running lint, tests, reference
   data and a benchmark regression check. `scripts/merge_upstream.py` merges
   upstream past the reformat.

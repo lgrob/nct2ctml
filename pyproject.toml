@@ -29,7 +29,7 @@ line-length = 100
 select = ["F", "E", "W", "B", "I", "UP"]
 # Line length and whitespace are the formatter's job. What it leaves is inside
 # strings: long lines, and trailing whitespace in the prompts of
-# utils/ai_helper.py, where removing it would change what the model is asked.
+# utils/llm/prompts/, where removing it would change what the model is asked.
 ignore = ["E501", "W291", "W293"]
 
 [tool.ruff.lint.per-file-ignores]

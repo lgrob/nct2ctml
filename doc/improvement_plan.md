@@ -142,8 +142,9 @@ Baseline at the time of the review: 543 offline tests pass in ~13 s
   - `scripts/run_ollama_mapping.sh` now exports the model it pulled.
   - `config.py` went from 278 to 238 lines.
 
-- [ ] **11. Split the largest modules as they are touched, not in one rewrite.**
-  Broken down in [plan_step11_split_modules.md](plan_step11_split_modules.md).
+- [x] **11. Split the largest modules as they are touched, not in one rewrite.**
+  Broken down in [plan_step11_split_modules.md](plan_step11_split_modules.md);
+  all four phases done 2026-09-29.
   - `utils/review_helper.py` (1,448 lines; `analyse` and `main` are the most
     complex functions) -> e.g. `review/cli.py`, `review/checks.py`,
     `review/sheets.py`

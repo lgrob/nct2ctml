@@ -2,6 +2,42 @@
 
 What changed in this fork after the initial retargeting, newest first. Moved from CHANGES.md on 2026-09-28 (improvement plan step 13); the entries are unchanged. Measured decisions are in [decisions/](decisions/), mapping runs and queue reviews in [runs/](runs/).
 
+## Registry-shared mapping and the model code split out (step 11, phases 2-3, 2026-09-29)
+
+- **`src/mapping/`** (new) holds what both registries share: the diagnosis
+  path (`seed_and_map_diagnosis`, the two-stage Oncotree mapping, baskets,
+  `diagnosis_text`), genomic criteria, and biomarker status. `src/ctis.py`
+  no longer imports the ClinicalTrials.gov module for them.
+  `clinical_trials_gov.py` went from 1,301 to 811 lines; everything left
+  reads the NCT document.
+- **`utils/llm/`** (new) replaces `utils/ai_helper.py`, now removed:
+  - `transport.py` (platform, `send_ai_request` with recording,
+    `parse_ai_response`);
+  - `schema.py` (enum cap, candidate checks, prompt list order);
+  - `prompts/` with one module per family: diagnosis, biomarkers, age,
+    arms, genomic, enrichment.
+
+  Tests and probes stub the model in one place, `utils.llm.transport`.
+- **`scripts/merge_upstream.py`** names, for each function upstream changed
+  in a conflicted file, where it lives in this fork now.
+- **How it was checked.** Every move was verbatim and snapshot-checked. At
+  the end, the whole of phases 2 and 3 was compared with `c00f5a3` under a
+  stub model that names a gene: identical output for all 1,180 trials and
+  identical prompts for the 57 curated ones.
+- **Found and fixed:**
+  - Genes kept out of the match tree were not recorded after the genomic
+    prompt move (`e886db1`; no map run used it). The mapper tested
+    `hasattr(ai_helper, "ROLE_DROPS")`, which the move tool could not see,
+    and the old stub model never produced a gene, so the snapshot could
+    not see it either. The stub now answers TP53, and a test covers the
+    hook.
+  - A prompt-variant test leaked its stub model into every later test once
+    a reload no longer undid it; the offline guard test caught it.
+  - The probes' "refuse to send" platform pointed at the old module and
+    would have guarded nothing.
+  - `doc/open_issues.md` still listed the arm prompt as schema-less; it has
+    a schema.
+
 ## config.py: overridable settings, catalogue moved out (improvement plan step 10, 2026-09-29)
 
 - **Overrides.** Every tunable setting can be set as `NCT2CTML_<NAME>`: 17 of

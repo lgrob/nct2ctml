@@ -53,7 +53,7 @@ pip install pre-commit && pre-commit install   # run both on every commit
 git config blame.ignoreRevsFile .git-blame-ignore-revs   # blame past the reformat
 ```
 
-Trailing whitespace inside the prompt strings of `utils/ai_helper.py` is
+Trailing whitespace inside the prompt strings of `utils/llm/prompts/` is
 deliberately left alone (`W291`/`W293` are ignored): removing it would change
 what the model is asked.
 
