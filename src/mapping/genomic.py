@@ -19,7 +19,7 @@ def map_ctml_match_genomic_criteria(
     gene_synonym_mapping: dict[str, list[str]],
     inclusion_text: str,
     exclusion_text: str,
-):
+) -> dict:
     """
     Map genomic criteria out of free-text eligibility.
 

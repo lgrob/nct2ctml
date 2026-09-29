@@ -153,9 +153,19 @@ Baseline at the time of the review: 543 offline tests pass in ~13 s
 
   The existing tests make this safe.
 
-- [ ] **12. Type hints at module boundaries.**
+- [x] **12. Type hints at module boundaries.**
   Mapper inputs/outputs, index rows, the platform interface. Then `mypy` or
   `pyright` on `src/` and `utils/` in CI, starting non-strict.
+
+  Done 2026-09-29 with mypy 2.3.1 (pinned in `requirements-dev.txt`; CI job
+  `types`).
+  - The 43 findings on the code as it stood were fixed, all annotation
+    mismatches rather than behaviour bugs. `ArmCriteriaText` carried a
+    method, which a TypedDict cannot, and it became a function.
+  - Boundaries annotated: the transport, `src/mapping/`, `src/text_rules`,
+    and the index rows as TypedDicts, which the column lists are now
+    derived from.
+  - Next level: `check_untyped_defs` (136 findings today).
 
 ## Phase 3 - Documentation
 

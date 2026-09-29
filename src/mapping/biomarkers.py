@@ -30,7 +30,7 @@ def _map_biomarker_statuses(
     return status_dict
 
 
-def map_her2_er_pr_status(nct_id: str, eligibilityCriteria: str, keywords: list):
+def map_her2_er_pr_status(nct_id: str, eligibilityCriteria: str, keywords: list) -> dict:
     result = biomarker_prompts.get_her2_er_pr_status(nct_id, eligibilityCriteria, keywords)
     filtered_her2_er_pr_dict = {
         k: v
@@ -40,7 +40,7 @@ def map_her2_er_pr_status(nct_id: str, eligibilityCriteria: str, keywords: list)
     return filtered_her2_er_pr_dict
 
 
-def map_pdl1_status(nct_id: str, eligibilityCriteria: str, keywords: list):
+def map_pdl1_status(nct_id: str, eligibilityCriteria: str, keywords: list) -> dict:
     contains_pdl1_info = mcm.check_if_eligibility_criteria_contains_pdl1_info(
         keywords, eligibilityCriteria
     )
@@ -53,7 +53,7 @@ def map_pdl1_status(nct_id: str, eligibilityCriteria: str, keywords: list):
     return {}
 
 
-def map_mmr_ms_status(nct_id: str, eligibilityCriteria: str, keywords: list):
+def map_mmr_ms_status(nct_id: str, eligibilityCriteria: str, keywords: list) -> dict:
     filtered_mmr_ms_status_dict = {}
     contains_mmr_info = mcm.check_if_eligibility_criteria_contains_mmr_info(
         keywords, eligibilityCriteria
@@ -77,6 +77,6 @@ def map_mmr_ms_status(nct_id: str, eligibilityCriteria: str, keywords: list):
     return filtered_mmr_ms_status_dict
 
 
-def map_disease_status(nct_id: str, eligibilityCriteria: str, keywords: list):
+def map_disease_status(nct_id: str, eligibilityCriteria: str, keywords: list) -> dict:
     result = biomarker_prompts.get_disease_status(nct_id, eligibilityCriteria, keywords)
     return result

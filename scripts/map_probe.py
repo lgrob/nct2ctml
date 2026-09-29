@@ -36,7 +36,7 @@ from src.trial_map_manager import TrialMapManager
 def main(out_path, ids):
     refuse_real_platform(transport)
     transport.send_ai_request = lambda id, prompt, json_schema=None: fake(json_schema or {})
-    transport.parse_ai_response = lambda response, trial_id="": response
+    transport.parse_ai_response = lambda ai_response, trial_id="": ai_response
     tdh.print = lambda *a, **k: None  # save_to_file echoes every YAML
     config.RUNS_PATH = None
     out = {}

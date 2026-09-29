@@ -2,6 +2,35 @@
 
 What changed in this fork after the initial retargeting, newest first. Moved from CHANGES.md on 2026-09-28 (improvement plan step 13); the entries are unchanged. Measured decisions are in [decisions/](decisions/), mapping runs and queue reviews in [runs/](runs/).
 
+## Type checking with mypy (improvement plan step 12, 2026-09-29)
+
+- **mypy, non-strict**, on `main.py`, `config.py`, `src/`, `utils/`, `bench/`
+  and `scripts/`. The configuration is in `pyproject.toml`, and
+  `explicit_package_bases` is needed because two modules are named
+  `biomarkers`. mypy and the PyYAML and requests stubs are pinned in
+  `requirements-dev.txt`, and CI has a new `types` job, checked in a fresh
+  3.12 environment from the lock.
+- **The 43 findings on the existing code** were annotations that did not
+  match what the code does: empty containers, `None` defaults, a parameter
+  that takes a list or a dict, an optional client. None changed behaviour.
+  Three small code changes came with them:
+  - `ArmCriteriaText.get_combined_eligibility_text` became
+    `match_criteria_mapper.combined_eligibility_text(arm)`, because a
+    TypedDict cannot carry methods.
+  - `read_from_file` and `read_from_file_path` raise for a format other than
+    json, instead of returning `None` to a caller that indexed it.
+  - `map_gender` returns `""` rather than `{}` for an unmapped sex; output is
+    identical.
+- **Boundaries annotated:** `utils.llm.transport`, `src/mapping/`, and the
+  public functions of `src/text_rules.py`. The index rows are TypedDicts
+  (`TrialRow`, `DiagnosisRow`, `GenomicRow`), and the column lists are
+  derived from them; `tests/test_index_rows.py` checks that a built index
+  has exactly those columns. On a scratch file, mypy flagged a wrong
+  argument type, a wrong schema type, a set method called on the returned
+  list, and an index row missing its columns.
+- **Next level:** `check_untyped_defs`, which reports 136 findings today (43
+  in `utils/provenance.py`).
+
 ## Registry-shared mapping and the model code split out (step 11, phases 2-3, 2026-09-29)
 
 - **`src/mapping/`** (new) holds what both registries share: the diagnosis

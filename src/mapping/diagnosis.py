@@ -7,6 +7,8 @@ diagnosis step is given (diagnosis_text, per config.DIAGNOSIS_INPUT).
 Moved from src/clinical_trials_gov.py on 2026-09-29 (step 11, phase 2).
 """
 
+from collections.abc import Iterable
+
 from loguru import logger
 
 import src.trial_data_helper as tdh
@@ -16,8 +18,8 @@ import utils.reference_validation as rv
 
 
 def map_eligibility_criteria_to_oncotree_term(
-    nct_id: str, eligibility_criteria: str, seed_terms=()
-) -> list:
+    nct_id: str, eligibility_criteria: str, seed_terms: Iterable[str] = ()
+) -> list[str]:
     """
     Two-stage mapping: pick level_1 nodes, then pick children within them.
 
@@ -182,7 +184,9 @@ def diagnosis_text(
     return legacy
 
 
-def seed_and_map_diagnosis(trial_id: str, conditions_list, eligibility_criteria: str = ""):
+def seed_and_map_diagnosis(
+    trial_id: str, conditions_list: Iterable[str] | None, eligibility_criteria: str = ""
+) -> tuple[list[str], list[str]]:
     """
     The diagnosis path both registries share: read the conditions, then ask
     the model with them as a floor. Returns (seeded, from_eligibility).
@@ -241,6 +245,6 @@ def seed_and_map_diagnosis(trial_id: str, conditions_list, eligibility_criteria:
     return seeded, from_eligibility
 
 
-def basket_wildcards(conditions_list, trial_id: str = "") -> set:
+def basket_wildcards(conditions_list: Iterable[str] | None, trial_id: str = "") -> set[str]:
     """Public name for the basket rule, so CTIS need not reach for a private one."""
     return _basket_wildcards(conditions_list, trial_id)

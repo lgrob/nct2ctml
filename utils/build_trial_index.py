@@ -99,6 +99,7 @@ import sys
 from collections import Counter
 from datetime import UTC, datetime
 from functools import lru_cache
+from typing import TypedDict, cast
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -120,60 +121,83 @@ LIQUID_ROOTS = frozenset({"Lymphoid", "Myeloid"})
 
 _AGE_BOUND = re.compile(r"^\s*(>=|<=|>|<)\s*([0-9]*\.?[0-9]+)\s*$")
 
-DIAGNOSIS_COLUMNS = [
-    "trial_id",
-    "arm_code",
-    "oncotree_code",
-    "oncotree_name",
-    "source_term",
-    "from_basket",
-    "include",
-]
-GENOMIC_COLUMNS = [
-    "trial_id",
-    "arm_code",
-    "hugo_symbol",
-    "variant_category",
-    "cnv_call",
-    "protein_change",
-    "protein_change_stated",
-    "protein_change_kind",
-    "protein_refseq",
-    "protein_ensembl",
-    "protein_check",
-    "fusion_partner",
-    "fusion",
-    "fusion_partner_check",
-    "gene_check",
-    "variant_classification",
-    "include",
-]
-TRIAL_COLUMNS = [
-    "trial_id",
-    "source",
-    "nct_id",
-    "protocol_no",
-    "short_title",
-    "phase",
-    "status",
-    "review_status",
-    "reviewed",
-    "source_file",
-    "layer_conflict",
-    "age_label",
-    "age_min",
-    "age_min_inclusive",
-    "age_max",
-    "age_max_inclusive",
-    "n_diagnosis_codes",
-    "n_genes",
-    "genes_not_required",
-    "mapped_at",
-    "mapped_run",
-    "mapped_commit",
-    "llm_model",
-    "prompt_settings",
-]
+
+class DiagnosisRow(TypedDict):
+    """One row of trial_diagnosis.tsv: a trial, an arm and an Oncotree node it matches."""
+
+    trial_id: str
+    arm_code: str
+    oncotree_code: str
+    oncotree_name: str
+    source_term: str
+    from_basket: int
+    include: int
+
+
+class GenomicRow(TypedDict, total=False):
+    """
+    One row of trial_genomic.tsv: a trial, an arm and one gene criterion.
+    total=False because index_trial fills the criterion's own fields and
+    build() adds the checked protein change fields afterwards
+    (_normalise_protein_changes); every key is present in the written file.
+    """
+
+    trial_id: str
+    arm_code: str
+    hugo_symbol: str
+    variant_category: str
+    cnv_call: str
+    protein_change: str
+    protein_change_stated: str
+    protein_change_kind: str
+    protein_refseq: str
+    protein_ensembl: str
+    protein_check: str
+    fusion_partner: str
+    fusion: str
+    fusion_partner_check: str
+    gene_check: str
+    variant_classification: str
+    include: int
+
+
+class TrialRow(TypedDict, total=False):
+    """
+    One row of trials.tsv. total=False because index_trial fills the trial's
+    own fields and build() adds the review status, source file and layer
+    conflict afterwards; every key is present in the written file.
+    """
+
+    trial_id: str
+    source: str
+    nct_id: str
+    protocol_no: str
+    short_title: str
+    phase: str
+    status: str
+    review_status: str
+    reviewed: int
+    source_file: str
+    layer_conflict: str
+    age_label: str
+    age_min: float | str
+    age_min_inclusive: int | str
+    age_max: float | str
+    age_max_inclusive: int | str
+    n_diagnosis_codes: int
+    n_genes: int
+    genes_not_required: str
+    mapped_at: str
+    mapped_run: str
+    mapped_commit: str
+    llm_model: str
+    prompt_settings: str
+
+
+# The column order of each table is the field order of its row type.
+DIAGNOSIS_COLUMNS = list(DiagnosisRow.__annotations__)
+GENOMIC_COLUMNS = list(GenomicRow.__annotations__)
+TRIAL_COLUMNS = list(TrialRow.__annotations__)
 
 # Input layers, lowest precedence first. The status says what a row is worth:
 # `reviewed` was signed off by a curator, `needs_review` is machine output the
@@ -433,7 +457,9 @@ def _fusion_fields(leaf):
     return {"fusion_partner": "", "fusion": "", "fusion_partner_check": ""}
 
 
-def index_trial(trial_id, trial, descendants, solid, liquid, name_to_code):
+def index_trial(
+    trial_id, trial, descendants, solid, liquid, name_to_code
+) -> tuple[TrialRow, list[DiagnosisRow], list[GenomicRow]]:
     """(trial_row, diagnosis_rows, genomic_rows) for one curated trial."""
     diagnoses, genomics, ages = [], [], []
 
@@ -497,14 +523,15 @@ def index_trial(trial_id, trial, descendants, solid, liquid, name_to_code):
     # include = 0. Before 2026-09-26 the "!" term was looked up as a name,
     # found nothing, and was published as an eligible diagnosis called
     # "!APL with PML-RARA" (none of the curated trials used one yet).
-    excluded_by_arm = {}
+    excluded_by_arm: dict[str, dict[str, str]] = {}
     for arm_code, term in diagnoses:
         if str(term).startswith("!"):
             name = str(term)[1:]
             excluded_by_arm.setdefault(arm_code, {}).update(
                 {m: str(term) for m in descendants.get(name, {name})}
             )
-    diagnosis_rows, seen = [], set()
+    diagnosis_rows: list[DiagnosisRow] = []
+    seen: set = set()
     for arm_code, term in diagnoses:
         if str(term).startswith("!"):
             continue
@@ -548,16 +575,18 @@ def index_trial(trial_id, trial, descendants, solid, liquid, name_to_code):
                 }
             )
 
-    genomic_rows, seen_genomic = [], set()
+    genomic_rows: list[GenomicRow] = []
+    seen_genomic: set = set()
     for row in genomics:
         key = tuple(sorted(row.items()))
         if key in seen_genomic:
             continue
         seen_genomic.add(key)
-        genomic_rows.append({"trial_id": trial_id, **row})
+        # on_leaf builds the criterion fields; the protein fields come later.
+        genomic_rows.append(cast(GenomicRow, {"trial_id": trial_id, **row}))
 
     low, low_incl, high, high_incl = _parse_age_bounds(ages)
-    trial_row = {
+    trial_row: TrialRow = {
         "trial_id": trial_id,
         "source": "CTIS" if not str(trial.get("nct_id") or "").startswith("NCT") else "CTGOV",
         "nct_id": trial.get("nct_id") or "",

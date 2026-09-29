@@ -53,6 +53,34 @@ pip install pre-commit && pre-commit install   # run both on every commit
 git config blame.ignoreRevsFile .git-blame-ignore-revs   # blame past the reformat
 ```
 
+## Types
+
+mypy checks `src/`, `utils/`, `bench/`, `scripts/`, `main.py` and
+`config.py` (settings in `pyproject.toml`), in CI's `types` job and
+locally:
+
+```bash
+./.venv/bin/pip install -r requirements-dev.txt
+mypy
+```
+
+It is non-strict: a function with annotations has its body checked, and
+one without is skipped. The boundaries are annotated, so a wrong argument
+there is an error:
+- the model transport (`utils.llm.transport.send_ai_request`,
+  `parse_ai_response`);
+- the shared mapping (`src/mapping/`);
+- the mapper's rules (`src/text_rules.py`);
+- the index rows, as TypedDicts in `utils/build_trial_index.py`. The column
+  lists are derived from them, so a new column is added to the row type.
+
+Annotate what you add, at least its signature. Turning on
+`check_untyped_defs` would check every function; it reports 136 findings
+today, 43 of them in `utils/provenance.py`. That is the next step, not a
+requirement yet.
+
+## Linting notes
+
 Trailing whitespace inside the prompt strings of `utils/llm/prompts/` is
 deliberately left alone (`W291`/`W293` are ignored): removing it would change
 what the model is asked.

@@ -93,6 +93,12 @@ class TestEnvironment(unittest.TestCase):
         with open(os.path.join(ROOT, ".github", "workflows", "lint.yml")) as handle:
             self.assertIn("pip install -r requirements-dev.txt", handle.read())
 
+    def test_mypy_and_its_stubs_are_pinned(self):
+        with open(os.path.join(ROOT, "requirements-dev.txt")) as handle:
+            text = handle.read()
+        for name in ("mypy", "types-PyYAML", "types-requests"):
+            self.assertRegex(text, rf"(?m)^{name}==[0-9.]+$", name)
+
 
 if __name__ == "__main__":
     unittest.main()

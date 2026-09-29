@@ -11,6 +11,7 @@ Moved from utils/ai_helper.py on 2026-09-29 (step 11, phase 3.1).
 
 import json
 import time
+from typing import Any
 
 import requests
 from loguru import logger
@@ -27,11 +28,11 @@ _llm_platform = create_llm_platform(
 )
 
 
-def parse_ai_response(ai_response, trial_id=""):
+def parse_ai_response(ai_response: Any, trial_id: str = "") -> Any:
     return _llm_platform.parse_response(ai_response, trial_id)
 
 
-def send_ai_request(id, prompt, json_schema=None):
+def send_ai_request(id: str, prompt: str, json_schema: dict[str, Any] | None = None) -> Any:
     """
     Send AI request using the configured platform. Inside a run
     (utils/provenance.start_run) the call is recorded, answer or error.
@@ -54,7 +55,7 @@ def send_ai_request(id, prompt, json_schema=None):
     return ai_response
 
 
-def _send_ai_request(id, prompt, json_schema=None):
+def _send_ai_request(id: str, prompt: str, json_schema: dict[str, Any] | None = None) -> Any:
     # Hosted platforms (e.g. Anthropic) own their transport and auth via an
     # official SDK, so they expose send() instead of going through the
     # unauthenticated hostname:port POST used by the self-hosted platforms.

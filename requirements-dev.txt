@@ -6,3 +6,8 @@ ruff==0.16.5
 # Validates the prompt schemas in tests/test_enrichment_schema.py, which
 # skips without it. Test-only; the pipeline never imports it.
 jsonschema==4.26.0
+# Type checking (pyproject.toml [tool.mypy]); CI's types job. The stubs are
+# the type information PyYAML and requests do not ship themselves.
+mypy==2.3.1
+types-PyYAML==6.0.12.20260906
+types-requests==2.33.0.20260906

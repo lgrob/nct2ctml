@@ -24,7 +24,7 @@ def send(id, prompt, json_schema=None):
 
 refuse_real_platform(transport)
 transport.send_ai_request = send
-transport.parse_ai_response = lambda r, trial_id="": r
+transport.parse_ai_response = lambda ai_response, trial_id="": ai_response
 
 import src.mapping.genomic as genomic
 from src.trial_map_manager import TrialMapManager

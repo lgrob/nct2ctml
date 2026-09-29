@@ -1,6 +1,6 @@
-# Lint and format check. The ruff version comes from requirements-dev.txt,
-# the rules from pyproject.toml, so this runs exactly what `ruff check .`
-# and `ruff format --check .` run locally.
+# Lint, format and type check. Tool versions come from requirements-dev.txt,
+# their settings from pyproject.toml, so this runs exactly what `ruff check .`,
+# `ruff format --check .` and `mypy` run locally.
 name: lint
 
 on:
@@ -23,3 +23,16 @@ jobs:
         run: ruff check --output-format=github .
       - name: ruff format
         run: ruff format --check --diff .
+
+  # Type check (pyproject.toml [tool.mypy], non-strict: annotated functions
+  # are checked). Needs the project's packages installed, for their types.
+  types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.lock -r requirements-dev.txt
+      - name: mypy
+        run: mypy

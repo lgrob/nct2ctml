@@ -18,6 +18,8 @@ calls; the same input always gives the same answer.
 """
 
 import re
+from collections.abc import Iterable
+from typing import Any
 
 import config
 import utils.gene_mentions as gene_mentions
@@ -59,8 +61,8 @@ def _walk(node, out, include=None):
             _walk(v, out, include)
 
 
-def collect(ctml):
-    out = {"diagnoses": [], "ages": [], "genomic": []}
+def collect(ctml: dict) -> dict[str, list]:
+    out: dict[str, list] = {"diagnoses": [], "ages": [], "genomic": []}
     _walk(ctml.get("treatment_list", ctml), out)
     return out
 
@@ -114,7 +116,9 @@ def _gene_status_patterns(term):
     return irrelevant, negative, positive
 
 
-def gene_status_contradictions(ctml, inclusion, ref=None):
+def gene_status_contradictions(
+    ctml: dict | None, inclusion: str | None, ref: "Reference | None" = None
+) -> dict[str, str]:
     """
     Genes the match tree requires although the inclusion text says they must
     be absent or do not matter: "wild type FLT-ITD" read as an FLT3 mutation
@@ -168,7 +172,13 @@ def gene_status_contradictions(ctml, inclusion, ref=None):
     return out
 
 
-def diagnoses_only_in_exclusions(diagnoses, inclusion, exclusion, context=(), ref=None):
+def diagnoses_only_in_exclusions(
+    diagnoses: Iterable,
+    inclusion: str | None,
+    exclusion: str | None,
+    context: Iterable[str] = (),
+    ref: "Reference | None" = None,
+) -> list[str]:
     """
     Diagnoses named (by name or synonym) in the exclusion criteria and nowhere
     in the inclusion criteria or the context texts (title, conditions).
@@ -229,7 +239,9 @@ _T_LINEAGE = re.compile(
 )
 
 
-def all_lineage_unspecified(diagnoses, inclusion, exclusion, context=()):
+def all_lineage_unspecified(
+    diagnoses: Iterable, inclusion: str | None, exclusion: str | None, context: Iterable[str] = ()
+) -> bool:
     """
     True when a trial names acute lymphoblastic leukaemia without a lineage
     and the mapping has B-ALL but not T-ALL.
@@ -257,7 +269,7 @@ def all_lineage_unspecified(diagnoses, inclusion, exclusion, context=()):
     )
 
 
-def add_sibling_diagnosis(tree, existing, new):
+def add_sibling_diagnosis(tree: Any, existing: str, new: str) -> int:
     """
     Add `new` as an alternative wherever `existing` is an eligible diagnosis:
     beside it in an OR list, or by wrapping a lone node in an OR. The copy
@@ -303,7 +315,7 @@ def add_sibling_diagnosis(tree, existing, new):
     return count
 
 
-def add_sibling_gene(tree, existing, new):
+def add_sibling_gene(tree: Any, existing: str, new: str) -> int:
     """
     Give every genomic criterion on `existing` a twin on `new` with the same
     fields: beside it in an OR list; for an exclusion ('!...') under an AND,
@@ -361,7 +373,9 @@ def _genomic_nodes(node):
             yield from _genomic_nodes(v)
 
 
-def find_mentions(text, terms, case_sensitive_short=True, gene=None):
+def find_mentions(
+    text: str, terms: Iterable[str], case_sensitive_short: bool = True, gene: str | None = None
+) -> list[tuple[int, int, str]]:
     """
     [(start, end, term)] for whole-word mentions of any term in text.
 
@@ -369,7 +383,7 @@ def find_mentions(text, terms, case_sensitive_short=True, gene=None):
     protein change counts too ("H3.3K27M", "EGFRvIII"), as in the scan
     (utils/gene_mentions).
     """
-    hits = []
+    hits: list[tuple[int, int, str]] = []
     for t in sorted({t for t in terms if t}, key=len, reverse=True):
         flags = 0 if (case_sensitive_short and len(t) <= 4) else re.IGNORECASE
         if gene:
@@ -415,7 +429,7 @@ class Reference:
         self.curated = rv.curated_aliases()
         self.curated_groups = rv.curated_group_aliases()
 
-    def dx_terms(self, name):
+    def dx_terms(self, name: str) -> set[str]:
         """
         Terms that count as the text naming a diagnosis: the Oncotree name
         (with and without ", NOS"), the synonym-table aliases, the text terms
@@ -437,7 +451,7 @@ class Reference:
                     out.add(v[:-1] if v.endswith("s") else v + "s")
         return out
 
-    def gene_terms(self, symbol):
+    def gene_terms(self, symbol: str) -> set[str]:
         """
         Terms that count as the text naming the gene: the symbol, the curated
         aliases (multi-gene addendum rows included, as in the scan: "H3.3"
@@ -450,7 +464,7 @@ class Reference:
             | {a for a in self.gene_aliases.get(symbol, ()) if rv.canonical_gene(a) == symbol}
         )
 
-    def weak_gene_terms(self, symbol):
+    def weak_gene_terms(self, symbol: str) -> set[str]:
         """
         Other NCBI aliases (MLL for KMT2A, N-MYC for MYCN, but also ALL and CML
         for BCR, ROS for ROS1). Shown to the curator, never counted as support.
@@ -459,7 +473,7 @@ class Reference:
             symbol
         )
 
-    def ancestors(self, name):
+    def ancestors(self, name: str) -> list[str]:
         out, n = [], self.parent.get(name)
         while n:
             out.append(n)
