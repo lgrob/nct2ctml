@@ -15,7 +15,7 @@ import utils.llm.transport as transport
 LIVE = os.environ.get("RUN_LIVE_LLM_TESTS") == "1"
 MESSAGE = (
     "a test reached the LLM platform. Tests must stub the model (patch "
-    "utils.ai_helper.send_ai_request or use a fake platform); a patch on a name that "
+    "utils.llm.transport.send_ai_request or use a fake platform); a patch on a name that "
     "no longer exists does nothing. Live tests need RUN_LIVE_LLM_TESTS=1."
 )
 
@@ -24,7 +24,7 @@ class OfflinePlatform:
     """
     Wraps the configured LLM platform for the offline suite: building and
     parsing requests work as usual, sending raises. Defining send() also
-    covers the self-hosted platforms, since utils.ai_helper uses send()
+    covers the self-hosted platforms, since utils.llm.transport uses send()
     whenever a platform has one.
     """
 
@@ -39,7 +39,7 @@ class OfflinePlatform:
 
 
 def install_offline_guard():
-    """Wrap utils.ai_helper's platform unless live tests were asked for. Idempotent."""
+    """Wrap utils.llm.transport's platform unless live tests were asked for. Idempotent."""
     if LIVE:
         return
 

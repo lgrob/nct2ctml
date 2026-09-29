@@ -1,5 +1,5 @@
 """
-The offline suite cannot call a model: utils.ai_helper's platform is wrapped
+The offline suite cannot call a model: utils.llm.transport's platform is wrapped
 so that sending raises (tests/support.py). Without the guard, a stub that
 stops taking effect - a patch on a function that has moved - would send
 real requests.
@@ -12,7 +12,6 @@ from unittest import mock
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import utils.ai_helper as ai
 import utils.llm.prompts.biomarkers as biomarker_prompts
 import utils.llm.transport as transport
 from tests.support import LIVE, OfflinePlatform
@@ -35,7 +34,7 @@ class TestOfflineGuard(unittest.TestCase):
     def test_a_patch_on_a_name_that_does_not_exist_is_caught(self):
         # What a moved function leaves behind: the assignment succeeds and
         # patches nothing, and the real path runs - into the guard.
-        with mock.patch.object(ai, "send_ai_request_moved", create=True, new=lambda *a: {}):
+        with mock.patch.object(transport, "send_ai_request_moved", create=True, new=lambda *a: {}):
             with self.assertRaises(RuntimeError):
                 biomarker_prompts.get_pdl1_status("NCT0", "PD-L1 positive", ["PD-L1"])
 

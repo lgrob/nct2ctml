@@ -63,6 +63,27 @@ def diagnosis_prompt_list(values):
     )
 
 
+# Structured output for everything the model is asked for, not just genomic
+# criteria. Without it Ollama is free to return prose or malformed JSON, and
+# parse_response logs a JSONDecodeError and hands back an empty dict - so the
+# whole answer is discarded as if the model had found nothing. Observed twice
+# on a single trial: "Expecting ',' delimiter: line 68 column 1 (char 514)",
+# which is 68 lines in 514 characters, i.e. a list of diagnoses one per line
+# with the commas missing.
+#
+# Where the prompt already restricts the answer to a list of candidates, the
+# schema restricts it too, which on a grammar-compiling backend makes an
+# off-list answer impossible to emit rather than merely discouraged.
+# "Lymphoma" is not an Oncotree display name and cannot be produced there.
+# On Anthropic the tool call is not `strict`, so the enum is guidance: the
+# cached Haiku answers to the 50-trial benchmark contain "Lymphoma" once per
+# replicate (NCT02332668, 1 of 440 and 1 of 426 answers) under a 283-value
+# enum. That one is caught - filter_diagnoses drops terms that are not
+# Oncotree names when the CTML is built - but an Oncotree name from outside
+# the candidate branch would pass. MatchMiner's _SOLID_ and
+# _LIQUID_ wildcards are deliberately absent too: the pipeline derives those
+# from the trial's conditions, and a model should not be invited to guess them.
+
 # Self-hosted backends compile the schema into a generation grammar, and one
 # with several hundred alternatives is slow to build. Above the cap the enum is
 # dropped and the schema still guarantees well-formed JSON of the right shape.

@@ -18,20 +18,17 @@ logger.remove()
 
 
 def load(variant):
-    """Reload config and ai_helper with this genomic prompt; None restores the default."""
+    """Reload config with this genomic prompt; None restores the default."""
     if variant is None:
         os.environ.pop("NCT2CTML_GENOMIC_PROMPT", None)
     else:
         os.environ["NCT2CTML_GENOMIC_PROMPT"] = variant
     import config
-    import utils.ai_helper as ai
-    from tests.support import install_offline_guard
 
+    # The prompts read config.GENOMIC_PROMPT when called, so reloading config
+    # is enough; the platform in utils.llm.transport, and its offline guard,
+    # are untouched.
     importlib.reload(config)
-    ai = importlib.reload(ai)
-    # The reload creates a fresh platform; keep the offline guard on it.
-    install_offline_guard()
-    return ai
 
 
 class TestGenomicPromptVariants(unittest.TestCase):

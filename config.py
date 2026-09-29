@@ -204,10 +204,10 @@ OLLAMA_NUM_CTX = _env("OLLAMA_NUM_CTX", 32768, int)
 # criteria block for a multi-arm trial legitimately runs longer than that.
 # 8192 at ~40 tok/s is ~205s, inside LLM_REQUEST_TIMEOUT_SECONDS below.
 OLLAMA_NUM_PREDICT = _env("OLLAMA_NUM_PREDICT", 8192, int)
-# Largest candidate list utils/ai_helper sends as a JSON-schema enum, per
+# Largest candidate list the prompts send as a JSON-schema enum (utils/llm/schema), per
 # LLM_PLATFORM (lower-case key; a platform not listed gets 400). Above it the
 # enum is dropped, the shape is still enforced and off-list answers become
-# possible again, so utils/ai_helper logs a WARNING and counts it.
+# possible again, so utils/llm/schema logs a WARNING and counts it.
 #
 # 400 is kept for the self-hosted backends. They compile the schema into a
 # decoding grammar (llama.cpp for Ollama and LocalAI, xgrammar/outlines for

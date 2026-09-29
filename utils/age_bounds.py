@@ -11,7 +11,7 @@ in three uses it as an exclusive bound instead ("3 Years" beside "birth to
 age <3 years"). No arithmetic on the structured field fits both. The prose
 says which, so it decides.
 
-The model reads the prose (utils.ai_helper.get_age_bounds); everything here is
+The model reads the prose (utils.llm.prompts.age.get_age_bounds); everything here is
 deterministic and offline, so the rules can be tested without a model. A
 pattern was tried for the reading step and rejected - see src/ctis.py - so
 this module deliberately does no text matching of its own.

@@ -633,7 +633,7 @@ class TrialMapManager:
           It may be the model's own addition, and a wrong gene matches the
           wrong patients.
         - An Oncotree diagnosis answered outside the candidate list its call
-          offered (diagnosis_off_list, see ai_helper.keep_candidates). It
+          offered (diagnosis_off_list, see utils.llm.schema.keep_candidates). It
           may be right when stage 1 missed the branch, or a wrong-branch
           answer; a curator decides.
 

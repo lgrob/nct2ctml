@@ -75,6 +75,13 @@ def _with_role(schema, roles=GENOMIC_ROLES):
     return s
 
 
+# a lot of trial criteria mention exclusion too in inclusion criteria hence the prompt supplies both inclusion and exclusion instructions
+# Shape that _enrich_genomic_criteria expects. Supplied to Ollama as
+# "format", which constrains decoding rather than merely asking for JSON.
+# Without it a model will happily echo the prompt's own input labels back as
+# keys - gemma3:27b returned {"EligibilityCriteria": ..., "Possible GeneList":
+# [], "Output": []} on 8 of 12 benchmark trials, treating the prompt as a
+# template to fill in.
 GENOMIC_CRITERIA_SCHEMA = {
     "type": "array",
     "items": {

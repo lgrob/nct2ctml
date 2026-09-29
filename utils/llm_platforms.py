@@ -400,7 +400,7 @@ class AnthropicPlatform(LLMPlatform):
 
     Unlike the self-hosted platforms above, this talks to a hosted API over
     HTTPS using the official `anthropic` SDK, so it bypasses the
-    hostname:port + requests.post path in ai_helper.send_ai_request by
+    hostname:port + requests.post path in utils.llm.transport.send_ai_request by
     exposing a `send()` method. Authentication is resolved by the SDK from
     ANTHROPIC_API_KEY (or an `ant auth login` profile) - never hardcode a key.
     """
