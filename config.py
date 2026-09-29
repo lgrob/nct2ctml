@@ -199,7 +199,7 @@ GENE_REWRITE_EXCLUSION_FILE_PATH = "ref/gene_rewrite_exclusions.tsv"
 # MANE Select protein sequences every trial protein change is checked
 # against (utils/protein_change.py); built by utils/build_protein_reference.py.
 PROTEIN_REFERENCE_FILE_PATH = "ref/mane_select_proteins.tsv"
-# How eligibility text names a diagnosis; text matching only (utils/review_helper).
+# How eligibility text names a diagnosis; text matching only (src/text_rules.Reference).
 DIAGNOSIS_TEXT_TERMS_FILE_PATH = "ref/diagnosis_text_terms.tsv"
 # Cytogenetic rearrangement -> gene pair, curated with a reason per row;
 # read only by utils/translocations.py.

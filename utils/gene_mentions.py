@@ -5,7 +5,7 @@ gene symbol. Deterministic, no model involved.
 
 Shared by the gene scan (src/trial_criteria_to_genes), the mapper's text
 checks (src/match_criteria_mapper._flag_unsupported_genes and
-_text_mentions_gene) and the review sheet (utils/review_helper), so the three
+_text_mentions_gene) and the review sheet (src/text_rules.find_mentions), so the three
 agree on what counts as the text naming a gene.
 
 1. Glued gene + change. NCT07306299 writes "H3.3K27M, H3.1K27M, H3.3G34R ...

@@ -2,7 +2,8 @@
 
 How a curator works through `ctml/needs-review` and accepts a trial into `ctml/reviewed`. Moved from the README on 2026-09-28.
 
-`utils/review_helper.py` puts the evidence for each flag next to the flag and
+`python -m utils.review_helper` (code in `utils/review/`; the rules it shares
+with the mapper are in `src/text_rules.py`) puts the evidence for each flag next to the flag and
 makes accepting a reviewed trial a checked, logged step. It reads the same
 reference data as the mapper and never calls a model. Run it from the repo
 root with the repo's environment (`source .venv/bin/activate`, or call

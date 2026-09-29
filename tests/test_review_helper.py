@@ -1,4 +1,4 @@
-"""utils/review_helper.py: the checks accept() applies, its log, and the evidence search."""
+"""The review helper (utils/review/): the checks accept() applies, its log, and the evidence search."""
 
 import csv
 import os
@@ -14,6 +14,7 @@ import utils.review.common as common
 import utils.review.evidence as evidence
 import utils.review.gate as gate
 import utils.review.maintenance as maintenance
+import utils.review_helper as rh
 from tests.support import temporary_layers
 
 logger.remove()
@@ -441,6 +442,13 @@ class TestFlagOrder(unittest.TestCase):
         self.assertEqual(common._as_list(["b", "a", "b"]), ["b", "a"])
         self.assertEqual(common._as_list(None), [])
         self.assertEqual(common._as_set("a; b"), {"a", "b"})
+
+
+class TestCommands(unittest.TestCase):
+    def test_every_subcommand_has_a_handler(self):
+        parser = rh._parser()
+        choices = next(a for a in parser._actions if a.dest == "cmd").choices
+        self.assertEqual(set(choices), set(rh.COMMANDS))
 
 
 if __name__ == "__main__":

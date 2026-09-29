@@ -2,6 +2,33 @@
 
 What changed in this fork after the initial retargeting, newest first. Moved from CHANGES.md on 2026-09-28 (improvement plan step 13); the entries are unchanged. Measured decisions are in [decisions/](decisions/), mapping runs and queue reviews in [runs/](runs/).
 
+## Review helper split; mapper no longer imports it (step 11, phase 1, 2026-09-29)
+
+- **`src/text_rules.py` (new, 467 lines).** The rules the mapper applies
+  after the model, moved verbatim from `utils/review_helper.py`:
+  exclusion-only diagnoses, gene-status contradictions, ALL named without a
+  lineage, and the sibling helpers, together with `Reference` and
+  `find_mentions`. `trial_map_manager` imports it instead of the review
+  tool.
+- **`utils/review/` (new).**
+  - `common.py`: paths, flag keys, advice and `Item`. The one place tests
+    redirect the layers.
+  - `evidence.py`: a trial's text and `analyse`.
+  - `sheets.py`: the HTML sheets.
+  - `gate.py`: problems, accept, exclude, the queue and the audit sample.
+  - `maintenance.py`: the batch commands.
+
+  `python -m utils.review_helper` is unchanged for users. The file is now the
+  CLI only, about 290 lines where it was 1,934.
+- **Two complex functions broken up.** `analyse` (C901 complexity 26) is
+  split into one helper per kind of sheet item, in the same order, and
+  `main` (24) into a handler per subcommand.
+- **How it was checked.** Every step was moved verbatim by an AST tool that
+  rewrote references to `module.name`, so patches keep taking effect.
+  `scripts/behaviour_snapshot.py` was unchanged after each of the 8
+  commits: prompts, 1,180 trials through `TrialMapManager`, the index, the
+  review queue, the batch dry runs, `check` and all 175 sheets.
+
 ## Refactoring safety net (step 11, phase 0, 2026-09-29)
 
 - **`scripts/behaviour_snapshot.py`** captures everything a move must not

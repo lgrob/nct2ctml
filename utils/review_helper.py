@@ -56,27 +56,8 @@ import utils.review.gate as gate
 import utils.review.maintenance as maintenance
 import utils.review.sheets as sheets
 
-# --------------------------------------------------------------------- data
 
-
-# ----------------------------------------------------------------- evidence
-
-
-# -------------------------------------------------------------------- build
-
-
-# -------------------------------------------------------------------- html
-
-
-# ------------------------------------------------------------ accept/check
-
-
-# --------------------------------------------------------------------- CLI
-
-
-def main(argv=None):
-    logger.remove()
-    logger.add(sys.stderr, level="WARNING")
+def _parser():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("queue")
@@ -127,128 +108,177 @@ def main(argv=None):
     ex.add_argument("trial")
     ex.add_argument("--reviewer", required=True)
     ex.add_argument("--reason", required=True)
-    args = ap.parse_args(argv)
+    return ap
 
-    if args.cmd == "queue":
-        ref = text_rules.Reference()
-        for tid in gate._queue_ids():
-            an = evidence.analyse(tid, ref)
-            print(f"{tid}\t{','.join(an['flags'])}\t{an['title'][:80]}")
-    elif args.cmd == "sheets":
-        rows = sheets.write_sheets(
-            args.trials or gate._queue_ids(),
-            "Review queue" if not args.trials else "Selected trials",
+
+def _cmd_queue(args):
+    ref = text_rules.Reference()
+    for tid in gate._queue_ids():
+        an = evidence.analyse(tid, ref)
+        print(f"{tid}\t{','.join(an['flags'])}\t{an['title'][:80]}")
+
+
+def _cmd_sheets(args):
+    rows = sheets.write_sheets(
+        args.trials or gate._queue_ids(),
+        "Review queue" if not args.trials else "Selected trials",
+    )
+    print(f"{len(rows)} sheets in {common.SHEET_DIR}/ - open {common.SHEET_DIR}/index.html")
+
+
+def _cmd_audit(args):
+    ids, pool = gate.audit_sample(args.n, args.seed)
+    out = f"ctml/audit_{datetime.date.today():%Y-%m-%d}.tsv"
+    with open(out, "w", newline="") as fh:
+        w = csv.writer(fh, delimiter="\t", lineterminator="\n")
+        w.writerow(["trial_id", "verdict", "error_type", "note"])
+        for t in ids:
+            w.writerow([t, "", "", ""])
+    sheets.write_sheets(
+        ids,
+        f"Audit sample: {len(ids)} of {pool} mapped trials (seed {args.seed})",
+        out_dir=os.path.join(common.SHEET_DIR, "audit"),
+    )
+    print(
+        f"{len(ids)} of {pool} mapped trials -> {out}; sheets in {common.SHEET_DIR}/audit/index.html"
+    )
+
+
+def _cmd_check(args):
+    path, layer = common._layer_of(args.trial)
+    raw = open(path).read()
+    found = gate.problems(yaml.safe_load(raw), raw)
+    print(
+        f"{args.trial} ({layer}): "
+        + ("ready to accept" if not found else "\n  - " + "\n  - ".join(found))
+    )
+
+
+def _cmd_accept(args):
+    print(
+        f"accepted -> {gate.accept(args.trial, args.reviewer, args.note, args.replace)}; logged in {common.LOG_FILE}"
+    )
+
+
+def _cmd_flag_exclusions(args):
+    found = maintenance.flag_exclusions(apply=args.apply)
+    for t, layer, hit in found:
+        print(f"{t}\t{layer}\t{'; '.join(hit)}")
+    moved = sum(1 for _, layer, _ in found if layer == "mapped")
+    print(
+        f"{len(found)} trials ({moved} mapped)"
+        + (
+            " flagged; mapped ones moved to the review queue"
+            if args.apply
+            else " would be flagged; run with --apply to write"
         )
-        print(f"{len(rows)} sheets in {common.SHEET_DIR}/ - open {common.SHEET_DIR}/index.html")
-    elif args.cmd == "audit":
-        ids, pool = gate.audit_sample(args.n, args.seed)
-        out = f"ctml/audit_{datetime.date.today():%Y-%m-%d}.tsv"
-        with open(out, "w", newline="") as fh:
-            w = csv.writer(fh, delimiter="\t", lineterminator="\n")
-            w.writerow(["trial_id", "verdict", "error_type", "note"])
-            for t in ids:
-                w.writerow([t, "", "", ""])
-        sheets.write_sheets(
-            ids,
-            f"Audit sample: {len(ids)} of {pool} mapped trials (seed {args.seed})",
-            out_dir=os.path.join(common.SHEET_DIR, "audit"),
-        )
+    )
+
+
+def _cmd_clear_stale_gene_flags(args):
+    found = maintenance.clear_stale_gene_flags(apply=args.apply)
+    for t, genes, moved in found:
+        print(f"{t}\t{','.join(genes)}\t{'-> mapped' if moved else 'stays in review'}")
+    print(
+        f"{len(found)} trials, {sum(len(g) for _, g, _ in found)} flags"
+        + (" cleared" if args.apply else " would be cleared; --apply to write")
+    )
+
+
+def _cmd_fix_all_lineage(args):
+    found = maintenance.fix_all_lineage(apply=args.apply)
+    for t, layer, n in found:
+        print(f"{t}\t{layer}\t{n} B-ALL node(s) given a T-ALL alternative")
+    print(
+        f"{len(found)} trials"
+        + (" updated" if args.apply else " would be updated; --apply to write")
+    )
+
+
+def _cmd_resolve_remap_drops(args):
+    found = maintenance.resolve_remap_drops(apply=args.apply)
+    for t, ok, left, moved, ev in found:
         print(
-            f"{len(ids)} of {pool} mapped trials -> {out}; sheets in {common.SHEET_DIR}/audit/index.html"
+            f"{t}\tresolved {len(ok)}, left {len(left)}\t{'-> mapped' if moved else 'stays in review'}"
         )
-    elif args.cmd == "check":
-        path, layer = common._layer_of(args.trial)
-        raw = open(path).read()
-        found = gate.problems(yaml.safe_load(raw), raw)
+        for e in ev:
+            print(f"    {e}")
+    print(
+        f"{len(found)} trials, {sum(len(x[1]) for x in found)} drops"
+        + (" resolved" if args.apply else " would be resolved; --apply to write")
+    )
+
+
+def _cmd_fix_genomic_notation(args):
+    found = maintenance.fix_genomic_notation(apply=args.apply)
+    for t, layer, n, rearr in found:
+        print(f"{t}\t{layer}\tH3C3 x{n}\trearranged: {','.join(rearr) or '-'}")
+    print(
+        f"{len(found)} trials"
+        + (" updated" if args.apply else " would be updated; --apply to write")
+    )
+
+
+def _cmd_flag_gene_status(args):
+    found = maintenance.flag_gene_status(apply=args.apply)
+    for t, layer, hit, action in found:
         print(
-            f"{args.trial} ({layer}): "
-            + ("ready to accept" if not found else "\n  - " + "\n  - ".join(found))
+            f"{t}\t{layer}\t{action}\t"
+            + " | ".join(f"{g}: {frag}" for g, frag in sorted(hit.items()))
         )
-    elif args.cmd == "accept":
-        print(
-            f"accepted -> {gate.accept(args.trial, args.reviewer, args.note, args.replace)}; logged in {common.LOG_FILE}"
+    moved = sum(1 for *_, a in found if a == "moved to review")
+    print(
+        f"{len(found)} trials ({moved} mapped)"
+        + (
+            " flagged; mapped ones moved to the review queue"
+            if args.apply
+            else " would be flagged; run with --apply to write"
         )
-    elif args.cmd == "flag-exclusions":
-        found = maintenance.flag_exclusions(apply=args.apply)
-        for t, layer, hit in found:
-            print(f"{t}\t{layer}\t{'; '.join(hit)}")
-        moved = sum(1 for _, layer, _ in found if layer == "mapped")
-        print(
-            f"{len(found)} trials ({moved} mapped)"
-            + (
-                " flagged; mapped ones moved to the review queue"
-                if args.apply
-                else " would be flagged; run with --apply to write"
-            )
-        )
-    elif args.cmd == "clear-stale-gene-flags":
-        found = maintenance.clear_stale_gene_flags(apply=args.apply)
-        for t, genes, moved in found:
-            print(f"{t}\t{','.join(genes)}\t{'-> mapped' if moved else 'stays in review'}")
-        print(
-            f"{len(found)} trials, {sum(len(g) for _, g, _ in found)} flags"
-            + (" cleared" if args.apply else " would be cleared; --apply to write")
-        )
-    elif args.cmd == "fix-all-lineage":
-        found = maintenance.fix_all_lineage(apply=args.apply)
-        for t, layer, n in found:
-            print(f"{t}\t{layer}\t{n} B-ALL node(s) given a T-ALL alternative")
-        print(
-            f"{len(found)} trials"
-            + (" updated" if args.apply else " would be updated; --apply to write")
-        )
-    elif args.cmd == "resolve-remap-drops":
-        found = maintenance.resolve_remap_drops(apply=args.apply)
-        for t, ok, left, moved, ev in found:
-            print(
-                f"{t}\tresolved {len(ok)}, left {len(left)}\t{'-> mapped' if moved else 'stays in review'}"
-            )
-            for e in ev:
-                print(f"    {e}")
-        print(
-            f"{len(found)} trials, {sum(len(x[1]) for x in found)} drops"
-            + (" resolved" if args.apply else " would be resolved; --apply to write")
-        )
-    elif args.cmd == "fix-genomic-notation":
-        found = maintenance.fix_genomic_notation(apply=args.apply)
-        for t, layer, n, rearr in found:
-            print(f"{t}\t{layer}\tH3C3 x{n}\trearranged: {','.join(rearr) or '-'}")
-        print(
-            f"{len(found)} trials"
-            + (" updated" if args.apply else " would be updated; --apply to write")
-        )
-    elif args.cmd == "flag-gene-status":
-        found = maintenance.flag_gene_status(apply=args.apply)
-        for t, layer, hit, action in found:
-            print(
-                f"{t}\t{layer}\t{action}\t"
-                + " | ".join(f"{g}: {frag}" for g, frag in sorted(hit.items()))
-            )
-        moved = sum(1 for *_, a in found if a == "moved to review")
-        print(
-            f"{len(found)} trials ({moved} mapped)"
-            + (
-                " flagged; mapped ones moved to the review queue"
-                if args.apply
-                else " would be flagged; run with --apply to write"
-            )
-        )
-    elif args.cmd == "flag-unsupported-genes":
-        found = maintenance.flag_unsupported_genes(apply=args.apply)
-        for t, layer, genes, action in found:
-            print(f"{t}\t{layer}\t{action}\t{'; '.join(genes)}")
-        moved = sum(1 for _, layer, _, a in found if a == "moved to review")
-        print(
-            f"{len(found)} trials ({moved} mapped would move to review)"
-            if not args.apply
-            else f"{len(found)} trials flagged; {moved} mapped ones moved to the review queue"
-        )
-    elif args.cmd == "exclude":
-        layers = gate.exclude(args.trial, args.reviewer, args.reason)
-        print(
-            f"{args.trial} excluded (ref/scope_overrides.tsv; logged in {common.LOG_FILE}); "
-            f"its copies in {', '.join(layers) or 'no layer'} are left in place and dropped at the next index build"
-        )
+    )
+
+
+def _cmd_flag_unsupported_genes(args):
+    found = maintenance.flag_unsupported_genes(apply=args.apply)
+    for t, layer, genes, action in found:
+        print(f"{t}\t{layer}\t{action}\t{'; '.join(genes)}")
+    moved = sum(1 for _, layer, _, a in found if a == "moved to review")
+    print(
+        f"{len(found)} trials ({moved} mapped would move to review)"
+        if not args.apply
+        else f"{len(found)} trials flagged; {moved} mapped ones moved to the review queue"
+    )
+
+
+def _cmd_exclude(args):
+    layers = gate.exclude(args.trial, args.reviewer, args.reason)
+    print(
+        f"{args.trial} excluded (ref/scope_overrides.tsv; logged in {common.LOG_FILE}); "
+        f"its copies in {', '.join(layers) or 'no layer'} are left in place and dropped at the next index build"
+    )
+
+
+COMMANDS = {
+    "queue": _cmd_queue,
+    "sheets": _cmd_sheets,
+    "audit": _cmd_audit,
+    "check": _cmd_check,
+    "accept": _cmd_accept,
+    "flag-exclusions": _cmd_flag_exclusions,
+    "clear-stale-gene-flags": _cmd_clear_stale_gene_flags,
+    "fix-all-lineage": _cmd_fix_all_lineage,
+    "resolve-remap-drops": _cmd_resolve_remap_drops,
+    "fix-genomic-notation": _cmd_fix_genomic_notation,
+    "flag-gene-status": _cmd_flag_gene_status,
+    "flag-unsupported-genes": _cmd_flag_unsupported_genes,
+    "exclude": _cmd_exclude,
+}
+
+
+def main(argv=None):
+    logger.remove()
+    logger.add(sys.stderr, level="WARNING")
+    args = _parser().parse_args(argv)
+    COMMANDS[args.cmd](args)
 
 
 if __name__ == "__main__":

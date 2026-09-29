@@ -94,13 +94,13 @@ Done 2026-09-29.
 
 ## Phase 1: `utils/review_helper.py` - no upstream cost, biggest payoff (about a day)
 
-- [ ] **1.1 Separate the rules the mapper uses** into `src/text_rules.py`, imported by both `trial_map_manager` and the review helper:
+- [x] **1.1 Separate the rules the mapper uses** into `src/text_rules.py`, imported by both `trial_map_manager` and the review helper:
   `collect`/`_walk`, the gene-alias and term patterns,
   `gene_status_contradictions`, `diagnoses_only_in_exclusions`, the ALL
   lineage rule (`B_ALL`, `T_ALL`, `all_lineage_unspecified`,
   `add_sibling_diagnosis`, and `add_sibling_gene` beside it). After this,
   the mapper imports nothing from the review tool. About 350 lines.
-- [ ] **1.2 Package the rest as `utils/review/`:**
+- [x] **1.2 Package the rest as `utils/review/`:**
 
   | Module | Contents | About |
   |---|---|---|
@@ -112,7 +112,7 @@ Done 2026-09-29.
 
   `utils/review_helper.py` keeps only the CLI (`main`), so every documented
   command still works. Do this in five commits, one per module.
-- [ ] **1.3 Break up the two most complex functions** (ruff C901):
+- [x] **1.3 Break up the two most complex functions** (ruff C901):
   `analyse` (complexity 26) into one function per kind of flag, and `main`
   (24) into one handler per subcommand. This is the one part of the phase
   that edits code rather than moving it, so it gets its own commit with the
@@ -123,6 +123,28 @@ review module exceeds about 600 lines, and the review sheets for the current
 queue are identical before and after (`review_helper sheets` into two
 directories, then compared). Ignore the generation time on the index page,
 which is the only part that changes between runs.
+
+Done 2026-09-29, in 8 commits, each checked with the snapshot:
+- `src/text_rules.py` (467 lines): the mapper's rules, `Reference` and
+  `find_mentions`. `trial_map_manager` imports nothing from the review tool.
+- `utils/review/`, with `common.py` rather than `paths.py`, because it also
+  holds the flags, the advice and `Item`:
+
+  | Module | Lines |
+  |---|---|
+  | `common.py` | 126 |
+  | `evidence.py` | about 460 |
+  | `sheets.py` | 144 |
+  | `gate.py` | 216 |
+  | `maintenance.py` | 488 |
+
+  `utils/review_helper.py` went from 1,934 lines to about 290, the CLI only.
+- `analyse` is split into one helper per kind of sheet item, and `main`
+  into a handler per subcommand with a dispatch table. Neither is flagged
+  by C901 now. A test checks that every subcommand has a handler.
+- One test patched `review_helper.eligibility_text` by name. After the
+  move it failed with AttributeError, not silently, and now patches
+  `evidence.eligibility_text`.
 
 ## Phase 2: `src/clinical_trials_gov.py` - registry-independent code gets a home (about half a day)
 
