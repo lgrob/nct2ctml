@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from loguru import logger
 
-import utils.ai_helper as ai
+import utils.llm.schema as llm_schema
 from utils.llm_platforms import decode_tool_result
 
 logger.remove()
@@ -60,7 +60,8 @@ class TestDiagnosisGuard(unittest.TestCase):
     def test_a_non_object_answer_becomes_no_diagnosis(self):
         for bad in (MISSING_BRACE, None, {}):
             self.assertEqual(
-                ai.keep_candidates(bad, ["Mycosis Fungoides"], "T"), {"oncotree_diagnoses": []}
+                llm_schema.keep_candidates(bad, ["Mycosis Fungoides"], "T"),
+                {"oncotree_diagnoses": []},
             )
 
 

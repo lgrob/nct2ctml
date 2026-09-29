@@ -24,6 +24,7 @@ import src.match_criteria_mapper as mcm
 import src.text_rules as text_rules
 import src.trial_data_helper as tdh
 import utils.ai_helper as ai
+import utils.llm.schema as llm_schema
 import utils.oncology_scope as scope
 import utils.reference_validation as rv
 from utils import provenance
@@ -214,7 +215,7 @@ class TrialMapManager:
         skipped_count = 0
         out_of_scope = []
         scope_overrides = scope.load_overrides() if config.SKIP_OUT_OF_SCOPE_AT_MAP else {}
-        ai.reset_enum_cap_events()
+        llm_schema.reset_enum_cap_events()
 
         for file_name in os.listdir(nct_files_path):
             if os.path.isfile(os.path.join(nct_files_path, file_name)) and file_name.endswith(
@@ -257,7 +258,7 @@ class TrialMapManager:
                     logger.info("-----------------------")
 
                     # Map to CTML format
-                    ai.OFF_LIST_BY_TRIAL.pop(nct_id, None)
+                    llm_schema.OFF_LIST_BY_TRIAL.pop(nct_id, None)
                     mapped_ctml = ctg.map_nct_to_ctml(trial_data, gene_synonym_mapping)
                     self._record_off_list(mapped_ctml, nct_id)
                     self._flag_excluded_diagnoses(mapped_ctml, trial_data, "nct", nct_id)
@@ -332,7 +333,7 @@ class TrialMapManager:
             )
         logger.info(f"Mapping completed. Processed: {processed_count}, Skipped: {skipped_count}")
         # How often a candidate list outgrew the schema enum cap this run.
-        logger.info(ai.enum_cap_summary())
+        logger.info(llm_schema.enum_cap_summary())
 
         return {"processed": processed_count, "skipped": skipped_count}
 
@@ -341,7 +342,7 @@ class TrialMapManager:
         numbers = sorted(f[:-5] for f in os.listdir(ctis_files_path) if f.endswith(".json"))
         overrides = scope.load_overrides() if config.SKIP_OUT_OF_SCOPE_AT_MAP else {}
         out_of_scope, done, failed = [], 0, 0
-        ai.reset_enum_cap_events()
+        llm_schema.reset_enum_cap_events()
         for n, ct in enumerate(numbers, 1):
             if config.SKIP_OUT_OF_SCOPE_AT_MAP:
                 try:
@@ -360,7 +361,7 @@ class TrialMapManager:
             print(f"  [{n}/{len(numbers)}] {ct}: {'ok' if ok else 'FAILED'}")
         if config.SKIP_OUT_OF_SCOPE_AT_MAP:
             scope.write_report(out_of_scope, config.SCOPE_REPORT_FILE_PATH, registry="ctis")
-        logger.info(ai.enum_cap_summary())
+        logger.info(llm_schema.enum_cap_summary())
         return {"processed": done, "failed": failed, "skipped": len(out_of_scope)}
 
     def map_single_ctis_trial(
@@ -385,7 +386,7 @@ class TrialMapManager:
 
         gene_synonym_mapping = self.get_gene_synonym_mapping()
         try:
-            ai.OFF_LIST_BY_TRIAL.pop(ct_number, None)
+            llm_schema.OFF_LIST_BY_TRIAL.pop(ct_number, None)
             mapped_ctml = ctis.map_ctis_to_ctml(trial_data, gene_synonym_mapping)
             self._record_off_list(mapped_ctml, ct_number)
             self._flag_excluded_diagnoses(mapped_ctml, trial_data, "ctis", ct_number)
@@ -591,7 +592,7 @@ class TrialMapManager:
     @staticmethod
     def _record_off_list(mapped_ctml: dict, trial_id: str) -> None:
         """Write diagnoses answered outside their candidate list into the CTML."""
-        terms = ai.OFF_LIST_BY_TRIAL.pop(trial_id, None)
+        terms = llm_schema.OFF_LIST_BY_TRIAL.pop(trial_id, None)
         if terms and isinstance(mapped_ctml, dict):
             mapped_ctml["diagnosis_off_list"] = "; ".join(sorted(terms))
 
@@ -707,7 +708,7 @@ class TrialMapManager:
         gene_synonym_mapping = self.get_gene_synonym_mapping()
         try:
             # Map to CTML format
-            ai.OFF_LIST_BY_TRIAL.pop(nct_id, None)
+            llm_schema.OFF_LIST_BY_TRIAL.pop(nct_id, None)
             mapped_ctml = ctg.map_nct_to_ctml(trial_data, gene_synonym_mapping)
             self._record_off_list(mapped_ctml, nct_id)
             self._flag_excluded_diagnoses(mapped_ctml, trial_data, "nct", nct_id)

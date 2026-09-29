@@ -19,7 +19,7 @@ import yaml
 from loguru import logger
 
 import config
-import utils.ai_helper as ai
+import utils.llm.schema as llm_schema
 import utils.llm.transport as transport
 from src.trial_map_manager import TrialMapManager
 from utils import build_trial_index as bti
@@ -274,7 +274,7 @@ class TestReplay(_Isolated):
             mock.patch.object(config, "LLM_PLATFORM", "Replay"),
             mock.patch.object(config, "SCHEMA_ENUM_MAX_VALUES", {"anthropic": None, "replay": 1}),
         ):
-            self.assertIsNone(ai.max_enum_values())
+            self.assertIsNone(llm_schema.max_enum_values())
 
     def test_replay_without_a_file_is_refused(self):
         with mock.patch.object(config, "LLM_REPLAY_FILE", None):

@@ -8,6 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from loguru import logger
 
 import utils.ai_helper as ai
+import utils.llm.schema as llm_schema
 import utils.llm.transport as transport
 
 logger.remove()
@@ -107,13 +108,13 @@ class TestEnumCap(unittest.TestCase):
     """
 
     def setUp(self):
-        ai.reset_enum_cap_events()
+        llm_schema.reset_enum_cap_events()
         self.logs = []
         self.sink = logger.add(lambda m: self.logs.append(m.record), level="INFO")
 
     def tearDown(self):
         logger.remove(self.sink)
-        ai.reset_enum_cap_events()
+        llm_schema.reset_enum_cap_events()
 
     def _terms(self, n):
         return [f"Term {i}" for i in range(n)]
@@ -129,9 +130,9 @@ class TestEnumCap(unittest.TestCase):
         self.assertEqual(len(warnings), 1)
         self.assertIn("NCT02508038", warnings[0])
         self.assertIn("438", warnings[0])
-        self.assertEqual(ai.ENUM_CAP_EVENTS["dropped"], 1)
-        self.assertEqual(ai.ENUM_CAP_EVENTS["largest"], 438)
-        self.assertIn("1 dropped", ai.enum_cap_summary())
+        self.assertEqual(llm_schema.ENUM_CAP_EVENTS["dropped"], 1)
+        self.assertEqual(llm_schema.ENUM_CAP_EVENTS["largest"], 438)
+        self.assertIn("1 dropped", llm_schema.enum_cap_summary())
 
     def test_the_cap_itself_still_gets_an_enum(self):
         with mock.patch.object(ai.config, "LLM_PLATFORM", "Ollama"):
@@ -146,13 +147,13 @@ class TestEnumCap(unittest.TestCase):
         self.assertEqual(len(items["enum"]), 370)
         self.assertEqual(self._levels("WARNING"), [])
         self.assertTrue(any("NCT02813135" in m and "370" in m for m in self._levels("INFO")))
-        self.assertEqual(ai.ENUM_CAP_EVENTS["near_cap"], 1)
+        self.assertEqual(llm_schema.ENUM_CAP_EVENTS["near_cap"], 1)
 
     def test_a_small_list_logs_nothing(self):
         with mock.patch.object(ai.config, "LLM_PLATFORM", "Ollama"):
             ai.oncotree_diagnoses_schema(self._terms(226))
         self.assertEqual(self.logs, [])
-        self.assertEqual(ai.ENUM_CAP_EVENTS["enum"], 1)
+        self.assertEqual(llm_schema.ENUM_CAP_EVENTS["enum"], 1)
 
     def test_anthropic_keeps_the_enum_for_the_whole_oncotree(self):
         # The forced tool call is not strict, so no grammar is compiled; 847 is
@@ -161,7 +162,7 @@ class TestEnumCap(unittest.TestCase):
             items = _items(ai.oncotree_diagnoses_schema(self._terms(847), "t"))
         self.assertEqual(len(items["enum"]), 847)
         self.assertEqual(self._levels("WARNING"), [])
-        self.assertEqual(ai.ENUM_CAP_EVENTS["dropped"], 0)
+        self.assertEqual(llm_schema.ENUM_CAP_EVENTS["dropped"], 0)
 
     def test_the_caps_are_pinned_per_backend(self):
         caps = ai.config.SCHEMA_ENUM_MAX_VALUES
@@ -171,7 +172,7 @@ class TestEnumCap(unittest.TestCase):
 
     def test_an_unlisted_platform_falls_back_to_400(self):
         with mock.patch.object(ai.config, "LLM_PLATFORM", "SomethingNew"):
-            self.assertEqual(ai.max_enum_values(), 400)
+            self.assertEqual(llm_schema.max_enum_values(), 400)
 
     def test_every_diagnosis_builder_names_the_trial(self):
         big = self._terms(401)
@@ -182,7 +183,7 @@ class TestEnumCap(unittest.TestCase):
         warnings = " ".join(self._levels("WARNING"))
         for tid in ("T-L1", "T-S2", "T-CH"):
             self.assertIn(tid, warnings)
-        self.assertEqual(ai.ENUM_CAP_EVENTS["dropped"], 3)
+        self.assertEqual(llm_schema.ENUM_CAP_EVENTS["dropped"], 3)
 
 
 class TestStatusSchemas(unittest.TestCase):

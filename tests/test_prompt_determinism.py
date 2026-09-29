@@ -21,6 +21,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from loguru import logger
 
 import utils.ai_helper as ai
+import utils.llm.schema as llm_schema
 
 logger.remove()
 
@@ -74,14 +75,14 @@ class TestPromptDeterminism(unittest.TestCase):
 
 class TestPromptList(unittest.TestCase):
     def test_sorted_deduplicated_and_none_free(self):
-        self.assertEqual(ai.prompt_list(["b", "a", None, "a"]), ["a", "b"])
+        self.assertEqual(llm_schema.prompt_list(["b", "a", None, "a"]), ["a", "b"])
 
     def test_diagnosis_candidates_are_printed_in_the_fixed_shuffle(self):
         import hashlib
 
         names = {"Neuroblastoma", "Ganglioneuroblastoma", "Medulloblastoma", "Ependymoma"}
         want = sorted(names, key=lambda v: hashlib.sha256(v.encode()).hexdigest())
-        self.assertEqual(ai.diagnosis_prompt_list(names), want)
+        self.assertEqual(llm_schema.diagnosis_prompt_list(names), want)
         for build in (
             lambda v: ai.get_ai_prompt_oncotree_diagnoses_from_trial_info("x", v, "T"),
             lambda v: ai.get_ai_prompt_child_values("x", v, "T"),
@@ -91,9 +92,11 @@ class TestPromptList(unittest.TestCase):
 
     def test_the_shuffle_does_not_move_existing_names_when_one_is_added(self):
         names = ["Neuroblastoma", "Ganglioneuroblastoma", "Medulloblastoma", "Ependymoma"]
-        before = ai.diagnosis_prompt_list(names)
+        before = llm_schema.diagnosis_prompt_list(names)
         after = [
-            v for v in ai.diagnosis_prompt_list(names + ["Ganglioneuroma"]) if v != "Ganglioneuroma"
+            v
+            for v in llm_schema.diagnosis_prompt_list(names + ["Ganglioneuroma"])
+            if v != "Ganglioneuroma"
         ]
         self.assertEqual(before, after)
 
