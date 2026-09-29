@@ -127,11 +127,20 @@ Baseline at the time of the review: 543 offline tests pass in ~13 s
   `tests/test_ctml_conversion.py` was deleted too: 24 live `map` calls with no
   assertions, which pytest would collect.
 
-- [ ] **10. Slim down `config.py`.**
+- [x] **10. Slim down `config.py`.**
   Move the ~60 lines of commented-out alternative models to `doc/` (with the
   model benchmark notes). Keep the active settings, give every tunable an
   `NCT2CTML_*` environment override, and log `LLM_PLATFORM` and the model at
   startup.
+
+  Done 2026-09-29.
+  - The 73 lines of alternative models moved to `doc/llm_backends.md`
+    ("Models tried").
+  - Every tunable is `_env(...)`: 17 settings, with the old variable names
+    kept. Overrides are collected in `config.OVERRIDES`, logged by `main.py`
+    and recorded in `run.json`. Paths are deliberately not overridable.
+  - `scripts/run_ollama_mapping.sh` now exports the model it pulled.
+  - `config.py` went from 278 to 238 lines.
 
 - [ ] **11. Split the largest modules as they are touched, not in one rewrite.**
   Broken down in [plan_step11_split_modules.md](plan_step11_split_modules.md).

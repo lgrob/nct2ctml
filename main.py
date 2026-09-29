@@ -19,6 +19,19 @@ import os
 from loguru import logger
 
 
+def log_settings():
+    """The model settings in force, and whatever the environment overrode (config.OVERRIDES)."""
+    import config
+
+    logger.info(
+        f"settings: {config.LLM_PLATFORM} {config.LLM_AI_MODEL}, "
+        f"genomic prompt {config.GENOMIC_PROMPT}, diagnosis input {config.DIAGNOSIS_INPUT}"
+    )
+    if config.OVERRIDES:
+        overrides = ", ".join(f"{k}={v!r}" for k, v in sorted(config.OVERRIDES.items()))
+        logger.warning(f"settings overridden from the environment (NCT2CTML_*): {overrides}")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="NCT to CTML: Pull and map clinical trial data from ClinicalTrials.gov to CTML format.",
@@ -168,6 +181,7 @@ Examples:
     )
 
     args = parser.parse_args()
+    log_settings()
 
     nct_files_path = "cache/nct"
     ctis_files_path = "cache/ctis"

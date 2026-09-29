@@ -2,6 +2,28 @@
 
 What changed in this fork after the initial retargeting, newest first. Moved from CHANGES.md on 2026-09-28 (improvement plan step 13); the entries are unchanged. Measured decisions are in [decisions/](decisions/), mapping runs and queue reviews in [runs/](runs/).
 
+## config.py: overridable settings, catalogue moved out (improvement plan step 10, 2026-09-29)
+
+- **Overrides.** Every tunable setting can be set as `NCT2CTML_<NAME>`: 17 of
+  them, through one helper, `_env`. `NCT2CTML_LLM_PLATFORM`,
+  `NCT2CTML_DIAGNOSIS_INPUT`, `NCT2CTML_GENOMIC_PROMPT` and
+  `NCT2CTML_REPLAY_FILE` work as before. Values are typed: ints, floats,
+  booleans, and `none` for an optional value. A bad value stops at import
+  with the variable named. Paths stay fixed on purpose: the reference files
+  are checked against `ref/SOURCES.tsv`.
+- **Overrides are never invisible.** `config.OVERRIDES` lists them, `main.py`
+  logs the settings and, as a warning, the overrides at startup, and every
+  run writes them to `run.json` (`config_overrides`).
+- **Model catalogue moved.** The 73 commented-out alternative models and
+  their notes (GPU sizes, benchmark scores, why each was not adopted) moved
+  verbatim to `doc/llm_backends.md`, "Models tried". `config.py` went from
+  278 to 238 lines.
+- **Fixed:** `scripts/run_ollama_mapping.sh` pulled and warmed up `$MODEL`,
+  but the mapping read its model from `config.py`, so
+  `MODEL=... sbatch scripts/run_ollama_mapping.sh` could map with a different
+  model than it loaded. It now exports `NCT2CTML_LLM_AI_MODEL=$MODEL`.
+- `tests/test_config.py` is new: 6 tests, each in a fresh interpreter.
+
 ## Review helper split; mapper no longer imports it (step 11, phase 1, 2026-09-29)
 
 - **`src/text_rules.py` (new, 467 lines).** The rules the mapper applies

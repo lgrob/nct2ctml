@@ -5,28 +5,56 @@
 
 import os
 
-# GPU_SERVER_HOSTNAME = "http://gpu02.sbms.hku.hk"
-# GPU_SERVER_HOSTNAME = "http://127.0.0.1"
+# Every tunable setting below can be overridden from the environment as
+# NCT2CTML_<NAME>, e.g. NCT2CTML_LLM_AI_MODEL=llama3.3:70b. What was overridden
+# is kept in OVERRIDES: main.py logs it at startup and each run records it in
+# runs/<run_id>/run.json, so a setting changed from outside the file is never
+# invisible. Paths are not overridable: the reference files are checked
+# against ref/SOURCES.tsv, and the layer directories are fixed by the layout.
+OVERRIDES = {}
+_TRUE, _FALSE = {"1", "true", "yes", "on"}, {"0", "false", "no", "off"}
+
+
+def _env(name, default, cast=str, env=None):
+    """The setting's value: NCT2CTML_<env or name> if set, else the default."""
+    key = f"NCT2CTML_{env or name}"
+    raw = os.environ.get(key)
+    if raw is None:
+        return default
+    try:
+        if cast is bool:
+            if raw.lower() not in _TRUE | _FALSE:
+                raise ValueError("expected one of 1/0, true/false, yes/no, on/off")
+            value = raw.lower() in _TRUE
+        elif cast == "optional":
+            value = None if raw.lower() in ("", "none", "null") else raw
+        else:
+            value = cast(raw)
+    except ValueError as e:
+        raise ValueError(f"{key}={raw!r}: {e}") from None
+    OVERRIDES[name] = value
+    return value
+
+
 # 127.0.0.1 rather than localhost or 0.0.0.0: proxied sites list
 # 127.0.0.1 in NO_PROXY, and a client aimed at 0.0.0.0 gets routed to the
 # proxy, which cannot reach a port on the compute node.
-GPU_SERVER_HOSTNAME = "http://127.0.0.1"
+GPU_SERVER_HOSTNAME = _env("GPU_SERVER_HOSTNAME", "http://127.0.0.1")
 
 # Options: Local_ai, vllm, SGLang, Ollama, Anthropic, Replay
-# NCT2CTML_LLM_PLATFORM overrides it, e.g. for a replay; every mapped file
-# records the platform it was made with.
-LLM_PLATFORM = os.environ.get("NCT2CTML_LLM_PLATFORM", "Anthropic")
-# LLM_PLATFORM = "Ollama"
+# NCT2CTML_LLM_PLATFORM overrides it (e.g. Replay, or Ollama on the GPU
+# cluster); every mapped file records the platform it was made with.
+LLM_PLATFORM = _env("LLM_PLATFORM", "Anthropic")
 
 # Provenance (utils/provenance.py). Each `map` and benchmark run writes
 # RUNS_PATH/<run_id>/run.json and records every model call, prompt and raw
 # answer, in RUNS_PATH/<run_id>/llm_calls.jsonl. Unlike cache/ it cannot be
 # regenerated: it is the only copy of what the model said. None turns
 # recording off; the CTML is still stamped with its _provenance block.
-RUNS_PATH = "runs"
+RUNS_PATH = _env("RUNS_PATH", "runs", "optional")
 # LLM_PLATFORM = "Replay" answers from a recorded run instead of a model,
 # which rebuilds that run's CTML offline. Point this at its llm_calls.jsonl.
-LLM_REPLAY_FILE = os.environ.get("NCT2CTML_REPLAY_FILE")
+LLM_REPLAY_FILE = _env("LLM_REPLAY_FILE", None, "optional", env="REPLAY_FILE")
 
 # Anthropic (hosted Claude API) settings - the production backend since
 # 2026-09-24 (roadmap D1). Auth comes from the ANTHROPIC_API_KEY environment
@@ -40,15 +68,16 @@ LLM_REPLAY_FILE = os.environ.get("NCT2CTML_REPLAY_FILE")
 # call, no thinking. It is also the cheapest current Claude model ($1/$5 per
 # 1M tokens). Moving to another model is a roadmap step 2.3 decision, taken
 # on replicated benchmark numbers, not a config edit.
-LLM_AI_MODEL = "claude-haiku-4-5-20251001"
+LLM_AI_MODEL = _env("LLM_AI_MODEL", "claude-haiku-4-5-20251001")
 # Thinking and effort. Haiku 4.5 supports neither adaptive thinking nor the
 # effort parameter (the API rejects the request), so both are off; the
 # platform refuses the combination rather than failing mid-run. On models
 # that support them, set ANTHROPIC_THINKING = "adaptive" and an effort level.
-ANTHROPIC_THINKING = None  # None | "adaptive"
-ANTHROPIC_EFFORT = None  # None | low | medium | high | xhigh | max
+ANTHROPIC_THINKING = _env("ANTHROPIC_THINKING", None, "optional")  # None | "adaptive"
+# None | low | medium | high | xhigh | max
+ANTHROPIC_EFFORT = _env("ANTHROPIC_EFFORT", None, "optional")
 # 0 for reproducibility. Ignored when thinking is on (the API requires 1).
-ANTHROPIC_TEMPERATURE = 0
+ANTHROPIC_TEMPERATURE = _env("ANTHROPIC_TEMPERATURE", 0, float)
 
 # What text the diagnosis step is given (roadmap 2.8, 2026-09-26). The model
 # was handed exclusion criteria alongside inclusion criteria - for CTIS with
@@ -64,7 +93,7 @@ ANTHROPIC_TEMPERATURE = 0
 # Default "labelled" since 2026-09-27 (3 replicates, 123 trials): exclusion-only
 # diagnoses 113 -> 57, recall unchanged; inclusion_only lost 16 curated
 # diagnoses and was rejected. See doc/decisions/2026-09-27-2.8-diagnosis-input.md.
-DIAGNOSIS_INPUT = os.environ.get("NCT2CTML_DIAGNOSIS_INPUT", "labelled")
+DIAGNOSIS_INPUT = _env("DIAGNOSIS_INPUT", "labelled")
 # Inclusion genomic prompt (roadmap 2.9): "baseline" (unchanged), "rules"
 # (explicit rules: only genes every entering patient must carry) or "roles"
 # (each gene is classified; only requirements enter the match tree, the rest
@@ -76,80 +105,12 @@ DIAGNOSIS_INPUT = os.environ.get("NCT2CTML_DIAGNOSIS_INPUT", "labelled")
 # trials requiring a gene of every patient that the text does not require
 # 191 -> 86; every gene kept out is recorded for review. See
 # doc/decisions/2026-09-28-2.9-genomic-prompt-roles.md.
-GENOMIC_PROMPT = os.environ.get("NCT2CTML_GENOMIC_PROMPT", "roles")
-ANTHROPIC_MAX_TOKENS = 16000
+GENOMIC_PROMPT = _env("GENOMIC_PROMPT", "roles")
+ANTHROPIC_MAX_TOKENS = _env("ANTHROPIC_MAX_TOKENS", 16000, int)
 
-# deepseek library
-# LLM_AI_MODEL = "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B"
-# LLM_AI_MODEL = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
-# LLM_AI_MODEL = "neuralmagic/DeepSeek-R1-Distill-Qwen-32B-quantized.w4a16"
-
-# Anthropic model (used when LLM_PLATFORM = "Anthropic")
-# LLM_AI_MODEL = "claude-opus-5"
-
-# --- GPU deployment (LeoMed or any box with >=24 GB VRAM) ------------------
-# Start here. Upstream developed every prompt in utils/ai_helper.py against a
-# 27B Gemma on Ollama (doc/local_llm_deployment_guide.md), so it is the model
-# most likely to work with them unmodified - which means a poor result can be
-# read as a model problem rather than a prompt problem. It also has no
-# thinking mode, and reasoning tokens are pure cost for structured extraction:
-# qwen3:14b once emitted 30,251 of them on a single call and hung for 3.5h.
-# ~16 GB at Q4, so it fits a 24 GB card with room for real context.
-# Raise OLLAMA_NUM_CTX to 32768 and drop the timeout to ~300 when using this.
-# LLM_AI_MODEL = "gemma3:27b"
-#
-# What is actually running on LeoMed. Benchmarked 2026-09-14 against the
-# curated key: gemma3:27b scored dx F1 0.18 / gene F1 0.09, llama3.3:70b
-# scored 0.40 / 0.61 on the same twelve trials, so capacity was a real
-# constraint rather than a prompting one. ~42 GB at Q4, resident in VRAM on
-# an A100-SXM4-80GB with room for the 32k context; ~149 s per trial.
-# This line is the single source of truth - scripts/run_ollama_mapping.sh
-# reads the model from here, so an uncommitted edit on the cluster means the
-# repo no longer says what is running.
-# The GPU backend: set LLM_PLATFORM = "Ollama" above and uncomment this.
-# LLM_AI_MODEL = "llama3.3:70b"
-#
-# The same weights are also reachable through Ollama's HuggingFace
-# passthrough, which is the form upstream's guide uses. Prefer the tag above:
-# it comes from Ollama's own registry, so it needs only registry.ollama.ai
-# rather than huggingface.co as well - one less host for a locked-down
-# network to refuse.
-# LLM_AI_MODEL = "hf.co/unsloth/gemma-3-27b-it-GGUF:Q4_K_M"
-#
-# Runner-up for 40 GB+. Likely sharper, but thinking MUST be disabled or it
-# reproduces the hang above on better hardware.
-# LLM_AI_MODEL = "qwen3:32b"
-
-# Laptop fallback. 14B at Q4 is about 9 GB and fits 16 GB of unified memory.
-# Only for exercising the plumbing: it produced 46 oncotree diagnoses where
-# the curated answer was 4, with no overlap. Not a production model.
-# LLM_AI_MODEL = "qwen3:14b"
-
-# gemma library
-# LLM_AI_MODEL = "hf.co/unsloth/gemma-4-31B-it-GGUF:UD-Q4_K_XL"
-# LLM_AI_MODEL = "cyankiwi/gemma-4-31B-it-AWQ-4bit"
-# LLM_AI_MODEL = "gemma4:31b" # from official ollama library instead of hugging face
-# LLM_AI_MODEL = "gemma4:26b" # from official ollama library instead of hugging face
-# LLM_AI_MODEL = "hf.co/unsloth/medgemma-27b-text-it-GGUF:Q4_K_M"
-# LLM_AI_MODEL = "hf.co/unsloth/gemma-3-27b-it-GGUF:Q4_K_M"
-# LLM_AI_MODEL = "hf.co/bartowski/gemma-2-27b-it-GGUF:Q4_K_M"
-
-# Qwen library
-# LLM_AI_MODEL = "Qwen/Qwen3.5-35B-A3B-GPTQ-Int4"
-# LLM_AI_MODEL = "Qwen/Qwen3.6-27B-FP8"
-# LLM_AI_MODEL = "qwen3.6:27b" # from official ollama library instead of hugging face
-# LLM_AI_MODEL = "qwen3.6:35b" # from official ollama library instead of hugging face
-
-# GLM library
-# LLM_AI_MODEL = "hf.co/mradermacher/GLM-4-32B-0414-GGUF:Q4_K_M"
-# LLM_AI_MODEL = "hf.co/lmstudio-community/GLM-Z1-32B-0414-GGUF:Q4_K_M"
-
-# moonshotai library
-# LLM_AI_MODEL = "moonshotai/Moonlight-16B-A3B-Instruct"
-# LLM_AI_MODEL = "hf.co/mmnga/Moonlight-16B-A3B-Instruct-gguf:Q8_0"
-
-# minimax library
-# LLM_AI_MODEL = "hf.co/mradermacher/SynLogic-32B-GGUF:Q4_K_M"
+# Other models tried, and the notes on each (GPU sizes, benchmark scores, why
+# not adopted): doc/llm_backends.md, "Models tried". To switch, set
+# NCT2CTML_LLM_PLATFORM and NCT2CTML_LLM_AI_MODEL; every run records both.
 
 
 # Where a mapped trial goes when it needs a human before it is usable -
@@ -176,7 +137,7 @@ CTIS_CACHE_PATH = "cache/ctis"
 # Bulk mapping skips trials with no oncology term (utils/oncology_scope.py).
 # Mapping a single trial by id never skips. Per-trial decisions go in the
 # overrides file; the skipped trials are listed, with reasons, in the report.
-SKIP_OUT_OF_SCOPE_AT_MAP = True
+SKIP_OUT_OF_SCOPE_AT_MAP = _env("SKIP_OUT_OF_SCOPE_AT_MAP", True, bool)
 SCOPE_OVERRIDES_FILE_PATH = "ref/scope_overrides.tsv"
 SCOPE_REPORT_FILE_PATH = "ctml/out-of-scope.tsv"
 
@@ -217,7 +178,7 @@ DIAGNOSIS_SYNONYM_FILE_PATH = "ref/diagnosis_synonyms.tsv"
 # Mapping configuration
 # Number of days back to consider for mapping trials
 # Trials with entry_last_updated_date within this many days will be mapped
-MAPPING_CUTOFF_DAYS = 1
+MAPPING_CUTOFF_DAYS = _env("MAPPING_CUTOFF_DAYS", 1, int)
 # Guard rails for self-hosted models.
 # LLM_REQUEST_TIMEOUT_SECONDS bounds every LLM HTTP call; without it a runaway
 # generation loop blocks the pipeline indefinitely.
@@ -228,21 +189,21 @@ MAPPING_CUTOFF_DAYS = 1
 # ~205-273s on a datacentre GPU.
 # On a 16 GB laptop at 2.4 tok/s the same cap needs ~850s - raise this to 1200
 # if you go back to CPU inference.
-LLM_REQUEST_TIMEOUT_SECONDS = 600
+LLM_REQUEST_TIMEOUT_SECONDS = _env("LLM_REQUEST_TIMEOUT_SECONDS", 600, int)
 # Ollama defaults num_ctx to 4096, too small for the genomic prompts, and it
 # truncates an over-long prompt SILENTLY rather than erroring - a truncated
 # prompt scores badly with nothing to indicate why. The longest criteria text
 # in the corpus is 19,676 chars (~4,900 tokens) before the prompt wrapper,
 # gene list and oncotree terms are added, so leave real headroom.
 # Drop to 8192 only if running on a machine short of memory.
-OLLAMA_NUM_CTX = 32768
+OLLAMA_NUM_CTX = _env("OLLAMA_NUM_CTX", 32768, int)
 # Caps output tokens so a runaway generation loop cannot block the pipeline.
 # 2048 is too low for real work: on the first GPU run it severed valid JSON
 # mid-string at ~1,900 tokens (char 7795, 7089, 8291 across three trials),
 # which surfaces as a JSONDecodeError rather than as a truncation. The genomic
 # criteria block for a multi-arm trial legitimately runs longer than that.
 # 8192 at ~40 tok/s is ~205s, inside LLM_REQUEST_TIMEOUT_SECONDS below.
-OLLAMA_NUM_PREDICT = 8192
+OLLAMA_NUM_PREDICT = _env("OLLAMA_NUM_PREDICT", 8192, int)
 # Largest candidate list utils/ai_helper sends as a JSON-schema enum, per
 # LLM_PLATFORM (lower-case key; a platform not listed gets 400). Above it the
 # enum is dropped, the shape is still enforced and off-list answers become
@@ -275,4 +236,4 @@ SCHEMA_ENUM_MAX_VALUES = {
 }
 # Lists above this fraction of the cap are logged at INFO, so a run shows the
 # cap being approached before it is crossed.
-SCHEMA_ENUM_NEAR_CAP_FRACTION = 0.8
+SCHEMA_ENUM_NEAR_CAP_FRACTION = _env("SCHEMA_ENUM_NEAR_CAP_FRACTION", 0.8, float)

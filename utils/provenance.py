@@ -221,6 +221,7 @@ def start_run(command, directory=None):
         "started_at": _now(),
         "code": code_version(),
         "llm": llm,
+        "config_overrides": dict(config.OVERRIDES),
         "reference_sha256": reference_hashes(),
         "python": sys.version.split()[0],
         "packages": _package_versions(),

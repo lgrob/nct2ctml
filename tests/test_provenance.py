@@ -195,6 +195,7 @@ class TestRecord(_Isolated):
         )
         self.assertEqual(info["summary"], {"output": "x"})
         self.assertIn("finished_at", info)
+        self.assertEqual(info["config_overrides"], dict(config.OVERRIDES))
         self.assertEqual(sorted(info["reference_sha256"]), provenance.reference_files())
 
     def test_a_trial_mapped_in_a_run_points_at_its_calls(self):

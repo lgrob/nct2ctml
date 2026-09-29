@@ -63,17 +63,20 @@ fi
 # Claude model id, or map with the wrong backend.
 PLATFORM="$($PY -c 'import config; print(config.LLM_PLATFORM)')"
 if [ "$PLATFORM" != "Ollama" ]; then
-    echo "ERROR: config.LLM_PLATFORM is '$PLATFORM'. Set LLM_PLATFORM = \"Ollama\" and an"
-    echo "       Ollama LLM_AI_MODEL in config.py to use this script."
+    echo "ERROR: config.LLM_PLATFORM is '$PLATFORM'. Run with"
+    echo "       NCT2CTML_LLM_PLATFORM=Ollama NCT2CTML_LLM_AI_MODEL=<an Ollama model>, e.g. llama3.3:70b."
     exit 1
 fi
 MODEL="${MODEL:-$($PY -c 'import config; print(config.LLM_AI_MODEL)')}"
+# The mapping reads its model from config; make it the one pulled and warmed
+# up here, so MODEL=... cannot map with a different model than it loaded.
+export NCT2CTML_LLM_AI_MODEL="$MODEL"
 NUM_CTX=$($PY -c 'import config; print(getattr(config,"OLLAMA_NUM_CTX",0))')
 
 echo "[$(date +%T)] repo=$REPO"
 echo "[$(date +%T)] models=$OLLAMA_MODELS"
 echo "[$(date +%T)] sif=$SIF"
-echo "[$(date +%T)] model=$MODEL  num_ctx=$NUM_CTX  (both from config.py)"
+echo "[$(date +%T)] model=$MODEL  num_ctx=$NUM_CTX  (from config.py or NCT2CTML_*)"
 
 # A prompt longer than num_ctx is truncated silently, so a too-small window
 # shows up as poor scores rather than as an error.
