@@ -28,15 +28,15 @@ import yaml
 
 import config
 import src.trial_data_helper as tdh
-import utils.ai_helper as ai
+import utils.llm.transport as transport
 from scripts.stub_model import fake, refuse_real_platform
 from src.trial_map_manager import TrialMapManager
 
 
 def main(out_path, ids):
-    refuse_real_platform(ai)
-    ai.send_ai_request = lambda id, prompt, json_schema=None: fake(json_schema or {})
-    ai.parse_ai_response = lambda response, trial_id="": response
+    refuse_real_platform(transport)
+    transport.send_ai_request = lambda id, prompt, json_schema=None: fake(json_schema or {})
+    transport.parse_ai_response = lambda response, trial_id="": response
     tdh.print = lambda *a, **k: None  # save_to_file echoes every YAML
     config.RUNS_PATH = None
     out = {}

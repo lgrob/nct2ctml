@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from loguru import logger
 
+import utils.llm.transport as transport
 import utils.review.common as common
 import utils.review.gate as gate
 
@@ -33,6 +34,12 @@ def load(variant):
 
 
 class TestGenomicPromptVariants(unittest.TestCase):
+    def setUp(self):
+        # These tests stub the model by assignment; put the real functions
+        # back afterwards, or the stub answers every later test's call.
+        for name in ("send_ai_request", "parse_ai_response"):
+            self.addCleanup(setattr, transport, name, getattr(transport, name))
+
     def tearDown(self):
         # Until 2026-09-29 this reloaded with "baseline", which set the variable
         # again: every later test, and every subprocess they started, ran with
@@ -55,7 +62,7 @@ class TestGenomicPromptVariants(unittest.TestCase):
 
     def test_roles_keeps_only_requirements(self):
         ai = load("roles")
-        ai.send_ai_request = lambda i, p, s=None: [
+        transport.send_ai_request = lambda i, p, s=None: [
             {
                 "genomic": {
                     "hugo_symbol": "APC",
@@ -71,7 +78,7 @@ class TestGenomicPromptVariants(unittest.TestCase):
                 }
             },
         ]
-        ai.parse_ai_response = lambda r, trial_id="": r
+        transport.parse_ai_response = lambda r, trial_id="": r
         out = ai.get_inclusion_genomic_criteria("T1", ["APC", "BRAF"], "text")
         self.assertEqual(
             [c["genomic"] for c in out], [{"hugo_symbol": "BRAF", "variant_category": "Mutation"}]
@@ -84,7 +91,7 @@ class TestGenomicPromptVariants(unittest.TestCase):
         self.assertIn(
             "cohort_union", s["items"]["properties"]["genomic"]["properties"]["role"]["enum"]
         )
-        ai.send_ai_request = lambda i, p, s=None: [
+        transport.send_ai_request = lambda i, p, s=None: [
             {
                 "genomic": {
                     "hugo_symbol": "ALK",
@@ -100,7 +107,7 @@ class TestGenomicPromptVariants(unittest.TestCase):
                 }
             },
         ]
-        ai.parse_ai_response = lambda r, trial_id="": r
+        transport.parse_ai_response = lambda r, trial_id="": r
         out = ai.get_inclusion_genomic_criteria("T2", ["ALK", "APC"], "text")
         self.assertEqual([c["genomic"]["hugo_symbol"] for c in out], ["ALK"])
         self.assertEqual(ai.ROLE_DROPS.pop("T2"), [("APC", "cohort_specific")])

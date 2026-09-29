@@ -48,6 +48,7 @@ from importlib import metadata
 from loguru import logger
 
 import config
+import utils.llm.transport as transport
 
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -158,9 +159,8 @@ def short_commit(code):
 
 def llm_settings():
     """The platform, model and every setting that changes what the model is asked or answers."""
-    import utils.ai_helper as ai
 
-    platform = ai._llm_platform
+    platform = transport._llm_platform
     name = str(config.LLM_PLATFORM)
     settings = {
         "platform": name,

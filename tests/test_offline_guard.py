@@ -13,6 +13,7 @@ from unittest import mock
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import utils.ai_helper as ai
+import utils.llm.transport as transport
 from tests.support import LIVE, OfflinePlatform
 
 
@@ -20,7 +21,7 @@ from tests.support import LIVE, OfflinePlatform
 class TestOfflineGuard(unittest.TestCase):
     def test_the_guard_is_installed(self):
         self.assertIsInstance(
-            ai._llm_platform,
+            transport._llm_platform,
             OfflinePlatform,
             "run the suite as `python -m unittest discover -s tests -t .` so that "
             "tests/__init__.py installs the offline guard",
@@ -28,7 +29,7 @@ class TestOfflineGuard(unittest.TestCase):
 
     def test_an_unstubbed_call_fails_instead_of_reaching_the_model(self):
         with self.assertRaisesRegex(RuntimeError, "reached the LLM platform"):
-            ai.send_ai_request("NCT0", "prompt", {"type": "object"})
+            transport.send_ai_request("NCT0", "prompt", {"type": "object"})
 
     def test_a_patch_on_a_name_that_does_not_exist_is_caught(self):
         # What a moved function leaves behind: the assignment succeeds and
@@ -38,7 +39,7 @@ class TestOfflineGuard(unittest.TestCase):
                 ai.get_pdl1_status("NCT0", "PD-L1 positive", ["PD-L1"])
 
     def test_building_a_request_still_works(self):
-        body = ai._llm_platform.get_request_body("p", ai.PDL1_SCHEMA)
+        body = transport._llm_platform.get_request_body("p", ai.PDL1_SCHEMA)
         self.assertTrue(body)
 
 

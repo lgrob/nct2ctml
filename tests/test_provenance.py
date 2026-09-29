@@ -20,6 +20,7 @@ from loguru import logger
 
 import config
 import utils.ai_helper as ai
+import utils.llm.transport as transport
 from src.trial_map_manager import TrialMapManager
 from utils import build_trial_index as bti
 from utils import promote as convert
@@ -66,7 +67,7 @@ class _Isolated(unittest.TestCase):
         self.addCleanup(provenance.finish_run)
 
     def use(self, platform):
-        p = mock.patch.object(ai, "_llm_platform", platform)
+        p = mock.patch.object(transport, "_llm_platform", platform)
         p.start()
         self.addCleanup(p.stop)
         return platform
@@ -88,7 +89,7 @@ class TestStamp(_Isolated):
         block = saved["_provenance"]
         self.assertEqual(list(saved)[-1], "_provenance")
         self.assertIsNone(block["run_id"])
-        self.assertEqual(block["llm"]["model"], ai._llm_platform.model)
+        self.assertEqual(block["llm"]["model"], transport._llm_platform.model)
         self.assertEqual(block["llm"]["genomic_prompt"], config.GENOMIC_PROMPT)
         self.assertEqual(block["llm"]["diagnosis_input"], config.DIAGNOSIS_INPUT)
         self.assertEqual(block["llm"]["temperature"], config.ANTHROPIC_TEMPERATURE)
@@ -144,14 +145,14 @@ class TestStamp(_Isolated):
 class TestRecord(_Isolated):
     def test_nothing_is_recorded_outside_a_run(self):
         self.use(FakeModel([{"genes": ["KRAS"]}]))
-        ai.send_ai_request("NCT1", "prompt", SCHEMA)
+        transport.send_ai_request("NCT1", "prompt", SCHEMA)
         self.assertFalse(os.path.exists(self.runs))
 
     def test_every_call_is_recorded_with_its_raw_answer(self):
         self.use(FakeModel([{"genes": ["KRAS"]}, {"genes": []}]))
         run_id = provenance.start_run("test")
-        ai.send_ai_request("NCT1", "first prompt", SCHEMA)
-        ai.send_ai_request("NCT2", "second prompt", SCHEMA)
+        transport.send_ai_request("NCT1", "first prompt", SCHEMA)
+        transport.send_ai_request("NCT2", "second prompt", SCHEMA)
         calls = self.calls()
         self.assertEqual([c["trial_id"] for c in calls], ["NCT1", "NCT2"])
         first = calls[0]
@@ -165,8 +166,8 @@ class TestRecord(_Isolated):
     def test_a_schema_is_stored_once_exactly_as_sent(self):
         self.use(FakeModel([{}, {}]))
         provenance.start_run("test")
-        ai.send_ai_request("NCT1", "a", SCHEMA)
-        ai.send_ai_request("NCT1", "b", SCHEMA)
+        transport.send_ai_request("NCT1", "a", SCHEMA)
+        transport.send_ai_request("NCT1", "b", SCHEMA)
         schemas = os.path.join(self.runs, provenance.current_run_id(), "schemas")
         self.assertEqual(os.listdir(schemas), [f"{provenance.schema_sha256(SCHEMA)}.json"])
         with open(os.path.join(schemas, os.listdir(schemas)[0])) as handle:
@@ -176,16 +177,16 @@ class TestRecord(_Isolated):
         self.use(FakeModel([TimeoutError("slow")]))
         provenance.start_run("test")
         with self.assertRaises(TimeoutError):
-            ai.send_ai_request("NCT1", "prompt", SCHEMA)
+            transport.send_ai_request("NCT1", "prompt", SCHEMA)
         self.assertEqual(self.calls()[0]["error"], "TimeoutError: slow")
         self.assertIsNone(self.calls()[0]["response"])
 
     def test_run_json_closes_with_the_counts(self):
         self.use(FakeModel([{}, TimeoutError("slow")]))
         run_id = provenance.start_run("test")
-        ai.send_ai_request("NCT1", "a", SCHEMA)
+        transport.send_ai_request("NCT1", "a", SCHEMA)
         with self.assertRaises(TimeoutError):
-            ai.send_ai_request("NCT1", "b", SCHEMA)
+            transport.send_ai_request("NCT1", "b", SCHEMA)
         self.assertEqual(provenance.for_trial("NCT1")["llm_calls"], 2)
         provenance.finish_run(output="x")
         with open(os.path.join(self.runs, run_id, provenance.RUN_FILE)) as handle:
@@ -201,7 +202,7 @@ class TestRecord(_Isolated):
     def test_a_trial_mapped_in_a_run_points_at_its_calls(self):
         self.use(FakeModel([{}]))
         run_id = provenance.start_run("test")
-        ai.send_ai_request("NCT1", "a", SCHEMA)
+        transport.send_ai_request("NCT1", "a", SCHEMA)
         block = provenance.for_trial("NCT1")
         self.assertEqual(block["run_id"], run_id)
         self.assertEqual(block["llm_calls"], 1)
@@ -217,7 +218,7 @@ class TestReplay(_Isolated):
         path = os.path.join(self.runs, provenance.current_run_id(), provenance.CALLS_FILE)
         for prompt, _ in calls:
             try:
-                ai.send_ai_request("NCT1", prompt, SCHEMA)
+                transport.send_ai_request("NCT1", prompt, SCHEMA)
             except Exception:
                 pass
         provenance.finish_run()
@@ -228,11 +229,11 @@ class TestReplay(_Isolated):
         replay = self.use(ReplayPlatform("ignored", "", calls_file=path))
         self.assertEqual(replay.model, config.LLM_AI_MODEL)
         self.assertEqual(
-            ai.parse_ai_response(ai.send_ai_request("NCT1", "b", SCHEMA), "NCT1"),
+            transport.parse_ai_response(transport.send_ai_request("NCT1", "b", SCHEMA), "NCT1"),
             {"genes": ["NRAS"]},
         )
         self.assertEqual(
-            ai.parse_ai_response(ai.send_ai_request("NCT1", "a", SCHEMA), "NCT1"),
+            transport.parse_ai_response(transport.send_ai_request("NCT1", "a", SCHEMA), "NCT1"),
             {"genes": ["KRAS"]},
         )
 
@@ -260,7 +261,7 @@ class TestReplay(_Isolated):
         self.use(ReplayPlatform("", "", calls_file=path))
         with mock.patch.object(config, "LLM_PLATFORM", "Replay"):
             run_id = provenance.start_run("replay")
-            ai.send_ai_request("NCT1", "a", SCHEMA)
+            transport.send_ai_request("NCT1", "a", SCHEMA)
             block = provenance.for_trial("NCT1")
         self.assertFalse(os.path.exists(os.path.join(self.runs, run_id, provenance.CALLS_FILE)))
         self.assertEqual(block["llm"]["replay_of"], path)

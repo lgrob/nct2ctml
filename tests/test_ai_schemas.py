@@ -8,6 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from loguru import logger
 
 import utils.ai_helper as ai
+import utils.llm.transport as transport
 
 logger.remove()
 
@@ -41,7 +42,7 @@ class TestEveryPromptIsStructured(unittest.TestCase):
     def test_the_schema_reaches_the_request_body(self):
         # Where the schema goes depends on the platform: Ollama's `format`,
         # the Anthropic forced tool's input. Either way it must be sent.
-        body = ai._llm_platform.get_request_body("p", ai.PDL1_SCHEMA)
+        body = transport._llm_platform.get_request_body("p", ai.PDL1_SCHEMA)
         sent = body.get("format") or body["tools"][0]["input_schema"]["properties"]["result"]
         self.assertEqual(sent, ai.PDL1_SCHEMA)
 

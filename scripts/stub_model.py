@@ -34,6 +34,9 @@ class _Refuse:
     parse_response = get_request_body = send
 
 
-def refuse_real_platform(ai):
-    """Replace utils.ai_helper's platform with one that raises, so a probe never calls a model."""
-    ai._llm_platform = _Refuse(ai._llm_platform)
+def refuse_real_platform(transport):
+    """
+    Replace the model platform with one that raises, so a probe never calls a
+    model. Pass utils.llm.transport, where the platform lives.
+    """
+    transport._llm_platform = _Refuse(transport._llm_platform)

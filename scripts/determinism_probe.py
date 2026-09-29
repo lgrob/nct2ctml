@@ -11,7 +11,7 @@ from loguru import logger
 logger.remove()
 import src.clinical_trials_gov as ctg
 import src.ctis as ctis
-import utils.ai_helper as ai
+import utils.llm.transport as transport
 from scripts.stub_model import fake, refuse_real_platform
 
 CALLS = []
@@ -22,9 +22,9 @@ def send(id, prompt, json_schema=None):
     return fake(json_schema or {})
 
 
-refuse_real_platform(ai)
-ai.send_ai_request = send
-ai.parse_ai_response = lambda r, trial_id="": r
+refuse_real_platform(transport)
+transport.send_ai_request = send
+transport.parse_ai_response = lambda r, trial_id="": r
 
 import src.mapping.genomic as genomic
 from src.trial_map_manager import TrialMapManager

@@ -5,16 +5,13 @@
 
 import json
 import re
-import time
 from inspect import cleandoc
 
-import requests
 from loguru import logger
 
 import config
-from utils import provenance
+import utils.llm.transport as transport
 from utils.genomic_patterns import CNV_DETAIL_KEYWORDS, MUTATION_DETAIL_KEYWORDS
-from utils.llm_platforms import create_llm_platform
 
 # Pre-compile patterns for efficiency
 _MUTATION_PATTERNS = [re.compile(pattern, re.IGNORECASE) for pattern in MUTATION_DETAIL_KEYWORDS]
@@ -65,14 +62,6 @@ def has_cnv_details(criteria_text: str) -> bool:
     return False
 
 
-# Initialize the LLM platform based on config
-_llm_platform = create_llm_platform(
-    platform_name=config.LLM_PLATFORM,
-    model=config.LLM_AI_MODEL,
-    hostname=config.GPU_SERVER_HOSTNAME,
-)
-
-
 def get_level1_diagnosis_from_original_conditions(
     nct_id: str, original_conditions: dict, level1_oncotree: set
 ) -> dict:
@@ -87,8 +76,8 @@ def get_level1_diagnosis_from_original_conditions(
         f"NCTID: {nct_id} | AI Prompt for Level 1 diagnosis from original conditions: {prompt}"
     )
 
-    ai_response = send_ai_request(nct_id, prompt, schema)
-    oncotree_diagnoses_dict = parse_ai_response(ai_response, nct_id)
+    ai_response = transport.send_ai_request(nct_id, prompt, schema)
+    oncotree_diagnoses_dict = transport.parse_ai_response(ai_response, nct_id)
     return keep_candidates(
         oncotree_diagnoses_dict, level1_oncotree_list, nct_id, extra=("", "Other"), keep_valid=False
     )
@@ -98,8 +87,10 @@ def get_oncotree_diagnoses_from_trial_info(nct_id: str, trial_info, oncotree_val
     schema, prompt = get_ai_prompt_oncotree_diagnoses_from_trial_info(
         trial_info, list(oncotree_values), nct_id
     )
-    ai_response = send_ai_request(nct_id, prompt, schema)
-    return keep_candidates(parse_ai_response(ai_response, nct_id), oncotree_values, nct_id)
+    ai_response = transport.send_ai_request(nct_id, prompt, schema)
+    return keep_candidates(
+        transport.parse_ai_response(ai_response, nct_id), oncotree_values, nct_id
+    )
 
 
 def get_child_level_diagnoses_from_condition(
@@ -109,36 +100,36 @@ def get_child_level_diagnoses_from_condition(
 
     schema, prompt = get_ai_prompt_child_values(nct_condition, child_nodes_oncotree_list, nct_id)
 
-    ai_response = send_ai_request(nct_id, prompt, schema)
-    oncotree_diagnoses_dict = parse_ai_response(ai_response, nct_id)
+    ai_response = transport.send_ai_request(nct_id, prompt, schema)
+    oncotree_diagnoses_dict = transport.parse_ai_response(ai_response, nct_id)
     return keep_candidates(oncotree_diagnoses_dict, child_nodes_oncotree_list, nct_id)
 
 
 def get_her2_er_pr_status(nct_id: str, eligibilityCriteria: str, keywords: list) -> dict:
     schema, prompt = get_her2_er_pr_status_prompt(eligibilityCriteria, keywords)
-    ai_response = send_ai_request(nct_id, prompt, schema)
-    her2_er_pr_status_dict = parse_ai_response(ai_response, nct_id)
+    ai_response = transport.send_ai_request(nct_id, prompt, schema)
+    her2_er_pr_status_dict = transport.parse_ai_response(ai_response, nct_id)
     return her2_er_pr_status_dict
 
 
 def get_pdl1_status(nct_id: str, eligibilityCriteria: str, keywords: list) -> dict:
     schema, prompt = get_pdl1_status_prompt(eligibilityCriteria, keywords)
-    ai_response = send_ai_request(nct_id, prompt, schema)
-    pdl1_status_dict = parse_ai_response(ai_response, nct_id)
+    ai_response = transport.send_ai_request(nct_id, prompt, schema)
+    pdl1_status_dict = transport.parse_ai_response(ai_response, nct_id)
     return pdl1_status_dict
 
 
 def get_mmr_status(nct_id: str, eligibilityCriteria: str, keywords: list) -> dict:
     schema, prompt = get_mmr_status_prompt(eligibilityCriteria, keywords)
-    ai_response = send_ai_request(nct_id, prompt, schema)
-    mmr_status_dict = parse_ai_response(ai_response, nct_id)
+    ai_response = transport.send_ai_request(nct_id, prompt, schema)
+    mmr_status_dict = transport.parse_ai_response(ai_response, nct_id)
     return mmr_status_dict
 
 
 def get_disease_status(nct_id: str, eligibilityCriteria: str, keywords: list) -> dict:
     schema, prompt = get_disease_status_prompt(eligibilityCriteria, keywords)
-    ai_response = send_ai_request(nct_id, prompt, schema)
-    disease_status_dict = parse_ai_response(ai_response, nct_id)
+    ai_response = transport.send_ai_request(nct_id, prompt, schema)
+    disease_status_dict = transport.parse_ai_response(ai_response, nct_id)
     return disease_status_dict
 
 
@@ -158,8 +149,8 @@ def get_age_bounds(trial_id: str, inclusion_criteria: str) -> dict:
     used.
     """
     schema, prompt = get_age_bounds_prompt(inclusion_criteria)
-    ai_response = send_ai_request(trial_id, prompt, schema)
-    return parse_ai_response(ai_response, trial_id)
+    ai_response = transport.send_ai_request(trial_id, prompt, schema)
+    return transport.parse_ai_response(ai_response, trial_id)
 
 
 def get_arm_criteria_mapping(
@@ -188,8 +179,8 @@ def get_arm_criteria_mapping(
     )
     labels = [a.get("label") for a in (arm_groups or []) if isinstance(a, dict) and a.get("label")]
     json_schema = arm_criteria_mapping_schema(labels)
-    ai_response = send_ai_request(nct_id, prompt, json_schema)
-    mapping = parse_ai_response(ai_response, nct_id)
+    ai_response = transport.send_ai_request(nct_id, prompt, json_schema)
+    mapping = transport.parse_ai_response(ai_response, nct_id)
     return mapping
 
 
@@ -201,8 +192,8 @@ ROLE_DROPS = {}
 
 def get_inclusion_genomic_criteria(nct_id: str, genes: list, eligibilityCriteria: str) -> list:
     json_schema, prompt = get_inclusion_genomic_criteria_prompt(genes, eligibilityCriteria)
-    ai_response = send_ai_request(nct_id, prompt, json_schema)
-    genomic_criteria = parse_ai_response(ai_response, nct_id)
+    ai_response = transport.send_ai_request(nct_id, prompt, json_schema)
+    genomic_criteria = transport.parse_ai_response(ai_response, nct_id)
     if getattr(config, "GENOMIC_PROMPT", "baseline") in ("roles", "roles_union") and isinstance(
         genomic_criteria, list
     ):
@@ -220,8 +211,8 @@ def get_inclusion_genomic_criteria(nct_id: str, genes: list, eligibilityCriteria
 
 def get_exclusion_genomic_criteria(nct_id: str, genes: list, eligibilityCriteria: str) -> list:
     json_schema, prompt = get_exclusion_genomic_criteria_prompt(genes, eligibilityCriteria)
-    ai_response = send_ai_request(nct_id, prompt, json_schema)
-    genomic_criteria = parse_ai_response(ai_response, nct_id)
+    ai_response = transport.send_ai_request(nct_id, prompt, json_schema)
+    genomic_criteria = transport.parse_ai_response(ai_response, nct_id)
     return genomic_criteria
 
 
@@ -266,8 +257,8 @@ def enrich_mutation_details(nct_id: str, mutation_criteria: list, criteria_text:
     )
 
     try:
-        ai_response = send_ai_request(nct_id, prompt, json_schema)
-        enrichment_result = parse_ai_response(ai_response, nct_id)
+        ai_response = transport.send_ai_request(nct_id, prompt, json_schema)
+        enrichment_result = transport.parse_ai_response(ai_response, nct_id)
 
         if isinstance(enrichment_result, dict):
             enriched_mutations = enrichment_result.get("enriched_mutations", [])
@@ -325,8 +316,8 @@ def enrich_cnv_details(nct_id: str, cnv_criteria: list, criteria_text: str) -> l
     )
 
     try:
-        ai_response = send_ai_request(nct_id, prompt, json_schema)
-        enrichment_result = parse_ai_response(ai_response, nct_id)
+        ai_response = transport.send_ai_request(nct_id, prompt, json_schema)
+        enrichment_result = transport.parse_ai_response(ai_response, nct_id)
 
         if isinstance(enrichment_result, dict):
             enriched_cnvs = enrichment_result.get("enriched_cnvs", [])
@@ -344,69 +335,6 @@ def enrich_cnv_details(nct_id: str, cnv_criteria: list, criteria_text: str) -> l
     except Exception as e:
         logger.error(f"NCTID: {nct_id} | CNV enrichment failed: {e}")
         return []
-
-
-def parse_ai_response(ai_response, trial_id=""):
-    return _llm_platform.parse_response(ai_response, trial_id)
-
-
-def send_ai_request(id, prompt, json_schema=None):
-    """
-    Send AI request using the configured platform. Inside a run
-    (utils/provenance.start_run) the call is recorded, answer or error.
-    """
-    started = time.monotonic()
-    try:
-        ai_response = _send_ai_request(id, prompt, json_schema)
-    except Exception as ex:
-        provenance.record_call(
-            id,
-            prompt,
-            json_schema,
-            error=f"{type(ex).__name__}: {ex}",
-            elapsed=time.monotonic() - started,
-        )
-        raise
-    provenance.record_call(
-        id, prompt, json_schema, response=ai_response, elapsed=time.monotonic() - started
-    )
-    return ai_response
-
-
-def _send_ai_request(id, prompt, json_schema=None):
-    # Hosted platforms (e.g. Anthropic) own their transport and auth via an
-    # official SDK, so they expose send() instead of going through the
-    # unauthenticated hostname:port POST used by the self-hosted platforms.
-    sender = getattr(_llm_platform, "send", None)
-    if callable(sender):
-        logger.debug(f"AI request | ID:{id} | {prompt[:200]}")
-        ai_response = sender(prompt, json_schema)
-        logger.debug(f"AI response | ID:{id} | {ai_response}")
-        return ai_response
-
-    req_body = _llm_platform.get_request_body(prompt, json_schema)
-    req_body_json = json.dumps(req_body)
-    logger.debug(f"AI request | ID:{id} | {req_body_json}")
-    endpoint_url = _llm_platform.get_endpoint_url()
-    print(endpoint_url)
-
-    # Without a timeout a stalled or runaway model blocks the pipeline forever:
-    # a local 14B in a constrained-JSON generation loop was observed emitting
-    # 30k+ tokens over 3.5 hours on a single call.
-    timeout = getattr(config, "LLM_REQUEST_TIMEOUT_SECONDS", 600)
-    response = requests.post(
-        endpoint_url,
-        data=req_body_json,
-        headers={"Content-Type": "application/json"},
-        timeout=timeout,
-    )
-
-    response.raise_for_status()
-
-    print(response.status_code)
-    ai_response = response.json()
-    logger.debug(f"AI response | ID:{id} | {ai_response}")
-    return ai_response
 
 
 def prompt_list(values):
@@ -749,7 +677,8 @@ def max_enum_values():
     """
     caps = getattr(config, "SCHEMA_ENUM_MAX_VALUES", {}) or {}
     platform = str(
-        getattr(_llm_platform, "recorded_platform", None) or getattr(config, "LLM_PLATFORM", "")
+        getattr(transport._llm_platform, "recorded_platform", None)
+        or getattr(config, "LLM_PLATFORM", "")
     ).lower()
     return caps.get(platform, _DEFAULT_MAX_ENUM_VALUES)
 

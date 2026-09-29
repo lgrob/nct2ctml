@@ -10,6 +10,8 @@ happens with the older command without `-t .`.
 
 import os
 
+import utils.llm.transport as transport
+
 LIVE = os.environ.get("RUN_LIVE_LLM_TESTS") == "1"
 MESSAGE = (
     "a test reached the LLM platform. Tests must stub the model (patch "
@@ -40,10 +42,9 @@ def install_offline_guard():
     """Wrap utils.ai_helper's platform unless live tests were asked for. Idempotent."""
     if LIVE:
         return
-    import utils.ai_helper as ai
 
-    if not isinstance(ai._llm_platform, OfflinePlatform):
-        ai._llm_platform = OfflinePlatform(ai._llm_platform)
+    if not isinstance(transport._llm_platform, OfflinePlatform):
+        transport._llm_platform = OfflinePlatform(transport._llm_platform)
 
 
 # ------------------------------------------------------------ directories
