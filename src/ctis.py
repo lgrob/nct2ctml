@@ -5,8 +5,9 @@ CTIS publishes a different document shape from ClinicalTrials.gov - everything
 hangs off authorizedApplication.authorizedPartI - so the field accessors here
 are CTIS-specific. Everything downstream of "get the criteria text out" is
 not: diagnosis mapping, gene extraction, contradiction resolution and
-biomarker status all reuse the functions in clinical_trials_gov, so both
-sources get identical treatment once the text is in hand.
+biomarker status all use the shared functions in src/mapping/ (moved out of
+clinical_trials_gov in step 11), so both sources get identical treatment
+once the text is in hand.
 
 Two things CTIS does differently, and they are not merely cosmetic:
 
@@ -25,8 +26,8 @@ import re
 
 from loguru import logger
 
-import src.clinical_trials_gov as ctg
 import src.ctml_schema as cs
+import src.mapping.biomarkers as biomarkers
 import src.mapping.diagnosis as diagnosis
 import src.mapping.genomic as genomic
 import src.match_criteria_mapper as mcm
@@ -269,7 +270,9 @@ def map_ctis_to_ctml(trial_data: dict, gene_synonym_mapping: dict[str, list[str]
     else:
         logger.info(f"CTIS: {ct} | No numeric age stated in criteria; leaving age_numerical unset")
 
-    clinical_criteria.update(ctg._map_biomarker_statuses(ct, criteria, keywords, level="global"))
+    clinical_criteria.update(
+        biomarkers._map_biomarker_statuses(ct, criteria, keywords, level="global")
+    )
 
     logger.info(f"CTIS: {ct} | Mapping genomic criteria")
     genomic_ctml = genomic.map_ctml_match_genomic_criteria(

@@ -19,6 +19,11 @@ what conflicts is what both sides really changed. The result is recorded as
 an ordinary merge of <ref>, so upstream's history is kept and nothing needs
 adding to .git-blame-ignore-revs.
 
+For a conflict in a Python file, the report also names, for each function
+upstream changed, the file of this fork that defines it now, so a fix to a
+function step 11 moved out of clinical_trials_gov.py or ai_helper.py can be
+carried to its new home.
+
 When anything conflicts the merge is left in progress: conflicted files hold
 the usual markers and are NOT staged. Resolve them, `git add` them and
 `git commit`, or `git merge --abort`. Python files the merge completed are
@@ -26,6 +31,7 @@ formatted again, since joining hunks can leave a line out of format.
 """
 
 import argparse
+import ast
 import os
 import subprocess
 import sys
@@ -107,6 +113,58 @@ def write(path, data):
         handle.write(data)
 
 
+def _top_level(source):
+    """{name: source text} of the top-level functions and classes, {} if unparseable."""
+    try:
+        tree = ast.parse(source)
+    except (SyntaxError, ValueError):
+        return {}
+    return {
+        n.name: ast.get_source_segment(source, n)
+        for n in tree.body
+        if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+    }
+
+
+def changed_functions(base_source, tip_source):
+    """Top-level functions and classes upstream added, changed or removed, sorted."""
+    before, after = _top_level(base_source or ""), _top_level(tip_source or "")
+    return sorted(n for n in set(before) | set(after) if before.get(n) != after.get(n))
+
+
+def where_now(names):
+    """{name: [files in this fork that define it at top level]}."""
+    found = {n: [] for n in names}
+    files = git("ls-files", "*.py").stdout.decode().split()
+    for f in files:
+        with open(os.path.join(ROOT, f), encoding="utf-8") as handle:
+            defined = _top_level(handle.read())
+        for n in names:
+            if n in defined:
+                found[n].append(f)
+    return found
+
+
+def moved_hints(path, base, tip):
+    """
+    Lines saying where each function upstream changed in `path` lives now.
+    Step 11 moved much of clinical_trials_gov.py and ai_helper.py into other
+    modules, so an upstream fix to a moved function has to be carried there by
+    hand; this names the file.
+    """
+    if not path.endswith(".py"):
+        return []
+    decode = lambda b: b.decode("utf-8", "replace") if b else ""  # noqa: E731
+    names = changed_functions(decode(show(base, path)), decode(show(tip, path)))
+    lines = []
+    for name, files in where_now(names).items():
+        if files == [path]:
+            continue
+        where = ", ".join(files) if files else "nowhere here (removed, or renamed)"
+        lines.append(f"      upstream changed {name}(): now in {where}")
+    return lines
+
+
 def merge_file(path, base, tip):
     """Merge one path upstream changed into the worktree. Returns a conflict description or None."""
     full = os.path.join(ROOT, path)
@@ -182,6 +240,8 @@ def main():
         print("\nConflicts (not staged):")
         for path, problem in conflicts.items():
             print(f"  {path}: {problem}")
+            for line in moved_hints(path, base, tip):
+                print(line)
         print("\nResolve them, `git add` each, then `git commit`; or `git merge --abort`.")
         return 1
     git("commit", "--quiet", "-m", message)
