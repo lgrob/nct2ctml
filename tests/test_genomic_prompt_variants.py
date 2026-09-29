@@ -13,18 +13,28 @@ logger.remove()
 
 
 def load(variant):
-    os.environ["NCT2CTML_GENOMIC_PROMPT"] = variant
+    """Reload config and ai_helper with this genomic prompt; None restores the default."""
+    if variant is None:
+        os.environ.pop("NCT2CTML_GENOMIC_PROMPT", None)
+    else:
+        os.environ["NCT2CTML_GENOMIC_PROMPT"] = variant
     import config
     import utils.ai_helper as ai
+    from tests.support import install_offline_guard
 
     importlib.reload(config)
-    return importlib.reload(ai)
+    ai = importlib.reload(ai)
+    # The reload creates a fresh platform; keep the offline guard on it.
+    install_offline_guard()
+    return ai
 
 
 class TestGenomicPromptVariants(unittest.TestCase):
     def tearDown(self):
-        os.environ.pop("NCT2CTML_GENOMIC_PROMPT", None)
-        load("baseline")
+        # Until 2026-09-29 this reloaded with "baseline", which set the variable
+        # again: every later test, and every subprocess they started, ran with
+        # the baseline genomic prompt instead of the default.
+        load(None)
 
     def test_baseline_has_no_rule_10_and_no_role(self):
         ai = load("baseline")

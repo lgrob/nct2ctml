@@ -31,7 +31,7 @@ export ANTHROPIC_API_KEY=...                  # never in config.py
 python main.py pull --nct_id NCT03643276      # one trial into cache/nct
 python main.py map --nct_id NCT03643276       # CTML into cache/ctml, or ctml/needs-review if flagged
 python -m utils.build_trial_index             # the flat index into index/
-python -m unittest discover -s tests          # offline suite, no key needed
+python -m unittest discover -s tests -t .     # offline suite, no key needed
 ```
 
 ## How it works

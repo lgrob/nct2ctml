@@ -3,7 +3,6 @@
 import csv
 import os
 import sys
-import tempfile
 import unittest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -11,6 +10,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from loguru import logger
 
 import utils.review_helper as rh
+from tests.support import temporary_layers
 
 logger.remove()
 
@@ -31,20 +31,9 @@ treatment_list:
 
 class _Layers(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.mkdtemp()
-        self.saved = {
-            k: getattr(rh, k) for k in ("MAPPED_DIR", "REVIEW_DIR", "REVIEWED_DIR", "LOG_FILE")
-        }
-        rh.MAPPED_DIR, rh.REVIEW_DIR, rh.REVIEWED_DIR = (
-            os.path.join(self.tmp, d) for d in ("mapped", "review", "reviewed")
-        )
-        rh.LOG_FILE = os.path.join(self.tmp, "review_log.tsv")
-        for d in (rh.MAPPED_DIR, rh.REVIEW_DIR):
-            os.makedirs(d)
-
-    def tearDown(self):
-        for k, v in self.saved.items():
-            setattr(rh, k, v)
+        self.layers = temporary_layers().__enter__()
+        self.addCleanup(self.layers.__exit__, None, None, None)
+        self.tmp = self.layers.root
 
     def put(self, text, layer="review"):
         with open(os.path.join(self.tmp, layer, "NCT0TEST.yaml"), "w") as fh:
@@ -57,7 +46,7 @@ class TestAccept(_Layers):
         with self.assertRaises(SystemExit) as e:
             rh.accept("NCT0TEST", "lgrob")
         self.assertIn("still flagged: gene_unsupported", str(e.exception))
-        self.assertTrue(os.path.exists(os.path.join(rh.REVIEW_DIR, "NCT0TEST.yaml")))
+        self.assertTrue(os.path.exists(os.path.join(self.layers.review, "NCT0TEST.yaml")))
 
     def test_a_wrong_protein_change_is_refused(self):
         # ALK residue 1174 is Phe; Leu1174 would be the variant, not the reference.
@@ -75,11 +64,11 @@ class TestAccept(_Layers):
     def test_accept_moves_stamps_and_logs(self):
         self.put(CTML.format(change="p.F1174L", extra=""))
         target = rh.accept("NCT0TEST", "lgrob", note="checked", today="2026-09-26")
-        self.assertFalse(os.path.exists(os.path.join(rh.REVIEW_DIR, "NCT0TEST.yaml")))
+        self.assertFalse(os.path.exists(os.path.join(self.layers.review, "NCT0TEST.yaml")))
         text = open(target).read()
         self.assertIn("curated_on: '2026-09-26'", text)
         self.assertIn("protein_change: p.F1174L", text)  # curator's text kept as written
-        rows = list(csv.DictReader(open(rh.LOG_FILE), delimiter="\t"))
+        rows = list(csv.DictReader(open(self.layers.log), delimiter="\t"))
         self.assertEqual(
             (rows[0]["trial_id"], rows[0]["reviewer"], rows[0]["from_layer"], rows[0]["note"]),
             ("NCT0TEST", "lgrob", "needs_review", "checked"),
@@ -87,7 +76,7 @@ class TestAccept(_Layers):
         self.assertEqual(len(rows[0]["sha256"]), 64)
 
     def test_a_trial_already_reviewed_is_refused(self):
-        os.makedirs(rh.REVIEWED_DIR)
+        os.makedirs(self.layers.reviewed)
         self.put("old\n", "reviewed")
         self.put(CTML.format(change="p.F1174L", extra=""), "mapped")
         with self.assertRaises(SystemExit):
@@ -116,7 +105,7 @@ class TestExclude(_Layers):
         )
         o = self.scope.load_overrides(self.scope.OVERRIDES)
         self.assertEqual(o["NCT0TEST"], ("skip", "adult-only trial (lgrob, 2026-09-26)"))
-        rows = list(csv.DictReader(open(rh.LOG_FILE), delimiter="\t"))
+        rows = list(csv.DictReader(open(self.layers.log), delimiter="\t"))
         self.assertEqual((rows[0]["flags_resolved"], rows[0]["from_layer"]), ("excluded", "mapped"))
         with self.assertRaises(SystemExit):
             rh.exclude("NCT0TEST", "lgrob", "again")
@@ -403,8 +392,8 @@ class TestFlagUnsupportedGenes(_Layers):
         self.assertEqual(
             [(t, layer, g) for t, layer, g, _ in found], [("NCT0TEST", "mapped", ["DNMT3B"])]
         )
-        self.assertFalse(os.path.exists(os.path.join(rh.MAPPED_DIR, "NCT0TEST.yaml")))
-        moved = open(os.path.join(rh.REVIEW_DIR, "NCT0TEST.yaml")).read()
+        self.assertFalse(os.path.exists(os.path.join(self.layers.mapped, "NCT0TEST.yaml")))
+        moved = open(os.path.join(self.layers.review, "NCT0TEST.yaml")).read()
         self.assertIn("gene_unsupported: DNMT3B", moved)
 
     def test_a_named_gene_is_not_flagged(self):
@@ -416,19 +405,19 @@ class TestFlagUnsupportedGenes(_Layers):
 
     def test_the_dry_run_writes_nothing(self):
         self._run("DNMT3B", "sign the ICF")
-        self.assertTrue(os.path.exists(os.path.join(rh.MAPPED_DIR, "NCT0TEST.yaml")))
+        self.assertTrue(os.path.exists(os.path.join(self.layers.mapped, "NCT0TEST.yaml")))
 
     def test_a_file_with_curator_comments_is_never_rewritten(self):
         found = self._run("DNMT3B", "sign the ICF", apply=True, comment="# curator note\n")
         self.assertEqual(found[0][3], "edited: check by hand")
-        self.assertTrue(os.path.exists(os.path.join(rh.MAPPED_DIR, "NCT0TEST.yaml")))
+        self.assertTrue(os.path.exists(os.path.join(self.layers.mapped, "NCT0TEST.yaml")))
 
 
 class TestAudit(_Layers):
     def test_the_sample_is_reproducible_and_skips_other_layers(self):
         for t in ("A", "B", "C", "D"):
-            open(os.path.join(rh.MAPPED_DIR, f"{t}.yaml"), "w").close()
-        open(os.path.join(rh.REVIEW_DIR, "B.yaml"), "w").close()
+            open(os.path.join(self.layers.mapped, f"{t}.yaml"), "w").close()
+        open(os.path.join(self.layers.review, "B.yaml"), "w").close()
         s1, pool = rh.audit_sample(2, seed=1)
         self.assertEqual(pool, 3)
         self.assertEqual(s1, rh.audit_sample(2, seed=1)[0])

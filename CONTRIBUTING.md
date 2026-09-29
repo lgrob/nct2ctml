@@ -8,9 +8,14 @@ from its tag. Setup is in the [README](README.md#quickstart).
 ## Tests
 
 ```bash
-python -m unittest discover -s tests -v            # offline suite
+python -m unittest discover -s tests -t . -v       # offline suite
 python -m unittest tests.test_reference_validation -v
 ```
+
+Run it from the repository root with `-t .`: the suite then loads
+`tests/__init__.py`, which wraps the LLM platform so that any test reaching
+it fails instead of sending a request (`tests/support.py`). Without `-t .`,
+`tests/test_offline_guard.py` fails and says so.
 
 The two live-model tests are skipped by default; they send real prompts to the
 backend `config.py` selects, so they need a running server or an API key:
@@ -90,7 +95,7 @@ Every file in `ref/` is listed in `ref/SOURCES.tsv`
   ```bash
   python -m utils.verify_refs --fetch-oncotree <version>   # or the file's build script
   python -m utils.verify_refs --update ref/<file>
-  python -m unittest discover -s tests
+  python -m unittest discover -s tests -t .
   ```
 
   For Oncotree, also update the version where the docs name it

@@ -2,6 +2,36 @@
 
 What changed in this fork after the initial retargeting, newest first. Moved from CHANGES.md on 2026-09-28 (improvement plan step 13); the entries are unchanged. Measured decisions are in [decisions/](decisions/), mapping runs and queue reviews in [runs/](runs/).
 
+## Refactoring safety net (step 11, phase 0, 2026-09-29)
+
+- **`scripts/behaviour_snapshot.py`** captures everything a move must not
+  change, and `--compare` checks it:
+  - prompts, schemas and CTML of the curated trials (determinism probe);
+  - every mapped or queued trial through `TrialMapManager` under a stub
+    model (`scripts/map_probe.py`, 1,180 trials);
+  - the index tables;
+  - the review helper's queue, the dry runs of its batch commands, `check`,
+    and the review sheets.
+
+  It is stable run to run, fails if it changed any file it only reads, and
+  noticed a disabled ALL-lineage rule (24 trials). The stub model is now
+  shared (`scripts/stub_model.py`), and both probes replace the platform
+  with one that refuses to send.
+- **The offline suite cannot call a model.** `tests/support.py` wraps the
+  platform so that sending raises. `tests/__init__.py` installs the wrapper,
+  so the suite runs as `unittest discover -s tests -t .` (README,
+  CONTRIBUTING and CI updated), and `tests/test_offline_guard.py` fails when
+  it is missing.
+- **No test may change `ctml/`, `cache/ctml`, `ref/`, `index/`, `runs/` or
+  `review_sheets/`.** `tests/test_zz_no_writes.py` checks this, and
+  `tests/support.temporary_layers()` redirects the review layers for tests
+  that write.
+- **Fixed:** `test_genomic_prompt_variants` restored the environment
+  wrongly. Its teardown set `NCT2CTML_GENOMIC_PROMPT=baseline` again, so
+  every later test, and every subprocess it started, ran with the baseline
+  genomic prompt instead of the default `roles`. It also reinstalls the
+  guard after reloading `ai_helper`.
+
 ## Documentation reorganised (improvement plan 13-16, 2026-09-28)
 
 - **CHANGES.md split** (2,023 -> 544 lines). It keeps the Apache notice, the

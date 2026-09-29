@@ -53,13 +53,13 @@ The size alone is not the problem. The problems are:
 
 ## Phase 0: safety net (before any move) - small
 
-- [ ] **0.1 Behaviour snapshot script.** Add `scripts/behaviour_snapshot.py`.
+- [x] **0.1 Behaviour snapshot script.** Add `scripts/behaviour_snapshot.py`.
   It writes one JSON containing the determinism probe's prompt, schema and
   CTML hashes for the 56 reviewed trials, plus the SHA-256 of each index
   table built from the current layers. A `--compare <file>` flag prints the
   differences. The same comparison verified the ruff reformat; this makes
   it one command.
-- [ ] **0.2 Tests cannot reach a model.** Add an `Offline` LLM platform
+- [x] **0.2 Tests cannot reach a model.** Add an `Offline` LLM platform
   whose `send()` raises "tests must not call a model", and make it the
   platform for the offline suite, so a patch that stops working fails loudly
   instead of calling the API. Live tests (`RUN_LIVE_LLM_TESTS=1`) switch it
@@ -67,7 +67,7 @@ The size alone is not the problem. The problems are:
   top-level modules and never loads `tests/__init__.py`, so the guard needs
   either `-t .` in the documented and CI commands, or to be set through the
   environment in CI and in `CONTRIBUTING.md`.
-- [ ] **0.3 Tests cannot write to real directories.** `test_review_helper`
+- [x] **0.3 Tests cannot write to real directories.** `test_review_helper`
   reassigns `rh.MAPPED_DIR`/`REVIEW_DIR`/`REVIEWED_DIR`/`LOG_FILE`. Replace
   that with one fixture that points `config` at a temporary tree, and add a
   test asserting no test run touches `ctml/` or `cache/ctml` (a
@@ -77,10 +77,24 @@ The size alone is not the problem. The problems are:
 assignment to a name that no longer exists) makes a test fail rather than
 call the model.
 
+Done 2026-09-29.
+- `scripts/behaviour_snapshot.py` also runs `scripts/map_probe.py`: every
+  mapped or queued trial (1,180) through `TrialMapManager` under the stub.
+  The curated trials alone did not exercise the rules Phase 1 moves:
+  disabling the ALL-lineage rule changed nothing among them, but 24 trials
+  in the corpus. The snapshot is stable run to run (about 1.5 minutes).
+- Offline guard in `tests/support.py`, installed by `tests/__init__.py`; the
+  suite runs as `unittest discover -s tests -t .`, and
+  `tests/test_offline_guard.py` fails without `-t .`.
+- `tests/support.temporary_layers()` and `tests/test_zz_no_writes.py`.
+- Found and fixed first: review sheets listed flagged names in set order
+  (25 of 175 sheets differed between identical runs), and
+  `test_genomic_prompt_variants` left `NCT2CTML_GENOMIC_PROMPT=baseline`
+  set for every later test and subprocess.
+
 ## Phase 1: `utils/review_helper.py` - no upstream cost, biggest payoff (about a day)
 
-- [ ] **1.1 Separate the rules the mapper uses** into `src/rules.py` (name
-  open), imported by both `trial_map_manager` and the review helper:
+- [ ] **1.1 Separate the rules the mapper uses** into `src/text_rules.py`, imported by both `trial_map_manager` and the review helper:
   `collect`/`_walk`, the gene-alias and term patterns,
   `gene_status_contradictions`, `diagnoses_only_in_exclusions`, the ALL
   lineage rule (`B_ALL`, `T_ALL`, `all_lineage_unspecified`,
@@ -168,7 +182,7 @@ gone, and the snapshot is unchanged.
    do Phase 1 and 3.1 only (the transport seam removes the monkeypatch risk);
    or do Phases 2 and 3 only after one more upstream merge. Recommended:
    Phases 0 and 1 now, then decide on 2 and 3 with that experience.
-2. **Names:** `src/rules.py` vs `src/mapping/rules.py`, and `utils/llm/` vs
+2. **Names:** `src/text_rules.py` (chosen 2026-09-29) vs `src/mapping/rules.py`, and `utils/llm/` vs
    `src/llm/`. They can be settled at 1.1; changing them later is another
    round of moves.
 3. **The test command:** switch to `unittest discover -s tests -t .` if 0.2

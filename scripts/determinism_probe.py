@@ -12,25 +12,7 @@ logger.remove()
 import src.clinical_trials_gov as ctg
 import src.ctis as ctis
 import utils.ai_helper as ai
-
-
-def fake(node):
-    t = node.get("type") if isinstance(node, dict) else None
-    if isinstance(node, dict) and "enum" in node:
-        return sorted(node["enum"], key=str)[0]
-    if t == "object":
-        return {k: fake(v) for k, v in (node.get("properties") or {}).items()}
-    if t == "array":
-        it = node.get("items") or {}
-        if isinstance(it, dict) and "enum" in it:
-            return sorted(it["enum"], key=str)[:2]
-        return [fake(it)] if isinstance(it, dict) and it.get("type") == "object" else []
-    if t == "string":
-        return ""
-    if t == "boolean":
-        return False
-    return None
-
+from scripts.stub_model import fake, refuse_real_platform
 
 CALLS = []
 
@@ -40,6 +22,7 @@ def send(id, prompt, json_schema=None):
     return fake(json_schema or {})
 
 
+refuse_real_platform(ai)
 ai.send_ai_request = send
 ai.parse_ai_response = lambda r, trial_id="": r
 
