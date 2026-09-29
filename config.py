@@ -11,7 +11,7 @@ import os
 # runs/<run_id>/run.json, so a setting changed from outside the file is never
 # invisible. Paths are not overridable: the reference files are checked
 # against ref/SOURCES.tsv, and the layer directories are fixed by the layout.
-OVERRIDES = {}
+OVERRIDES: dict[str, object] = {}
 _TRUE, _FALSE = {"1", "true", "yes", "on"}, {"0", "false", "no", "off"}
 
 

@@ -85,7 +85,7 @@ class TrialPullManager:
                         nct_ids.add(row["nct_id"])
         return nct_ids
 
-    def get_trial_from_trial_status_file(self, nct_id: str) -> dict:
+    def get_trial_from_trial_status_file(self, nct_id: str) -> dict | None:
         """Get current status of a trial from trial_status.csv"""
         if not os.path.exists(self.trial_status_file):
             return None
@@ -294,9 +294,9 @@ class TrialPullManager:
                         "trial_last_updated_date",
                         "entry_last_updated_date",
                     ]
-                    writer = csv.DictWriter(file, fieldnames=fieldnames)
-                    writer.writeheader()
-                    writer.writerows(records)
+                    dict_writer = csv.DictWriter(file, fieldnames=fieldnames)
+                    dict_writer.writeheader()
+                    dict_writer.writerows(records)
                 logger.info(
                     f"Updated trial {nct_id} in {self.trial_status_file} | local_protocol_ids : {local_protocol_ids} | status : {status} | last_update_date : {last_update_date}"
                 )

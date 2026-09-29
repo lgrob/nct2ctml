@@ -36,3 +36,19 @@ ignore = ["E501", "W291", "W293"]
 # Tests put the repo root on sys.path before importing it.
 "tests/*" = ["E402"]
 "scripts/*_probe.py" = ["E402"]
+
+[tool.mypy]
+# Non-strict to start (improvement plan step 12): unannotated functions are
+# not checked, annotated ones are. src/ and utils/ are namespace packages, so
+# modules are named by path from the repository root.
+python_version = "3.12"
+files = ["main.py", "config.py", "src", "utils", "bench", "scripts"]
+explicit_package_bases = true
+mypy_path = "."
+warn_unused_ignores = true
+warn_redundant_casts = true
+
+[[tool.mypy.overrides]]
+# No type information published.
+module = ["ahocorasick"]
+ignore_missing_imports = true

@@ -6,7 +6,7 @@
 intervention_types = ["DRUG", "BIOLOGICAL", "COMBINATION_PRODUCT"]
 # Countries whose recruiting sites make a trial eligible.
 # An empty list means worldwide (no location filter).
-regions = []
+regions: list[str] = []
 conditions = [
     # general oncology terms (kept from upstream)
     "cancer",

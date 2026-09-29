@@ -85,8 +85,9 @@ def read_from_file(path: str, file_name: str, format: str) -> dict:
         with open(f"{path}/{file_name}.json") as json_file:
             data = json.load(json_file)
             return data
-    else:
-        print("No implementation for formats other than json")
+    # Every caller reads JSON. Until 2026-09-29 another format printed a
+    # message and returned None, which the caller then indexed.
+    raise ValueError(f"unsupported format {format!r}; only json is implemented")
 
 
 def read_from_file_path(path: str, format: str) -> dict:
@@ -94,8 +95,9 @@ def read_from_file_path(path: str, format: str) -> dict:
         with open(path) as json_file:
             data = json.load(json_file)
             return data
-    else:
-        print("No implementation for formats other than json")
+    # Every caller reads JSON. Until 2026-09-29 another format printed a
+    # message and returned None, which the caller then indexed.
+    raise ValueError(f"unsupported format {format!r}; only json is implemented")
 
 
 def save_to_file(data: dict, path: str, file_name: str, format: str):
@@ -194,7 +196,7 @@ def split_with_find(text, keywords: list[str]):
 
 
 ##Post-processing##
-def update_hugo_symbol(genomic_crit: dict):
+def update_hugo_symbol(genomic_crit: dict | list):
 
     if isinstance(genomic_crit, dict):
         for key, value in genomic_crit.items():

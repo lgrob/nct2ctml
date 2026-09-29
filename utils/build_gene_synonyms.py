@@ -228,8 +228,8 @@ def invert(records: dict, symbols: list[str]) -> tuple[dict, list]:
                 alias_to_genes[name].add(official)
 
     mapping, collisions = {}, []
-    for alias, genes in sorted(alias_to_genes.items()):
-        genes = sorted(genes)
+    for alias, gene_set in sorted(alias_to_genes.items()):
+        genes = sorted(gene_set)
         if len(genes) > 1:
             # An alias that is itself one of the candidate official symbols is
             # not ambiguous: HGF is listed as a historical alias of IL6 and

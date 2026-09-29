@@ -60,6 +60,7 @@ import os
 import re
 from dataclasses import dataclass, field
 from functools import lru_cache
+from typing import cast
 
 import config
 
@@ -166,7 +167,7 @@ def _residues(tokens: str) -> str | None:
         # ("Ala" is not valid one-letter), so a mixed read is refused above.
         parts = list(tokens)
     out = [_one_letter(p) for p in parts]
-    return None if None in out else "".join(out)
+    return None if None in out else "".join(cast(list[str], out))
 
 
 def _parse(text: str) -> _Parsed | None:

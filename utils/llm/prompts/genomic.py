@@ -16,7 +16,7 @@ import utils.llm.transport as transport
 # Roadmap 2.9, "roles": genes the model classified as something other than an
 # entry requirement, per trial id: [(gene, role)]. Read by the mapper, which
 # records them as gene_role_dropped on the trial.
-ROLE_DROPS = {}
+ROLE_DROPS: dict[str, list[tuple[str, str]]] = {}
 
 
 def get_inclusion_genomic_criteria(nct_id: str, genes: list, eligibilityCriteria: str) -> list:

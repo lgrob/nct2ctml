@@ -77,7 +77,7 @@ class CtisPullManager:
                         found.add(row["ct_number"])
         return found
 
-    def get_trial_from_status_file(self, ct_number: str) -> dict:
+    def get_trial_from_status_file(self, ct_number: str) -> dict | None:
         if not os.path.exists(self.status_file):
             return None
         with open(self.status_file, newline="", encoding="utf-8") as f:
@@ -189,7 +189,7 @@ class CtisPullManager:
         logger.info(f"CTIS search found {len(found)} unique paediatric trials")
         return found
 
-    def fetch_and_cache_trial(self, ct_number: str) -> dict:
+    def fetch_and_cache_trial(self, ct_number: str) -> dict | None:
         """Retrieve the full CTIS record and cache it. Returns the record, or None."""
         try:
             resp = requests.get(

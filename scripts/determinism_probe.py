@@ -14,7 +14,7 @@ import src.ctis as ctis
 import utils.llm.transport as transport
 from scripts.stub_model import fake, refuse_real_platform
 
-CALLS = []
+CALLS: list[dict[str, str]] = []
 
 
 def send(id, prompt, json_schema=None):
@@ -29,8 +29,8 @@ transport.parse_ai_response = lambda r, trial_id="": r
 import src.mapping.genomic as genomic
 from src.trial_map_manager import TrialMapManager
 
-syn = TrialMapManager.get_gene_synonym_mapping(None)
-out = {}
+syn = TrialMapManager().get_gene_synonym_mapping()
+out: dict = {}
 for tid in sys.argv[2].split(","):
     n0 = len(CALLS)
     reg = "nct" if tid.startswith("NCT") else "ctis"

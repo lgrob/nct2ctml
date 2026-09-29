@@ -24,7 +24,7 @@ import utils.age_bounds as ab
 import utils.llm.prompts.arms as arm_prompts
 import utils.llm.prompts.diagnosis as dx_prompts
 import utils.oncotree as onct
-from src.match_criteria_mapper import ArmCriteriaBlocks, ArmCriteriaText
+from src.match_criteria_mapper import ArmCriteriaBlocks
 
 
 def map_nct_to_ctml(trial_data: dict, gene_synonym_mapping: dict[str, list[str]]) -> dict:
@@ -69,9 +69,7 @@ def map_nct_to_clinical_and_genomic_criteria(
 ) -> dict:
     nct_id = get_nct_id(trial_data)
 
-    global_nct_criteria = ArmCriteriaText.get_combined_eligibility_text(
-        all_arms_criteria.get("global", {})
-    )
+    global_nct_criteria = mcm.combined_eligibility_text(all_arms_criteria.get("global", {}))
     global_inclusion_text = all_arms_criteria.get("global", {}).get("inclusion_text", "")
     global_exclusion_text = all_arms_criteria.get("global", {}).get("exclusion_text", "")
 
@@ -178,7 +176,7 @@ def _map_arm_level_matches(
         if arm_criteria["inclusion_text"] == "" and arm_criteria["exclusion_text"] == "":
             continue
 
-        arm_eligibility_criteria = ArmCriteriaText.get_combined_eligibility_text(arm_criteria)
+        arm_eligibility_criteria = mcm.combined_eligibility_text(arm_criteria)
         arm_inclusion_text = arm_criteria.get("inclusion_text", "")
         arm_exclusion_text = arm_criteria.get("exclusion_text", "")
         mapped_arm_clinical_critera = {}
@@ -546,7 +544,7 @@ def _age_bound(raw, operator, nct_id="", unit_offset=0):
     return f"{operator}{years}"
 
 
-def map_age_numerical(trial_data: dict, prose: dict = None) -> list:
+def map_age_numerical(trial_data: dict, prose: dict | None = None) -> list:
     """
     The trial's age bounds as CTML age_numerical expressions, in years.
 
@@ -597,8 +595,7 @@ def get_full_nct_eligibility_criteria(trial_data):
 def map_gender(trial_data: dict):
     nct_gender = tdh.safe_get(trial_data, ["protocolSection", "eligibilityModule", "sex"])
     gender_mapping = {"male": "Male", "female": "Female"}
-    result = gender_mapping.get(nct_gender.lower(), {})
-    return result
+    return gender_mapping.get(nct_gender.lower(), "")
 
 
 def _map_global_diagnosis_from_conditions_and_extra_info(trial_data: dict) -> set:

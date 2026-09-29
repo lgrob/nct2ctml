@@ -392,7 +392,9 @@ def get_cnv_detail_enrichment_prompt(
     return CNV_ENRICHMENT_SCHEMA, cleandoc(prompt)
 
 
-ENRICHMENT_REJECTED = []  # (field, value) the check refused, for measurement
+ENRICHMENT_REJECTED: list[
+    tuple[str, object]
+] = []  # (field, value) the check refused, for measurement
 
 
 def merge_enriched_criteria(

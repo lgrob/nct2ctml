@@ -5,11 +5,13 @@
 
 import re
 from collections.abc import Iterable, Mapping
+from types import ModuleType
 
 from loguru import logger
 
 import utils.gene_mentions as gene_mentions
 
+_config: ModuleType | None
 try:
     import src.trial_config as _config
 except ImportError:  # pragma: no cover - allows standalone import in tests

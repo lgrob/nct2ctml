@@ -78,7 +78,7 @@ RUN_FILE = "run.json"
 
 _run = None
 _git = None
-_hashes = {}
+_hashes: dict[tuple[str, int, int], str] = {}
 
 
 def _now():

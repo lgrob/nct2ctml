@@ -52,7 +52,7 @@ ANY_LIQUID = "_LIQUID_"
 # remember that the benchmark cannot see this distinction at all.
 
 
-def dx(*names):
+def dx(*names) -> dict:
     """One diagnosis, or an `or` over several."""
     if len(names) == 1:
         return {"clinical": {"oncotree_primary_diagnosis": names[0]}}
@@ -91,7 +91,7 @@ def status(*values):
     return {"clinical": {"disease_status": list(values)}}
 
 
-CURATIONS = {}
+CURATIONS: dict[str, dict] = {}
 
 
 # --------------------------------------------------------------- neuroblastoma

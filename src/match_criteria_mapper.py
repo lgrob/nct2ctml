@@ -4,6 +4,7 @@
 # See CHANGES.md for what differs.
 
 import re
+from collections.abc import Iterable
 from typing import TypedDict
 
 from loguru import logger
@@ -33,19 +34,21 @@ class ArmCriteriaText(TypedDict, total=False):
     inclusion_text: str
     exclusion_text: str
 
-    def get_combined_eligibility_text(self) -> str:
-        """
-        Combine inclusion and exclusion text into a single eligibility criteria string.
 
-        The combined text is in the format:
-        "Inclusion Criteria: {inclusion_text}\nExclusion Criteria: {exclusion_text}"
-        """
-        combined_text = ""
-        if self.get("inclusion_text"):
-            combined_text += f"Inclusion Criteria: {self['inclusion_text']}\n"
-        if self.get("exclusion_text"):
-            combined_text += f"Exclusion Criteria: {self['exclusion_text']}"
-        return combined_text.strip()
+def combined_eligibility_text(arm: ArmCriteriaText) -> str:
+    """
+    Combine an arm's inclusion and exclusion text into one eligibility string:
+    "Inclusion Criteria: {inclusion_text}\nExclusion Criteria: {exclusion_text}".
+
+    A method on ArmCriteriaText until 2026-09-29; a TypedDict cannot carry
+    methods (mypy rejects it), so it is a function of the dict.
+    """
+    combined_text = ""
+    if arm.get("inclusion_text"):
+        combined_text += f"Inclusion Criteria: {arm['inclusion_text']}\n"
+    if arm.get("exclusion_text"):
+        combined_text += f"Exclusion Criteria: {arm['exclusion_text']}"
+    return combined_text.strip()
 
 
 ArmCriteriaBlocks = dict[str, ArmCriteriaText]
@@ -440,7 +443,7 @@ def _convert_clinical_block(clinical_critera, trial_id: str = "") -> dict:
 
     if diagnoses:
         if len(diagnoses) > 1:  # incase of multiple diagnoses, put the result under 'or' operator
-            diagnosis_result = {"or": []}
+            diagnosis_result: dict[str, list] = {"or": []}
             for diagnosis in diagnoses:
                 diagnosis_ctml = {"clinical": {"oncotree_primary_diagnosis": diagnosis}}
                 diagnosis_result["or"].append(diagnosis_ctml)
@@ -473,7 +476,7 @@ def _negated(variant_category: str) -> bool:
     return (variant_category or "").startswith("!")
 
 
-def _base_category(variant_category: str) -> str:
+def _base_category(variant_category: str | None) -> str:
     return (variant_category or "").lstrip("!").strip().lower()
 
 
@@ -802,7 +805,7 @@ def combine_clinical_and_genomic_ctml(clinical_ctml, genomic_ctml):
         return match_result
 
 
-def check_if_eligibility_criteria_contains_gene_info(genes: list, eligibility):
+def check_if_eligibility_criteria_contains_gene_info(genes: Iterable[str], eligibility):
     print("looking for gene keywords")
     contains = ac.search_keywords_in_text(genes, eligibility)
     return contains

@@ -194,7 +194,7 @@ def diagnoses_only_in_exclusions(diagnoses, inclusion, exclusion, context=(), re
     return out
 
 
-_SHARED = []
+_SHARED: list["Reference"] = []
 
 
 def _shared_reference():

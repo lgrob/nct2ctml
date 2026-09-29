@@ -169,7 +169,7 @@ class TrialMapManager:
             mapped_ctml["protocol_ids"] = []
             logger.info("Local trial info file not found")
 
-    def _get_cutoff_date(self, cutoff_days: int = None) -> datetime:
+    def _get_cutoff_date(self, cutoff_days: int | None = None) -> datetime:
         """
         Get the cutoff date for mapping trials.
 
@@ -194,7 +194,7 @@ class TrialMapManager:
         return cutoff_date
 
     def map_all_trials(
-        self, nct_files_path: str, ctml_files_path: str, cutoff_days: int = None
+        self, nct_files_path: str, ctml_files_path: str, cutoff_days: int | None = None
     ) -> dict[str, int]:
         """Map all NCT files to CTML format with local trial info integration"""
         logger.info(f"Using ctml_files_path: {ctml_files_path}")

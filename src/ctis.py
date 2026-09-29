@@ -88,7 +88,8 @@ def split_inclusion_exclusion_criteria(trial_data: dict) -> tuple[str, str]:
     ec = _g(_part_one(trial_data), "trialDetails", "trialInformation", "eligibilityCriteria") or {}
 
     def join(key: str) -> str:
-        seen, lines = set(), []
+        seen: set[str] = set()
+        lines: list[str] = []
         for item in ec.get(key) or []:
             text = re.sub(r"\s+", " ", (item.get(key) or "")).strip()
             if text and text not in seen:

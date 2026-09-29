@@ -128,7 +128,7 @@ OFF_LIST_EVENTS = {"checked": 0, "recased": 0, "kept_for_review": 0, "dropped": 
 # trial id -> Oncotree names answered off-list; read and cleared by
 # TrialMapManager, which records them as diagnosis_off_list and routes the
 # trial to review.
-OFF_LIST_BY_TRIAL = {}
+OFF_LIST_BY_TRIAL: dict[str, list[str]] = {}
 
 
 def keep_candidates(result, allowed, trial_id="", extra=(), keep_valid=True):

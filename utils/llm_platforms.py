@@ -411,7 +411,7 @@ class AnthropicPlatform(LLMPlatform):
 
     def __init__(self, model: str, hostname: str):
         super().__init__(model, hostname)
-        self._client = None
+        self._client: Any = None
 
     @property
     def port(self) -> int:
@@ -609,7 +609,7 @@ class ReplayPlatform(LLMPlatform):
                 "(or NCT2CTML_REPLAY_FILE): a run's llm_calls.jsonl"
             )
         self.source = path
-        self._answers = defaultdict(deque)
+        self._answers: defaultdict[tuple[str, str | None], deque[Any]] = defaultdict(deque)
         recorded = set()
         with open(path, encoding="utf-8") as handle:
             for line in handle:

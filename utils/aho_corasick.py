@@ -1,11 +1,12 @@
 import os
 import sys
+from collections.abc import Iterable
 
 sys.path.append(os.path.abspath("../"))
 import ahocorasick
 
 
-def search_keywords_in_text(keywords: list, text):
+def search_keywords_in_text(keywords: Iterable[str], text):
     # Create an Aho-Corasick automaton
     A = ahocorasick.Automaton()
 
