@@ -34,6 +34,8 @@ The rules, and why:
 
 from loguru import logger
 
+import utils.llm.prompts.age as age_prompts
+
 # Conversion to years for the units the prompt allows. Kept in step with
 # src/clinical_trials_gov._AGE_UNIT_IN_YEARS, which covers the registry's
 # structured field.
@@ -170,9 +172,7 @@ def read_age_bounds(trial_id, inclusion_text):
     if not (inclusion_text or "").strip():
         return None
     try:
-        import utils.ai_helper as ai
-
-        result = ai.get_age_bounds(trial_id, inclusion_text)
+        result = age_prompts.get_age_bounds(trial_id, inclusion_text)
     except Exception as e:
         logger.warning(f"{trial_id} | Age reading failed ({e}); using structured ages only")
         return None

@@ -8,7 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from loguru import logger
 
 import config
-import utils.ai_helper as ai
+import utils.llm.prompts.age as age_prompts
 import utils.llm.prompts.biomarkers as biomarker_prompts
 import utils.llm.prompts.diagnosis as dx_prompts
 import utils.llm.prompts.genomic as genomic_prompts
@@ -37,7 +37,7 @@ class TestEveryPromptIsStructured(unittest.TestCase):
             biomarker_prompts.get_pdl1_status_prompt("c", []),
             biomarker_prompts.get_mmr_status_prompt("c", []),
             biomarker_prompts.get_disease_status_prompt("c", []),
-            ai.get_age_bounds_prompt("c"),
+            age_prompts.get_age_bounds_prompt("c"),
             genomic_prompts.get_inclusion_genomic_criteria_prompt(["MYCN"], "c"),
             genomic_prompts.get_exclusion_genomic_criteria_prompt(["MYCN"], "c"),
         ]
@@ -211,13 +211,13 @@ class TestStatusSchemas(unittest.TestCase):
 
     def test_either_age_bound_may_be_null(self):
         for end in ("minimum", "maximum"):
-            bound = ai.AGE_BOUNDS_SCHEMA["properties"][end]
+            bound = age_prompts.AGE_BOUNDS_SCHEMA["properties"][end]
             self.assertIn("null", bound["properties"]["value"]["type"])
 
     def test_age_units_are_constrained_to_what_the_code_converts(self):
         from utils.age_bounds import UNIT_IN_YEARS
 
-        unit = ai.AGE_BOUNDS_SCHEMA["properties"]["maximum"]["properties"]["unit"]
+        unit = age_prompts.AGE_BOUNDS_SCHEMA["properties"]["maximum"]["properties"]["unit"]
         self.assertEqual(set(unit["enum"]), set(UNIT_IN_YEARS))
 
 

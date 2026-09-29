@@ -107,11 +107,11 @@ class TestProseBounds(unittest.TestCase):
 
 class TestReadingFailures(unittest.TestCase):
     def test_a_model_failure_is_none_not_an_exception(self):
-        with patch("utils.ai_helper.get_age_bounds", side_effect=ConnectionError("down")):
+        with patch("utils.llm.prompts.age.get_age_bounds", side_effect=ConnectionError("down")):
             self.assertIsNone(ab.read_age_bounds("NCT00000000", "Age 1 to 21 years"))
 
     def test_empty_text_asks_nothing(self):
-        with patch("utils.ai_helper.get_age_bounds") as reader:
+        with patch("utils.llm.prompts.age.get_age_bounds") as reader:
             self.assertIsNone(ab.read_age_bounds("NCT00000000", "  "))
         reader.assert_not_called()
 
@@ -119,14 +119,15 @@ class TestReadingFailures(unittest.TestCase):
 class TestCtisBothBounds(unittest.TestCase):
     def test_ctis_now_gets_a_maximum(self):
         with patch(
-            "utils.ai_helper.get_age_bounds", return_value=_prose(low=1, high=18, high_inc=False)
+            "utils.llm.prompts.age.get_age_bounds",
+            return_value=_prose(low=1, high=18, high_inc=False),
         ):
             self.assertEqual(
                 ctis.map_age_numerical("2023-500000-00-00", "Age 1 to <18 years"), [">=1", "<18"]
             )
 
     def test_ctis_with_no_stated_age_gets_none(self):
-        with patch("utils.ai_helper.get_age_bounds", return_value=_prose()):
+        with patch("utils.llm.prompts.age.get_age_bounds", return_value=_prose()):
             self.assertEqual(ctis.map_age_numerical("2023-500000-00-00", "ECOG 0-1"), [])
 
 
