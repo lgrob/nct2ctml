@@ -26,6 +26,7 @@ refuse_real_platform(ai)
 ai.send_ai_request = send
 ai.parse_ai_response = lambda r, trial_id="": r
 
+import src.mapping.genomic as genomic
 from src.trial_map_manager import TrialMapManager
 
 syn = TrialMapManager.get_gene_synonym_mapping(None)
@@ -42,7 +43,7 @@ for tid in sys.argv[2].split(","):
     n1 = len(CALLS)
     try:
         inc, exc = (ctg if reg == "nct" else ctis).split_inclusion_exclusion_criteria(d)
-        g = ctg.map_ctml_match_genomic_criteria(tid, syn, inc, exc)
+        g = genomic.map_ctml_match_genomic_criteria(tid, syn, inc, exc)
         c += "|G|" + json.dumps(g, sort_keys=True, default=str)
     except Exception as e:
         c += f"|G ERROR {type(e).__name__}: {e}"

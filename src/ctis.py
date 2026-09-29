@@ -28,6 +28,7 @@ from loguru import logger
 import src.clinical_trials_gov as ctg
 import src.ctml_schema as cs
 import src.mapping.diagnosis as diagnosis
+import src.mapping.genomic as genomic
 import src.match_criteria_mapper as mcm
 import utils.age_bounds as ab
 
@@ -271,7 +272,7 @@ def map_ctis_to_ctml(trial_data: dict, gene_synonym_mapping: dict[str, list[str]
     clinical_criteria.update(ctg._map_biomarker_statuses(ct, criteria, keywords, level="global"))
 
     logger.info(f"CTIS: {ct} | Mapping genomic criteria")
-    genomic_ctml = ctg.map_ctml_match_genomic_criteria(
+    genomic_ctml = genomic.map_ctml_match_genomic_criteria(
         ct, gene_synonym_mapping, inclusion_text, exclusion_text
     )
 
