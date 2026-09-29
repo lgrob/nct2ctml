@@ -21,6 +21,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from loguru import logger
 
 import config
+import src.text_rules as text_rules
 import utils.gene_mentions as gm
 import utils.reference_validation as rv
 import utils.review_helper as rh
@@ -70,7 +71,7 @@ class TestCuratedHistoneAliases(unittest.TestCase):
         self.assertEqual(scan("H3.1 K27M"), ["H3C2", "H3C3"])
         self.assertTrue(_text_mentions_gene("H3.1 K27M", "H3C3"))
         self.assertFalse(_text_mentions_gene("H3.1 K27M", "H3C6"))
-        ref = rh.Reference()
+        ref = text_rules.Reference()
         self.assertIn("H3.1", ref.gene_terms("H3C2"))
         self.assertNotIn("H3.1", ref.gene_terms("H3C6"))
 
@@ -200,7 +201,7 @@ class TestHistoneVariants(unittest.TestCase):
 
 class TestReviewSheetAgrees(unittest.TestCase):
     def setUp(self):
-        self.ref = rh.Reference()
+        self.ref = text_rules.Reference()
 
     def ev(self, text, gene):
         return rh.evidence([("inclusion", text)], self.ref.gene_terms(gene), gene=gene)
@@ -217,8 +218,10 @@ class TestReviewSheetAgrees(unittest.TestCase):
             self.assertFalse(self.ev(text, "H3-3A"), text)
 
     def test_plain_evidence_unchanged(self):
-        self.assertEqual(rh.find_mentions("BRAFV600E", {"BRAF"}), [])
-        self.assertEqual(rh.find_mentions("BRAFV600E", {"BRAF"}, gene="BRAF"), [(0, 4, "BRAF")])
+        self.assertEqual(text_rules.find_mentions("BRAFV600E", {"BRAF"}), [])
+        self.assertEqual(
+            text_rules.find_mentions("BRAFV600E", {"BRAF"}, gene="BRAF"), [(0, 4, "BRAF")]
+        )
 
 
 if __name__ == "__main__":

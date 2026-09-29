@@ -9,8 +9,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from loguru import logger
 
 import src.match_criteria_mapper as mcm
+import src.text_rules as text_rules
 import src.trial_config as tc
-import utils.review_helper as rh
 
 logger.remove()
 
@@ -64,7 +64,7 @@ class TestGenomicNotation(unittest.TestCase):
                 },
             ]
         }
-        self.assertEqual(rh.add_sibling_gene(t, "H3C2", "H3C3"), 2)
+        self.assertEqual(text_rules.add_sibling_gene(t, "H3C2", "H3C3"), 2)
         self.assertEqual([n["genomic"]["hugo_symbol"] for n in t["and"][:2]], ["H3C2", "H3C3"])
         self.assertEqual([n["genomic"]["hugo_symbol"] for n in t["and"][2]["or"]], ["H3C2", "H3C3"])
 

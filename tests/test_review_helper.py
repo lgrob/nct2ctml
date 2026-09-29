@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from loguru import logger
 
+import src.text_rules as text_rules
 import utils.review_helper as rh
 from tests.support import temporary_layers
 
@@ -117,12 +118,14 @@ class TestExclude(_Layers):
 
 class TestEvidence(unittest.TestCase):
     def test_british_spelling_and_hyphens(self):
-        hits = rh.find_mentions("relapsed B-lymphoblastic leukaemia", ["B-Lymphoblastic Leukemia"])
+        hits = text_rules.find_mentions(
+            "relapsed B-lymphoblastic leukaemia", ["B-Lymphoblastic Leukemia"]
+        )
         self.assertEqual(len(hits), 1)
 
     def test_short_symbols_are_case_sensitive_whole_words(self):
-        self.assertEqual(rh.find_mentions("patients are eligible", ["AR"]), [])
-        self.assertEqual(len(rh.find_mentions("AR-positive", ["AR"])), 1)
+        self.assertEqual(text_rules.find_mentions("patients are eligible", ["AR"]), [])
+        self.assertEqual(len(text_rules.find_mentions("AR-positive", ["AR"])), 1)
 
     def test_near_miss_spelling(self):
         # 2023-504694-20-00 writes KMT2A as "KTM2A".
@@ -131,7 +134,7 @@ class TestEvidence(unittest.TestCase):
         self.assertFalse(rh.near_misses([("inclusion", "MET")], "MEK"))  # under 4 characters
 
     def test_ambiguous_aliases_never_count_as_support(self):
-        ref = rh.Reference()
+        ref = text_rules.Reference()
         self.assertNotIn("ALL", ref.gene_terms("BCR"))
         self.assertIn("ALL", ref.weak_gene_terms("BCR"))
 
@@ -146,7 +149,7 @@ class TestDiagnosesOnlyInExclusions(unittest.TestCase):
     )
 
     def test_exclusion_only_diagnoses_are_found(self):
-        got = rh.diagnoses_only_in_exclusions(
+        got = text_rules.diagnoses_only_in_exclusions(
             [
                 "Acute Myeloid Leukemia",
                 "Juvenile Myelomonocytic Leukemia",
@@ -161,7 +164,7 @@ class TestDiagnosesOnlyInExclusions(unittest.TestCase):
 
     def test_named_in_inclusion_or_title_is_not_reported(self):
         self.assertEqual(
-            rh.diagnoses_only_in_exclusions(
+            text_rules.diagnoses_only_in_exclusions(
                 ["Juvenile Myelomonocytic Leukemia"],
                 "",
                 self.EXC,
@@ -172,7 +175,7 @@ class TestDiagnosesOnlyInExclusions(unittest.TestCase):
 
     def test_excluded_and_unnamed_diagnoses_are_ignored(self):
         self.assertEqual(
-            rh.diagnoses_only_in_exclusions(
+            text_rules.diagnoses_only_in_exclusions(
                 ["!Juvenile Myelomonocytic Leukemia", "Osteosarcoma", "_LIQUID_"],
                 self.INC,
                 self.EXC,

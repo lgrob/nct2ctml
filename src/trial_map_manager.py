@@ -21,6 +21,7 @@ import config
 import src.clinical_trials_gov as ctg
 import src.ctis as ctis
 import src.match_criteria_mapper as mcm
+import src.text_rules as text_rules
 import src.trial_data_helper as tdh
 import utils.ai_helper as ai
 import utils.oncology_scope as scope
@@ -487,14 +488,12 @@ class TrialMapManager:
     ) -> None:
         """
         A trial for "acute lymphoblastic leukaemia" with no lineage wording
-        gets T-ALL beside B-ALL (utils.review_helper.all_lineage_unspecified):
+        gets T-ALL beside B-ALL (src.text_rules.all_lineage_unspecified):
         the synonym table maps unqualified ALL to B-ALL only. Never loses the trial.
         """
         if not isinstance(mapped_ctml, dict):
             return
         try:
-            from utils import review_helper as rh
-
             if registry == "ctis":
                 import src.ctis as ctis
 
@@ -507,8 +506,12 @@ class TrialMapManager:
                 context = [im.get("briefTitle") or "", im.get("officialTitle") or ""] + list(
                     ps.get("conditionsModule", {}).get("conditions") or []
                 )
-            if rh.all_lineage_unspecified(rh.collect(mapped_ctml)["diagnoses"], inc, exc, context):
-                n = rh.add_sibling_diagnosis(mapped_ctml.get("treatment_list"), rh.B_ALL, rh.T_ALL)
+            if text_rules.all_lineage_unspecified(
+                text_rules.collect(mapped_ctml)["diagnoses"], inc, exc, context
+            ):
+                n = text_rules.add_sibling_diagnosis(
+                    mapped_ctml.get("treatment_list"), text_rules.B_ALL, text_rules.T_ALL
+                )
                 logger.info(
                     f"{trial_id} | ALL named without lineage: T-ALL added beside B-ALL ({n})"
                 )
@@ -523,21 +526,19 @@ class TrialMapManager:
         Write genes the tree requires although the inclusion text says they
         must be absent or do not matter into the CTML as
         gene_status_contradiction, which routes the trial to review
-        (utils.review_helper.gene_status_contradictions; NCT05805605's
+        (src.text_rules.gene_status_contradictions; NCT05805605's
         "wild type FLT-ITD" read as an FLT3 mutation). Never loses the trial.
         """
         if not isinstance(mapped_ctml, dict):
             return
         try:
-            from utils import review_helper as rh
-
             if registry == "ctis":
                 import src.ctis as ctis
 
                 inc, _ = ctis.split_inclusion_exclusion_criteria(trial_data)
             else:
                 inc, _ = ctg.split_inclusion_exclusion_criteria(trial_data)
-            found = rh.gene_status_contradictions(mapped_ctml, inc)
+            found = text_rules.gene_status_contradictions(mapped_ctml, inc)
             if found:
                 mapped_ctml["gene_status_contradiction"] = "; ".join(sorted(found))
                 logger.warning(
@@ -553,21 +554,19 @@ class TrialMapManager:
         """
         Write diagnoses named only in the exclusion criteria into the CTML as
         diagnosis_excluded, which routes the trial to review. Deterministic:
-        no model call (utils.review_helper.diagnoses_only_in_exclusions).
+        no model call (src.text_rules.diagnoses_only_in_exclusions).
         """
         if not isinstance(mapped_ctml, dict):
             return
-        from utils import review_helper as rh
-
         try:
             TrialMapManager._flag_excluded_diagnoses_inner(
-                mapped_ctml, trial_data, registry, trial_id, rh
+                mapped_ctml, trial_data, registry, trial_id
             )
         except Exception as e:  # a check must never lose the trial
             logger.warning(f"{trial_id} | exclusion check skipped: {type(e).__name__}: {e}")
 
     @staticmethod
-    def _flag_excluded_diagnoses_inner(mapped_ctml, trial_data, registry, trial_id, rh):
+    def _flag_excluded_diagnoses_inner(mapped_ctml, trial_data, registry, trial_id):
         if registry == "ctis":
             import src.ctis as ctis
 
@@ -580,8 +579,8 @@ class TrialMapManager:
             context = [im.get("briefTitle") or "", im.get("officialTitle") or ""] + list(
                 ps.get("conditionsModule", {}).get("conditions") or []
             )
-        found = rh.diagnoses_only_in_exclusions(
-            rh.collect(mapped_ctml)["diagnoses"], inc, exc, context
+        found = text_rules.diagnoses_only_in_exclusions(
+            text_rules.collect(mapped_ctml)["diagnoses"], inc, exc, context
         )
         if found:
             mapped_ctml["diagnosis_excluded"] = "; ".join(found)
