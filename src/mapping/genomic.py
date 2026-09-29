@@ -11,6 +11,7 @@ from loguru import logger
 import src.match_criteria_mapper as mcm
 import src.trial_criteria_to_genes as ctg
 import utils.ai_helper as ai
+import utils.llm.prompts.enrichment as enrichment_prompts
 
 
 def map_ctml_match_genomic_criteria(
@@ -182,25 +183,29 @@ def _enrich_genomic_criteria(nct_id: str, genomic_criteria: list, criteria_text:
                 cnv_criteria.append(criterion)
 
     # Enrich mutations if criteria text contains mutation detail keywords
-    if mutation_criteria and ai.has_mutation_details(criteria_text):
+    if mutation_criteria and enrichment_prompts.has_mutation_details(criteria_text):
         logger.info(
             f"NCTID: {nct_id} | Detected mutation details in criteria, enriching {len(mutation_criteria)} mutation(s)"
         )
-        enriched_mutations = ai.enrich_mutation_details(nct_id, mutation_criteria, criteria_text)
+        enriched_mutations = enrichment_prompts.enrich_mutation_details(
+            nct_id, mutation_criteria, criteria_text
+        )
         if enriched_mutations:
             # Merge into the mutation_criteria list; these are references into genomic_criteria
-            ai.merge_enriched_criteria(
+            enrichment_prompts.merge_enriched_criteria(
                 mutation_criteria, enriched_mutations, enrichment_type="mutation"
             )
 
     # Enrich CNVs if criteria text contains CNV detail keywords
-    if cnv_criteria and ai.has_cnv_details(criteria_text):
+    if cnv_criteria and enrichment_prompts.has_cnv_details(criteria_text):
         logger.info(
             f"NCTID: {nct_id} | Detected CNV details in criteria, enriching {len(cnv_criteria)} CNV(s)"
         )
-        enriched_cnvs = ai.enrich_cnv_details(nct_id, cnv_criteria, criteria_text)
+        enriched_cnvs = enrichment_prompts.enrich_cnv_details(nct_id, cnv_criteria, criteria_text)
         if enriched_cnvs:
             # Merge into the cnv_criteria list; these are references into genomic_criteria
-            ai.merge_enriched_criteria(cnv_criteria, enriched_cnvs, enrichment_type="cnv")
+            enrichment_prompts.merge_enriched_criteria(
+                cnv_criteria, enriched_cnvs, enrichment_type="cnv"
+            )
 
     return genomic_criteria

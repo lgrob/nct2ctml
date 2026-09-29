@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from loguru import logger
 
-import utils.ai_helper as ai
+import utils.llm.prompts.enrichment as enrichment_prompts
 
 logger.remove()
 
@@ -21,42 +21,51 @@ CNV = [{"genomic": {"hugo_symbol": "MYCN", "variant_category": "Copy Number Vari
 
 class TestSchemas(unittest.TestCase):
     def test_both_prompts_send_a_schema(self):
-        schema, _ = ai.get_mutation_detail_enrichment_prompt(["EGFR"], "EGFR exon 19 deletion", MUT)
-        self.assertIs(schema, ai.MUTATION_ENRICHMENT_SCHEMA)
-        schema, _ = ai.get_cnv_detail_enrichment_prompt(["MYCN"], "MYCN amplification", CNV)
-        self.assertIs(schema, ai.CNV_ENRICHMENT_SCHEMA)
+        schema, _ = enrichment_prompts.get_mutation_detail_enrichment_prompt(
+            ["EGFR"], "EGFR exon 19 deletion", MUT
+        )
+        self.assertIs(schema, enrichment_prompts.MUTATION_ENRICHMENT_SCHEMA)
+        schema, _ = enrichment_prompts.get_cnv_detail_enrichment_prompt(
+            ["MYCN"], "MYCN amplification", CNV
+        )
+        self.assertIs(schema, enrichment_prompts.CNV_ENRICHMENT_SCHEMA)
 
     def test_schemas_are_valid_json_schema(self):
         try:
             import jsonschema
         except ImportError:
             self.skipTest("jsonschema not installed")
-        for schema in (ai.MUTATION_ENRICHMENT_SCHEMA, ai.CNV_ENRICHMENT_SCHEMA):
+        for schema in (
+            enrichment_prompts.MUTATION_ENRICHMENT_SCHEMA,
+            enrichment_prompts.CNV_ENRICHMENT_SCHEMA,
+        ):
             jsonschema.Draft202012Validator.check_schema(schema)
         jsonschema.validate(
-            {"enriched_cnvs": [{"index": 0, "cnv_call": None}]}, ai.CNV_ENRICHMENT_SCHEMA
+            {"enriched_cnvs": [{"index": 0, "cnv_call": None}]},
+            enrichment_prompts.CNV_ENRICHMENT_SCHEMA,
         )
         with self.assertRaises(jsonschema.ValidationError):
             jsonschema.validate(
-                {"enriched_cnvs": [{"index": 0, "cnv_call": "Gain"}]}, ai.CNV_ENRICHMENT_SCHEMA
+                {"enriched_cnvs": [{"index": 0, "cnv_call": "Gain"}]},
+                enrichment_prompts.CNV_ENRICHMENT_SCHEMA,
             )
 
     def test_schema_enums_match_what_the_prompt_lists(self):
-        _, p = ai.get_mutation_detail_enrichment_prompt(["EGFR"], "x", MUT)
-        self.assertTrue(all(f'"{v}"' in p for v in ai.VARIANT_CLASSIFICATIONS))
-        _, p = ai.get_cnv_detail_enrichment_prompt(["MYCN"], "x", CNV)
-        self.assertTrue(all(f'"{v}"' in p for v in ai.CNV_CALLS))
+        _, p = enrichment_prompts.get_mutation_detail_enrichment_prompt(["EGFR"], "x", MUT)
+        self.assertTrue(all(f'"{v}"' in p for v in enrichment_prompts.VARIANT_CLASSIFICATIONS))
+        _, p = enrichment_prompts.get_cnv_detail_enrichment_prompt(["MYCN"], "x", CNV)
+        self.assertTrue(all(f'"{v}"' in p for v in enrichment_prompts.CNV_CALLS))
 
 
 class TestMergeChecks(unittest.TestCase):
     def _mut(self, **kw):
         crit = [{"genomic": dict(MUT[0]["genomic"])}]
-        ai.merge_enriched_criteria(crit, [dict(index=0, **kw)], "mutation")
+        enrichment_prompts.merge_enriched_criteria(crit, [dict(index=0, **kw)], "mutation")
         return crit[0]["genomic"]
 
     def _cnv(self, call):
         crit = [{"genomic": dict(CNV[0]["genomic"])}]
-        ai.merge_enriched_criteria(crit, [{"index": 0, "cnv_call": call}], "cnv")
+        enrichment_prompts.merge_enriched_criteria(crit, [{"index": 0, "cnv_call": call}], "cnv")
         return crit[0]["genomic"]
 
     def test_allowed_values_are_merged(self):
@@ -73,10 +82,10 @@ class TestMergeChecks(unittest.TestCase):
         self.assertNotIn("cnv_call", self._cnv("Amplification"))
 
     def test_nulls_are_silent(self):
-        before = len(ai.ENRICHMENT_REJECTED)
+        before = len(enrichment_prompts.ENRICHMENT_REJECTED)
         g = self._mut(variant_classification=None, exon=None)
         self.assertEqual(g, MUT[0]["genomic"])
-        self.assertEqual(len(ai.ENRICHMENT_REJECTED), before)
+        self.assertEqual(len(enrichment_prompts.ENRICHMENT_REJECTED), before)
 
 
 class TestAliasInContradictions(unittest.TestCase):
