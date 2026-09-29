@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from loguru import logger
 
 import utils.review.common as common
+import utils.review.gate as gate
 
 logger.remove()
 
@@ -150,11 +151,11 @@ class TestGeneRoleDroppedIsInformation(unittest.TestCase):
     def test_accept_does_not_refuse_it(self):
         import yaml
 
-        import utils.review_helper as rh
-
         self.assertNotIn("gene_role_dropped", common.FLAG_KEYS)
         c = self._ctml()
-        self.assertFalse([p for p in rh.problems(c, yaml.safe_dump(c)) if "gene_role_dropped" in p])
+        self.assertFalse(
+            [p for p in gate.problems(c, yaml.safe_dump(c)) if "gene_role_dropped" in p]
+        )
 
     def test_index_publishes_genes_not_required(self):
         import utils.build_trial_index as b

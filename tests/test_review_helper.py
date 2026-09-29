@@ -12,6 +12,7 @@ from loguru import logger
 import src.text_rules as text_rules
 import utils.review.common as common
 import utils.review.evidence as evidence
+import utils.review.gate as gate
 import utils.review_helper as rh
 from tests.support import temporary_layers
 
@@ -47,7 +48,7 @@ class TestAccept(_Layers):
     def test_a_flagged_file_is_refused(self):
         self.put(CTML.format(change="p.F1174L", extra="          gene_unsupported: ALK\n"))
         with self.assertRaises(SystemExit) as e:
-            rh.accept("NCT0TEST", "lgrob")
+            gate.accept("NCT0TEST", "lgrob")
         self.assertIn("still flagged: gene_unsupported", str(e.exception))
         self.assertTrue(os.path.exists(os.path.join(self.layers.review, "NCT0TEST.yaml")))
 
@@ -55,18 +56,18 @@ class TestAccept(_Layers):
         # ALK residue 1174 is Phe; Leu1174 would be the variant, not the reference.
         self.put(CTML.format(change="p.L1174F", extra=""))
         with self.assertRaises(SystemExit) as e:
-            rh.accept("NCT0TEST", "lgrob")
+            gate.accept("NCT0TEST", "lgrob")
         self.assertIn("reference_mismatch", str(e.exception))
 
     def test_no_diagnosis_is_refused(self):
         self.put(CTML.format(change="p.F1174L", extra="").replace("Neuroblastoma", "[]"))
         with self.assertRaises(SystemExit) as e:
-            rh.accept("NCT0TEST", "lgrob")
+            gate.accept("NCT0TEST", "lgrob")
         self.assertIn("no diagnosis", str(e.exception))
 
     def test_accept_moves_stamps_and_logs(self):
         self.put(CTML.format(change="p.F1174L", extra=""))
-        target = rh.accept("NCT0TEST", "lgrob", note="checked", today="2026-09-26")
+        target = gate.accept("NCT0TEST", "lgrob", note="checked", today="2026-09-26")
         self.assertFalse(os.path.exists(os.path.join(self.layers.review, "NCT0TEST.yaml")))
         text = open(target).read()
         self.assertIn("curated_on: '2026-09-26'", text)
@@ -83,7 +84,7 @@ class TestAccept(_Layers):
         self.put("old\n", "reviewed")
         self.put(CTML.format(change="p.F1174L", extra=""), "mapped")
         with self.assertRaises(SystemExit):
-            rh.accept("NCT0TEST", "lgrob")
+            gate.accept("NCT0TEST", "lgrob")
 
 
 class TestExclude(_Layers):
@@ -104,18 +105,18 @@ class TestExclude(_Layers):
     def test_exclude_writes_a_skip_row_and_logs(self):
         self.put(CTML.format(change="p.F1174L", extra=""), "mapped")
         self.assertEqual(
-            rh.exclude("NCT0TEST", "lgrob", "adult-only trial", today="2026-09-26"), ["mapped"]
+            gate.exclude("NCT0TEST", "lgrob", "adult-only trial", today="2026-09-26"), ["mapped"]
         )
         o = self.scope.load_overrides(self.scope.OVERRIDES)
         self.assertEqual(o["NCT0TEST"], ("skip", "adult-only trial (lgrob, 2026-09-26)"))
         rows = list(csv.DictReader(open(self.layers.log), delimiter="\t"))
         self.assertEqual((rows[0]["flags_resolved"], rows[0]["from_layer"]), ("excluded", "mapped"))
         with self.assertRaises(SystemExit):
-            rh.exclude("NCT0TEST", "lgrob", "again")
+            gate.exclude("NCT0TEST", "lgrob", "again")
 
     def test_a_reason_is_required(self):
         with self.assertRaises(SystemExit):
-            rh.exclude("NCT0TEST", "lgrob", " ")
+            gate.exclude("NCT0TEST", "lgrob", " ")
 
 
 class TestEvidence(unittest.TestCase):
@@ -254,7 +255,7 @@ class TestDiagnosesOnlyInExclusions(unittest.TestCase):
             }
         }
         self.assertEqual(
-            [p for p in rh.problems(ctml, "") if "OncoTree" in p or "excluded" in p], []
+            [p for p in gate.problems(ctml, "") if "OncoTree" in p or "excluded" in p], []
         )
         only_neg = {
             "treatment_list": {
@@ -276,7 +277,8 @@ class TestDiagnosesOnlyInExclusions(unittest.TestCase):
             }
         }
         self.assertIn(
-            "only excluded diagnoses: add the diagnosis the trial enrols", rh.problems(only_neg, "")
+            "only excluded diagnoses: add the diagnosis the trial enrols",
+            gate.problems(only_neg, ""),
         )
 
     def test_off_list_flag_with_several_names(self):
@@ -367,7 +369,9 @@ class TestContradictions(unittest.TestCase):
             self.FUSION,
             {"genomic": {"hugo_symbol": "ABL1", "variant_category": "!Any Variation"}},
         )
-        self.assertIn("requires and forbids ABL1 under one AND: matches nobody", rh.problems(t, ""))
+        self.assertIn(
+            "requires and forbids ABL1 under one AND: matches nobody", gate.problems(t, "")
+        )
 
 
 class TestFlagUnsupportedGenes(_Layers):
@@ -423,9 +427,9 @@ class TestAudit(_Layers):
         for t in ("A", "B", "C", "D"):
             open(os.path.join(self.layers.mapped, f"{t}.yaml"), "w").close()
         open(os.path.join(self.layers.review, "B.yaml"), "w").close()
-        s1, pool = rh.audit_sample(2, seed=1)
+        s1, pool = gate.audit_sample(2, seed=1)
         self.assertEqual(pool, 3)
-        self.assertEqual(s1, rh.audit_sample(2, seed=1)[0])
+        self.assertEqual(s1, gate.audit_sample(2, seed=1)[0])
         self.assertNotIn("B", s1)
 
 
