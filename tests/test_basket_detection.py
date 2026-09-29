@@ -7,7 +7,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from loguru import logger
 
-import src.clinical_trials_gov as ctg
+import src.mapping.diagnosis as diagnosis
 
 logger.remove()  # the rule logs every decision; tests assert on return values
 
@@ -29,26 +29,27 @@ class TestBasketWildcards(unittest.TestCase):
     """
 
     def test_broad_term_alone_is_a_basket(self):
-        self.assertEqual(ctg._basket_wildcards(["Pediatric Cancer"]), {"_SOLID_", "_LIQUID_"})
-        self.assertEqual(ctg._basket_wildcards(["Advanced Solid Tumor"]), {"_SOLID_"})
+        self.assertEqual(diagnosis._basket_wildcards(["Pediatric Cancer"]), {"_SOLID_", "_LIQUID_"})
+        self.assertEqual(diagnosis._basket_wildcards(["Advanced Solid Tumor"]), {"_SOLID_"})
 
     def test_broad_term_beside_a_named_diagnosis_is_a_header(self):
         self.assertEqual(
-            ctg._basket_wildcards(["Pediatric Solid Tumor", "Osteosarcoma", "Neuroblastoma"]), set()
+            diagnosis._basket_wildcards(["Pediatric Solid Tumor", "Osteosarcoma", "Neuroblastoma"]),
+            set(),
         )
 
     def test_no_broad_term_is_never_a_basket(self):
-        self.assertEqual(ctg._basket_wildcards(["Neuroblastoma"]), set())
-        self.assertEqual(ctg._basket_wildcards([]), set())
-        self.assertEqual(ctg._basket_wildcards(None), set())
+        self.assertEqual(diagnosis._basket_wildcards(["Neuroblastoma"]), set())
+        self.assertEqual(diagnosis._basket_wildcards([]), set())
+        self.assertEqual(diagnosis._basket_wildcards(None), set())
 
     def test_liquid_only_appears_for_the_any_cancer_wording(self):
         """
         "Solid Tumor" justifies _SOLID_ alone; "Cancer" justifies both. Adding
         _LIQUID_ to a solid-tumour basket would match every leukaemia patient.
         """
-        self.assertNotIn("_LIQUID_", ctg._basket_wildcards(["Solid Tumor"]))
-        self.assertIn("_LIQUID_", ctg._basket_wildcards(["Cancer"]))
+        self.assertNotIn("_LIQUID_", diagnosis._basket_wildcards(["Solid Tumor"]))
+        self.assertIn("_LIQUID_", diagnosis._basket_wildcards(["Cancer"]))
 
 
 class TestSeveralUmbrellaTerms(unittest.TestCase):
@@ -60,7 +61,7 @@ class TestSeveralUmbrellaTerms(unittest.TestCase):
 
     def test_two_umbrella_terms_outweigh_a_named_diagnosis(self):
         self.assertEqual(
-            ctg._basket_wildcards(
+            diagnosis._basket_wildcards(
                 ["Malignant Neoplasm", "Cancer", "Glioma", "Erdheim-Chester Disease"]
             ),
             {"_SOLID_", "_LIQUID_"},
@@ -68,11 +69,12 @@ class TestSeveralUmbrellaTerms(unittest.TestCase):
 
     def test_one_umbrella_term_is_still_a_header(self):
         self.assertEqual(
-            ctg._basket_wildcards(["Pediatric Solid Tumor", "Osteosarcoma", "Neuroblastoma"]), set()
+            diagnosis._basket_wildcards(["Pediatric Solid Tumor", "Osteosarcoma", "Neuroblastoma"]),
+            set(),
         )
 
     def test_the_threshold_is_named_not_magic(self):
-        self.assertEqual(ctg._BASKET_BROAD_TERMS, 2)
+        self.assertEqual(diagnosis._BASKET_BROAD_TERMS, 2)
 
 
 class TestBasketWildcardsOnRealTrials(unittest.TestCase):
@@ -91,7 +93,7 @@ class TestBasketWildcardsOnRealTrials(unittest.TestCase):
             conditions = _cached(nct_id)
             if conditions is None:
                 self.skipTest(f"{nct_id} not cached")
-            self.assertEqual(ctg._basket_wildcards(conditions, nct_id), expected, nct_id)
+            self.assertEqual(diagnosis._basket_wildcards(conditions, nct_id), expected, nct_id)
 
     def test_category_headers_are_not_baskets(self):
         # NCT04897321 lists "Pediatric Solid Tumor" ahead of five real
@@ -100,7 +102,7 @@ class TestBasketWildcardsOnRealTrials(unittest.TestCase):
             conditions = _cached(nct_id)
             if conditions is None:
                 self.skipTest(f"{nct_id} not cached")
-            self.assertEqual(ctg._basket_wildcards(conditions, nct_id), set(), nct_id)
+            self.assertEqual(diagnosis._basket_wildcards(conditions, nct_id), set(), nct_id)
 
 
 if __name__ == "__main__":

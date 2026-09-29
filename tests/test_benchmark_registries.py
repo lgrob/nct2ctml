@@ -23,7 +23,7 @@ sys.path.insert(0, ROOT)
 from loguru import logger
 
 import bench.benchmark_map as bm
-import src.clinical_trials_gov as ctg
+import src.mapping.diagnosis as diagnosis
 
 logger.remove()
 
@@ -104,7 +104,7 @@ class TestConditionsOnly(unittest.TestCase):
         os.chdir(ROOT)
         try:
             with patch.object(
-                ctg, "seed_and_map_diagnosis", wraps=ctg.seed_and_map_diagnosis
+                diagnosis, "seed_and_map_diagnosis", wraps=diagnosis.seed_and_map_diagnosis
             ) as seed:
                 bm.write_conditions_baseline([CTIS_ID], out)
         finally:

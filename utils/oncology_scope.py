@@ -40,6 +40,7 @@ import os
 import re
 
 import config
+import src.mapping.diagnosis as diagnosis
 
 # Stems, matched case-insensitively anywhere in the text. A stem that is
 # missing here is a false skip; the four found so far (germinoma, NSCLC,
@@ -256,7 +257,6 @@ def assess(trial_id, trial_data, registry, overrides=None):
 
     conditions, other = (_nct_texts if registry == "nct" else _ctis_texts)(trial_data)
 
-    import src.clinical_trials_gov as ctg
     import utils.reference_validation as rv
 
     follow_on = _FOLLOW_ON_RX.search(" | ".join(t for t in other if t))
@@ -269,7 +269,7 @@ def assess(trial_id, trial_data, registry, overrides=None):
     oncotree = rv.diagnoses_from_conditions(conditions, trial_id)
     if oncotree:
         return True, f"conditions name {sorted(oncotree)[:3]}"
-    if ctg.basket_wildcards(conditions, trial_id):
+    if diagnosis.basket_wildcards(conditions, trial_id):
         return True, "conditions describe a basket"
     # "Chemotherapy-induced nausea" names a treatment, not a tumour
     # (NCT06904235), so treatment stems do not count here.

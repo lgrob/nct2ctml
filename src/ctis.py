@@ -27,6 +27,7 @@ from loguru import logger
 
 import src.clinical_trials_gov as ctg
 import src.ctml_schema as cs
+import src.mapping.diagnosis as diagnosis
 import src.match_criteria_mapper as mcm
 import utils.age_bounds as ab
 
@@ -228,7 +229,7 @@ def map_ctis_to_ctml(trial_data: dict, gene_synonym_mapping: dict[str, list[str]
     import config
 
     mode = getattr(config, "DIAGNOSIS_INPUT", "legacy")
-    diagnosis_text = ctg.diagnosis_text(
+    diagnosis_text = diagnosis.diagnosis_text(
         inclusion_text,
         exclusion_text,
         title=(get_titles(trial_data)[1] or get_titles(trial_data)[0])
@@ -237,7 +238,7 @@ def map_ctis_to_ctml(trial_data: dict, gene_synonym_mapping: dict[str, list[str]
         conditions=conditions,
         legacy="\n".join(conditions + [criteria]),
     )
-    seeded, from_eligibility = ctg.seed_and_map_diagnosis(ct, conditions, diagnosis_text)
+    seeded, from_eligibility = diagnosis.seed_and_map_diagnosis(ct, conditions, diagnosis_text)
     diagnoses = sorted(set(seeded) | set(from_eligibility))
 
     if not diagnoses:
@@ -245,7 +246,7 @@ def map_ctis_to_ctml(trial_data: dict, gene_synonym_mapping: dict[str, list[str]
         # title stage: CTIS registers neither. A trial whose conditions say
         # only "solid tumour" is a basket, and _SOLID_/_LIQUID_ is how CTML
         # says so - CTIS trials were previously unable to express that at all.
-        diagnoses = sorted(ctg.basket_wildcards(conditions, ct))
+        diagnoses = sorted(diagnosis.basket_wildcards(conditions, ct))
 
     if diagnoses:
         clinical_criteria["oncotree_primary_diagnosis"] = diagnoses

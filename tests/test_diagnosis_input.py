@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from loguru import logger
 
 import config
-import src.clinical_trials_gov as ctg
+import src.mapping.diagnosis as diagnosis
 import utils.ai_helper as ai
 
 logger.remove()
@@ -21,11 +21,11 @@ INC, EXC = "Newly diagnosed AML.", "Juvenile myelomonocytic leukemia (JMML). APL
 class TestDiagnosisText(unittest.TestCase):
     def test_legacy_returns_the_old_text_unchanged(self):
         with mock.patch.object(config, "DIAGNOSIS_INPUT", "legacy"):
-            self.assertEqual(ctg.diagnosis_text(INC, EXC, "T", ["AML"], legacy="OLD"), "OLD")
+            self.assertEqual(diagnosis.diagnosis_text(INC, EXC, "T", ["AML"], legacy="OLD"), "OLD")
 
     def test_labelled_labels_both_sections(self):
         with mock.patch.object(config, "DIAGNOSIS_INPUT", "labelled"):
-            t = ctg.diagnosis_text(INC, EXC, conditions=["AML"], legacy="OLD")
+            t = diagnosis.diagnosis_text(INC, EXC, conditions=["AML"], legacy="OLD")
         self.assertEqual(
             t,
             "Conditions: AML\nInclusion Criteria: Newly diagnosed AML.\n"
@@ -34,7 +34,9 @@ class TestDiagnosisText(unittest.TestCase):
 
     def test_inclusion_only_drops_the_exclusion_criteria(self):
         with mock.patch.object(config, "DIAGNOSIS_INPUT", "inclusion_only"):
-            t = ctg.diagnosis_text(INC, EXC, title="CHIP-AML22", conditions=["AML"], legacy="OLD")
+            t = diagnosis.diagnosis_text(
+                INC, EXC, title="CHIP-AML22", conditions=["AML"], legacy="OLD"
+            )
         self.assertEqual(
             t, "Title: CHIP-AML22\nConditions: AML\nInclusion Criteria: Newly diagnosed AML."
         )

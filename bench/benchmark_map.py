@@ -54,6 +54,7 @@ import yaml
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import config
+import src.mapping.diagnosis as diagnosis
 from utils.build_trial_index import diagnosis_population
 
 TRUTH_DIR = config.CTML_REVIEWED_PATH
@@ -405,7 +406,6 @@ def write_conditions_baseline(ids, out_dir):
     from loguru import logger
 
     logger.remove()
-    import src.clinical_trials_gov as ctg
 
     for nct in ids:
         with open(f"{CACHE_DIRS[registry_of(nct)]}/{nct}.json") as handle:
@@ -414,9 +414,9 @@ def write_conditions_baseline(ids, out_dir):
         # The pipeline's own function with no eligibility text, so the model
         # is never called: whatever the seed and basket rules decide is exactly
         # what reaches the full run as its floor.
-        diagnoses, _ = ctg.seed_and_map_diagnosis(nct, conditions, "")
+        diagnoses, _ = diagnosis.seed_and_map_diagnosis(nct, conditions, "")
         if not diagnoses:
-            diagnoses = sorted(ctg.basket_wildcards(conditions, nct))
+            diagnoses = sorted(diagnosis.basket_wildcards(conditions, nct))
         doc = {
             "nct_id": nct,
             "treatment_list": {

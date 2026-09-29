@@ -8,6 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from loguru import logger
 
 import src.clinical_trials_gov as ctg
+import src.mapping.diagnosis as diagnosis
 
 logger.remove()
 
@@ -37,7 +38,7 @@ class TestBranchFloor(unittest.TestCase):
             }
 
         with patch.object(ctg.ai, "get_oncotree_diagnoses_from_trial_info", side_effect=fake_ai):
-            result = ctg.map_eligibility_criteria_to_oncotree_term(
+            result = diagnosis.map_eligibility_criteria_to_oncotree_term(
                 "NCT01704716", "high risk neuroblastoma", seed_terms
             )
         return offered, result
@@ -75,7 +76,7 @@ class TestBranchFloor(unittest.TestCase):
             return {"oncotree_diagnoses": ["Neuroblastoma"]}
 
         with patch.object(ctg.ai, "get_oncotree_diagnoses_from_trial_info", side_effect=fake_ai):
-            result = ctg.map_eligibility_criteria_to_oncotree_term(
+            result = diagnosis.map_eligibility_criteria_to_oncotree_term(
                 "NCT01704716", "text", ["Neuroblastoma"]
             )
         self.assertEqual(result, ["Neuroblastoma"])
