@@ -24,7 +24,7 @@ import config
 import src.text_rules as text_rules
 import utils.gene_mentions as gm
 import utils.reference_validation as rv
-import utils.review_helper as rh
+import utils.review.evidence as evidence
 from src.match_criteria_mapper import _flag_unsupported_genes, _text_mentions_gene
 from src.trial_criteria_to_genes import TrialCriteriaToGenes
 
@@ -204,7 +204,7 @@ class TestReviewSheetAgrees(unittest.TestCase):
         self.ref = text_rules.Reference()
 
     def ev(self, text, gene):
-        return rh.evidence([("inclusion", text)], self.ref.gene_terms(gene), gene=gene)
+        return evidence.evidence([("inclusion", text)], self.ref.gene_terms(gene), gene=gene)
 
     def test_glued_and_histone_evidence(self):
         self.assertTrue(self.ev(NCT07306299, "H3-3A"))

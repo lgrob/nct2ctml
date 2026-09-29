@@ -11,6 +11,7 @@ from loguru import logger
 
 import src.text_rules as text_rules
 import utils.review.common as common
+import utils.review.evidence as evidence
 import utils.review_helper as rh
 from tests.support import temporary_layers
 
@@ -130,9 +131,9 @@ class TestEvidence(unittest.TestCase):
 
     def test_near_miss_spelling(self):
         # 2023-504694-20-00 writes KMT2A as "KTM2A".
-        self.assertTrue(rh.near_misses([("inclusion", "including KTM2A/AF4")], "KMT2A"))
-        self.assertFalse(rh.near_misses([("inclusion", "including KMT2B")], "KMT2A2"))
-        self.assertFalse(rh.near_misses([("inclusion", "MET")], "MEK"))  # under 4 characters
+        self.assertTrue(evidence.near_misses([("inclusion", "including KTM2A/AF4")], "KMT2A"))
+        self.assertFalse(evidence.near_misses([("inclusion", "including KMT2B")], "KMT2A2"))
+        self.assertFalse(evidence.near_misses([("inclusion", "MET")], "MEK"))  # under 4 characters
 
     def test_ambiguous_aliases_never_count_as_support(self):
         ref = text_rules.Reference()
@@ -383,7 +384,7 @@ class TestFlagUnsupportedGenes(_Layers):
 
         self.put(comment + self.MAPPED.format(gene=gene), layer="mapped")
         with (
-            mock.patch.object(rh, "eligibility_text", lambda t: (inc, "", {})),
+            mock.patch.object(evidence, "eligibility_text", lambda t: (inc, "", {})),
             mock.patch("utils.oncology_scope.load_report", lambda *a, **k: {}),
             mock.patch("utils.oncology_scope.load_overrides", lambda *a, **k: {}),
         ):
