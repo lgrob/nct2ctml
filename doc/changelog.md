@@ -2,6 +2,13 @@
 
 What changed in this fork after the initial retargeting, newest first. Moved from CHANGES.md on 2026-09-28 (improvement plan step 13); the entries are unchanged. Measured decisions are in [decisions/](decisions/), mapping runs and queue reviews in [runs/](runs/).
 
+## Improvement plan removed (2026-09-29)
+
+All 16 steps are done. `doc/improvement_plan.md` is removed; it is in git
+history at `2a3f65e`. Where this log says "step N of doc/improvement_plan.md",
+that is the file meant. Its open items moved to
+[open_issues.md](open_issues.md), "Follow-ups from the improvement plan".
+
 ## Type checking with mypy (improvement plan step 12, 2026-09-29)
 
 - **mypy, non-strict**, on `main.py`, `config.py`, `src/`, `utils/`, `bench/`

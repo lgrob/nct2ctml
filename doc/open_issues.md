@@ -4,6 +4,32 @@ Things known to be wrong, unfinished, or undecided. Each says what it costs,
 so triage does not need re-deriving. Dated entries are measurements, not
 guesses.
 
+## Follow-ups from the improvement plan
+
+The 16-step improvement plan (2026-09-28/29) is complete and was removed; it is
+in git history at `2a3f65e` (`doc/improvement_plan.md`), and each step is in
+[changelog.md](changelog.md). What it left open:
+
+- **CTIS test fixtures.** CI runs on frozen ClinicalTrials.gov records only.
+  EMA's legal notice excludes third-party content and CTIS records are
+  sponsor-submitted, so republishing them is not settled; until it is, 4
+  CTIS tests skip in CI (`tests/fixtures/registry/README.md`).
+- **First index release.** `python -m utils.release_index create` exists
+  (doc/index_guide.md); no release has been made, and where archives live
+  (a GitHub Release or Kispi storage) is not decided.
+- **The genomics pipeline reads `index/`, not a release.** Until it reads a
+  release and writes the tag into each report, a report cannot be traced
+  to the index behind it. The change is outside this repository.
+- **`sync_trials.sh` on a server.** It no longer activates conda; a
+  machine running it (for example through matchminer-admin's systemd timer)
+  needs `.venv` or `PYTHON` set.
+- **CITATION.cff** names only the organisation for Kispi; the people, and a
+  Zenodo DOI once releases are tagged, are missing.
+- **Type checking, next level.** mypy runs non-strict; `check_untyped_defs`
+  reports 136 findings (43 in `utils/provenance.py`).
+- **CI on GitHub.** The fork's workflows have not run yet: GitHub holds a
+  fork's Actions until they are enabled in the repository's Actions tab.
+
 ## Correctness
 
 ### Oncotree parents are keyed by display name, and nine names have two

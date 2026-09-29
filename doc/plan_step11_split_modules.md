@@ -1,6 +1,7 @@
 # Sub-plan: step 11, split the largest modules
 
-Step 11 of [improvement_plan.md](improvement_plan.md), broken into steps that
+Step 11 of the improvement plan (removed once complete; in git history at
+`2a3f65e`, `doc/improvement_plan.md`), broken into steps that
 can each be done, verified and committed separately. Measured at commit
 `f91851c` (2026-09-28).
 
