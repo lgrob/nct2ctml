@@ -13,7 +13,7 @@ import src.text_rules as text_rules
 import utils.review.common as common
 import utils.review.evidence as evidence
 import utils.review.gate as gate
-import utils.review_helper as rh
+import utils.review.maintenance as maintenance
 from tests.support import temporary_layers
 
 logger.remove()
@@ -392,7 +392,7 @@ class TestFlagUnsupportedGenes(_Layers):
             mock.patch("utils.oncology_scope.load_report", lambda *a, **k: {}),
             mock.patch("utils.oncology_scope.load_overrides", lambda *a, **k: {}),
         ):
-            return rh.flag_unsupported_genes(apply=apply)
+            return maintenance.flag_unsupported_genes(apply=apply)
 
     def test_a_gene_supported_only_by_a_blocked_alias_is_flagged_and_moved(self):
         found = self._run(
