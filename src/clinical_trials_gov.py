@@ -14,6 +14,7 @@ import re
 from loguru import logger
 
 import src.ctml_schema as cs
+import src.mapping.biomarkers as biomarkers
 import src.mapping.diagnosis as diagnosis
 import src.mapping.genomic as genomic
 import src.match_criteria_mapper as mcm
@@ -117,11 +118,11 @@ def map_nct_to_clinical_and_genomic_criteria(
         mapped_global_clinical_critera["gender"] = gender_str
 
     logger.info(f"NCTID: {nct_id} | Mapping disease status")
-    disease_status_dict = map_disease_status(nct_id, global_nct_criteria, keywords)
+    disease_status_dict = biomarkers.map_disease_status(nct_id, global_nct_criteria, keywords)
     if disease_status_dict and len(disease_status_dict.get("disease_status", {})) > 0:
         mapped_global_clinical_critera.update(disease_status_dict)
 
-    biomarker_status_dict = _map_biomarker_statuses(
+    biomarker_status_dict = biomarkers._map_biomarker_statuses(
         nct_id, global_nct_criteria, keywords, level="global"
     )
     mapped_global_clinical_critera.update(biomarker_status_dict)
@@ -162,24 +163,6 @@ def map_nct_to_clinical_and_genomic_criteria(
     return trial_schema
 
 
-def _map_biomarker_statuses(
-    nct_id: str,
-    eligibility_criteria: str,
-    keywords: list,
-    level: str,
-) -> dict:
-    logger.info(f"NCTID: {nct_id} | Mapping {level} HER2/ER/PR status")
-    status_dict = map_her2_er_pr_status(nct_id, eligibility_criteria, keywords)
-
-    logger.info(f"NCTID: {nct_id} | Mapping {level} PDL1 status")
-    status_dict.update(map_pdl1_status(nct_id, eligibility_criteria, keywords))
-
-    logger.info(f"NCTID: {nct_id} | Mapping {level} MMR/MS status")
-    status_dict.update(map_mmr_ms_status(nct_id, eligibility_criteria, keywords))
-
-    return status_dict
-
-
 def _map_arm_level_matches(
     nct_id: str,
     all_arms_criteria: ArmCriteriaBlocks,
@@ -211,7 +194,7 @@ def _map_arm_level_matches(
         if oncotree_diagnoses_list and len(oncotree_diagnoses_list) > 0:
             mapped_arm_clinical_critera["oncotree_primary_diagnosis"] = oncotree_diagnoses_list
         mapped_arm_clinical_critera.update(
-            _map_biomarker_statuses(
+            biomarkers._map_biomarker_statuses(
                 nct_id=nct_id,
                 eligibility_criteria=arm_eligibility_criteria,
                 keywords=keywords,
@@ -598,16 +581,6 @@ def map_age_numerical(trial_data: dict, prose: dict = None) -> list:
     return ab.reconcile_with_structured(minimum, maximum, stated_maximum, prose, nct_id)
 
 
-def map_her2_er_pr_status(nct_id: str, eligibilityCriteria: str, keywords: list):
-    result = ai.get_her2_er_pr_status(nct_id, eligibilityCriteria, keywords)
-    filtered_her2_er_pr_dict = {
-        k: v
-        for k, v in result.items()
-        if v.lower() in ["positive", "negative", "!positive", "!negative"]
-    }
-    return filtered_her2_er_pr_dict
-
-
 def get_nct_keywords(trial_data):
     return tdh.safe_get(trial_data, ["protocolSection", "conditionsModule", "keywords"])
 
@@ -620,52 +593,10 @@ def get_full_nct_eligibility_criteria(trial_data):
     return tdh.safe_get(trial_data, ["protocolSection", "eligibilityModule", "eligibilityCriteria"])
 
 
-def map_pdl1_status(nct_id: str, eligibilityCriteria: str, keywords: list):
-    contains_pdl1_info = mcm.check_if_eligibility_criteria_contains_pdl1_info(
-        keywords, eligibilityCriteria
-    )
-    if contains_pdl1_info:
-        result = ai.get_pdl1_status(nct_id, eligibilityCriteria, keywords)
-        filtered_pdl1_status_dict = {
-            k: v for k, v in result.items() if v.lower() in ["high", "low"]
-        }
-        return filtered_pdl1_status_dict
-    return {}
-
-
-def map_mmr_ms_status(nct_id: str, eligibilityCriteria: str, keywords: list):
-    filtered_mmr_ms_status_dict = {}
-    contains_mmr_info = mcm.check_if_eligibility_criteria_contains_mmr_info(
-        keywords, eligibilityCriteria
-    )
-    if contains_mmr_info:
-        mmr_ms_status_dict = ai.get_mmr_status(nct_id, eligibilityCriteria, keywords)
-        if "mmr_status" in mmr_ms_status_dict:
-            mmr_value = mmr_ms_status_dict["mmr_status"]
-            if mmr_value in [
-                "MMR-Proficient",
-                "MMR-Deficient",
-                "!MMR-Proficient",
-                "!MMR-Deficient",
-            ]:
-                filtered_mmr_ms_status_dict["mmr_status"] = mmr_value
-
-        if "ms_status" in mmr_ms_status_dict:
-            ms_value = mmr_ms_status_dict["ms_status"]
-            if ms_value in ["MSI-H", "MSI-L", "MSS", "!MSI-H", "!MSI-L"]:
-                filtered_mmr_ms_status_dict["ms_status"] = ms_value
-    return filtered_mmr_ms_status_dict
-
-
 def map_gender(trial_data: dict):
     nct_gender = tdh.safe_get(trial_data, ["protocolSection", "eligibilityModule", "sex"])
     gender_mapping = {"male": "Male", "female": "Female"}
     result = gender_mapping.get(nct_gender.lower(), {})
-    return result
-
-
-def map_disease_status(nct_id: str, eligibilityCriteria: str, keywords: list):
-    result = ai.get_disease_status(nct_id, eligibilityCriteria, keywords)
     return result
 
 
