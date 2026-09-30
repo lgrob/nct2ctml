@@ -169,6 +169,16 @@ def _ollama_num_ctx() -> int:
         return 16384
 
 
+def _ollama_think() -> bool | str:
+    """Ollama's "think" value, from config.OLLAMA_THINK: False, True or low/medium/high."""
+    try:
+        import config
+
+        return getattr(config, "OLLAMA_THINK", False)
+    except Exception:
+        return False
+
+
 def _ollama_num_predict() -> int:
     """Max tokens Ollama may generate, overridable via config.OLLAMA_NUM_PREDICT."""
     try:
@@ -222,7 +232,7 @@ class OllamaPlatform(LLMPlatform):
                     {"role": "user", "content": prompt},
                 ],
                 "stream": False,
-                "think": False,
+                "think": _ollama_think(),
                 "keep_alive": "15m",
                 "options": {
                     # "think": True,
@@ -462,7 +472,10 @@ class AnthropicPlatform(LLMPlatform):
         if thinking:
             body["thinking"] = {"type": thinking}
         else:
-            body["temperature"] = getattr(config, "ANTHROPIC_TEMPERATURE", 0)
+            # anthropic 1.x dropped the sampling parameters from
+            # messages.create() (a TypeError); Haiku 4.5 still accepts them,
+            # so temperature goes into the request JSON through extra_body.
+            body["extra_body"] = {"temperature": getattr(config, "ANTHROPIC_TEMPERATURE", 0)}
         if effort:
             body["output_config"] = {"effort": effort}
         if json_schema:

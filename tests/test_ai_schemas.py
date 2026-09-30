@@ -61,6 +61,14 @@ class TestEveryPromptIsStructured(unittest.TestCase):
         )
         self.assertEqual(body.get("format"), biomarker_prompts.PDL1_SCHEMA)
 
+    def test_the_ollama_think_setting_is_sent(self):
+        from utils.llm_platforms import OllamaPlatform
+
+        platform = OllamaPlatform("gpt-oss:120b", "http://127.0.0.1")
+        self.assertIs(platform.get_request_body("p")["think"], False)
+        with mock.patch.object(config, "OLLAMA_THINK", "low", create=True):
+            self.assertEqual(platform.get_request_body("p")["think"], "low")
+
 
 class TestCandidateListsBecomeEnums(unittest.TestCase):
     """

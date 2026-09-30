@@ -180,6 +180,7 @@ def llm_settings():
         settings.update(
             num_ctx=getattr(config, "OLLAMA_NUM_CTX", None),
             num_predict=getattr(config, "OLLAMA_NUM_PREDICT", None),
+            think=getattr(config, "OLLAMA_THINK", False),
         )
     elif kind == "replay":
         settings.update(recorded_platform=platform.recorded_platform, replay_of=platform.source)

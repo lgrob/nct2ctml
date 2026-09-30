@@ -28,6 +28,13 @@ def _env(name, default, cast=str, env=None):
             value = raw.lower() in _TRUE
         elif cast == "optional":
             value = None if raw.lower() in ("", "none", "null") else raw
+        elif cast == "ollama_think":
+            if raw.lower() in _TRUE | _FALSE:
+                value = raw.lower() in _TRUE
+            elif raw.lower() in ("low", "medium", "high"):
+                value = raw.lower()
+            else:
+                raise ValueError("expected false/true or low/medium/high")
         else:
             value = cast(raw)
     except ValueError as e:
@@ -207,6 +214,12 @@ OLLAMA_NUM_CTX = _env("OLLAMA_NUM_CTX", 32768, int)
 # criteria block for a multi-arm trial legitimately runs longer than that.
 # 8192 at ~40 tok/s is ~205s, inside LLM_REQUEST_TIMEOUT_SECONDS below.
 OLLAMA_NUM_PREDICT = _env("OLLAMA_NUM_PREDICT", 8192, int)
+# Ollama's "think" field. False (the default) turns reasoning off, which is
+# what structured extraction wants and what every Ollama measurement so far
+# used. gpt-oss cannot turn it off: it takes only "low", "medium" or "high",
+# and ignores False. Its reasoning tokens count against OLLAMA_NUM_PREDICT,
+# so raise that too (16384) when running it.
+OLLAMA_THINK = _env("OLLAMA_THINK", False, "ollama_think")
 # Largest candidate list the prompts send as a JSON-schema enum (utils/llm/schema), per
 # LLM_PLATFORM (lower-case key; a platform not listed gets 400). Above it the
 # enum is dropped, the shape is still enforced and off-list answers become

@@ -176,6 +176,28 @@ class TestFullMappingDispatch(unittest.TestCase):
         self.assertEqual([r["registry"] for r in rows], ["ctis"] * N_CTIS)
         self.assertTrue(all(r["dx_f1"] == 1.0 for r in rows))
 
+    def test_a_trial_routed_to_review_stays_in_the_run_and_is_scored(self):
+        out = tempfile.mkdtemp()
+        truth = os.path.join(ROOT, bm.TRUTH_DIR)
+        queue = bm.config.CTML_REVIEW_PATH
+        seen = []
+
+        def fake_map(trial_id, cache_dir, out_dir):
+            # The mapper writes a flagged trial to CTML_REVIEW_PATH, not out_dir.
+            seen.append(bm.config.CTML_REVIEW_PATH)
+            os.makedirs(bm.config.CTML_REVIEW_PATH, exist_ok=True)
+            shutil.copy(os.path.join(truth, trial_id + ".yaml"), bm.config.CTML_REVIEW_PATH)
+            return True
+
+        mgr = MagicMock()
+        mgr.map_single_ctis_trial.side_effect = fake_map
+        with patch("src.trial_map_manager.TrialMapManager", return_value=mgr):
+            rows = _run_main("--source", "ctis", "--out", out)
+        self.assertEqual(set(seen), {bm.review_dir(out)})
+        self.assertEqual(bm.config.CTML_REVIEW_PATH, queue)
+        self.assertEqual([r["status"] for r in rows], ["ok"] * N_CTIS)
+        self.assertTrue(all(r["to_review"] and r["dx_f1"] == 1.0 for r in rows))
+
 
 class TestUnsatisfiable(unittest.TestCase):
     def test_present_and_absent_in_separate_alternatives_is_satisfiable(self):

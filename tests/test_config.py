@@ -32,6 +32,16 @@ def load(env=None, names=()):
 
 
 class TestConfig(unittest.TestCase):
+    def test_ollama_think_takes_a_switch_or_a_level(self):
+        for raw, value in (("low", "low"), ("HIGH", "high"), ("false", False), ("1", True)):
+            _, out = load({"NCT2CTML_OLLAMA_THINK": raw}, ["OLLAMA_THINK"])
+            self.assertEqual(out["values"]["OLLAMA_THINK"], value, raw)
+        _, out = load(names=["OLLAMA_THINK"])
+        self.assertIs(out["values"]["OLLAMA_THINK"], False)
+        result, _ = load({"NCT2CTML_OLLAMA_THINK": "max"}, ["OLLAMA_THINK"])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("NCT2CTML_OLLAMA_THINK", result.stderr)
+
     def test_defaults_without_overrides(self):
         _, out = load(names=["LLM_PLATFORM", "LLM_AI_MODEL", "GENOMIC_PROMPT", "RUNS_PATH"])
         self.assertEqual(out["overrides"], {})

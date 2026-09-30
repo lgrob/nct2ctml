@@ -8,6 +8,20 @@
 #   sbatch scripts/run_ollama_mapping.sh benchmark
 #   sbatch scripts/run_ollama_mapping.sh map-all
 #
+# The platform and model come from NCT2CTML_* variables (doc/llm_backends.md),
+# for example:
+#
+#   sbatch --export=ALL,NCT2CTML_LLM_PLATFORM=Ollama,NCT2CTML_LLM_AI_MODEL=qwen3.6:27b \
+#     scripts/run_ollama_mapping.sh benchmark
+#
+# gpt-oss cannot turn reasoning off; give it a level and room for the
+# reasoning tokens, and more host memory for the 120b (~65 GB of weights):
+#
+#   sbatch --mem=96G --export=ALL,NCT2CTML_LLM_PLATFORM=Ollama,NCT2CTML_LLM_AI_MODEL=gpt-oss:120b,\
+#   NCT2CTML_OLLAMA_THINK=low,NCT2CTML_OLLAMA_NUM_PREDICT=16384 scripts/run_ollama_mapping.sh benchmark
+#
+# REP=2 (etc.) keeps a replicate's output apart from the first one's.
+#
 #SBATCH --job-name=nct2ctml
 #SBATCH --gpus=1
 #SBATCH --cpus-per-task=8
@@ -26,6 +40,14 @@ SIF="${OLLAMA_SIF:-$HOME/containers/ollama.sif}"
 REPO="${REPO:-${SLURM_SUBMIT_DIR:-$PWD}}"
 # Model weights are large (~16 GB for a 27B at Q4). Keep them off $HOME,
 # which is usually quota'd small, and out of the container, which is read-only.
+# Not every site sets $SCRATCH; without it, and without OLLAMA_MODELS, stop
+# rather than invent a directory and pull tens of GB into it.
+if [ -z "${OLLAMA_MODELS:-}" ] && [ -z "${SCRATCH:-}" ]; then
+  echo "FATAL: neither OLLAMA_MODELS nor SCRATCH is set, so there is no model directory."
+  echo "Point it at the directory holding your pulled models, e.g.:"
+  echo "  sbatch --export=ALL,OLLAMA_MODELS=/path/to/ollama/models,... scripts/run_ollama_mapping.sh benchmark"
+  exit 1
+fi
 export OLLAMA_MODELS="${OLLAMA_MODELS:-$SCRATCH/ollama-models}"
 # Deliberately NOT a literal. The pipeline requests whatever config.py names,
 # so a separate default here can drift out of step with it - pulling one model
@@ -72,11 +94,24 @@ MODEL="${MODEL:-$($PY -c 'import config; print(config.LLM_AI_MODEL)')}"
 # up here, so MODEL=... cannot map with a different model than it loaded.
 export NCT2CTML_LLM_AI_MODEL="$MODEL"
 NUM_CTX=$($PY -c 'import config; print(getattr(config,"OLLAMA_NUM_CTX",0))')
+THINK=$($PY -c 'import config; print(config.OLLAMA_THINK)')
+NUM_PREDICT=$($PY -c 'import config; print(config.OLLAMA_NUM_PREDICT)')
 
 echo "[$(date +%T)] repo=$REPO"
 echo "[$(date +%T)] models=$OLLAMA_MODELS"
 echo "[$(date +%T)] sif=$SIF"
-echo "[$(date +%T)] model=$MODEL  num_ctx=$NUM_CTX  (from config.py or NCT2CTML_*)"
+echo "[$(date +%T)] model=$MODEL  num_ctx=$NUM_CTX  num_predict=$NUM_PREDICT  think=$THINK  (from config.py or NCT2CTML_*)"
+
+# gpt-oss ignores think=false and reasons anyway; its reasoning then eats
+# num_predict and the JSON is cut off, which scores as empty answers.
+case "$MODEL" in
+  gpt-oss*)
+    if [ "$THINK" = "False" ]; then
+      echo "ERROR: $MODEL cannot turn reasoning off. Set NCT2CTML_OLLAMA_THINK=low|medium|high"
+      echo "       (and NCT2CTML_OLLAMA_NUM_PREDICT=16384)."
+      exit 1
+    fi ;;
+esac
 
 # A prompt longer than num_ctx is truncated silently, so a too-small window
 # shows up as poor scores rather than as an error.
@@ -96,14 +131,24 @@ if [ ! -f "$SIF" ]; then
   exit 1
 fi
 
+# Apptainer or its predecessor Singularity, whichever the site has; same flags.
+CONTAINER="$(command -v apptainer || command -v singularity || true)"
+if [ -z "$CONTAINER" ]; then
+  echo "FATAL: neither apptainer nor singularity is on PATH (module load?)."
+  exit 1
+fi
+# The ollama image sets OLLAMA_HOST=0.0.0.0:11434 itself, and the image's
+# value wins over the one exported above. A client aimed at 0.0.0.0 goes to
+# the proxy (0.0.0.0 is not in NO_PROXY) and fails with "something went
+# wrong"; --env makes the container use 127.0.0.1.
+CEXEC=("$CONTAINER" exec --nv --env "OLLAMA_HOST=${OLLAMA_HOST#http://}" --bind "$OLLAMA_MODELS:$OLLAMA_MODELS")
+
 # --- 1. start the server ---------------------------------------------------
 # --nv exposes the NVIDIA stack. Without it Ollama starts happily and runs on
 # CPU at roughly 1/20th the speed, with no error - the failure this script
 # exists to catch.
-echo "[$(date +%T)] starting ollama from $SIF"
-apptainer exec --nv \
-  --bind "$OLLAMA_MODELS:$OLLAMA_MODELS" \
-  "$SIF" ollama serve > logs/ollama_server.log 2>&1 &
+echo "[$(date +%T)] starting ollama from $SIF with $CONTAINER"
+"${CEXEC[@]}" "$SIF" ollama serve > logs/ollama_server.log 2>&1 &
 SERVER_PID=$!
 trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
 
@@ -120,8 +165,7 @@ echo "[$(date +%T)] ollama responding"
 # which surfaces much later as an opaque mapping failure.
 if ! curl -s http://localhost:11434/api/tags | grep -q "${MODEL%%:*}"; then
   echo "[$(date +%T)] pulling $MODEL (needs outbound network)"
-  apptainer exec --nv --bind "$OLLAMA_MODELS:$OLLAMA_MODELS" \
-    "$SIF" ollama pull "$MODEL" || {
+  "${CEXEC[@]}" "$SIF" ollama pull "$MODEL" || {
       echo "FAILED: could not pull $MODEL."
       echo "If this cluster blocks egress, stage the GGUF into $OLLAMA_MODELS instead."
       exit 1; }
@@ -148,11 +192,13 @@ nvidia-smi --query-gpu=name,memory.used,memory.total --format=csv,noheader 2>/de
 # --- 4. run the work -------------------------------------------------------
 case "$MODE" in
   benchmark)
-    # 50, not 12: the key was expanded on 2026-09-14. bench/benchmark_map.py
-    # filters to NCT* ids, so the five curated CTIS trials are NOT scored -
-    # a quarter of the corpus is unmeasured by this run.
-    echo "[$(date +%T)] benchmarking against the 50 curated NCT trials"
-    $PY -m bench.benchmark_map
+    # Every curated trial, both registries (bench/README.md). One directory
+    # per model and replicate, report included, so runs of different models
+    # neither overwrite each other nor the tracked bench/report.json.
+    TAG="$(echo "$MODEL" | tr ':/' '--')${REP:+-rep$REP}"
+    OUT="bench/output-$TAG"
+    echo "[$(date +%T)] benchmarking against the curated trials -> $OUT"
+    $PY -m bench.benchmark_map --out "$OUT" --json "$OUT/report.json"
     ;;
   map-all)
     echo "[$(date +%T)] mapping the full NCT corpus"

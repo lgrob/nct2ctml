@@ -238,10 +238,28 @@ def population_prf(got, want):
 
 
 # ---------------------------------------------------------------- reporting
+def review_dir(out_dir):
+    """
+    Where a benchmark run's review-routed trials go: inside its own output.
+
+    The mapper sends a trial it will not publish as it stands to
+    config.CTML_REVIEW_PATH. Left at ctml/needs-review, a benchmark run wrote
+    model output into the curators' queue (moving any copy there to .prev),
+    and the scorer, reading only out_dir, counted the trial as missing and
+    left it out of the means - so the trials hardest to map dropped out of
+    the score, a different set for each model.
+    """
+    return os.path.join(out_dir, "needs-review")
+
+
 def score(truth_dir, out_dir, ids):
     rows, agg = [], defaultdict(list)
     for nct in ids:
         tp, op = f"{truth_dir}/{nct}.yaml", f"{out_dir}/{nct}.yaml"
+        routed = f"{review_dir(out_dir)}/{nct}.yaml"
+        to_review = not os.path.exists(op) and os.path.exists(routed)
+        if to_review:
+            op = routed
         if not os.path.exists(op):
             rows.append({"nct_id": nct, "registry": registry_of(nct), "status": "MISSING OUTPUT"})
             continue
@@ -256,6 +274,7 @@ def score(truth_dir, out_dir, ids):
                 "nct_id": nct,
                 "registry": registry_of(nct),
                 "status": "ok",
+                "to_review": to_review,
                 "dx_p": dp,
                 "dx_r": dr,
                 "dx_f1": df,
@@ -377,6 +396,9 @@ def report(rows, agg, diagnoses_only=False):
                     f"{m['exact_pop']} by population, of {m['n']}"
                 )
         print(f"\nscored {len(ok)}/{len(rows)} trials")
+        routed = [r["nct_id"] for r in ok if r.get("to_review")]
+        if routed:
+            print(f"routed to review (scored as mapped): {len(routed)}  {routed}")
         bad = [r["nct_id"] for r in ok if r["unsatisfiable"]]
         if bad:
             print(f"unsatisfiable trees: {len(bad)}  {bad}")
@@ -481,6 +503,7 @@ def main():
         print(f"mapping {len(ids)} trials -> {args.out}\n")
         from utils import provenance
 
+        queue, config.CTML_REVIEW_PATH = config.CTML_REVIEW_PATH, review_dir(args.out)
         run_id = provenance.start_run(command="benchmark")
         print(f"run {run_id}")
         mgr = tmm.TrialMapManager()
@@ -495,6 +518,7 @@ def main():
                 timings[nct] = time.time() - t0
                 print(f"  [{n}/{len(ids)}] {nct}  {status}  ({timings[nct]:.0f}s)")
         finally:
+            config.CTML_REVIEW_PATH = queue
             provenance.finish_run(output=args.out, trials=len(ids))
 
     rows, agg = score(args.truth, args.out, ids)

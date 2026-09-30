@@ -31,7 +31,21 @@ class TestRequestBody(unittest.TestCase):
         body = AnthropicPlatform(HAIKU, "").get_request_body("p", SCHEMA)
         self.assertNotIn("thinking", body)
         self.assertNotIn("output_config", body)
-        self.assertEqual(body["temperature"], 0)
+        self.assertEqual(body["extra_body"], {"temperature": 0})
+
+    def test_every_key_is_a_parameter_of_the_installed_sdk(self):
+        # A mocked client accepts any keyword; the real one raised TypeError on
+        # `temperature` after anthropic 1.x removed it, failing every call.
+        import inspect
+
+        from anthropic.resources.messages import Messages
+
+        accepted = set(inspect.signature(Messages.create).parameters)
+        for thinking in (None, "adaptive"):
+            with patch.multiple(config, ANTHROPIC_THINKING=thinking, ANTHROPIC_EFFORT=None):
+                model = HAIKU if thinking is None else "claude-sonnet-5"
+                body = AnthropicPlatform(model, "").get_request_body("p", SCHEMA)
+            self.assertLessEqual(set(body), accepted, set(body) - accepted)
 
     def test_a_schema_becomes_a_forced_tool_wrapping_it(self):
         body = AnthropicPlatform(HAIKU, "").get_request_body("p", SCHEMA)
@@ -53,7 +67,7 @@ class TestRequestBody(unittest.TestCase):
             body = AnthropicPlatform("claude-sonnet-5", "").get_request_body("p", SCHEMA)
         self.assertEqual(body["thinking"], {"type": "adaptive"})
         self.assertEqual(body["output_config"], {"effort": "medium"})
-        self.assertNotIn("temperature", body)
+        self.assertNotIn("extra_body", body)
         self.assertEqual(body["tool_choice"], {"type": "auto"})
 
 

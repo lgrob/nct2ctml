@@ -2,6 +2,39 @@
 
 What changed in this fork after the initial retargeting, newest first. Moved from CHANGES.md on 2026-09-28 (improvement plan step 13); the entries are unchanged. Measured decisions are in [decisions/](decisions/), mapping runs and queue reviews in [runs/](runs/).
 
+## The Anthropic backend works again on anthropic 1.4.0; gpt-oss and Qwen3.6 on the cluster (2026-09-30)
+
+**Every Anthropic call had failed since the environment was pinned**
+(plan step 4, `23050fe`): `anthropic` 1.x removed `temperature` from
+`messages.create()`, so each request raised `TypeError` before it was sent.
+The first corpus run afterwards (`runs/20260930T115133Z-636913`) failed all
+1,141 calls; nothing was written or overwritten. The tests passed because they
+mock the client, which accepts any keyword. Temperature now goes through
+`extra_body` (Haiku 4.5 still accepts it, and the documented measurements were
+made at 0), and a new test checks every key the platform builds against the
+installed SDK's signature.
+
+**`OLLAMA_THINK`** (`NCT2CTML_OLLAMA_THINK`: false/true or low/medium/high)
+sets Ollama's `think` field, which was fixed at false. gpt-oss cannot turn
+reasoning off, so it needs a level; the level is recorded in each run's
+provenance. `scripts/run_ollama_mapping.sh` refuses gpt-oss with thinking off,
+and its benchmark mode now writes `bench/output-<model>[-rep<N>]/` with the
+report inside, so runs of different models no longer overwrite each other or
+the tracked `bench/report.json`. Its comment, which said CTIS keys were not
+scored, is corrected. It also runs under Singularity where Apptainer is
+missing, and forces OLLAMA_HOST=127.0.0.1 inside the container: the ollama
+image sets 0.0.0.0 itself, which sends client calls to the site proxy.
+
+**The benchmark kept losing the trials it routed to review.** A trial the
+mapper flags goes to `CTML_REVIEW_PATH`, and in a benchmark run that was the
+curators' `ctml/needs-review`. The scorer read only `--out`, so the trial
+counted as "MISSING OUTPUT" and left the means: the hardest trials dropped out
+of the score, a different set per model. The benchmark now points the queue at
+`<out>/needs-review` for the run (and restores it), scores those trials, marks
+them `to_review` in the report and lists them in the summary. The committed
+Haiku report scored all 50, so it was not affected; the first qwen3.6:27b run
+(job 6752539) was.
+
 ## A review interface, and the diagnosis-seed rules (2026-09-30)
 
 **`python -m utils.review.app`** serves the review sheets at 127.0.0.1:8765 with
