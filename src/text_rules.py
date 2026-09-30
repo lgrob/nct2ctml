@@ -220,6 +220,19 @@ B_ALL = "B-Lymphoblastic Leukemia/Lymphoma"
 T_ALL = "T-Lymphoblastic Leukemia/Lymphoma"
 
 
+# MatchMiner's basket wildcards, as diagnosis names.
+WILDCARD_NAMES = frozenset({"_SOLID_", "_LIQUID_"})
+
+
+# A condition that describes a population rather than a diagnosis, which is what
+# src.trial_data_helper.all_tumours / all_solid_tumours read as a basket.
+_CONDITION_IS_BROAD = re.compile(
+    r"\b(?:solid\s+tumou?rs?|solid\s+malignanc|metastatic\s+cancer|malignant\s+neoplasm|neoplasms|"
+    r"cancer|advanced\s+cancer)\b",
+    re.I,
+)
+
+
 _ALL_FULL = re.compile(r"acute\s+lymph(?:oblastic|ocytic|oid)\s+leuka?emia", re.I)
 
 
@@ -267,6 +280,116 @@ def all_lineage_unspecified(
     return not (
         _B_LINEAGE.search(both) or _T_LINEAGE.search(both) or _T_LINEAGE.search(exclusion or "")
     )
+
+
+# "18-70 years", "18 to 70 years", "18 and 70 yrs": both ends of a range.
+_YEAR_RANGE = re.compile(
+    r"(\d+(?:\.\d+)?)\s*(?:-|\u2013|\u2014|to|and|~)\s*(\d+(?:\.\d+)?)\s*(?:years?|yrs?)\b", re.I
+)
+
+
+# "18 years", ">= 18 years of age".
+_YEAR_ONE = re.compile(r"(\d+(?:\.\d+)?)\s*(?:years?|yrs?)\b", re.I)
+
+
+# Registry units below a year, as clinicaltrials.gov writes them.
+_SUB_YEAR_UNIT = re.compile(r"^\s*(\d+(?:\.\d+)?)\s*(day|week|month)s?\s*$", re.I)
+
+
+def age_units_implausible(minimum_raw, maximum_raw, inclusion: str | None) -> str:
+    """
+    The reason the structured age fields contradict the text's own units, or
+    "" when they do not.
+
+    Reported when both structured bounds are in days, weeks or months AND the
+    inclusion text states the same two numbers in years. That combination is a
+    sponsor's data-entry error, not a neonatal trial: NCT06342336 and
+    NCT07106892 publish minimumAge "18 Days" / maximumAge "75 Days" against
+    "18 years to 75 years" in the text, and NCT06776952 "18 Days" / "70 Days"
+    against "Aged 18-70 years (inclusive)". All three also carry
+    stdAges CHILD, which is why an adult trial is in a paediatric corpus at
+    all. Found by the 2026-09-29 audit (defect B).
+
+    The numbers must match for the check to fire, so a real neonatal study
+    ("18 to 75 days") is not reported, and neither is a year figure that
+    appears elsewhere in the text for another purpose. The mapper keeps the
+    structured reading - it is what the registry says - and routes the trial
+    to review rather than guessing which field the sponsor meant.
+    """
+    low, high = (
+        _SUB_YEAR_UNIT.match(str(minimum_raw or "")),
+        _SUB_YEAR_UNIT.match(str(maximum_raw or "")),
+    )
+    if not (low and high):
+        return ""
+    in_years: set[float] = set()
+    for a, b in _YEAR_RANGE.findall(inclusion or ""):
+        in_years.update((float(a), float(b)))
+    in_years.update(float(n) for n in _YEAR_ONE.findall(inclusion or ""))
+    stated = (float(low.group(1)), float(high.group(1)))
+    if not in_years.issuperset(stated):
+        return ""
+    return (
+        f"the registry states {minimum_raw} to {maximum_raw}, and the inclusion text "
+        f"states the same numbers in years"
+    )
+
+
+def diagnosis_seed_suspect(
+    diagnoses: Iterable,
+    conditions: Iterable[str],
+    inclusion: str | None,
+    context: Iterable[str] = (),
+) -> str:
+    """
+    The reason this trial's diagnosis scope looks wrong on deterministic grounds,
+    or "" when it does not. Two cases, both from the 2026-09-29 audit and both
+    measured over all 1,146 indexed trials
+    (doc/decisions/2026-09-29-conditions-seed-rules.md):
+
+    1. **A basket resting on the word "oncology".** `all_tumours` reads a sole
+       condition of "cancer", "oncology" or "advanced cancer" as every tumour, so
+       the trial is published with both wildcards. "Oncology" is a specialty, not
+       a population: NCT04217512 registers it and its inclusion text is "Patients
+       with head and neck cancer"; NCT07633236 registers "Oncology Patients
+       Receiving Chemotherapy" beside "Cachexia-Anorexia Syndrome". 2 of the 17
+       trials whose basket rests on a bare broad word, and both are wrong. The
+       wider rule on "cancer" was measured and not adopted: 10 of its 17 are
+       category headers the basket rule is right about.
+    2. **B-lineage published where the text names only T-lineage.** Oncotree has
+       no lineage-free ALL node, so `ref/diagnosis_synonyms.tsv` maps unqualified
+       ALL to B-ALL. A T-cell trial that registers "Acute Lymphoblastic Leukemia"
+       therefore gets a B-lineage criterion it never asked for (NCT07070219,
+       NCT07070323). 8 indexed trials.
+
+    Nothing is removed. The flag routes the trial to review, because both cases
+    need a person: case 1 may be a genuine basket whose text happens to name one
+    tumour, and case 2 may be a trial that does enrol both lineages.
+    """
+    names = {str(d) for d in diagnoses or []}
+    positive = {n for n in names if not n.startswith("!")}
+    text = " ".join([inclusion or "", " ".join(c for c in context if c)])
+
+    if positive & WILDCARD_NAMES:
+        broad = [c for c in conditions or [] if "oncology" in c.lower()]
+        others = [
+            c for c in conditions or [] if c not in broad and _CONDITION_IS_BROAD.search(c or "")
+        ]
+        specific = positive - WILDCARD_NAMES
+        if broad and not others and (specific or _ALL_FULL.search(text)):
+            return (
+                f"the basket rests on the condition {broad[0].strip()!r}, a specialty rather "
+                f"than a population"
+                + (f", and the trial also names {sorted(specific)[0]}" if specific else "")
+            )
+
+    t_lineage = _T_LINEAGE.search(text)
+    if B_ALL in positive and t_lineage and not _B_LINEAGE.search(text):
+        return (
+            f"{B_ALL} is required although the text names T-lineage disease "
+            f"({t_lineage.group(0)!r}) and never B-lineage"
+        )
+    return ""
 
 
 def add_sibling_diagnosis(tree: Any, existing: str, new: str) -> int:

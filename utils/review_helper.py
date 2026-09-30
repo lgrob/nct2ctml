@@ -104,6 +104,21 @@ def _parser():
     fg.add_argument(
         "--apply", action="store_true", help="write the flag and move mapped trials to review"
     )
+    sub.add_parser(
+        "fix-age-operator", help="upper age bound '<=N' rewritten as '<N' (audit defect A)"
+    ).add_argument("--apply", action="store_true")
+    fa = sub.add_parser(
+        "flag-age-units", help="registry age in days/weeks/months where the text says years"
+    )
+    fa.add_argument(
+        "--apply", action="store_true", help="write the flag and move mapped trials to review"
+    )
+    fd = sub.add_parser(
+        "flag-diagnosis-seed", help="basket on a specialty word; B-lineage on a T-lineage trial"
+    )
+    fd.add_argument(
+        "--apply", action="store_true", help="write the flag and move mapped trials to review"
+    )
     ex = sub.add_parser("exclude")
     ex.add_argument("trial")
     ex.add_argument("--reviewer", required=True)
@@ -249,6 +264,46 @@ def _cmd_flag_unsupported_genes(args):
     )
 
 
+def _cmd_fix_age_operator(args):
+    found = maintenance.fix_age_operator(apply=args.apply)
+    for t, layer, changes in found:
+        print(f"{t}\t{layer}\t" + ", ".join(f"{o} -> {n}" for o, n in changes))
+    print(
+        f"{len(found)} trials, {sum(len(c) for *_, c in found)} bounds"
+        + (" rewritten" if args.apply else " would be rewritten; --apply to write")
+    )
+
+
+def _cmd_flag_age_units(args):
+    found = maintenance.flag_age_units(apply=args.apply)
+    for t, layer, reason, action in found:
+        print(f"{t}\t{layer}\t{action}\t{reason}")
+    moved = sum(1 for *_, a in found if a == "moved to review")
+    print(
+        f"{len(found)} trials ({moved} mapped)"
+        + (
+            " flagged; mapped ones moved to the review queue"
+            if args.apply
+            else " would be flagged; run with --apply to write"
+        )
+    )
+
+
+def _cmd_flag_diagnosis_seed(args):
+    found = maintenance.flag_diagnosis_seed(apply=args.apply)
+    for t, layer, reason, action in found:
+        print(f"{t}\t{layer}\t{action}\t{reason}")
+    moved = sum(1 for *_, a in found if a == "moved to review")
+    print(
+        f"{len(found)} trials ({moved} mapped)"
+        + (
+            " flagged; mapped ones moved to the review queue"
+            if args.apply
+            else " would be flagged; run with --apply to write"
+        )
+    )
+
+
 def _cmd_exclude(args):
     layers = gate.exclude(args.trial, args.reviewer, args.reason)
     print(
@@ -270,6 +325,9 @@ COMMANDS = {
     "fix-genomic-notation": _cmd_fix_genomic_notation,
     "flag-gene-status": _cmd_flag_gene_status,
     "flag-unsupported-genes": _cmd_flag_unsupported_genes,
+    "fix-age-operator": _cmd_fix_age_operator,
+    "flag-age-units": _cmd_flag_age_units,
+    "flag-diagnosis-seed": _cmd_flag_diagnosis_seed,
     "exclude": _cmd_exclude,
 }
 

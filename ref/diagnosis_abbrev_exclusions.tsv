@@ -1,0 +1,20 @@
+# Short condition strings that diagnoses_from_conditions must never resolve to a
+# diagnosis, although each is an unambiguous alias in ref/diagnosis_synonyms.tsv.
+# Read only by utils/reference_validation.py; path in config.py.
+#
+# A registry condition of four letters is an abbreviation, and an abbreviation
+# that means two different diagnoses resolves to whichever one the alias table
+# happens to hold. The gene side has the same problem and the same remedy
+# (ref/gene_rewrite_exclusions.tsv). Blocking one costs nothing when the trial
+# also registers the full name, which is the usual case: NCT07188441 lists
+# "GCT", "Germ Cell Tumor" and "Central Malignant Germ Cell Tumor" together.
+#
+# Found 2026-09-29 by the 3.4 audit and the seed-rule measurement over all 1,146
+# indexed trials (doc/decisions/2026-09-29-conditions-seed-rules.md). Automatic
+# discriminators were measured and rejected there, so this list is explicit and
+# a curator extends it: add the abbreviation, what it wrongly resolved to, and
+# the trial that showed it.
+#
+# abbreviation	wrongly_resolved_to	seen_in	note
+GCT	Granular Cell Tumor	NCT07188441	germ cell tumour in every corpus occurrence; the trial is a central malignant germ cell tumour study
+RAS	Radiation-Associated Sarcoma	NCT07257653	a gene family in every corpus occurrence; the trial is colorectal and lists RAS beside BRAF

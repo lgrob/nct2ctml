@@ -560,9 +560,15 @@ def map_age_numerical(trial_data: dict, prose: dict | None = None) -> list:
     "Years". Sub-year ages become decimals - 6 Months -> ">=0.5" - so that
     infant and neonatal trials keep a usable bound at both ends.
 
-    Note that MatchMiner treats "<" and "<=" identically (likewise ">" and
-    ">=") - the flat index does not, which is why a maximum the prose states
-    as exclusive is now emitted as "<N".
+    The upper bound is emitted with "<", not "<=", because the value already
+    carries the completed-unit offset: maximumAge "40 Years" means age < 41,
+    and "<=41" would admit a patient who has turned 41. MatchMiner treats "<"
+    and "<=" identically, so this is invisible there - but the flat index
+    reads the operator literally (`age_max_inclusive`), and a consumer joining
+    on whole years admitted an extra year of patients. Audited 2026-09-29
+    (doc/runs/2026-09-29-3.4-audit.md, defect A): 496 of the 765 indexed
+    trials with an upper bound were one unit too wide. A maximum the prose
+    states as exclusive is likewise "<N", one unit lower.
 
     `prose` is the model's reading of the age sentence
     (utils.age_bounds.read_age_bounds), or None. It narrows a maximum the
@@ -573,7 +579,7 @@ def map_age_numerical(trial_data: dict, prose: dict | None = None) -> list:
     eligibility = tdh.safe_get(trial_data, ["protocolSection", "eligibilityModule"]) or {}
     nct_id = get_nct_id(trial_data)
     minimum = _age_bound(eligibility.get("minimumAge"), ">=", nct_id)
-    maximum = _age_bound(eligibility.get("maximumAge"), "<=", nct_id, unit_offset=1)
+    maximum = _age_bound(eligibility.get("maximumAge"), "<", nct_id, unit_offset=1)
     if prose is None:
         return [b for b in (minimum, maximum) if b]
     stated_maximum = _stated_age_years(eligibility.get("maximumAge"), nct_id) if maximum else None

@@ -799,6 +799,31 @@ def _widen_inferred_nos_leaf(name, condition, trial_id=""):
     return parent
 
 
+@lru_cache(maxsize=1)
+def _abbrev_exclusions():
+    """
+    Condition strings the seed must never resolve, from
+    config.DIAGNOSIS_ABBREV_EXCLUSION_FILE_PATH. Empty when the file is absent,
+    which restores the behaviour before the list existed.
+
+    Case-sensitive on purpose: "GCT" is an abbreviation and "Gct" is not one a
+    registry writes, while lowercasing would also block a real word that happens
+    to spell an abbreviation.
+    """
+    path = getattr(config, "DIAGNOSIS_ABBREV_EXCLUSION_FILE_PATH", "")
+    try:
+        handle = open(path, newline="")
+    except (FileNotFoundError, OSError):
+        logger.warning(f"no diagnosis abbreviation exclusion list at {path!r}; none are blocked")
+        return frozenset()
+    with handle:
+        return frozenset(
+            row[0].strip()
+            for row in csv.reader(handle, delimiter="\t")
+            if row and row[0].strip() and not row[0].lstrip().startswith("#")
+        )
+
+
 def diagnoses_from_conditions(conditions, trial_id=""):
     """
     Oncotree terms the trial names outright in conditionsModule.
@@ -818,8 +843,15 @@ def diagnoses_from_conditions(conditions, trial_id=""):
     "Medulloblastoma, NOS" alongside the exact node it already matches, and
     the seed would start over-generating rather than merely reaching further.
     """
+    blocked = _abbrev_exclusions()
     found, seen = [], set()
     for condition in conditions or []:
+        if condition.strip() in blocked:
+            logger.info(
+                f"{trial_id} | condition {condition.strip()!r} is a blocked abbreviation "
+                f"(ref/diagnosis_abbrev_exclusions.tsv); seeding nothing from it"
+            )
+            continue
         stripped = strip_condition_qualifiers(condition)
         candidates = (condition, stripped, f"{condition}, NOS", f"{stripped}, NOS")
         for position, candidate in enumerate(candidates):

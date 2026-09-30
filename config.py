@@ -174,6 +174,9 @@ MANE_GENES_FILE_PATH = "ref/mane_genes.tsv"
 # WHO reclassifications and registry house style. See the header of the file
 # itself for what belongs in it and what does not.
 DIAGNOSIS_SYNONYM_FILE_PATH = "ref/diagnosis_synonyms.tsv"
+# Short condition strings the conditions seed must never resolve to a diagnosis,
+# because the abbreviation means something else (GCT, RAS). See the file header.
+DIAGNOSIS_ABBREV_EXCLUSION_FILE_PATH = "ref/diagnosis_abbrev_exclusions.tsv"
 
 # Mapping configuration
 # Number of days back to consider for mapping trials

@@ -385,6 +385,183 @@ def flag_gene_status(apply=False):
     return found
 
 
+_AGE_INCLUSIVE_MAX = re.compile(
+    r"^(?P<lead>\s*(?:-\s*)?age_numerical:\s*)<=(?P<n>[0-9.]+)\s*$", re.M
+)
+
+
+def fix_age_operator(apply=False):
+    """
+    Existing output: an upper age bound written `<=N` becomes `<N`.
+
+    The ClinicalTrials.gov path added a completed unit to maximumAge and kept
+    `<=`, so a 40-year maximum was published as `<=41` - one unit too wide.
+    Fixed at the source on 2026-09-29 (src.clinical_trials_gov.map_age_numerical,
+    audit defect A); this re-applies it to the 496 of 765 indexed trials mapped
+    before that, without a re-map. The two forms are identical to MatchMiner,
+    which treats `<` and `<=` alike, so the rewrite changes nothing downstream
+    except `age_max_inclusive` in the flat index, which is the point.
+
+    A rewrite by text, so curator formatting and comments survive, and only
+    maxima are touched (`>=` minima are exact). Mapped and review layers;
+    reviewed and curator-edited files are skipped - a `<=` a curator wrote by
+    hand is theirs to keep. Returns [(trial_id, layer, [(old, new)])].
+    """
+    import utils.oncology_scope as scope
+
+    out_of_scope = set(scope.load_report()) | {
+        t for t, (d, _) in scope.load_overrides().items() if d == "skip"
+    }
+    found = []
+    for d, layer in ((common.MAPPED_DIR, "mapped"), (common.REVIEW_DIR, "needs_review")):
+        for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
+            if not f.endswith(".yaml"):
+                continue
+            t, path = f[:-5], os.path.join(d, f)
+            if (
+                t in out_of_scope
+                or os.path.exists(os.path.join(common.REVIEWED_DIR, f))
+                or (layer == "mapped" and os.path.exists(os.path.join(common.REVIEW_DIR, f)))
+            ):
+                continue
+            raw = open(path).read()
+            if re.search(r"^\s*#", raw, re.M):
+                continue
+            changes = [(f"<={m['n']}", f"<{m['n']}") for m in _AGE_INCLUSIVE_MAX.finditer(raw)]
+            if not changes:
+                continue
+            found.append((t, layer, changes))
+            if apply:
+                with open(path, "w") as fh:
+                    fh.write(_AGE_INCLUSIVE_MAX.sub(r"\g<lead><\g<n>", raw))
+    return found
+
+
+def flag_age_units(apply=False):
+    """
+    Apply the age-units check (src.text_rules.age_units_implausible) to CTML
+    already written: the registry states the range in days, weeks or months
+    while the inclusion text states the same numbers in years.
+
+    Mapped and review layers; never ctml/reviewed or out-of-scope trials.
+    Returns [(trial_id, layer, reason, action)]. With apply=True the top-level
+    key is added (text append, so curator comments survive) and a mapped trial
+    moves to the review queue, as the mapper now does. The bounds themselves
+    are left alone: which field the sponsor meant is a curator's call.
+    """
+    import src.clinical_trials_gov as ctg
+    import utils.oncology_scope as scope
+
+    out_of_scope = set(scope.load_report()) | {
+        t for t, (d, _) in scope.load_overrides().items() if d == "skip"
+    }
+    found = []
+    for d, layer in ((common.MAPPED_DIR, "mapped"), (common.REVIEW_DIR, "needs_review")):
+        if not os.path.isdir(d):
+            continue
+        for f in sorted(os.listdir(d)):
+            if not f.endswith(".yaml") or not f.startswith("NCT"):
+                continue  # CTIS publishes no structured age fields
+            t = f[:-5]
+            if t in out_of_scope or os.path.exists(os.path.join(common.REVIEWED_DIR, f)):
+                continue
+            if layer == "mapped" and os.path.exists(os.path.join(common.REVIEW_DIR, f)):
+                continue  # the review copy is what the index publishes
+            path = os.path.join(d, f)
+            raw = open(path).read()
+            ctml = yaml.safe_load(raw)
+            if not isinstance(ctml, dict) or ctml.get("age_units_implausible"):
+                continue
+            try:
+                _, _, record = evidence.eligibility_text(t)
+                eligibility = record["protocolSection"]["eligibilityModule"]
+                inclusion, _ = ctg.split_inclusion_exclusion_criteria(record)
+            except (OSError, ValueError, KeyError, TypeError):
+                continue
+            reason = text_rules.age_units_implausible(
+                eligibility.get("minimumAge"), eligibility.get("maximumAge"), inclusion
+            )
+            if not reason:
+                continue
+            found.append((t, layer, reason, "moved to review" if layer == "mapped" else "flagged"))
+            if apply:
+                text = (
+                    raw.rstrip("\n")
+                    + "\n"
+                    + yaml.safe_dump(
+                        {"age_units_implausible": reason}, allow_unicode=True, width=1000
+                    )
+                )
+                with open(os.path.join(common.REVIEW_DIR, f), "w") as fh:
+                    fh.write(text)
+                if layer == "mapped":
+                    os.remove(path)
+    return found
+
+
+def flag_diagnosis_seed(apply=False):
+    """
+    Apply the diagnosis-seed check (src.text_rules.diagnosis_seed_suspect) to CTML
+    already written: a basket resting on the word "oncology", or a B-lineage
+    criterion on a trial whose text names only T-lineage disease.
+
+    Mapped and review layers; never ctml/reviewed or out-of-scope trials. Returns
+    [(trial_id, layer, reason, action)]. With apply=True the top-level key is added
+    (text append, so curator comments survive) and a mapped trial moves to the
+    review queue, as the mapper now does. Nothing is removed from the match tree.
+    """
+    import utils.oncology_scope as scope
+
+    out_of_scope = set(scope.load_report()) | {
+        t for t, (d, _) in scope.load_overrides().items() if d == "skip"
+    }
+    found = []
+    for d, layer in ((common.MAPPED_DIR, "mapped"), (common.REVIEW_DIR, "needs_review")):
+        if not os.path.isdir(d):
+            continue
+        for f in sorted(os.listdir(d)):
+            if not f.endswith(".yaml"):
+                continue
+            t = f[:-5]
+            if t in out_of_scope or os.path.exists(os.path.join(common.REVIEWED_DIR, f)):
+                continue
+            if layer == "mapped" and os.path.exists(os.path.join(common.REVIEW_DIR, f)):
+                continue  # the review copy is what the index publishes
+            path = os.path.join(d, f)
+            raw = open(path).read()
+            ctml = yaml.safe_load(raw)
+            if not isinstance(ctml, dict) or ctml.get("diagnosis_seed_suspect"):
+                continue
+            try:
+                inclusion, _, record = evidence.eligibility_text(t)
+                conditions = evidence._conditions(t, record)
+            except (OSError, ValueError, KeyError, TypeError):
+                continue
+            context = conditions + [
+                str(ctml.get("short_title") or ""),
+                str(ctml.get("long_title") or ""),
+            ]
+            reason = text_rules.diagnosis_seed_suspect(
+                text_rules.collect(ctml)["diagnoses"], conditions, inclusion, context
+            )
+            if not reason:
+                continue
+            found.append((t, layer, reason, "moved to review" if layer == "mapped" else "flagged"))
+            if apply:
+                text = (
+                    raw.rstrip("\n")
+                    + "\n"
+                    + yaml.safe_dump(
+                        {"diagnosis_seed_suspect": reason}, allow_unicode=True, width=1000
+                    )
+                )
+                with open(os.path.join(common.REVIEW_DIR, f), "w") as fh:
+                    fh.write(text)
+                if layer == "mapped":
+                    os.remove(path)
+    return found
+
+
 def flag_unsupported_genes(apply=False):
     """
     Re-run the mapper's unsupported-gene check (match_criteria_mapper.

@@ -44,9 +44,20 @@ NCT_ID = "NCT07440290"
 
 
 def _have_cache():
-    return os.path.isdir(os.path.join(ROOT, bm.CACHE_DIRS["ctis"])) and os.path.isdir(
-        os.path.join(ROOT, bm.CACHE_DIRS["nct"])
-    )
+    """
+    True when both registries have cached records to score against.
+
+    A record, not just the directory: `pull` creates both directories, and so
+    does anyone clearing the cache to re-pull it, so an empty directory used to
+    let these tests run and fail on a missing file instead of skipping.
+    """
+    for registry in ("ctis", "nct"):
+        path = os.path.join(ROOT, bm.CACHE_DIRS[registry])
+        if not os.path.isdir(path):
+            return False
+        if not any(name.endswith(".json") for name in os.listdir(path)):
+            return False
+    return True
 
 
 def _run_main(*argv):

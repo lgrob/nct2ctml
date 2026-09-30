@@ -46,27 +46,27 @@ class TestStructuredAndProse(unittest.TestCase):
             ctg.map_age_numerical(_trial("1 Year", "17 Years")),
             ctg.map_age_numerical(_trial("1 Year", "17 Years"), None),
         )
-        self.assertEqual(ctg.map_age_numerical(_trial("1 Year", "17 Years")), [">=1", "<=18"])
+        self.assertEqual(ctg.map_age_numerical(_trial("1 Year", "17 Years")), [">=1", "<18"])
 
     def test_an_exclusive_prose_bound_narrows_the_structured_maximum(self):
         # NCT06528691: "birth to age <3 years" against a structured "3 Years".
         got = ctg.map_age_numerical(_trial("0 Days", "3 Years"), _prose(high=3, high_inc=False))
         self.assertIn("<3", got)
-        self.assertNotIn("<=4", got)
+        self.assertNotIn("<4", got)
 
     def test_a_completed_units_prose_bound_keeps_the_wide_reading(self):
         # NCT02443831: "24 years or younger" against "24 Years".
         got = ctg.map_age_numerical(_trial(maximum="24 Years"), _prose(high=24, high_inc=True))
-        self.assertEqual(got, ["<=25"])
+        self.assertEqual(got, ["<25"])
         # NCT03643276: "age < 18 years" against "17 Years" - the same reading.
         got = ctg.map_age_numerical(_trial(maximum="17 Years"), _prose(high=18, high_inc=False))
-        self.assertEqual(got, ["<=18"])
+        self.assertEqual(got, ["<18"])
 
     def test_a_disagreeing_prose_bound_does_not_override(self):
         # Prose 30 against structured 18: probably a cohort or a misreading.
         # The structured field wins; the prose only ever resolves ambiguity.
         got = ctg.map_age_numerical(_trial(maximum="18 Years"), _prose(high=30, high_inc=False))
-        self.assertEqual(got, ["<=19"])
+        self.assertEqual(got, ["<19"])
 
     def test_prose_fills_bounds_the_structured_fields_lack(self):
         # NCT04625907 carries no structured ages; its key holds >=1 and <=25.

@@ -2,6 +2,35 @@
 
 How a curator works through `ctml/needs-review` and accepts a trial into `ctml/reviewed`. Moved from the README on 2026-09-28.
 
+## The review interface
+
+```
+./.venv/bin/python -m utils.review.app        # then open http://127.0.0.1:8765
+```
+
+Like every other command here it needs the repo's own environment, from the repo
+root. The system Python stops with `No module named 'loguru'`; the app says so and
+gives this line.
+
+One page per trial: the same evidence the static sheets show, an editor for the
+trial's CTML, and the decision. **Save and re-check** writes the file, keeps the
+previous version as `<trial>.yaml.prev` and re-runs the review gate, so the page
+tells you what `accept` would still refuse before you press it. **Accept** and
+**Exclude** are `gate.accept` and `gate.exclude` — the same code as the command
+line, so `ctml/review_log.tsv` and the accepted file's SHA-256 are written
+exactly as before, and a file that still carries a flag is still refused.
+
+A reviewer name is required for both decisions; Exclude also needs the note,
+which becomes the reason in `ref/scope_overrides.tsv`. The server binds
+127.0.0.1 only — the queue is unpublished clinical mapping output — handles one
+request at a time, and has no authentication because it is not reachable off the
+machine. Two curators should not point it at the same checkout: there is no
+locking, so the second save would overwrite the first.
+
+Nothing here is a new rule. The static sheets (`review_helper sheets`) and the
+CLI still work unchanged; the interface exists so that resolving a flag does not
+mean a text editor in one window and a terminal in another.
+
 `python -m utils.review_helper` (code in `utils/review/`; the rules it shares
 with the mapper are in `src/text_rules.py`) puts the evidence for each flag next to the flag and
 makes accepting a reviewed trial a checked, logged step. It reads the same

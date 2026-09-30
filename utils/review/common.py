@@ -42,6 +42,8 @@ FLAG_KEYS = (
     "protein_change_unverified",
     "protein_change_check",
     "fusion_partner_unverified",
+    "age_units_implausible",
+    "diagnosis_seed_suspect",
 )
 
 
@@ -82,6 +84,21 @@ ADVICE = {
     "delete `protein_change_unverified:` and `protein_change_check:`.",
     "fusion_partner_unverified": "The fusion partner is not an official gene symbol. Replace the line with "
     "`fusion_partner: <symbol>` or delete it.",
+    "diagnosis_seed_suspect": "The diagnosis scope rests on something deterministic code distrusts: "
+    'either a basket built on a specialty word ("Oncology" is not a population, so '
+    "_SOLID_/_LIQUID_ may be far wider than the trial), or a B-lineage criterion on a "
+    "trial whose text names only T-lineage disease (Oncotree has no lineage-free ALL "
+    "node, so unqualified ALL maps to B-ALL). Decide from the text: narrow the wildcards "
+    "to the diagnoses the trial enrols, or replace the B-lineage entry with the T-lineage "
+    "one - or keep it if the trial really does enrol both. Then delete the top-level "
+    "`diagnosis_seed_suspect:` line.",
+    "age_units_implausible": "The registry's structured age fields are in days, weeks or months while the "
+    "inclusion text states the same numbers in years, so one of the two is a "
+    "sponsor error (and the trial may not be paediatric at all despite its CHILD "
+    "tag). Decide which the protocol means: correct `age_numerical` to the years "
+    "reading, or leave it if the registry is right. Then delete the top-level "
+    "`age_units_implausible:` line. If the trial does not enrol children, exclude "
+    "it with `review_helper exclude` instead.",
 }
 
 

@@ -21,6 +21,7 @@ ref/genes.txt	supplied	genes_kispi.txt resolved to current HGNC symbols	1,086 sy
 ref/diagnosis_synonyms.tsv	curated	this repository				
 ref/diagnosis_text_terms.tsv	curated	this repository				
 ref/gene_rewrite_exclusions.tsv	curated	this repository				
+ref/diagnosis_abbrev_exclusions.tsv	curated	this repository				
 ref/gene_synonym_addendum.tsv	curated	this repository				
 ref/scope_overrides.tsv	curated	this repository				
 ref/translocation_fusions.tsv	curated	this repository				

@@ -266,6 +266,8 @@ class TrialMapManager:
                     self._record_role_drops(mapped_ctml, nct_id)
                     self._add_unspecified_all_lineage(mapped_ctml, trial_data, "nct", nct_id)
                     self._flag_gene_status(mapped_ctml, trial_data, "nct", nct_id)
+                    self._flag_age_units(mapped_ctml, trial_data, nct_id)
+                    self._flag_diagnosis_seed(mapped_ctml, trial_data, "nct", nct_id)
 
                     # Add local trial info if available
                     if nct_id in local_trial_dict:
@@ -394,6 +396,7 @@ class TrialMapManager:
             self._record_role_drops(mapped_ctml, ct_number)
             self._add_unspecified_all_lineage(mapped_ctml, trial_data, "ctis", ct_number)
             self._flag_gene_status(mapped_ctml, trial_data, "ctis", ct_number)
+            self._flag_diagnosis_seed(mapped_ctml, trial_data, "ctis", ct_number)
             # CTIS bypassed the review queue entirely until 2026-09-21: it saved
             # straight to the output directory, so a CTIS trial whose diagnosis
             # could not be determined reached MatchMiner and matched every
@@ -549,6 +552,32 @@ class TrialMapManager:
             logger.warning(f"{trial_id} | gene-status check skipped: {type(e).__name__}: {e}")
 
     @staticmethod
+    def _flag_age_units(mapped_ctml: dict, trial_data: dict, trial_id: str) -> None:
+        """
+        Write age_units_implausible when the structured age fields are in days,
+        weeks or months while the inclusion text states the same numbers in
+        years (src.text_rules.age_units_implausible), which routes the trial to
+        review. ClinicalTrials.gov only: CTIS publishes no structured age.
+
+        The bounds themselves are left as the registry states them. Which
+        field the sponsor meant is not ours to decide, and a trial that is
+        held back can be seen; one quietly rewritten cannot.
+        """
+        if not isinstance(mapped_ctml, dict):
+            return
+        try:
+            eligibility = tdh.safe_get(trial_data, ["protocolSection", "eligibilityModule"]) or {}
+            inclusion, _ = ctg.split_inclusion_exclusion_criteria(trial_data)
+            reason = text_rules.age_units_implausible(
+                eligibility.get("minimumAge"), eligibility.get("maximumAge"), inclusion
+            )
+            if reason:
+                mapped_ctml["age_units_implausible"] = reason
+                logger.warning(f"{trial_id} | age units look wrong: {reason}")
+        except Exception as e:  # a check must never lose the trial
+            logger.warning(f"{trial_id} | age-units check skipped: {type(e).__name__}: {e}")
+
+    @staticmethod
     def _flag_excluded_diagnoses(
         mapped_ctml: dict, trial_data: dict, registry: str, trial_id: str
     ) -> None:
@@ -588,6 +617,43 @@ class TrialMapManager:
             logger.warning(
                 f"{trial_id} | diagnoses named only in the exclusion criteria: {', '.join(found)}"
             )
+
+    @staticmethod
+    def _flag_diagnosis_seed(
+        mapped_ctml: dict, trial_data: dict, registry: str, trial_id: str
+    ) -> None:
+        """
+        Write diagnosis_seed_suspect when the scope rests on the word "oncology"
+        or a B-lineage criterion sits on a T-lineage trial
+        (src.text_rules.diagnosis_seed_suspect), which routes the trial to review.
+        Deterministic: no model call, and nothing is removed.
+        """
+        if not isinstance(mapped_ctml, dict):
+            return
+        try:
+            if registry == "ctis":
+                import src.ctis as ctis
+
+                inclusion, _ = ctis.split_inclusion_exclusion_criteria(trial_data)
+                conditions = list(ctis.get_conditions(trial_data))
+                context = conditions + list(ctis.get_titles(trial_data))
+            else:
+                inclusion, _ = ctg.split_inclusion_exclusion_criteria(trial_data)
+                section = trial_data.get("protocolSection", {})
+                identification = section.get("identificationModule", {})
+                conditions = list(section.get("conditionsModule", {}).get("conditions") or [])
+                context = conditions + [
+                    identification.get("briefTitle") or "",
+                    identification.get("officialTitle") or "",
+                ]
+            reason = text_rules.diagnosis_seed_suspect(
+                text_rules.collect(mapped_ctml)["diagnoses"], conditions, inclusion, context
+            )
+            if reason:
+                mapped_ctml["diagnosis_seed_suspect"] = reason
+                logger.warning(f"{trial_id} | diagnosis scope looks wrong: {reason}")
+        except Exception as e:  # a check must never lose the trial
+            logger.warning(f"{trial_id} | diagnosis-seed check skipped: {type(e).__name__}: {e}")
 
     @staticmethod
     def _record_off_list(mapped_ctml: dict, trial_id: str) -> None:
@@ -665,6 +731,16 @@ class TrialMapManager:
             reasons.append(
                 "a gene is required although the text says it must be absent or does not matter"
             )
+        if "diagnosis_seed_suspect" in keys:
+            reasons.append(
+                "the diagnosis scope rests on a specialty word, or a B-lineage criterion "
+                "sits on a trial whose text names only T-lineage disease"
+            )
+        if "age_units_implausible" in keys:
+            reasons.append(
+                "the structured age fields are in days, weeks or months where the text "
+                "states the same numbers in years"
+            )
         if not reasons:
             import config
 
@@ -716,6 +792,8 @@ class TrialMapManager:
             self._record_role_drops(mapped_ctml, nct_id)
             self._add_unspecified_all_lineage(mapped_ctml, trial_data, "nct", nct_id)
             self._flag_gene_status(mapped_ctml, trial_data, "nct", nct_id)
+            self._flag_age_units(mapped_ctml, trial_data, nct_id)
+            self._flag_diagnosis_seed(mapped_ctml, trial_data, "nct", nct_id)
 
             # Add local trial info if available
             self._add_local_trial_info(mapped_ctml, nct_id)

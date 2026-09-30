@@ -32,11 +32,11 @@ class TestAgeBounds(unittest.TestCase):
     """
 
     def test_both_bounds_are_emitted(self):
-        self.assertEqual(ctg.map_age_numerical(_trial("1 Year", "14 Years")), [">=1", "<=15"])
+        self.assertEqual(ctg.map_age_numerical(_trial("1 Year", "14 Years")), [">=1", "<15"])
 
     def test_either_bound_alone(self):
         self.assertEqual(ctg.map_age_numerical(_trial("18 Years", None)), [">=18"])
-        self.assertEqual(ctg.map_age_numerical(_trial(None, "17 Years")), ["<=18"])
+        self.assertEqual(ctg.map_age_numerical(_trial(None, "17 Years")), ["<18"])
         self.assertEqual(ctg.map_age_numerical(_trial(None, None)), [])
 
     def test_the_maximum_is_in_completed_units(self):
@@ -50,8 +50,8 @@ class TestAgeBounds(unittest.TestCase):
         maximumAge "24 Years" with "24 years or younger"; NCT03643276 pairs
         "17 Years" with "age < 18 years (up to 17 years and 365 days)".
         """
-        self.assertEqual(ctg.map_age_numerical(_trial(None, "24 Years")), ["<=25"])
-        self.assertEqual(ctg.map_age_numerical(_trial(None, "21 Years")), ["<=22"])
+        self.assertEqual(ctg.map_age_numerical(_trial(None, "24 Years")), ["<25"])
+        self.assertEqual(ctg.map_age_numerical(_trial(None, "21 Years")), ["<22"])
 
     def test_the_minimum_is_exact(self):
         """A lower bound admits a patient the day they reach it; no offset."""
@@ -65,13 +65,11 @@ class TestAgeBounds(unittest.TestCase):
         conversion intends - so the one-unit offset on a day-scale maximum
         disappears below its granularity, as it should.
         """
-        self.assertEqual(ctg.map_age_numerical(_trial("18 Days", "70 Days")), [">=0.05", "<=0.19"])
-        self.assertEqual(
-            ctg.map_age_numerical(_trial("6 Months", "18 Months")), [">=0.5", "<=1.58"]
-        )
+        self.assertEqual(ctg.map_age_numerical(_trial("18 Days", "70 Days")), [">=0.05", "<0.19"])
+        self.assertEqual(ctg.map_age_numerical(_trial("6 Months", "18 Months")), [">=0.5", "<1.58"])
 
     def test_unparseable_bounds_are_dropped_not_fatal(self):
-        self.assertEqual(ctg.map_age_numerical(_trial("N/A", "14 Years")), ["<=15"])
+        self.assertEqual(ctg.map_age_numerical(_trial("N/A", "14 Years")), ["<15"])
         self.assertEqual(ctg.map_age_numerical(_trial("1 Year", "14 Fortnights")), [">=1"])
 
 
@@ -136,7 +134,7 @@ class TestAgeBoundsReachCTML(unittest.TestCase):
         if not os.path.exists(path):
             self.skipTest("cached record not present")
         bounds = ctg.map_age_numerical(json.load(open(path)))
-        self.assertEqual(bounds, [">=0.05", "<=0.19"])
+        self.assertEqual(bounds, [">=0.05", "<0.19"])
 
 
 if __name__ == "__main__":

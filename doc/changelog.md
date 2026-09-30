@@ -2,6 +2,87 @@
 
 What changed in this fork after the initial retargeting, newest first. Moved from CHANGES.md on 2026-09-28 (improvement plan step 13); the entries are unchanged. Measured decisions are in [decisions/](decisions/), mapping runs and queue reviews in [runs/](runs/).
 
+## A review interface, and the diagnosis-seed rules (2026-09-30)
+
+**`python -m utils.review.app`** serves the review sheets at 127.0.0.1:8765 with
+an editor and the decision on the same page. Save writes the file, keeps the
+previous version as `.prev` and re-runs the gate, so the page shows what
+`accept` would refuse; Accept and Exclude call `gate.accept` / `gate.exclude`
+unchanged, so the log and the SHA-256 are written as before. Standard library
+only (`http.server`), so `requirements.lock` is untouched. The static sheets and
+the CLI are unchanged. Documented in [review_guide.md](review_guide.md);
+16 tests, none of which bind a socket.
+
+**Diagnosis-seed rules** from the 3.4 audit, measured over all 1,146 indexed
+trials before adoption
+([decision](decisions/2026-09-30-conditions-seed-rules.md)):
+
+- `ref/diagnosis_abbrev_exclusions.tsv` (mirroring the gene side) stops the
+  conditions seed resolving an ambiguous abbreviation: `GCT` had become Granular
+  Cell Tumor on a germ cell tumour trial, `RAS` Radiation-Associated Sarcoma on a
+  colorectal one. Two rows, curator-extensible; enforced in
+  `reference_validation.diagnoses_from_conditions`.
+- `text_rules.diagnosis_seed_suspect` flags two scope errors and removes nothing:
+  a basket resting on the condition "Oncology" (a specialty, not a population —
+  2 trials, both wrong), and a B-lineage criterion on a trial whose text names
+  only T-lineage disease (8 trials; Oncotree has no lineage-free ALL node, so
+  unqualified ALL maps to B-ALL). The flag routes to review;
+  `review_helper flag-diagnosis-seed [--apply]` applies it to existing CTML —
+  10 trials, all currently published, not yet applied.
+- Two wider variants were measured and **not** adopted: the same basket rule on
+  the word "cancer" (17 trials, 10 of them legitimate category headers) and
+  automatic detection of abbreviation collisions (text corroboration flags 18 of
+  40, almost all correct expansions; lineage consistency flags 1, a false
+  positive). Widening the unqualified-ALL rule was also rejected: of 141 trials
+  where it declines to fire, every sampled one declines correctly.
+
+One correction to the audit note: NCT07262489's Hepatocellular Carcinoma comes
+from the model reading an incidental mention, not from the conditions seed, so
+the seed rules reach 2 of its diagnosis-scope causes rather than 3.
+
+## The two age defects from the 3.4 audit (2026-09-29)
+
+Both found by the audit of the second full run
+([runs/2026-09-29-3.4-audit.md](runs/2026-09-29-3.4-audit.md)). Deterministic,
+no model calls, and the corpus was corrected in place rather than re-mapped.
+
+- **Defect A: the upper age bound was one unit too wide.** The
+  ClinicalTrials.gov path added a completed unit to `maximumAge` and kept
+  `<=`, so a 40-year maximum was published as `<=41`. MatchMiner treats `<`
+  and `<=` identically - `map_age_numerical` said so in a comment - but the
+  flat index reads the operator literally, so `age_max_inclusive` was `1` and
+  a consumer joining on whole years admitted an extra year of patients. 496
+  of the 765 indexed trials with an upper bound were affected; the prose path
+  (`age_bounds.prose_bounds`) already emitted `<N+1`, which is why the
+  prose-corrected CTGOV trials and every CTIS trial were right.
+  `map_age_numerical` now passes `<`, and
+  `review_helper fix-age-operator [--apply]` rewrites existing CTML by text
+  (465 bounds in 465 trials). After rebuilding the index,
+  `age_max_inclusive = 1` fell from 496 rows to 31: 28 in `ctml/reviewed`,
+  which the pass never touches because each accepted file's SHA-256 is in
+  `ctml/review_log.tsv`, and 3 mapped or queued files with curator comments.
+  **The 28 reviewed trials are what the first release builds from, so they
+  need a curator's decision before 3.3.**
+- **Defect B: a sponsor's units error published as a neonatal window.**
+  `text_rules.age_units_implausible` reports a trial whose structured age
+  fields are in days, weeks or months while the inclusion text states the
+  same two numbers in years. The mapper writes `age_units_implausible`, which
+  routes the trial to review (`_flag_age_units`, ClinicalTrials.gov only:
+  CTIS publishes no structured age), and leaves the bounds as the registry
+  states them - which field the sponsor meant is a curator's call.
+  `review_helper flag-age-units [--apply]` applies it to existing CTML. The
+  numbers have to match, so a real neonatal study ("18 to 70 days") is not
+  reported. Four trials, all now in the review queue: NCT06342336 and
+  NCT07106892 (18-75 Days against 18-75 years), NCT06776952 (18-70 Days
+  against "Aged 18-70 years (inclusive)") and NCT06375161 (18-70 **Weeks**,
+  published as 0.34-1.36 years), which the audit's sample had missed. All
+  four are tagged `stdAges: CHILD` by the registry, which is why adult trials
+  were in a paediatric corpus at all.
+
+Index after both passes and a rebuild: 1,146 trials, 913 mapped (was 916),
+177 needs review (was 174), 56 reviewed; diagnosis and genomic tables
+unchanged. 645 offline tests (25 new in `tests/test_age_units.py`).
+
 ## Improvement plan removed (2026-09-29)
 
 All 16 steps are done. `doc/improvement_plan.md` is removed; it is in git
