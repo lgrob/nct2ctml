@@ -1,170 +1,74 @@
 [
   {
     "nct_id": "NCT01704716",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
     "dx_r": 1.0,
     "dx_f1": 1.0,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 1,
-    "n_pop_got": 1,
-    "pop_missed": [],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
     "n_dx_truth": 1,
     "n_dx_got": 1,
     "genes_truth": [
       "MYCN"
     ],
-    "genes_got": [],
+    "genes_got": [
+      "MYCN"
+    ],
     "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 0.0,
-    "age_p": 0.0,
-    "age_r": 0.0,
-    "ages_truth": [
-      "<=21",
-      ">=1"
-    ],
-    "ages_got": [
-      "<=22",
-      ">=0.08"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 35.0
+    "seconds": 0
   },
   {
     "nct_id": "NCT02332668",
-    "registry": "nct",
     "status": "ok",
-    "dx_p": 0.3333333333333333,
-    "dx_r": 0.5,
-    "dx_f1": 0.4,
-    "pop_p": 1.0,
-    "pop_r": 0.7473806752037253,
-    "pop_f1": 0.8554297135243172,
-    "n_pop_truth": 859,
-    "n_pop_got": 642,
-    "pop_missed": [
-      "ALK Positive Large B-Cell Lymphoma",
-      "AML (megakaryoblastic) with t(1;22)(p13.3;q13.3);RBM15-MKL1",
-      "AML with BCR-ABL1",
-      "AML with Biallelic Mutations of CEBPA",
-      "AML with Maturation",
-      "AML with Minimal Differentiation"
-    ],
-    "pop_extra": [],
+    "dx_p": 1.0,
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
     "n_dx_truth": 2,
-    "n_dx_got": 3,
+    "n_dx_got": 2,
     "genes_truth": [],
     "genes_got": [],
-    "dx_missed": [
-      "_LIQUID_"
-    ],
-    "dx_spurious": [
-      "Classical Hodgkin Lymphoma",
-      "Melanoma"
-    ],
+    "dx_missed": [],
+    "dx_spurious": [],
     "age_truth": "Children",
     "age_got": "Children",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=18",
-      ">=0.5"
-    ],
-    "ages_got": [
-      "<=18",
-      ">=0.5"
-    ],
     "unsatisfiable": [],
-    "seconds": 15.2
+    "seconds": 0
   },
   {
     "nct_id": "NCT02393157",
-    "registry": "nct",
     "status": "ok",
-    "dx_p": 0.6666666666666666,
-    "dx_r": 0.3333333333333333,
-    "dx_f1": 0.4444444444444444,
-    "pop_p": 0.10465116279069768,
-    "pop_r": 0.45,
-    "pop_f1": 0.169811320754717,
-    "n_pop_truth": 20,
-    "n_pop_got": 86,
-    "pop_missed": [
-      "B-Lymphoblastic Leukemia/Lymphoma with Hyperdiploidy",
-      "B-Lymphoblastic Leukemia/Lymphoma with Hypodiploidy",
-      "B-Lymphoblastic Leukemia/Lymphoma with Recurrent Genetic Abnormalities",
-      "B-Lymphoblastic Leukemia/Lymphoma with iAMP21",
-      "B-Lymphoblastic Leukemia/Lymphoma with t(12;21)(p13.2;q22.1); ETV6-RUNX1",
-      "B-Lymphoblastic Leukemia/Lymphoma with t(1;19)(q23;p13.3);TCF3-PBX1"
-    ],
-    "pop_extra": [
-      "ALK Positive Large B-Cell Lymphoma",
-      "Adult T-Cell Leukemia/Lymphoma",
-      "Aggressive NK-Cell Leukemia",
-      "Alpha Heavy-Chain Disease",
-      "Amyloidosis",
-      "Anaplastic Large Cell Lymphoma"
-    ],
+    "dx_p": 1.0,
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
     "n_dx_truth": 6,
-    "n_dx_got": 3,
+    "n_dx_got": 6,
     "genes_truth": [],
     "genes_got": [],
-    "dx_missed": [
-      "B-Lymphoblastic Leukemia/Lymphoma",
-      "Follicular Lymphoma",
-      "High-Grade B-Cell Lymphoma, NOS",
-      "Primary Mediastinal (Thymic) Large B-Cell Lymphoma"
-    ],
-    "dx_spurious": [
-      "Non-Hodgkin Lymphoma"
-    ],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=32",
-      ">=3"
-    ],
-    "ages_got": [
-      "<=32",
-      ">=3"
-    ],
+    "dx_missed": [],
+    "dx_spurious": [],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 10.1
+    "seconds": 0
   },
   {
     "nct_id": "NCT02443831",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
     "dx_r": 1.0,
     "dx_f1": 1.0,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 11,
-    "n_pop_got": 11,
-    "pop_missed": [],
-    "pop_extra": [],
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
@@ -174,276 +78,133 @@
     "genes_got": [],
     "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=25"
-    ],
-    "ages_got": [
-      "<=25"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 11.2
+    "seconds": 0
   },
   {
     "nct_id": "NCT02559778",
-    "registry": "nct",
-    "status": "ok",
-    "dx_p": 1.0,
-    "dx_r": 0.5,
-    "dx_f1": 0.6666666666666666,
-    "pop_p": 1.0,
-    "pop_r": 0.5,
-    "pop_f1": 0.6666666666666666,
-    "n_pop_truth": 2,
-    "n_pop_got": 1,
-    "pop_missed": [
-      "Ganglioneuroblastoma"
-    ],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
-    "n_dx_truth": 2,
-    "n_dx_got": 1,
-    "genes_truth": [
-      "MYCN"
-    ],
-    "genes_got": [],
-    "dx_missed": [
-      "Ganglioneuroblastoma"
-    ],
-    "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 0.0,
-    "age_p": 0.0,
-    "age_r": 0.0,
-    "ages_truth": [
-      "<=22",
-      ">=1.5"
-    ],
-    "ages_got": [
-      "<=23"
-    ],
-    "unsatisfiable": [],
-    "seconds": 10.0
-  },
-  {
-    "nct_id": "NCT02813135",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
     "dx_r": 1.0,
     "dx_f1": 1.0,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 859,
-    "n_pop_got": 859,
-    "pop_missed": [],
-    "pop_extra": [],
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
     "n_dx_truth": 2,
     "n_dx_got": 2,
+    "genes_truth": [
+      "MYCN"
+    ],
+    "genes_got": [
+      "MYCN"
+    ],
+    "dx_missed": [],
+    "dx_spurious": [],
+    "age_truth": "Children",
+    "age_got": "Children",
+    "unsatisfiable": [],
+    "seconds": 0
+  },
+  {
+    "nct_id": "NCT02813135",
+    "status": "ok",
+    "dx_p": 1.0,
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
+    "n_dx_truth": 12,
+    "n_dx_got": 12,
     "genes_truth": [],
     "genes_got": [],
     "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 0.0,
-    "age_p": 0.0,
-    "age_r": 0.0,
-    "ages_truth": [
-      "<=18"
-    ],
-    "ages_got": [
-      "<=19"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 9.8
+    "seconds": 0
   },
   {
     "nct_id": "NCT03067181",
-    "registry": "nct",
     "status": "ok",
-    "dx_p": 0.5,
-    "dx_r": 0.14285714285714285,
-    "dx_f1": 0.22222222222222224,
-    "pop_p": 0.5,
-    "pop_r": 0.14285714285714285,
-    "pop_f1": 0.22222222222222224,
-    "n_pop_truth": 7,
-    "n_pop_got": 2,
-    "pop_missed": [
-      "Choriocarcinoma",
-      "Extra Gonadal Germ Cell Tumor",
-      "Immature Teratoma",
-      "Mixed Germ Cell Tumor",
-      "Seminoma",
-      "Yolk Sac Tumor"
-    ],
-    "pop_extra": [
-      "Ovarian Choriocarcinoma, NOS"
-    ],
+    "dx_p": 1.0,
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
     "n_dx_truth": 7,
-    "n_dx_got": 2,
+    "n_dx_got": 7,
     "genes_truth": [],
     "genes_got": [],
-    "dx_missed": [
-      "Choriocarcinoma",
-      "Extra Gonadal Germ Cell Tumor",
-      "Immature Teratoma",
-      "Mixed Germ Cell Tumor",
-      "Seminoma",
-      "Yolk Sac Tumor"
-    ],
-    "dx_spurious": [
-      "Ovarian Choriocarcinoma, NOS"
-    ],
+    "dx_missed": [],
+    "dx_spurious": [],
     "age_truth": "All",
     "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [],
-    "ages_got": [],
     "unsatisfiable": [],
-    "seconds": 17.6
+    "seconds": 0
   },
   {
     "nct_id": "NCT03643276",
-    "registry": "nct",
-    "status": "ok",
-    "dx_p": 1.0,
-    "dx_r": 0.2,
-    "dx_f1": 0.33333333333333337,
-    "pop_p": 1.0,
-    "pop_r": 0.6470588235294118,
-    "pop_f1": 0.7857142857142858,
-    "n_pop_truth": 17,
-    "n_pop_got": 11,
-    "pop_missed": [
-      "Acute Undifferentiated Leukemia",
-      "Early T-Cell Precursor Lymphoblastic Leukemia",
-      "Mixed Phenotype Acute Leukemia, B/Myeloid, NOS",
-      "Mixed Phenotype Acute Leukemia, T/Myeloid, NOS",
-      "Natural Killer (NK) Cell Lymphoblastic Leukemia/Lymphoma",
-      "T-Lymphoblastic Leukemia/Lymphoma"
-    ],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
-    "n_dx_truth": 5,
-    "n_dx_got": 1,
-    "genes_truth": [
-      "ABL1",
-      "BCR"
-    ],
-    "genes_got": [],
-    "dx_missed": [
-      "Acute Undifferentiated Leukemia",
-      "Mixed Phenotype Acute Leukemia, B/Myeloid, NOS",
-      "Mixed Phenotype Acute Leukemia, T/Myeloid, NOS",
-      "T-Lymphoblastic Leukemia/Lymphoma"
-    ],
-    "dx_spurious": [],
-    "age_truth": "Children",
-    "age_got": "Children",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=18"
-    ],
-    "ages_got": [
-      "<=18"
-    ],
-    "unsatisfiable": [],
-    "seconds": 13.5
-  },
-  {
-    "nct_id": "NCT03838042",
-    "registry": "nct",
-    "status": "ok",
-    "dx_p": 0.0,
-    "dx_r": 0.0,
-    "dx_f1": 0.0,
-    "pop_p": 0.023547880690737835,
-    "pop_r": 1.0,
-    "pop_f1": 0.046012269938650305,
-    "n_pop_truth": 15,
-    "n_pop_got": 637,
-    "pop_missed": [],
-    "pop_extra": [
-      "Acinar Cell Carcinoma of the Pancreas",
-      "Acinar Cell Carcinoma, NOS",
-      "Acinic Cell Carcinoma",
-      "Acral Melanoma",
-      "Adamantinoma",
-      "Adenocarcinoma In Situ"
-    ],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
-    "n_dx_truth": 10,
-    "n_dx_got": 1,
-    "genes_truth": [
-      "MYC",
-      "MYCN"
-    ],
-    "genes_got": [],
-    "dx_missed": [
-      "Alveolar Rhabdomyosarcoma",
-      "Atypical Teratoid/Rhabdoid Tumor",
-      "Diffuse Midline Glioma, H3 K27-Altered",
-      "Embryonal Rhabdomyosarcoma",
-      "Ependymoma",
-      "Ewing Sarcoma"
-    ],
-    "dx_spurious": [
-      "_SOLID_"
-    ],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=22",
-      ">=2"
-    ],
-    "ages_got": [
-      "<=22",
-      ">=2"
-    ],
-    "unsatisfiable": [],
-    "seconds": 6.7
-  },
-  {
-    "nct_id": "NCT03900793",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
     "dx_r": 1.0,
     "dx_f1": 1.0,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 11,
-    "n_pop_got": 11,
-    "pop_missed": [],
-    "pop_extra": [],
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
+    "n_dx_truth": 5,
+    "n_dx_got": 5,
+    "genes_truth": [
+      "ABL1",
+      "BCR"
+    ],
+    "genes_got": [
+      "ABL1",
+      "BCR"
+    ],
+    "dx_missed": [],
+    "dx_spurious": [],
+    "age_truth": "Children",
+    "age_got": "Children",
+    "unsatisfiable": [],
+    "seconds": 0
+  },
+  {
+    "nct_id": "NCT03838042",
+    "status": "ok",
+    "dx_p": 1.0,
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
+    "n_dx_truth": 10,
+    "n_dx_got": 10,
+    "genes_truth": [
+      "MYC",
+      "MYCN"
+    ],
+    "genes_got": [
+      "MYC",
+      "MYCN"
+    ],
+    "dx_missed": [],
+    "dx_spurious": [],
+    "age_truth": "Children",
+    "age_got": "Children",
+    "unsatisfiable": [],
+    "seconds": 0
+  },
+  {
+    "nct_id": "NCT03900793",
+    "status": "ok",
+    "dx_p": 1.0,
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
@@ -455,97 +216,45 @@
     "dx_spurious": [],
     "age_truth": "All",
     "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      ">=10"
-    ],
-    "ages_got": [
-      ">=10"
-    ],
     "unsatisfiable": [],
-    "seconds": 8.7
+    "seconds": 0
   },
   {
     "nct_id": "NCT04094610",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
-    "dx_r": 0.5,
-    "dx_f1": 0.6666666666666666,
-    "pop_p": 1.0,
-    "pop_r": 0.7415599534342259,
-    "pop_f1": 0.8516042780748664,
-    "n_pop_truth": 859,
-    "n_pop_got": 637,
-    "pop_missed": [
-      "ALK Positive Large B-Cell Lymphoma",
-      "AML (megakaryoblastic) with t(1;22)(p13.3;q13.3);RBM15-MKL1",
-      "AML with BCR-ABL1",
-      "AML with Biallelic Mutations of CEBPA",
-      "AML with Maturation",
-      "AML with Minimal Differentiation"
-    ],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
     "n_dx_truth": 2,
-    "n_dx_got": 1,
+    "n_dx_got": 2,
     "genes_truth": [
       "NTRK1",
       "NTRK2",
       "NTRK3",
       "ROS1"
     ],
-    "genes_got": [],
-    "dx_missed": [
-      "_LIQUID_"
+    "genes_got": [
+      "NTRK1",
+      "NTRK2",
+      "NTRK3",
+      "ROS1"
     ],
+    "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=26"
-    ],
-    "ages_got": [
-      "<=26"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 7.7
+    "seconds": 0
   },
   {
     "nct_id": "NCT04185038",
-    "registry": "nct",
     "status": "ok",
-    "dx_p": 0.875,
-    "dx_r": 0.875,
-    "dx_f1": 0.875,
-    "pop_p": 0.35294117647058826,
-    "pop_r": 0.5714285714285714,
-    "pop_f1": 0.43636363636363634,
-    "n_pop_truth": 21,
-    "n_pop_got": 34,
-    "pop_missed": [
-      "Choriocarcinoma",
-      "Embryonal Carcinoma",
-      "Germ Cell Tumor, Brain",
-      "Germinoma",
-      "Immature Teratoma",
-      "Malignant Teratoma"
-    ],
-    "pop_extra": [
-      "Adult-Type Diffuse Glioma",
-      "Angiocentric Glioma",
-      "Astrocytoma, IDH-Mutant",
-      "Astrocytoma, IDH-Mutant, Grade 2",
-      "Astrocytoma, IDH-Mutant, Grade 3",
-      "Astrocytoma, IDH-Mutant, Grade 4"
-    ],
+    "dx_p": 1.0,
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
@@ -553,45 +262,22 @@
     "n_dx_got": 8,
     "genes_truth": [],
     "genes_got": [],
-    "dx_missed": [
-      "Germ Cell Tumor, Brain"
-    ],
-    "dx_spurious": [
-      "Diffuse Glioma"
-    ],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=27",
-      ">=1"
-    ],
-    "ages_got": [
-      "<=27",
-      ">=1"
-    ],
+    "dx_missed": [],
+    "dx_spurious": [],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 11.6
+    "seconds": 0
   },
   {
     "nct_id": "NCT04221035",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
     "dx_r": 1.0,
     "dx_f1": 1.0,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 1,
-    "n_pop_got": 1,
-    "pop_missed": [],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
     "n_dx_truth": 1,
     "n_dx_got": 1,
     "genes_truth": [
@@ -599,39 +285,24 @@
       "MYCL",
       "MYCN"
     ],
-    "genes_got": [],
+    "genes_got": [
+      "MYC",
+      "MYCL",
+      "MYCN"
+    ],
     "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 0.0,
-    "age_p": 0.0,
-    "age_r": 0.0,
-    "ages_truth": [
-      "<=21",
-      ">=0",
-      ">=1"
-    ],
-    "ages_got": [
-      "<=22"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 13.4
+    "seconds": 0
   },
   {
     "nct_id": "NCT04322318",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
     "dx_r": 1.0,
     "dx_f1": 1.0,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 1,
-    "n_pop_got": 1,
-    "pop_missed": [],
-    "pop_extra": [],
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
@@ -641,34 +312,17 @@
     "genes_got": [],
     "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=31"
-    ],
-    "ages_got": [
-      "<=31"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 15.1
+    "seconds": 0
   },
   {
     "nct_id": "NCT04478292",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
     "dx_r": 1.0,
     "dx_f1": 1.0,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 1,
-    "n_pop_got": 1,
-    "pop_missed": [],
-    "pop_extra": [],
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
@@ -678,164 +332,85 @@
     "genes_got": [],
     "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=19"
-    ],
-    "ages_got": [
-      "<=19"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 10.0
+    "seconds": 0
   },
   {
     "nct_id": "NCT04625907",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
-    "dx_r": 0.25,
-    "dx_f1": 0.4,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 6,
-    "n_pop_got": 6,
-    "pop_missed": [],
-    "pop_extra": [],
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
     "n_dx_truth": 4,
-    "n_dx_got": 1,
+    "n_dx_got": 4,
     "genes_truth": [],
     "genes_got": [],
-    "dx_missed": [
-      "Alveolar Rhabdomyosarcoma",
-      "Embryonal Rhabdomyosarcoma",
-      "Spindle Cell/Sclerosing Rhabdomyosarcoma"
-    ],
+    "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 0.0,
-    "age_p": 0.0,
-    "age_r": 0.0,
-    "ages_truth": [
-      "<=26",
-      ">=1"
-    ],
-    "ages_got": [],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 13.9
+    "seconds": 0
   },
   {
     "nct_id": "NCT04634357",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
-    "dx_r": 0.5,
-    "dx_f1": 0.6666666666666666,
-    "pop_p": 1.0,
-    "pop_r": 0.5,
-    "pop_f1": 0.6666666666666666,
-    "n_pop_truth": 2,
-    "n_pop_got": 1,
-    "pop_missed": [
-      "Hepatocellular Carcinoma"
-    ],
-    "pop_extra": [],
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
     "n_dx_truth": 2,
-    "n_dx_got": 1,
+    "n_dx_got": 2,
     "genes_truth": [],
     "genes_got": [],
-    "dx_missed": [
-      "Hepatocellular Carcinoma"
-    ],
+    "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=22",
-      ">=1"
-    ],
-    "ages_got": [
-      "<=22",
-      ">=1"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 11.3
+    "seconds": 0
   },
   {
     "nct_id": "NCT04655404",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
-    "dx_r": 0.6666666666666666,
-    "dx_f1": 0.8,
-    "pop_p": 1.0,
-    "pop_r": 0.4,
-    "pop_f1": 0.5714285714285715,
-    "n_pop_truth": 5,
-    "n_pop_got": 2,
-    "pop_missed": [
-      "Glioblastoma, IDH-Wildtype",
-      "Gliosarcoma",
-      "Small Cell Glioblastoma"
-    ],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
     "n_dx_truth": 3,
-    "n_dx_got": 2,
+    "n_dx_got": 3,
     "genes_truth": [
       "NTRK1",
       "NTRK2",
       "NTRK3"
     ],
-    "genes_got": [],
-    "dx_missed": [
-      "Glioblastoma, IDH-Wildtype"
+    "genes_got": [
+      "NTRK1",
+      "NTRK2",
+      "NTRK3"
     ],
+    "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=22"
-    ],
-    "ages_got": [
-      "<=22"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 19.9
+    "seconds": 0
   },
   {
     "nct_id": "NCT04696029",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
     "dx_r": 1.0,
     "dx_f1": 1.0,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 6,
-    "n_pop_got": 6,
-    "pop_missed": [],
-    "pop_extra": [],
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
@@ -845,278 +420,130 @@
     "genes_got": [],
     "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=22"
-    ],
-    "ages_got": [
-      "<=22"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 10.1
+    "seconds": 0
   },
   {
     "nct_id": "NCT04732065",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
-    "dx_r": 0.25,
-    "dx_f1": 0.4,
-    "pop_p": 1.0,
-    "pop_r": 0.1111111111111111,
-    "pop_f1": 0.19999999999999998,
-    "n_pop_truth": 9,
-    "n_pop_got": 1,
-    "pop_missed": [
-      "Diffuse Midline Glioma, H3 K27-Altered",
-      "High-Grade Glioma, NOS",
-      "Medulloblastoma, Group 3",
-      "Medulloblastoma, Group 4",
-      "Medulloblastoma, NOS",
-      "Medulloblastoma, Non-WNT, Non-SHH"
-    ],
-    "pop_extra": [],
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
     "n_dx_truth": 4,
-    "n_dx_got": 1,
+    "n_dx_got": 4,
     "genes_truth": [],
     "genes_got": [],
-    "dx_missed": [
-      "Diffuse Midline Glioma, H3 K27-Altered",
-      "High-Grade Glioma, NOS",
-      "Medulloblastoma"
-    ],
+    "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=22",
-      ">=2"
-    ],
-    "ages_got": [
-      "<=22",
-      ">=2"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 14.9
+    "seconds": 0
   },
   {
     "nct_id": "NCT04775485",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
-    "dx_r": 0.25,
-    "dx_f1": 0.4,
-    "pop_p": 1.0,
-    "pop_r": 0.25,
-    "pop_f1": 0.4,
-    "n_pop_truth": 4,
-    "n_pop_got": 1,
-    "pop_missed": [
-      "Ganglioglioma",
-      "Pilocytic Astrocytoma",
-      "Pleomorphic Xanthoastrocytoma"
-    ],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
     "n_dx_truth": 4,
-    "n_dx_got": 1,
+    "n_dx_got": 4,
     "genes_truth": [
       "BRAF",
       "NF1",
       "RAF1"
     ],
-    "genes_got": [],
-    "dx_missed": [
-      "Ganglioglioma",
-      "Pilocytic Astrocytoma",
-      "Pleomorphic Xanthoastrocytoma"
+    "genes_got": [
+      "BRAF",
+      "NF1",
+      "RAF1"
     ],
+    "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=26",
-      ">=0.5"
-    ],
-    "ages_got": [
-      "<=26",
-      ">=0.5"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 18.9
+    "seconds": 0
   },
   {
     "nct_id": "NCT04897321",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
-    "dx_r": 0.75,
-    "dx_f1": 0.8571428571428571,
-    "pop_p": 1.0,
-    "pop_r": 0.9117647058823529,
-    "pop_f1": 0.9538461538461539,
-    "n_pop_truth": 34,
-    "n_pop_got": 31,
-    "pop_missed": [
-      "Adrenocortical Carcinoma",
-      "Malignant Peripheral Nerve Sheath Tumor",
-      "Rhabdoid Cancer"
-    ],
-    "pop_extra": [],
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
     "n_dx_truth": 12,
-    "n_dx_got": 9,
+    "n_dx_got": 12,
     "genes_truth": [],
     "genes_got": [],
-    "dx_missed": [
-      "Adrenocortical Carcinoma",
-      "Malignant Peripheral Nerve Sheath Tumor",
-      "Rhabdoid Cancer"
-    ],
+    "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=22"
-    ],
-    "ages_got": [
-      "<=22"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 10.3
+    "seconds": 0
   },
   {
     "nct_id": "NCT05009992",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
-    "dx_r": 0.5,
-    "dx_f1": 0.6666666666666666,
-    "pop_p": 1.0,
-    "pop_r": 0.5,
-    "pop_f1": 0.6666666666666666,
-    "n_pop_truth": 2,
-    "n_pop_got": 1,
-    "pop_missed": [
-      "Diffuse Pediatric-Type High-Grade Glioma, H3-Wildtype and IDH-Wildtype"
-    ],
-    "pop_extra": [],
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
-    "n_dx_truth": 2,
+    "n_dx_truth": 1,
     "n_dx_got": 1,
     "genes_truth": [],
     "genes_got": [],
-    "dx_missed": [
-      "Diffuse Pediatric-Type High-Grade Glioma, H3-Wildtype and IDH-Wildtype"
-    ],
+    "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=40",
-      ">=2"
-    ],
-    "ages_got": [
-      "<=40",
-      ">=2"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 15.5
+    "seconds": 0
   },
   {
     "nct_id": "NCT05106296",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
-    "dx_r": 0.75,
-    "dx_f1": 0.8571428571428571,
-    "pop_p": 1.0,
-    "pop_r": 0.7272727272727273,
-    "pop_f1": 0.8421052631578948,
-    "n_pop_truth": 11,
-    "n_pop_got": 8,
-    "pop_missed": [
-      "Glioblastoma, IDH-Wildtype",
-      "Gliosarcoma",
-      "Small Cell Glioblastoma"
-    ],
-    "pop_extra": [],
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
     "n_dx_truth": 4,
-    "n_dx_got": 3,
+    "n_dx_got": 4,
     "genes_truth": [],
     "genes_got": [],
-    "dx_missed": [
-      "Glioblastoma, IDH-Wildtype"
-    ],
+    "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=26",
-      ">=3"
-    ],
-    "ages_got": [
-      "<=26",
-      ">=3"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 10.6
+    "seconds": 0
   },
   {
     "nct_id": "NCT05180825",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
-    "dx_r": 0.2,
-    "dx_f1": 0.33333333333333337,
-    "pop_p": 1.0,
-    "pop_r": 0.2,
-    "pop_f1": 0.33333333333333337,
-    "n_pop_truth": 5,
-    "n_pop_got": 1,
-    "pop_missed": [
-      "Ganglioglioma",
-      "Low-Grade Glioma, NOS",
-      "Papillary Glioneuronal Tumor",
-      "Rosette-forming Glioneuronal Tumor of the Fourth Ventricle"
-    ],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
     "n_dx_truth": 5,
-    "n_dx_got": 1,
+    "n_dx_got": 5,
     "genes_truth": [
       "BRAF",
       "H3-3A",
@@ -1124,128 +551,74 @@
       "H3C2",
       "IDH1"
     ],
-    "genes_got": [],
-    "dx_missed": [
-      "Ganglioglioma",
-      "Low-Grade Glioma, NOS",
-      "Papillary Glioneuronal Tumor",
-      "Rosette-forming Glioneuronal Tumor of the Fourth Ventricle"
+    "genes_got": [
+      "BRAF",
+      "H3-3A",
+      "H3-3B",
+      "H3C2",
+      "IDH1"
     ],
+    "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=26",
-      ">=0.08"
-    ],
-    "ages_got": [
-      "<=26",
-      ">=0.08"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 9.0
+    "seconds": 0
   },
   {
     "nct_id": "NCT05183035",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
     "dx_r": 1.0,
     "dx_f1": 1.0,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 31,
-    "n_pop_got": 31,
-    "pop_missed": [],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
     "n_dx_truth": 1,
     "n_dx_got": 1,
     "genes_truth": [
       "FLT3"
     ],
-    "genes_got": [],
+    "genes_got": [
+      "FLT3"
+    ],
     "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=22",
-      ">=0.08"
-    ],
-    "ages_got": [
-      "<=22",
-      ">=0.08"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 12.0
+    "seconds": 0
   },
   {
     "nct_id": "NCT05304585",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
-    "dx_r": 0.6666666666666666,
-    "dx_f1": 0.8,
-    "pop_p": 1.0,
-    "pop_r": 0.6666666666666666,
-    "pop_f1": 0.8,
-    "n_pop_truth": 3,
-    "n_pop_got": 2,
-    "pop_missed": [
-      "Alveolar Rhabdomyosarcoma"
-    ],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
     "n_dx_truth": 3,
-    "n_dx_got": 2,
+    "n_dx_got": 3,
     "genes_truth": [
       "FOXO1"
     ],
-    "genes_got": [],
-    "dx_missed": [
-      "Alveolar Rhabdomyosarcoma"
+    "genes_got": [
+      "FOXO1"
     ],
+    "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=22"
-    ],
-    "ages_got": [
-      "<=22"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 12.0
+    "seconds": 0
   },
   {
     "nct_id": "NCT05366218",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
     "dx_r": 1.0,
     "dx_f1": 1.0,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 11,
-    "n_pop_got": 11,
-    "pop_missed": [],
-    "pop_extra": [],
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
@@ -1255,82 +628,41 @@
     "genes_got": [],
     "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 0.5,
-    "age_p": 0.5,
-    "age_r": 0.5,
-    "ages_truth": [
-      "<=18",
-      ">=3"
-    ],
-    "ages_got": [
-      "<=19",
-      ">=3"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 11.3
+    "seconds": 0
   },
   {
     "nct_id": "NCT05489887",
-    "registry": "nct",
-    "status": "ok",
-    "dx_p": 1.0,
-    "dx_r": 0.5,
-    "dx_f1": 0.6666666666666666,
-    "pop_p": 1.0,
-    "pop_r": 0.5,
-    "pop_f1": 0.6666666666666666,
-    "n_pop_truth": 2,
-    "n_pop_got": 1,
-    "pop_missed": [
-      "Ganglioneuroblastoma"
-    ],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
-    "n_dx_truth": 2,
-    "n_dx_got": 1,
-    "genes_truth": [
-      "MYCN"
-    ],
-    "genes_got": [],
-    "dx_missed": [
-      "Ganglioneuroblastoma"
-    ],
-    "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 0.8,
-    "age_p": 1.0,
-    "age_r": 0.6666666666666666,
-    "ages_truth": [
-      "<=22",
-      ">=1",
-      ">=1.5"
-    ],
-    "ages_got": [
-      "<=22",
-      ">=1"
-    ],
-    "unsatisfiable": [],
-    "seconds": 8.6
-  },
-  {
-    "nct_id": "NCT05504291",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
     "dx_r": 1.0,
     "dx_f1": 1.0,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 1,
-    "n_pop_got": 1,
-    "pop_missed": [],
-    "pop_extra": [],
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
+    "n_dx_truth": 2,
+    "n_dx_got": 2,
+    "genes_truth": [
+      "MYCN"
+    ],
+    "genes_got": [
+      "MYCN"
+    ],
+    "dx_missed": [],
+    "dx_spurious": [],
+    "age_truth": "Children",
+    "age_got": "Children",
+    "unsatisfiable": [],
+    "seconds": 0
+  },
+  {
+    "nct_id": "NCT05504291",
+    "status": "ok",
+    "dx_p": 1.0,
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
@@ -1340,44 +672,20 @@
     "genes_got": [],
     "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 0.0,
-    "age_p": 0.0,
-    "age_r": 0.0,
-    "ages_truth": [
-      "<=18"
-    ],
-    "ages_got": [
-      "<=19"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 8.5
+    "seconds": 0
   },
   {
     "nct_id": "NCT05580562",
-    "registry": "nct",
     "status": "ok",
-    "dx_p": 0.0,
-    "dx_r": 0.0,
-    "dx_f1": 0.0,
-    "pop_p": 0.043478260869565216,
-    "pop_r": 1.0,
-    "pop_f1": 0.08333333333333333,
-    "n_pop_truth": 1,
-    "n_pop_got": 23,
-    "pop_missed": [],
-    "pop_extra": [
-      "Adult-Type Diffuse Glioma",
-      "Angiocentric Glioma",
-      "Astrocytoma, IDH-Mutant",
-      "Astrocytoma, IDH-Mutant, Grade 2",
-      "Astrocytoma, IDH-Mutant, Grade 3",
-      "Astrocytoma, IDH-Mutant, Grade 4"
-    ],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
+    "dx_p": 1.0,
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
     "n_dx_truth": 1,
     "n_dx_got": 1,
     "genes_truth": [
@@ -1385,48 +693,29 @@
       "H3-3B",
       "H3C2"
     ],
-    "genes_got": [],
-    "dx_missed": [
-      "Diffuse Midline Glioma, H3 K27-Altered"
+    "genes_got": [
+      "H3-3A",
+      "H3-3B",
+      "H3C2"
     ],
-    "dx_spurious": [
-      "Diffuse Glioma"
-    ],
+    "dx_missed": [],
+    "dx_spurious": [],
     "age_truth": "All",
     "age_got": "All",
-    "age_f1": 0.0,
-    "age_p": 0.0,
-    "age_r": 0.0,
-    "ages_truth": [
-      ">=0"
-    ],
-    "ages_got": [],
     "unsatisfiable": [],
-    "seconds": 14.9
+    "seconds": 0
   },
   {
     "nct_id": "NCT05658640",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
-    "dx_r": 0.5,
-    "dx_f1": 0.6666666666666666,
-    "pop_p": 1.0,
-    "pop_r": 0.7857142857142857,
-    "pop_f1": 0.88,
-    "n_pop_truth": 14,
-    "n_pop_got": 11,
-    "pop_missed": [
-      "Early T-Cell Precursor Lymphoblastic Leukemia",
-      "Natural Killer (NK) Cell Lymphoblastic Leukemia/Lymphoma",
-      "T-Lymphoblastic Leukemia/Lymphoma"
-    ],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
     "n_dx_truth": 2,
-    "n_dx_got": 1,
+    "n_dx_got": 2,
     "genes_truth": [
       "CBL",
       "FLT3",
@@ -1437,50 +726,34 @@
       "NRAS",
       "PTPN11"
     ],
-    "genes_got": [],
-    "dx_missed": [
-      "T-Lymphoblastic Leukemia/Lymphoma"
+    "genes_got": [
+      "CBL",
+      "FLT3",
+      "HRAS",
+      "KRAS",
+      "MAP2K1",
+      "NF1",
+      "NRAS",
+      "PTPN11"
     ],
+    "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 0.5,
-    "age_p": 0.5,
-    "age_r": 0.5,
-    "ages_truth": [
-      "<=21",
-      ">=1"
-    ],
-    "ages_got": [
-      "<=22",
-      ">=1"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 9.9
+    "seconds": 0
   },
   {
     "nct_id": "NCT05745714",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
-    "dx_r": 0.5,
-    "dx_f1": 0.6666666666666666,
-    "pop_p": 1.0,
-    "pop_r": 0.7857142857142857,
-    "pop_f1": 0.88,
-    "n_pop_truth": 14,
-    "n_pop_got": 11,
-    "pop_missed": [
-      "Early T-Cell Precursor Lymphoblastic Leukemia",
-      "Natural Killer (NK) Cell Lymphoblastic Leukemia/Lymphoma",
-      "T-Lymphoblastic Leukemia/Lymphoma"
-    ],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
     "n_dx_truth": 2,
-    "n_dx_got": 1,
+    "n_dx_got": 2,
     "genes_truth": [
       "CRLF2",
       "DDX3X",
@@ -1495,41 +768,33 @@
       "SH2B3",
       "STAT5B"
     ],
-    "genes_got": [],
-    "dx_missed": [
-      "T-Lymphoblastic Leukemia/Lymphoma"
+    "genes_got": [
+      "CRLF2",
+      "DDX3X",
+      "DNM2",
+      "EPOR",
+      "IL7R",
+      "JAK1",
+      "JAK2",
+      "JAK3",
+      "P2RY8",
+      "PTPN2",
+      "SH2B3",
+      "STAT5B"
     ],
+    "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 0.5,
-    "age_p": 0.5,
-    "age_r": 0.5,
-    "ages_truth": [
-      "<=21",
-      ">=1"
-    ],
-    "ages_got": [
-      "<=22",
-      ">=1"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 15.4
+    "seconds": 0
   },
   {
     "nct_id": "NCT05748171",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
     "dx_r": 1.0,
     "dx_f1": 1.0,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 11,
-    "n_pop_got": 11,
-    "pop_missed": [],
-    "pop_extra": [],
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
@@ -1541,37 +806,18 @@
     "dx_spurious": [],
     "age_truth": "Children",
     "age_got": "Children",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=18",
-      ">=1"
-    ],
-    "ages_got": [
-      "<=18",
-      ">=1"
-    ],
     "unsatisfiable": [],
-    "seconds": 9.1
+    "seconds": 0
   },
   {
     "nct_id": "NCT05918640",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
     "dx_r": 1.0,
     "dx_f1": 1.0,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 2,
-    "n_pop_got": 2,
-    "pop_missed": [],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
     "n_dx_truth": 2,
     "n_dx_got": 2,
     "genes_truth": [
@@ -1579,121 +825,64 @@
       "FUS",
       "TAF15"
     ],
-    "genes_got": [],
+    "genes_got": [
+      "EWSR1",
+      "FUS",
+      "TAF15"
+    ],
     "dx_missed": [],
     "dx_spurious": [],
     "age_truth": "All",
     "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      ">=10"
-    ],
-    "ages_got": [
-      ">=10"
-    ],
     "unsatisfiable": [],
-    "seconds": 17.1
+    "seconds": 0
   },
   {
     "nct_id": "NCT05985161",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
-    "dx_r": 0.5,
-    "dx_f1": 0.6666666666666666,
-    "pop_p": 1.0,
-    "pop_r": 0.5,
-    "pop_f1": 0.6666666666666666,
-    "n_pop_truth": 4,
-    "n_pop_got": 2,
-    "pop_missed": [
-      "Atypical Teratoid/Rhabdoid Tumor",
-      "Rhabdoid Cancer"
-    ],
-    "pop_extra": [],
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
     "n_dx_truth": 4,
-    "n_dx_got": 2,
+    "n_dx_got": 4,
     "genes_truth": [],
     "genes_got": [],
-    "dx_missed": [
-      "Atypical Teratoid/Rhabdoid Tumor",
-      "Rhabdoid Cancer"
-    ],
+    "dx_missed": [],
     "dx_spurious": [],
     "age_truth": "All",
     "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      ">=1"
-    ],
-    "ages_got": [
-      ">=1"
-    ],
     "unsatisfiable": [],
-    "seconds": 14.6
+    "seconds": 0
   },
   {
     "nct_id": "NCT06023641",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
-    "dx_r": 0.25,
-    "dx_f1": 0.4,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 6,
-    "n_pop_got": 6,
-    "pop_missed": [],
-    "pop_extra": [],
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
     "n_dx_truth": 4,
-    "n_dx_got": 1,
+    "n_dx_got": 4,
     "genes_truth": [],
     "genes_got": [],
-    "dx_missed": [
-      "Alveolar Rhabdomyosarcoma",
-      "Embryonal Rhabdomyosarcoma",
-      "Spindle Cell/Sclerosing Rhabdomyosarcoma"
-    ],
+    "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 0.0,
-    "age_p": 0.0,
-    "age_r": 0.0,
-    "ages_truth": [
-      "<=22"
-    ],
-    "ages_got": [
-      "<=23"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 9.7
+    "seconds": 0
   },
   {
     "nct_id": "NCT06071897",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
     "dx_r": 1.0,
     "dx_f1": 1.0,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 2,
-    "n_pop_got": 2,
-    "pop_missed": [],
-    "pop_extra": [],
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
@@ -1703,36 +892,17 @@
     "genes_got": [],
     "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=19",
-      ">=1.5"
-    ],
-    "ages_got": [
-      "<=19",
-      ">=1.5"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 8.6
+    "seconds": 0
   },
   {
     "nct_id": "NCT06083883",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
     "dx_r": 1.0,
     "dx_f1": 1.0,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 2,
-    "n_pop_got": 2,
-    "pop_missed": [],
-    "pop_extra": [],
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
@@ -1744,89 +914,44 @@
     "dx_spurious": [],
     "age_truth": "All",
     "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=81",
-      ">=16"
-    ],
-    "ages_got": [
-      "<=81",
-      ">=16"
-    ],
     "unsatisfiable": [],
-    "seconds": 22.7
+    "seconds": 0
   },
   {
     "nct_id": "NCT06172296",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
-    "dx_r": 0.5,
-    "dx_f1": 0.6666666666666666,
-    "pop_p": 1.0,
-    "pop_r": 0.5,
-    "pop_f1": 0.6666666666666666,
-    "n_pop_truth": 2,
-    "n_pop_got": 1,
-    "pop_missed": [
-      "Ganglioneuroblastoma"
-    ],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
     "n_dx_truth": 2,
-    "n_dx_got": 1,
+    "n_dx_got": 2,
     "genes_truth": [
       "MYCN"
     ],
-    "genes_got": [],
-    "dx_missed": [
-      "Ganglioneuroblastoma"
+    "genes_got": [
+      "MYCN"
     ],
+    "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 0.6666666666666666,
-    "age_p": 1.0,
-    "age_r": 0.5,
-    "ages_truth": [
-      "<=31",
-      ">=1.5"
-    ],
-    "ages_got": [
-      "<=31"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 9.9
+    "seconds": 0
   },
   {
     "nct_id": "NCT06177067",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
-    "dx_r": 0.5,
-    "dx_f1": 0.6666666666666666,
-    "pop_p": 1.0,
-    "pop_r": 0.8611111111111112,
-    "pop_f1": 0.9253731343283582,
-    "n_pop_truth": 36,
-    "n_pop_got": 31,
-    "pop_missed": [
-      "Acute Undifferentiated Leukemia",
-      "Mixed Phenotype Acute Leukemia with t(9;22)(q34.1;q11.2); BCR-ABL1",
-      "Mixed Phenotype Acute Leukemia with t(v;11q23.3); KMT2A Rearranged",
-      "Mixed Phenotype Acute Leukemia, B/Myeloid, NOS",
-      "Mixed Phenotype Acute Leukemia, T/Myeloid, NOS"
-    ],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
     "n_dx_truth": 2,
-    "n_dx_got": 1,
+    "n_dx_got": 2,
     "genes_truth": [
       "DEK",
       "KAT6A",
@@ -1838,91 +963,53 @@
       "PICALM",
       "UBTF"
     ],
-    "genes_got": [],
-    "dx_missed": [
-      "Acute Leukemias of Ambiguous Lineage"
+    "genes_got": [
+      "DEK",
+      "KAT6A",
+      "KMT2A",
+      "MLLT10",
+      "NPM1",
+      "NUP214",
+      "NUP98",
+      "PICALM",
+      "UBTF"
     ],
+    "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=31",
-      ">=1"
-    ],
-    "ages_got": [
-      "<=31",
-      ">=1"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 9.9
+    "seconds": 0
   },
   {
     "nct_id": "NCT06239272",
-    "registry": "nct",
-    "status": "ok",
-    "dx_p": 0.9047619047619048,
-    "dx_r": 0.95,
-    "dx_f1": 0.9268292682926829,
-    "pop_p": 0.9565217391304348,
-    "pop_r": 0.9565217391304348,
-    "pop_f1": 0.9565217391304348,
-    "n_pop_truth": 23,
-    "n_pop_got": 23,
-    "pop_missed": [
-      "Undifferentiated Pleomorphic Sarcoma/Malignant Fibrous Histiocytoma/High-Grade Spindle Cell Sarcoma"
-    ],
-    "pop_extra": [
-      "Low-Grade Fibromyxoid Sarcoma"
-    ],
-    "gene_p": 1.0,
-    "gene_r": 1.0,
-    "gene_f1": 1.0,
-    "n_dx_truth": 20,
-    "n_dx_got": 21,
-    "genes_truth": [],
-    "genes_got": [],
-    "dx_missed": [
-      "Undifferentiated Pleomorphic Sarcoma/Malignant Fibrous Histiocytoma/High-Grade Spindle Cell Sarcoma"
-    ],
-    "dx_spurious": [
-      "Low-Grade Fibromyxoid Sarcoma",
-      "Well-Differentiated Liposarcoma"
-    ],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 0.6666666666666666,
-    "age_p": 1.0,
-    "age_r": 0.5,
-    "ages_truth": [
-      "<=31",
-      ">=1"
-    ],
-    "ages_got": [
-      "<=31"
-    ],
-    "unsatisfiable": [],
-    "seconds": 14.8
-  },
-  {
-    "nct_id": "NCT06528691",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
     "dx_r": 1.0,
     "dx_f1": 1.0,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 1,
-    "n_pop_got": 1,
-    "pop_missed": [],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
+    "n_dx_truth": 20,
+    "n_dx_got": 20,
+    "genes_truth": [],
+    "genes_got": [],
+    "dx_missed": [],
+    "dx_spurious": [],
+    "age_truth": "Children",
+    "age_got": "Children",
+    "unsatisfiable": [],
+    "seconds": 0
+  },
+  {
+    "nct_id": "NCT06528691",
+    "status": "ok",
+    "dx_p": 1.0,
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
     "n_dx_truth": 1,
     "n_dx_got": 1,
     "genes_truth": [
@@ -1931,37 +1018,25 @@
       "NTRK3",
       "ROS1"
     ],
-    "genes_got": [],
+    "genes_got": [
+      "NTRK1",
+      "NTRK2",
+      "NTRK3",
+      "ROS1"
+    ],
     "dx_missed": [],
     "dx_spurious": [],
     "age_truth": "Children",
     "age_got": "Children",
-    "age_f1": 0.0,
-    "age_p": 0.0,
-    "age_r": 0.0,
-    "ages_truth": [
-      "<=3"
-    ],
-    "ages_got": [
-      "<=4"
-    ],
     "unsatisfiable": [],
-    "seconds": 11.4
+    "seconds": 0
   },
   {
     "nct_id": "NCT06865664",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
     "dx_r": 1.0,
     "dx_f1": 1.0,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 6,
-    "n_pop_got": 6,
-    "pop_missed": [],
-    "pop_extra": [],
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
@@ -1971,45 +1046,22 @@
     "genes_got": [],
     "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=40",
-      ">=3"
-    ],
-    "ages_got": [
-      "<=40",
-      ">=3"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 18.6
+    "seconds": 0
   },
   {
     "nct_id": "NCT07012447",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
-    "dx_r": 0.3333333333333333,
-    "dx_f1": 0.5,
-    "pop_p": 1.0,
-    "pop_r": 0.25,
-    "pop_f1": 0.4,
-    "n_pop_truth": 4,
-    "n_pop_got": 1,
-    "pop_missed": [
-      "Early T-Cell Precursor Lymphoblastic Leukemia",
-      "Natural Killer (NK) Cell Lymphoblastic Leukemia/Lymphoma",
-      "T-Lymphoblastic Leukemia/Lymphoma"
-    ],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
     "n_dx_truth": 3,
-    "n_dx_got": 1,
+    "n_dx_got": 3,
     "genes_truth": [
       "ASXL1",
       "ASXL2",
@@ -2028,125 +1080,84 @@
       "TET2",
       "WT1"
     ],
-    "genes_got": [],
-    "dx_missed": [
-      "Early T-Cell Precursor Lymphoblastic Leukemia",
-      "T-Lymphoblastic Leukemia/Lymphoma"
+    "genes_got": [
+      "ASXL1",
+      "ASXL2",
+      "BCOR",
+      "BCORL1",
+      "CBFB",
+      "DNMT3A",
+      "EZH2",
+      "FLT3",
+      "IDH1",
+      "IDH2",
+      "PML",
+      "RUNX1",
+      "SF3B1",
+      "STAG2",
+      "TET2",
+      "WT1"
     ],
+    "dx_missed": [],
     "dx_spurious": [],
     "age_truth": "All",
     "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      ">=14"
-    ],
-    "ages_got": [
-      ">=14"
-    ],
     "unsatisfiable": [],
-    "seconds": 9.9
+    "seconds": 0
   },
   {
     "nct_id": "NCT07059975",
-    "registry": "nct",
-    "status": "ok",
-    "dx_p": 1.0,
-    "dx_r": 0.5,
-    "dx_f1": 0.6666666666666666,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 31,
-    "n_pop_got": 31,
-    "pop_missed": [],
-    "pop_extra": [],
-    "gene_p": 1.0,
-    "gene_r": 1.0,
-    "gene_f1": 1.0,
-    "n_dx_truth": 2,
-    "n_dx_got": 1,
-    "genes_truth": [],
-    "genes_got": [],
-    "dx_missed": [
-      "Myeloid Sarcoma"
-    ],
-    "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      "<=31",
-      ">=0.08"
-    ],
-    "ages_got": [
-      "<=31",
-      ">=0.08"
-    ],
-    "unsatisfiable": [],
-    "seconds": 12.8
-  },
-  {
-    "nct_id": "NCT07110246",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
     "dx_r": 1.0,
     "dx_f1": 1.0,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 1,
-    "n_pop_got": 1,
-    "pop_missed": [],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
+    "n_dx_truth": 2,
+    "n_dx_got": 2,
+    "genes_truth": [],
+    "genes_got": [],
+    "dx_missed": [],
+    "dx_spurious": [],
+    "age_truth": "Children",
+    "age_got": "Children",
+    "unsatisfiable": [],
+    "seconds": 0
+  },
+  {
+    "nct_id": "NCT07110246",
+    "status": "ok",
+    "dx_p": 1.0,
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
     "n_dx_truth": 1,
     "n_dx_got": 1,
     "genes_truth": [
       "BRAF"
     ],
-    "genes_got": [],
+    "genes_got": [
+      "BRAF"
+    ],
     "dx_missed": [],
     "dx_spurious": [],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 0.5,
-    "age_p": 0.5,
-    "age_r": 0.5,
-    "ages_truth": [
-      "<=25",
-      ">=1"
-    ],
-    "ages_got": [
-      "<=26",
-      ">=1"
-    ],
+    "age_truth": "Children",
+    "age_got": "Children",
     "unsatisfiable": [],
-    "seconds": 15.7
+    "seconds": 0
   },
   {
     "nct_id": "NCT07215910",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
     "dx_r": 1.0,
     "dx_f1": 1.0,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 1,
-    "n_pop_got": 1,
-    "pop_missed": [],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
     "n_dx_truth": 1,
     "n_dx_got": 1,
     "genes_truth": [
@@ -2154,40 +1165,27 @@
       "IDH1",
       "IDH2"
     ],
-    "genes_got": [],
+    "genes_got": [
+      "CDKN2A",
+      "IDH1",
+      "IDH2"
+    ],
     "dx_missed": [],
     "dx_spurious": [],
     "age_truth": "All",
     "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      ">=12"
-    ],
-    "ages_got": [
-      ">=12"
-    ],
     "unsatisfiable": [],
-    "seconds": 10.5
+    "seconds": 0
   },
   {
     "nct_id": "NCT07297979",
-    "registry": "nct",
     "status": "ok",
     "dx_p": 1.0,
     "dx_r": 1.0,
     "dx_f1": 1.0,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 1,
-    "n_pop_got": 1,
-    "pop_missed": [],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
+    "gene_p": 1.0,
+    "gene_r": 1.0,
+    "gene_f1": 1.0,
     "n_dx_truth": 1,
     "n_dx_got": 1,
     "genes_truth": [
@@ -2195,170 +1193,40 @@
       "EWSR1",
       "FLI1"
     ],
-    "genes_got": [],
+    "genes_got": [
+      "ERG",
+      "EWSR1",
+      "FLI1"
+    ],
     "dx_missed": [],
     "dx_spurious": [],
     "age_truth": "All",
     "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      ">=2"
-    ],
-    "ages_got": [
-      ">=2"
-    ],
     "unsatisfiable": [],
-    "seconds": 8.4
+    "seconds": 0
   },
   {
     "nct_id": "NCT07440290",
-    "registry": "nct",
-    "status": "ok",
-    "dx_p": 0.5,
-    "dx_r": 1.0,
-    "dx_f1": 0.6666666666666666,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 859,
-    "n_pop_got": 859,
-    "pop_missed": [],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
-    "n_dx_truth": 2,
-    "n_dx_got": 4,
-    "genes_truth": [
-      "BRAF"
-    ],
-    "genes_got": [],
-    "dx_missed": [],
-    "dx_spurious": [
-      "Diffuse Glioma",
-      "Erdheim-Chester Disease"
-    ],
-    "age_truth": "All",
-    "age_got": "All",
-    "age_f1": 1.0,
-    "age_p": 1.0,
-    "age_r": 1.0,
-    "ages_truth": [
-      ">=1"
-    ],
-    "ages_got": [
-      ">=1"
-    ],
-    "unsatisfiable": [],
-    "seconds": 8.0
-  },
-  {
-    "nct_id": "2023-503322-39-00",
-    "registry": "ctis",
-    "status": "MISSING OUTPUT",
-    "seconds": 9.1
-  },
-  {
-    "nct_id": "2023-504694-20-00",
-    "registry": "ctis",
-    "status": "MISSING OUTPUT",
-    "seconds": 18.8
-  },
-  {
-    "nct_id": "2023-505575-69-01",
-    "registry": "ctis",
     "status": "ok",
     "dx_p": 1.0,
-    "dx_r": 0.2,
-    "dx_f1": 0.33333333333333337,
-    "pop_p": 1.0,
-    "pop_r": 1.0,
-    "pop_f1": 1.0,
-    "n_pop_truth": 11,
-    "n_pop_got": 11,
-    "pop_missed": [],
-    "pop_extra": [],
+    "dx_r": 1.0,
+    "dx_f1": 1.0,
     "gene_p": 1.0,
     "gene_r": 1.0,
     "gene_f1": 1.0,
-    "n_dx_truth": 5,
-    "n_dx_got": 1,
-    "genes_truth": [],
-    "genes_got": [],
-    "dx_missed": [
-      "Chondroblastic Osteosarcoma",
-      "Fibroblastic Osteosarcoma",
-      "High-Grade Surface Osteosarcoma",
-      "Osteoblastic Osteosarcoma"
+    "n_dx_truth": 2,
+    "n_dx_got": 2,
+    "genes_truth": [
+      "BRAF"
     ],
+    "genes_got": [
+      "BRAF"
+    ],
+    "dx_missed": [],
     "dx_spurious": [],
     "age_truth": "All",
     "age_got": "All",
-    "age_f1": 0.0,
-    "age_p": 0.0,
-    "age_r": 0.0,
-    "ages_truth": [
-      ">=4"
-    ],
-    "ages_got": [],
     "unsatisfiable": [],
-    "seconds": 14.1
-  },
-  {
-    "nct_id": "2023-509392-17-00",
-    "registry": "ctis",
-    "status": "MISSING OUTPUT",
-    "seconds": 17.3
-  },
-  {
-    "nct_id": "2024-511989-36-00",
-    "registry": "ctis",
-    "status": "ok",
-    "dx_p": 1.0,
-    "dx_r": 0.3333333333333333,
-    "dx_f1": 0.5,
-    "pop_p": 1.0,
-    "pop_r": 0.3333333333333333,
-    "pop_f1": 0.5,
-    "n_pop_truth": 3,
-    "n_pop_got": 1,
-    "pop_missed": [
-      "Ewing Sarcoma of Soft Tissue",
-      "Round Cell Sarcoma, NOS"
-    ],
-    "pop_extra": [],
-    "gene_p": 0.0,
-    "gene_r": 0.0,
-    "gene_f1": 0.0,
-    "n_dx_truth": 3,
-    "n_dx_got": 1,
-    "genes_truth": [
-      "EWSR1"
-    ],
-    "genes_got": [],
-    "dx_missed": [
-      "Ewing Sarcoma of Soft Tissue",
-      "Round Cell Sarcoma, NOS"
-    ],
-    "dx_spurious": [],
-    "age_truth": "Children",
-    "age_got": "All",
-    "age_f1": 0.0,
-    "age_p": 0.0,
-    "age_r": 0.0,
-    "ages_truth": [
-      ">=2"
-    ],
-    "ages_got": [],
-    "unsatisfiable": [],
-    "seconds": 10.5
-  },
-  {
-    "nct_id": "2025-520982-39-00",
-    "registry": "ctis",
-    "status": "MISSING OUTPUT",
-    "seconds": 13.2
+    "seconds": 0
   }
 ]
