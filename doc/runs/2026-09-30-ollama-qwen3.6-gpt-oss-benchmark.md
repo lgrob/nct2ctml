@@ -13,8 +13,8 @@ is worth a proper comparison with Haiku 4.5; it does not settle one.
   cache as on the cluster.
 - **qwen3.6:27b:** job 6752539, one H100 NVL (18.4 GB in VRAM), thinking off,
   `num_predict` 8192. The job ran before a9aae13, whose two defects (below)
-  made its own report unusable. Its saved answers were therefore replayed
-  (`LLM_PLATFORM=Replay`) at a9aae13 into `bench/output-qwen3.6-27b-replay/`:
+  made its own report unusable. Its saved answers (run `20260930T164949Z-12380b`)
+  were therefore replayed (`LLM_PLATFORM=Replay`) at a9aae13 into `bench/output-qwen3.6-27b-replay/`:
   replay run `20260930T193526Z-6cb7f8`, 56 of 56 trials, no replay misses.
   Every model answer is from the job, and the code around it is a9aae13's.
 - **gpt-oss:120b:** job 6758304 at a9aae13, one A100-SXM4-80GB (64.5 GB in
@@ -69,6 +69,48 @@ only, not paired.
   NCT05009992, NCT05580562, NCT06239272, NCT07215910. gpt-oss NCT03067181,
   NCT04775485, NCT05009992, NCT05580562, 2023-504694-20-00.
 
+## Rescored at 412f46c (2026-10-01)
+
+Both runs were replayed again from the same saved answers (runs
+`20260930T164949Z-12380b` and `20260930T200508Z-6e452d`) at 412f46c, into
+`bench/output-qwen3.6-27b-v2/` and `bench/output-gpt-oss-120b-v2/`. No model
+was called. 412f46c adds three things: `genomic_emptied`, the
+`variant_category` guard and the gene-anchored cohort cue (changelog
+"A genomic answer dropped to nothing goes to review"), and
+`diagnosis_over_generated` (changelog "A diagnosis call that answers with its
+candidate list goes to review").
+
+| NCT (50 trials) | qwen3.6:27b a9aae13 | qwen3.6:27b 412f46c | gpt-oss:120b a9aae13 | gpt-oss:120b 412f46c |
+|---|---|---|---|---|
+| diagnosis population recall | 0.93 | 0.93 | 0.94 | 0.94 |
+| diagnosis population precision | 0.81 | 0.81 | 0.76 | 0.76 |
+| diagnosis name F1 | 0.76 | 0.76 | 0.75 | 0.75 |
+| gene F1 | 0.75 | 0.75 | 0.76 | 0.78 |
+| age F1 | 0.92 | 0.92 | 0.91 | 0.91 |
+| routed to review (of 56) | 7 | 12 | 5 | 10 |
+
+CTIS is unchanged for both models.
+
+- **Genes:** gpt-oss gains on two trials, NCT05580562 (0.00 to 0.86, the
+  trial the cue fix names) and NCT05745714 (0.87 to 0.96). Qwen already
+  scored 0.86 on NCT05580562 and does not move. The zero-gene trials still
+  score 0.00: the new rule sends an emptied trial to review rather than
+  recovering its genes, and the benchmark does not score that.
+- **Newly routed, both models:** NCT02443831, NCT04897321, NCT06528691.
+  Qwen only: NCT04775485, 2023-509392-17-00. gpt-oss only: NCT04732065
+  (already routed for Qwen at a9aae13), NCT05489887.
+- **Reasons, read for gpt-oss:** NCT02443831 `genomic_emptied: CD19; CD22`
+  (plus `gene_role_dropped` for KMT2A, TCF3, BCR as risk groups);
+  NCT05489887 `genomic_emptied: MYCN`; NCT04897321, NCT04732065 and
+  NCT06528691 by `diagnosis_over_generated`, the three trials with 78-126
+  diagnoses.
+- **`genomic_emptied` fires where the drop is the intended result.** On
+  NCT02443831 both symbols are antigens, which `filter_genomic_criteria`
+  removes on purpose (flow or IHC, not sequencing), so the trial correctly
+  has no genomic criterion and is still sent to review. The same will hold
+  for other antigen-targeted trials. NCT05489887 (MYCN) may be the same
+  pattern through the cohort drop; not checked. Recorded here, not changed.
+
 ## Defects found
 1. **The benchmark dropped review-routed trials from the score.** They were
    written to `ctml/needs-review` and scored as MISSING OUTPUT: 7 of 56 in
@@ -90,9 +132,11 @@ only, not paired.
    and the script refuses gpt-oss with thinking off.
 
 ## Not done
-- **Replicates:** a second run of each model, and Haiku on the same commit,
-  so the comparison can be paired per trial with intervals.
-- **The shared failures:** the seven zero-gene trials and the 126-diagnosis
-  trials have not been read.
-- **The original qwen run's `run_id`** (the Ollama run the replay read) is
-  not recorded here yet.
+- **Replicates of the local models** were not run: at temperature 0 with a
+  fixed seed and `top_k` 1 they are close to deterministic, so the
+  uncertainty that matters is the 50-trial sample, handled by pairing per
+  trial.
+- **The shared failures** were read on 2026-10-01; the findings and fixes
+  are in the changelog entries named above. The zero-gene trials that are
+  not explained there have not been read.
+- **Haiku on the same commit**, to pair the comparison per trial.
