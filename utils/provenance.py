@@ -208,8 +208,8 @@ def _write_json(path, data):
 def _check_model_digest(llm):
     """
     Add the served weights' digest to the run's settings, and refuse to start
-    when config.OLLAMA_MODEL_DIGEST pins another one (or the digest cannot be
-    read to check it). A self-hosted model's tag can be re-published with new
+    when config pins another one for this model (OLLAMA_MODEL_DIGESTS, or the
+    OLLAMA_MODEL_DIGEST override), or the digest cannot be read to check it. A self-hosted model's tag can be re-published with new
     weights; without the digest a run could not say which weights it used.
     """
     lookup = getattr(transport._llm_platform, "model_digest", None)
@@ -217,8 +217,15 @@ def _check_model_digest(llm):
         return
     digest = lookup()
     llm["model_digest"] = digest
-    pinned = getattr(config, "OLLAMA_MODEL_DIGEST", None)
-    if pinned and digest != pinned:
+    override = getattr(config, "OLLAMA_MODEL_DIGEST", "") or ""
+    if override.lower() == "off":
+        return
+    pinned = override or getattr(config, "OLLAMA_MODEL_DIGESTS", {}).get(llm["model"])
+
+    def bare(value):
+        return (value or "").lower().removeprefix("sha256:")
+
+    if pinned and bare(digest) != bare(pinned):
         raise RuntimeError(
             f"{llm['model']} is served with digest {digest}, but OLLAMA_MODEL_DIGEST pins "
             f"{pinned}. Pull the pinned weights, or change the pin with a decision record."

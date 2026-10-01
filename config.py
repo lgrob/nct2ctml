@@ -231,11 +231,19 @@ OLLAMA_NUM_PREDICT = _env("OLLAMA_NUM_PREDICT", 16384, int)
 # with one that structured extraction does not want (qwen3.6 was measured
 # with False).
 OLLAMA_THINK = _env("OLLAMA_THINK", "low", "ollama_think")
-# The digest of the weights the run must use (`ollama list` shows its first
-# 12 characters; /api/tags the whole). Checked when a run starts, which
-# refuses on a mismatch; every run records the digest it was served either
-# way. None: recorded but not enforced.
-OLLAMA_MODEL_DIGEST = _env("OLLAMA_MODEL_DIGEST", None, "optional")
+# The digest of the weights a run must use, per Ollama model: what /api/tags
+# reports, the SHA-256 of the model's manifest (`ollama list` shows its first
+# 12 characters). Checked when a run starts, which refuses on a mismatch or
+# when the digest cannot be read; every run records the digest it was served
+# either way. A model not listed is recorded but not checked.
+# gpt-oss:120b: the weights benchmarked on 2026-09-30, manifest under
+# /shares/stucklin.mef.uzh/2026_llm4clinicaltrials_kidscan/models.
+OLLAMA_MODEL_DIGESTS = {
+    "gpt-oss:120b": "a951a23b46a1f6093dafee2ea481d634b4e31ac720a8a16f3f91e04f5a40ecd9",
+}
+# Overrides the table for this run's model: a digest to pin, or "off" to skip
+# the check (e.g. a test of new weights before a decision adopts them).
+OLLAMA_MODEL_DIGEST = _env("OLLAMA_MODEL_DIGEST", "")
 # Largest candidate list the prompts send as a JSON-schema enum (utils/llm/schema), per
 # LLM_PLATFORM (lower-case key; a platform not listed gets 400). Above it the
 # enum is dropped, the shape is still enforced and off-list answers become

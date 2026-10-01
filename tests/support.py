@@ -38,8 +38,14 @@ class OfflinePlatform:
         raise RuntimeError(MESSAGE)
 
     def model_digest(self):
-        # Asking an Ollama server for its digest is a network call too.
-        return None
+        # Asking an Ollama server for its digest is a network call too. There
+        # is no server, so report the pinned weights as served: the pin
+        # (config.OLLAMA_MODEL_DIGESTS) then passes, read at call time so a
+        # test that reloads config cannot undo it. tests/test_provenance
+        # tests the check itself with its own platform.
+        import config
+
+        return getattr(config, "OLLAMA_MODEL_DIGESTS", {}).get(self._real.model)
 
 
 def install_offline_guard():

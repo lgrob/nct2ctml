@@ -228,9 +228,13 @@ class TestModelDigest(_Isolated):
 
     def setUp(self):
         super().setUp()
-        p = mock.patch.object(config, "LLM_PLATFORM", "Ollama")
-        p.start()
-        self.addCleanup(p.stop)
+        for p in (
+            mock.patch.object(config, "LLM_PLATFORM", "Ollama"),
+            mock.patch.object(config, "OLLAMA_MODEL_DIGESTS", {}),
+            mock.patch.object(config, "OLLAMA_MODEL_DIGEST", ""),
+        ):
+            p.start()
+            self.addCleanup(p.stop)
 
     def test_the_run_and_every_file_record_the_served_digest(self):
         self.use(_ServedWeights("sha256:abc"))
@@ -252,10 +256,41 @@ class TestModelDigest(_Isolated):
             with self.assertRaises(RuntimeError):
                 provenance.start_run("test")
 
+    def test_the_table_pins_its_model_and_only_that_model(self):
+        table = {"gpt-oss:120b": "abc"}
+        with mock.patch.object(config, "OLLAMA_MODEL_DIGESTS", table):
+            self.use(_ServedWeights("sha256:abc"))  # the prefix does not matter
+            self.assertTrue(provenance.start_run("test"))
+            provenance.finish_run()
+            self.use(_ServedWeights("sha256:other"))
+            with self.assertRaises(RuntimeError):
+                provenance.start_run("test")
+            other = _ServedWeights("sha256:other")
+            other.model = "qwen3.6:27b"
+            self.use(other)
+            self.assertTrue(provenance.start_run("test"))
+
+    def test_off_skips_the_check(self):
+        with (
+            mock.patch.object(config, "OLLAMA_MODEL_DIGESTS", {"gpt-oss:120b": "abc"}),
+            mock.patch.object(config, "OLLAMA_MODEL_DIGEST", "off"),
+        ):
+            self.use(_ServedWeights("sha256:other"))
+            self.assertTrue(provenance.start_run("test"))
+
     def test_a_matching_pin_runs(self):
         self.use(_ServedWeights("sha256:abc"))
         with mock.patch.object(config, "OLLAMA_MODEL_DIGEST", "sha256:abc"):
             self.assertTrue(provenance.start_run("test"))
+
+
+class TestPinnedWeights(unittest.TestCase):
+    def test_the_benchmarked_weights_are_pinned(self):
+        # doc/decisions/2026-10-01-gpt-oss-backend.md
+        self.assertEqual(
+            config.OLLAMA_MODEL_DIGESTS[config.LLM_AI_MODEL],
+            "a951a23b46a1f6093dafee2ea481d634b4e31ac720a8a16f3f91e04f5a40ecd9",
+        )
 
 
 class TestReplay(_Isolated):

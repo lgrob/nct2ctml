@@ -65,10 +65,14 @@ a measured improvement.
 - **Reproducibility needs the weights, not the tag.** `gpt-oss:120b` names
   whatever the registry holds under it. Every run now records the digest of
   the weights it was served (`run.json` and each file's `_provenance`), and
-  `OLLAMA_MODEL_DIGEST` pins one: a run then refuses to start on other
-  weights. The pin is left unset until the digest of the benchmarked weights
-  is copied from the cluster (`ollama list` / `/api/tags`). The weights
-  (about 65 GB) are kept under the project's Ollama model directory.
+  `OLLAMA_MODEL_DIGESTS` pins the benchmarked ones: `gpt-oss:120b` =
+  `a951a23b46a1f6093dafee2ea481d634b4e31ac720a8a16f3f91e04f5a40ecd9`, the
+  SHA-256 of its manifest under
+  `/shares/stucklin.mef.uzh/2026_llm4clinicaltrials_kidscan/models`. A run
+  served other weights under the tag refuses to start
+  (`NCT2CTML_OLLAMA_MODEL_DIGEST=off` skips the check, for testing new weights
+  before a decision adopts them). The weights, about 65 GB, have to be kept
+  in that directory for the pin to mean anything.
 - **Costs:** the API bill goes, and GPU time comes instead: 51 minutes for 56
   trials on one A100, so roughly 18 hours for the 1,171-trial corpus.
 - **Not covered:** the current CTML in `cache/ctml`, `ctml/needs-review` and

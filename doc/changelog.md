@@ -15,9 +15,12 @@ index are still Haiku's until remapped.
 A tag such as `gpt-oss:120b` can be re-published with new weights, so
 `OllamaPlatform.model_digest` asks the server for the digest it holds under
 the tag. `provenance.start_run` records it in `run.json` and every file's
-`_provenance`, and refuses to start when `OLLAMA_MODEL_DIGEST` pins another
-digest or the digest cannot be read. The offline test guard answers None
-rather than asking a server. 4 tests.
+`_provenance`, and refuses to start when `OLLAMA_MODEL_DIGESTS` pins another
+digest for the model or the digest cannot be read. gpt-oss:120b is pinned to
+the benchmarked weights, `a951a23b…ecd9`; a model not in the table is
+recorded but not checked, and `NCT2CTML_OLLAMA_MODEL_DIGEST` overrides the
+pin for one run (`off` skips it). The offline test guard reports the pinned
+digest as served instead of asking a server. 7 tests.
 
 ## A diagnosis call that answers with its candidate list goes to review (2026-10-01)
 
