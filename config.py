@@ -253,3 +253,15 @@ SCHEMA_ENUM_MAX_VALUES = {
 # Lists above this fraction of the cap are logged at INFO, so a run shows the
 # cap being approached before it is crossed.
 SCHEMA_ENUM_NEAR_CAP_FRACTION = _env("SCHEMA_ENUM_NEAR_CAP_FRACTION", 0.8, float)
+
+# When a diagnosis call answers with this share of its candidate list, it is
+# read as the list back rather than an answer and the trial goes to review
+# (utils.llm.schema._over_generated, which documents the measurement). The
+# list must have at least MIN_LIST terms for the rule to apply at all, the
+# whole list back included: on a short branch one right answer is already a
+# large share, and answering all of Peritoneum's 2 terms or Prostate's 5 is a
+# defensible reading of a pan-organ trial. Measured over the 1,149 mapped
+# trials of the 2026-09-28 full run: median share 0.032, p99 0.434, and the 52
+# curated keys never exceed 0.222; these values fire on 7 of the 1,149 (0.6%).
+DIAGNOSIS_OVER_GENERATION_SHARE = _env("DIAGNOSIS_OVER_GENERATION_SHARE", 0.4, float)
+DIAGNOSIS_OVER_GENERATION_MIN_LIST = _env("DIAGNOSIS_OVER_GENERATION_MIN_LIST", 20, int)

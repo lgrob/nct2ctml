@@ -497,6 +497,29 @@ _COHORT_NEGATION_CUES = (
 )
 
 
+_SEGMENT_BREAK = re.compile(r"\n+|\s*[*•]\s*|(?<=[.;:])\s+(?=[A-Z0-9(\[])")
+
+
+def _cohort_negation_near(inclusion_text: str, gene: str) -> bool:
+    """
+    Does the inclusion text negate this gene where it names it?
+
+    The cue has to sit in the same segment - bullet, line or sentence - as the
+    gene. Tested against the whole inclusion text until 2026-10-01, which made
+    the drop-both branch fire on prose that had nothing to do with the gene:
+    "without" occurs somewhere in the inclusion text of 18 of the 50 benchmark
+    trials, any cue in 25 of 50. NCT05580562 is the case the docstring below
+    cites for case 1 and it was taking case 2, because "lack of" appears in an
+    unrelated criterion.
+    """
+    for segment in _SEGMENT_BREAK.split(inclusion_text or ""):
+        if not segment or not _text_mentions_gene(segment, gene):
+            continue
+        if any(cue in segment.lower() for cue in _COHORT_NEGATION_CUES):
+            return True
+    return False
+
+
 def _text_mentions_gene(text: str, gene: str) -> bool:
     """
     Is the symbol actually written in this text?
@@ -601,7 +624,6 @@ def resolve_contradictory_genes(
     if not contradictory:
         return inclusions, exclusions, []
 
-    text = (inclusion_text or "").lower()
     cohort_genes, artefact_genes, fabricated_genes = set(), set(), set()
     for gene in sorted(set(contradictory)):
         stated_in_inclusion = _text_mentions_gene(inclusion_text, gene)
@@ -610,7 +632,7 @@ def resolve_contradictory_genes(
             # Absent where it is required, present where it is forbidden: the
             # exclusion is what the trial states and the inclusion is invented.
             fabricated_genes.add(gene)
-        elif any(cue in text for cue in _COHORT_NEGATION_CUES):
+        elif _cohort_negation_near(inclusion_text, gene):
             cohort_genes.add(gene)
         else:
             artefact_genes.add(gene)
@@ -704,6 +726,34 @@ def find_unsatisfiable_genes(match_node) -> list:
     return sorted(set(findings))
 
 
+# Trials whose genomic answer was emptied by this module: trial_id -> the
+# symbols the model named. Populated by convert_to_ctml_genomic_schema and
+# popped by TrialMapManager._record_genomic_emptied, which writes them to the
+# CTML as genomic_emptied and routes the trial to review. Same hand-off as
+# genomic_prompts.ROLE_DROPS, for the same reason: the fact is known here and
+# belongs on the trial.
+GENOMIC_EMPTIED: dict[str, list[str]] = {}
+
+
+def _symbols_named(genomic_criteria) -> list[str]:
+    """Every hugo_symbol anywhere in a model genomic answer, in order."""
+    out: list[str] = []
+
+    def walk(node):
+        if isinstance(node, dict):
+            sym = node.get("hugo_symbol")
+            if isinstance(sym, str) and sym.strip() and sym.strip() not in out:
+                out.append(sym.strip())
+            for v in node.values():
+                walk(v)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v)
+
+    walk(genomic_criteria)
+    return out
+
+
 def convert_to_ctml_genomic_schema(
     inclusion_genomic_criteria: list,
     exclusion_genomic_criteria: list,
@@ -714,6 +764,11 @@ def convert_to_ctml_genomic_schema(
 ) -> dict:
     inclusions = []
     exclusions = []
+    # What the model named, before any of the drops below. Kept so an answer
+    # this function empties can be reported rather than silently lost.
+    named_by_model = _symbols_named(
+        [inclusion_genomic_criteria or [], exclusion_genomic_criteria or []]
+    )
     # The text the scan ran on (clinical_trials_gov.map_ctml_match_genomic_criteria).
     scanned_text = (inclusion_text or "") + "\n" + (exclusion_text or "")
     print(tdh.get_all_keys(inclusion_genomic_criteria))
@@ -727,7 +782,18 @@ def convert_to_ctml_genomic_schema(
             inclusion_genomic_criteria, trial_id, scanned_genes, scanned_text
         )
         for alteration in inclusion_genomic_criteria:
-            variant_category = alteration["genomic"]["variant_category"]
+            # .get, not indexing: the guard above only asks that the key exist
+            # somewhere in the list, so a list where some items carry
+            # variant_category and others do not used to raise KeyError here
+            # and lose the whole trial to the caller's except.
+            variant_category = (alteration.get("genomic") or {}).get("variant_category")
+            if not isinstance(variant_category, str) or not variant_category.strip():
+                logger.warning(
+                    f"{trial_id}: dropped genomic criterion on "
+                    f"{(alteration.get('genomic') or {}).get('hugo_symbol')!r}, "
+                    f"the model returned no variant_category for it"
+                )
+                continue
             # if variant_category begins with !, add alteration to exclusions, without removing !
             if variant_category.startswith("!"):
                 if alteration not in exclusions:
@@ -777,15 +843,32 @@ def convert_to_ctml_genomic_schema(
 
     # combine both inclusion and exclusion criteria under a top level 'and'
     if inclusion_genomic_criteria_ctml and exclusion_genomic_criteria_ctml:
-        inclusion_exclusion_genomic_criteria_ctml = {
-            "and": [inclusion_genomic_criteria_ctml, exclusion_genomic_criteria_ctml]
-        }
-        return inclusion_exclusion_genomic_criteria_ctml
+        result = {"and": [inclusion_genomic_criteria_ctml, exclusion_genomic_criteria_ctml]}
     elif inclusion_genomic_criteria_ctml:
-        return inclusion_genomic_criteria_ctml
+        result = inclusion_genomic_criteria_ctml
     elif exclusion_genomic_criteria_ctml:
-        return exclusion_genomic_criteria_ctml
-    return {}
+        result = exclusion_genomic_criteria_ctml
+    else:
+        result = {}
+
+    # The model named genes and nothing survived. Each drop above is defended
+    # on its own as narrowing one criterion among several, but when the last
+    # one goes the genomic block disappears, combine_clinical_and_genomic_ctml
+    # falls through to the clinical criteria alone, and the trial is published
+    # matching every patient with the diagnosis - the alteration it requires
+    # asked of nobody. Recorded for review rather than published as it stands.
+    if named_by_model and not result:
+        if trial_id:
+            kept = GENOMIC_EMPTIED.setdefault(trial_id, [])
+            for gene in named_by_model:
+                if gene not in kept:
+                    kept.append(gene)
+        logger.warning(
+            f"{trial_id} | the model returned {', '.join(named_by_model)} and post-processing "
+            f"left no genomic criterion: the trial would match on its clinical criteria alone"
+        )
+
+    return result
 
 
 def combine_clinical_and_genomic_ctml(clinical_ctml, genomic_ctml):

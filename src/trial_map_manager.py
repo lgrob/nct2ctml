@@ -259,11 +259,14 @@ class TrialMapManager:
 
                     # Map to CTML format
                     llm_schema.OFF_LIST_BY_TRIAL.pop(nct_id, None)
+                    llm_schema.OVER_GENERATION_BY_TRIAL.pop(nct_id, None)
                     mapped_ctml = ctg.map_nct_to_ctml(trial_data, gene_synonym_mapping)
                     self._record_off_list(mapped_ctml, nct_id)
+                    self._record_over_generated_diagnoses(mapped_ctml, nct_id)
                     self._flag_excluded_diagnoses(mapped_ctml, trial_data, "nct", nct_id)
                     self._flag_contradictions(mapped_ctml, nct_id)
                     self._record_role_drops(mapped_ctml, nct_id)
+                    self._record_genomic_emptied(mapped_ctml, nct_id)
                     self._add_unspecified_all_lineage(mapped_ctml, trial_data, "nct", nct_id)
                     self._flag_gene_status(mapped_ctml, trial_data, "nct", nct_id)
                     self._flag_age_units(mapped_ctml, trial_data, nct_id)
@@ -389,11 +392,14 @@ class TrialMapManager:
         gene_synonym_mapping = self.get_gene_synonym_mapping()
         try:
             llm_schema.OFF_LIST_BY_TRIAL.pop(ct_number, None)
+            llm_schema.OVER_GENERATION_BY_TRIAL.pop(ct_number, None)
             mapped_ctml = ctis.map_ctis_to_ctml(trial_data, gene_synonym_mapping)
             self._record_off_list(mapped_ctml, ct_number)
+            self._record_over_generated_diagnoses(mapped_ctml, ct_number)
             self._flag_excluded_diagnoses(mapped_ctml, trial_data, "ctis", ct_number)
             self._flag_contradictions(mapped_ctml, ct_number)
             self._record_role_drops(mapped_ctml, ct_number)
+            self._record_genomic_emptied(mapped_ctml, ct_number)
             self._add_unspecified_all_lineage(mapped_ctml, trial_data, "ctis", ct_number)
             self._flag_gene_status(mapped_ctml, trial_data, "ctis", ct_number)
             self._flag_diagnosis_seed(mapped_ctml, trial_data, "ctis", ct_number)
@@ -485,6 +491,35 @@ class TrialMapManager:
                 if f"{g} ({role})" not in seen:
                     seen.append(f"{g} ({role})")
             mapped_ctml["gene_role_dropped"] = "; ".join(seen)
+
+    @staticmethod
+    def _record_over_generated_diagnoses(mapped_ctml: dict, trial_id: str) -> None:
+        """
+        A diagnosis call that answered with its own candidate list
+        (llm_schema.OVER_GENERATION_BY_TRIAL). Written as
+        diagnosis_over_generated, which routes the trial to review: the answer
+        is a non-answer, and published as it stands the trial matches every
+        patient in the branch. The candidate list is left as the model
+        returned it - a curator decides what the population is, with the
+        trial's own conditions as the floor.
+        """
+        record = llm_schema.OVER_GENERATION_BY_TRIAL.pop(trial_id, None)
+        if record and isinstance(mapped_ctml, dict):
+            mapped_ctml["diagnosis_over_generated"] = record
+
+    @staticmethod
+    def _record_genomic_emptied(mapped_ctml: dict, trial_id: str) -> None:
+        """
+        Genes the model returned that post-processing dropped to nothing, so
+        the trial carries no genomic criterion at all
+        (match_criteria_mapper.GENOMIC_EMPTIED). Written as genomic_emptied,
+        which routes the trial to review: published as it stands it matches
+        every patient with the diagnosis, which is the same failure the
+        no-diagnosis rule guards against one level up.
+        """
+        emptied = mcm.GENOMIC_EMPTIED.pop(trial_id, None)
+        if emptied and isinstance(mapped_ctml, dict):
+            mapped_ctml["genomic_emptied"] = "; ".join(emptied)
 
     @staticmethod
     def _add_unspecified_all_lineage(
@@ -702,6 +737,13 @@ class TrialMapManager:
           offered (diagnosis_off_list, see utils.llm.schema.keep_candidates). It
           may be right when stage 1 missed the branch, or a wrong-branch
           answer; a curator decides.
+        - A genomic answer that post-processing dropped to nothing
+          (genomic_emptied, see
+          match_criteria_mapper.convert_to_ctml_genomic_schema). Each drop is
+          safe on its own because it narrows one criterion among several; when
+          it takes the last one the genomic block disappears and the trial
+          matches every patient with the diagnosis, which is the first case
+          above by another route.
 
         Discarding either is worse than queueing it: a trial that is not there
         is a trial nobody can be matched to and nobody can see is missing.
@@ -718,9 +760,19 @@ class TrialMapManager:
             reasons.append(
                 "a diagnosis was answered outside the candidate list the model was offered"
             )
+        if "diagnosis_over_generated" in keys:
+            reasons.append(
+                "a diagnosis call answered with its own candidate list, so the diagnoses are "
+                "the branch rather than this trial's population"
+            )
         if "genomic_contradiction" in keys:
             reasons.append(
                 "the match tree requires and forbids the same gene, so it matches nobody"
+            )
+        if "genomic_emptied" in keys:
+            reasons.append(
+                "the model returned genomic criteria and post-processing dropped all of them, "
+                "so as it stands the trial asks for no alteration at all"
             )
         if "diagnosis_excluded" in keys:
             reasons.append("a diagnosis is named only in the exclusion criteria")
@@ -785,11 +837,14 @@ class TrialMapManager:
         try:
             # Map to CTML format
             llm_schema.OFF_LIST_BY_TRIAL.pop(nct_id, None)
+            llm_schema.OVER_GENERATION_BY_TRIAL.pop(nct_id, None)
             mapped_ctml = ctg.map_nct_to_ctml(trial_data, gene_synonym_mapping)
             self._record_off_list(mapped_ctml, nct_id)
+            self._record_over_generated_diagnoses(mapped_ctml, nct_id)
             self._flag_excluded_diagnoses(mapped_ctml, trial_data, "nct", nct_id)
             self._flag_contradictions(mapped_ctml, nct_id)
             self._record_role_drops(mapped_ctml, nct_id)
+            self._record_genomic_emptied(mapped_ctml, nct_id)
             self._add_unspecified_all_lineage(mapped_ctml, trial_data, "nct", nct_id)
             self._flag_gene_status(mapped_ctml, trial_data, "nct", nct_id)
             self._flag_age_units(mapped_ctml, trial_data, nct_id)

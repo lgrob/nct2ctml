@@ -122,13 +122,68 @@ def reset_enum_cap_events():
 
 # Answers checked against, and dropped from, their call's candidate list;
 # see keep_candidates.
-OFF_LIST_EVENTS = {"checked": 0, "recased": 0, "kept_for_review": 0, "dropped": 0}
+OFF_LIST_EVENTS = {
+    "checked": 0,
+    "recased": 0,
+    "kept_for_review": 0,
+    "dropped": 0,
+    "over_generated": 0,
+}
 
 
 # trial id -> Oncotree names answered off-list; read and cleared by
 # TrialMapManager, which records them as diagnosis_off_list and routes the
 # trial to review.
 OFF_LIST_BY_TRIAL: dict[str, list[str]] = {}
+
+
+# trial id -> the worst over-generating diagnosis call of that trial, as
+# "<kept> of <offered> candidates"; read and cleared by TrialMapManager, which
+# records it as diagnosis_over_generated and routes the trial to review. See
+# _over_generated.
+OVER_GENERATION_BY_TRIAL: dict[str, str] = {}
+
+
+def _over_generated(n_kept: int, n_offered: int) -> bool:
+    """
+    Did this call return its candidate list back rather than answer?
+
+    The degenerate case of stage-2 over-generation: not a wrong branch but a
+    non-answer, the model listing its options. On the 2026-09-30 Ollama
+    benchmark NCT04732065 and NCT06528691 each came back with 126 diagnoses
+    from both models, which is exactly the Oncotree subtree under CNS/Brain
+    that a level-1 answer of CNS/Brain offers at stage 2 - the whole list,
+    nothing else. keep_candidates cannot see it: every answer is on the list,
+    so the membership check it exists for is blind by construction, and the
+    trial was published with 126 diagnoses, 4 and 1 curated.
+
+    The list has to be long enough that a legitimate answer cannot be a large
+    share of it. Every diagnosis call offers a whole level-1 subtree
+    (l1_to_all_mapping), and the smallest of those are Peritoneum with 2 terms
+    and Prostate with 5, where one right answer is already half the list and
+    the whole list is a defensible reading of a pan-organ trial. The floor is
+    what keeps the rule off that case, so it applies to the whole list back as
+    well, not only to a partial share.
+
+    Thresholds measured on the 1,149 mapped trials of the 2026-09-28 full run
+    that carry a real Oncotree diagnosis: the share of its own candidate list
+    a mapping takes has median 0.032 and p99 0.434, and the 52 curated keys
+    never exceed 0.222 (2023-505575-69-01, 5 of 23). The rule below fires on
+    7 of the 1,149 (0.6%), all of them in the published layer and none a
+    curated key. The candidate list is reconstructed in that measurement from
+    the branches the output's own diagnoses fall in, so its denominator is a
+    lower bound and the shares an upper bound; here the real list is in hand.
+
+    Returning a whole branch is never the right encoding in any case: the
+    matchengine expands a parent to all its descendants, so the 126 leaves
+    and the single node CNS/Brain reach the same patients, and a genuinely
+    pan-CNS trial is one node or a _SOLID_ wildcard.
+    """
+    floor = int(getattr(config, "DIAGNOSIS_OVER_GENERATION_MIN_LIST", 20))
+    share = float(getattr(config, "DIAGNOSIS_OVER_GENERATION_SHARE", 0.4))
+    if n_kept <= 0 or n_offered < max(floor, 1):
+        return False
+    return n_kept / n_offered >= share
 
 
 def keep_candidates(result, allowed, trial_id="", extra=(), keep_valid=True):
@@ -206,7 +261,35 @@ def keep_candidates(result, allowed, trial_id="", extra=(), keep_valid=True):
             f"{trial_id} | diagnosis answer {value!r} was not among the "
             f"{len(permitted)} candidates offered; dropped"
         )
+
+    # Counted against the candidate list proper, not `permitted`: the level-1
+    # schema also allows "" and "Other", which are not candidates.
+    offered = {a for a in allowed if a is not None}
+    answered = {
+        (item.get("oncotree_value") if isinstance(item, dict) else item) for item in kept
+    } & offered
+    if _over_generated(len(answered), len(offered)):
+        OFF_LIST_EVENTS["over_generated"] += 1
+        record = f"{len(answered)} of {len(offered)} candidates"
+        # Several calls per trial: keep the worst of them.
+        previous = OVER_GENERATION_BY_TRIAL.get(trial_id)
+        if previous is None or len(answered) / len(offered) > _share_of(previous):
+            OVER_GENERATION_BY_TRIAL[trial_id] = record
+        logger.warning(
+            f"{trial_id} | a diagnosis call returned {record}, which reads as the "
+            f"candidate list back rather than an answer; trial goes to review"
+        )
+
     return dict(result, oncotree_diagnoses=kept)
+
+
+def _share_of(record: str) -> float:
+    """The share a recorded "<kept> of <offered> candidates" string stands for."""
+    try:
+        kept, offered = record.split(" of ")
+        return int(kept) / int(offered.split()[0])
+    except (ValueError, ZeroDivisionError, IndexError):
+        return 0.0
 
 
 def enum_cap_summary() -> str:
@@ -218,7 +301,8 @@ def enum_cap_summary() -> str:
         f"Diagnosis answers: {OFF_LIST_EVENTS['checked']} checked against their "
         f"candidate list, {OFF_LIST_EVENTS['recased']} recased, "
         f"{OFF_LIST_EVENTS['kept_for_review']} off-list kept for review, "
-        f"{OFF_LIST_EVENTS['dropped']} dropped"
+        f"{OFF_LIST_EVENTS['dropped']} dropped, "
+        f"{OFF_LIST_EVENTS['over_generated']} calls returning their candidate list"
     )
 
 

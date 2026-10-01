@@ -2,6 +2,117 @@
 
 What changed in this fork after the initial retargeting, newest first. Moved from CHANGES.md on 2026-09-28 (improvement plan step 13); the entries are unchanged. Measured decisions are in [decisions/](decisions/), mapping runs and queue reviews in [runs/](runs/).
 
+## A diagnosis call that answers with its candidate list goes to review (2026-10-01)
+
+The other shared failure in
+[runs/2026-09-30-ollama-qwen3.6-gpt-oss-benchmark.md](runs/2026-09-30-ollama-qwen3.6-gpt-oss-benchmark.md):
+NCT04732065 and NCT06528691 each came back with exactly 126 diagnoses from
+both models, against 4 and 1 curated.
+
+**126 is the size of the list, not a judgement.**
+`mapping/diagnosis.map_eligibility_criteria_to_oncotree_term` builds the
+stage-2 candidates from `onct.get_all_oncotree_data()`, which maps each
+level-1 node to its whole subtree rather than its level-2 children. For
+`CNS/Brain` that is exactly 126 terms - the subtree is 127 nodes including
+the root and the root itself is not in the list - so both models returned
+their entire candidate list verbatim. `keep_candidates` drops off-list
+answers, so an answer can never exceed the list, and exactly 126 can only
+mean all of it. Nothing expanded anything on the output side; the broad
+category was in the prompt. It shows on brain trials because `CNS/Brain` is
+the largest branch in Oncotree (126, against 120 Lymphoid, 106 Myeloid, 54
+Soft Tissue) and the only one at or above 126, still under the Ollama enum
+cap of 400, so the cap is not involved. The same failure, milder: Qwen on
+NCT04775485 (121 of 126) and both models on NCT04897321 (73 and 78 of a
+148-term list over seven branches).
+
+**`keep_candidates` was blind to it by construction.** It checks membership,
+and every answer was a member; nothing looked at how many there were. So the
+trial was published with 126 diagnoses, no flag and no review routing, and
+it matched every brain-tumour patient in the database.
+`schema._over_generated` now reads a call that answers with at least
+`config.DIAGNOSIS_OVER_GENERATION_SHARE` (0.4) of a candidate list of at
+least `DIAGNOSIS_OVER_GENERATION_MIN_LIST` (20) terms as the list back rather
+than an answer, records the worst such call of the trial in
+`OVER_GENERATION_BY_TRIAL`, and `TrialMapManager._record_over_generated_diagnoses`
+writes it to the CTML as `diagnosis_over_generated`, which routes the trial
+to review. The answer is left as the model returned it: a curator decides the
+population, with the trial's own `conditionsModule` terms as the floor. The
+list floor is what keeps the rule off short branches - Peritoneum offers 2
+terms and Prostate 5, where one right answer is already half the list.
+
+Measured over the 1,236 mapped trials of the 2026-09-28 full run, the 1,149
+of them carrying a real Oncotree diagnosis: the share of its own candidate
+list a mapping takes has median 0.032 and p99 0.434, and the 52 curated keys
+never exceed 0.222 (2023-505575-69-01, 5 of 23). The rule fires on **7 of the
+1,149 (0.6%), every one in the published layer and none a curated key**, and
+on all four of the benchmark over-generators including both NCT04897321
+replicates. The candidate lists in that measurement are reconstructed from
+the branches each output's own diagnoses fall in, so the denominators are
+lower bounds and the shares upper bounds - in the pipeline the real list is
+in hand, and the rule can only fire less often than measured.
+
+Returning a whole branch is never the right encoding in any case: the
+matchengine expands a parent to all its descendants, so the 126 leaves and
+the single node `CNS/Brain` reach the same patients, and a genuinely pan-CNS
+trial is one node or a `_SOLID_` wildcard. Not done: falling back to the
+conditions seed instead of keeping the model's list, which would change
+published output and needs its own measurement.
+
+## A genomic answer dropped to nothing goes to review (2026-10-01)
+
+Found while reading the seven trials that scored 0.00 on genes for both
+local models in [runs/2026-09-30-ollama-qwen3.6-gpt-oss-benchmark.md](runs/2026-09-30-ollama-qwen3.6-gpt-oss-benchmark.md).
+Five of the seven turned out not to be model errors at all; three fixes come
+from that reading, and the rest is written up in the run record.
+
+**A dropped genomic criterion could empty the match tree silently.** Each
+drop in `convert_to_ctml_genomic_schema` is defended on its own as narrowing
+one criterion among several - `filter_genomic_criteria`'s docstring makes
+that argument explicitly. The argument inverts when the drop takes the last
+one: the function returns `{}`, `combine_clinical_and_genomic_ctml` falls
+through to "using only clinical CTML", and the trial is published matching
+every patient with the diagnosis, with the alteration it requires asked of
+nobody. That is the failure the no-diagnosis rule already guards one level
+up, reached by another route, and it left no trace beyond a `logger.warning`:
+no flag, no review routing, nothing in the index. Replaying answer shapes on
+NCT07440290 (key `BRAF`, scan list exactly `['BRAF']`) shows four that empty
+the tree and route nowhere: the alteration written into `hugo_symbol`
+(`BRAF V600E`, `BRAF (V600E)`), a fusion written as a pair (`NTRK1-ETV6`),
+and no `variant_category` at all. `match_criteria_mapper.GENOMIC_EMPTIED` now
+records the symbols the model named when nothing survives,
+`TrialMapManager._record_genomic_emptied` writes them to the CTML as
+`genomic_emptied`, and `_destination_for` sends the trial to review - the
+same hand-off as `gene_role_dropped`, and the same routing as
+`genomic_contradiction`. A trial whose model answer was genuinely empty is
+untouched: that is not the same thing as one whose criteria were dropped.
+
+**`KeyError: 'variant_category'` lost whole trials.** The guard above the
+inclusion loop asks only that `hugo_symbol` and `variant_category` each
+appear *somewhere* in the model's list, then the loop indexed
+`alteration["genomic"]["variant_category"]` directly. A list where some items
+carry the key and others do not therefore raised, and the callers catch that
+as a mapping failure - so one malformed item cost the trial, not just the
+item. The loop skips and logs the item instead; if that empties the block,
+`genomic_emptied` picks it up.
+
+**The cohort-negation cue is anchored to the gene.** Case 2 of
+`resolve_contradictory_genes` drops both sides of a contradictory gene when
+the inclusion text negates it, which is right for the SIOPEN design the
+docstring cites. The cue was tested against the whole inclusion text, so the
+branch fired on prose with nothing to do with the gene: "without" occurs
+somewhere in the inclusion text of 18 of the 50 benchmark trials, any cue in
+25 of 50. NCT05580562, the trial the same docstring names as the case-1
+example, was taking case 2 because "lack of" appears in an unrelated
+criterion. `_cohort_negation_near` now requires the cue in the same bullet,
+line or sentence as the gene. Enumerated over all 189 (trial, gene) pairs the
+scan finds in the 50 benchmark trials, 106 pairs on 15 trials change branch,
+51 of them on a gene in the answer key, and every change is cohort to
+artefact - the stated inclusion is kept instead of both sides going. Nothing
+moves the other way, so the change can only keep a criterion the trial
+states; the cost is that a cohort split expressed away from the gene's own
+sentence now keeps the inclusion and loses the without-the-alteration cohort.
+NCT04221035's MYCN, negated in the sentence that names it, still takes case 2.
+
 ## The Anthropic backend works again on anthropic 1.4.0; gpt-oss and Qwen3.6 on the cluster (2026-09-30)
 
 **Every Anthropic call had failed since the environment was pinned**

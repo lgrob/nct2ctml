@@ -14,7 +14,7 @@ alternatives also has a file in [../decisions/](../decisions/).
 | 2026-09-27 | - | [Targeted re-map of the review queue (2026-09-27)](2026-09-27-targeted-remap-review-queue.md) |
 | 2026-09-28 | 3.2 | [Second full mapping run (roadmap 3.2, 2026-09-28)](2026-09-28-3.2-second-full-run.md) |
 | 2026-09-28 | 7.7 | [Re-map of the 17 trials split at the wrong heading (roadmap 7.7, 2026-09-28)](2026-09-28-7.7-remap-17-trials.md) |
-| 2026-09-30 | - | [Benchmark: qwen3.6:27b on Ollama, and a failed gpt-oss:120b run (2026-09-30)](2026-09-30-qwen3.6-27b-benchmark.md) |
+| 2026-09-30 | - | [Benchmark: qwen3.6:27b and gpt-oss:120b on Ollama (2026-09-30)](2026-09-30-ollama-qwen3.6-gpt-oss-benchmark.md) |
 
 ## Recording a new one
 

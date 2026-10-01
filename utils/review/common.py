@@ -35,8 +35,10 @@ LOG_COLUMNS = ["date", "trial_id", "reviewer", "from_layer", "flags_resolved", "
 FLAG_KEYS = (
     "gene_unsupported",
     "diagnosis_off_list",
+    "diagnosis_over_generated",
     "diagnosis_excluded",
     "genomic_contradiction",
+    "genomic_emptied",
     "remap_dropped_diagnoses",
     "gene_status_contradiction",
     "protein_change_unverified",
@@ -55,6 +57,11 @@ ADVICE = {
     "oncotree_primary_diagnosis entries, or _SOLID_ / _LIQUID_ for a basket trial.",
     "gene_unsupported": "The model returned a gene the text scan did not find. If the text requires it, "
     "delete the `gene_unsupported:` line; if not, delete the whole genomic criterion.",
+    "diagnosis_over_generated": "The diagnosis call answered with its own candidate list, which is a "
+    "non-answer: the diagnoses describe the Oncotree branch, not this trial's population. "
+    "As it stands the trial matches every patient in the branch. Cut the list to the "
+    "populations the eligibility text states - the trial's own conditionsModule terms are "
+    "the floor - then delete the top-level `diagnosis_over_generated:` line.",
     "diagnosis_off_list": "A diagnosis was answered outside the candidate list the model was offered. "
     "Keep or remove that diagnosis in the match tree, then delete the top-level "
     "`diagnosis_off_list:` line.",
@@ -79,6 +86,13 @@ ADVICE = {
     "nobody. Often an exclusion written for the whole gene ('!Any Variation') where the "
     "text excludes one variant, or a gene also required as a fusion partner. Narrow or "
     "remove the exclusion, then delete the top-level `genomic_contradiction:` line.",
+    "genomic_emptied": "The model returned these genes and post-processing dropped every one, so the "
+    "trial now matches on its clinical criteria alone - every patient with the "
+    "diagnosis, whatever their sequencing says. Usual causes: the alteration was "
+    "written into hugo_symbol ('BRAF V600E'), a fusion was written as a pair, no "
+    "variant_category was given, or the symbol is not in ref/genes.txt. Add the "
+    "criterion the text states, or confirm the trial has none, then delete the "
+    "top-level `genomic_emptied:` line.",
     "protein_change_unverified": "The stated protein change does not match the reference protein. Write the "
     "correct change as `protein_change:` (it is re-checked), or drop it; then "
     "delete `protein_change_unverified:` and `protein_change_check:`.",
