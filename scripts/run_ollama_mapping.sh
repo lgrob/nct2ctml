@@ -16,7 +16,8 @@
 #   sbatch --export=ALL,OLLAMA_SIF=...,OLLAMA_MODELS=... \
 #     scripts/run_ollama_mapping.sh benchmark
 #   sbatch --time=24:00:00 --export=ALL,OLLAMA_SIF=...,OLLAMA_MODELS=... \
-#     scripts/run_ollama_mapping.sh map-all
+#     scripts/run_ollama_mapping.sh map-all       # every cached trial
+#   (SOURCE=nct|ctis for one registry, CUTOFF_DAYS=N for recent NCT trials only)
 #
 # Another model through NCT2CTML_* variables (doc/llm_backends.md), e.g.
 #   --export=ALL,...,NCT2CTML_LLM_AI_MODEL=qwen3.6:27b,NCT2CTML_OLLAMA_THINK=false
@@ -202,10 +203,20 @@ case "$MODE" in
     $PY -m bench.benchmark_map --out "$OUT" --json "$OUT/report.json"
     ;;
   map-all)
-    echo "[$(date +%T)] mapping the full NCT corpus"
-    $PY main.py map --all
-    echo "[$(date +%T)] mapping the CTIS corpus"
-    $PY main.py map --all --source ctis
+    # Every cached trial. `map --all` alone maps only the NCT trials updated
+    # in the last MAPPING_CUTOFF_DAYS (1: the nightly incremental run), so a
+    # remap needs the cutoff opened; CUTOFF_DAYS=14 etc. maps recent ones
+    # only. SOURCE=nct or SOURCE=ctis maps one registry. CTIS has no cutoff.
+    CUTOFF_DAYS="${CUTOFF_DAYS:-36500}"
+    SOURCE="${SOURCE:-all}"
+    if [ "$SOURCE" != "ctis" ]; then
+      echo "[$(date +%T)] mapping the NCT corpus (trials updated in the last $CUTOFF_DAYS days)"
+      $PY main.py map --all --cutoff-days "$CUTOFF_DAYS"
+    fi
+    if [ "$SOURCE" != "nct" ]; then
+      echo "[$(date +%T)] mapping the CTIS corpus"
+      $PY main.py map --all --source ctis
+    fi
     ;;
   *)
     echo "unknown mode '$MODE' (expected: benchmark | map-all)"; exit 2 ;;

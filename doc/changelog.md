@@ -2,6 +2,16 @@
 
 What changed in this fork after the initial retargeting, newest first. Moved from CHANGES.md on 2026-09-28 (improvement plan step 13); the entries are unchanged. Measured decisions are in [decisions/](decisions/), mapping runs and queue reviews in [runs/](runs/).
 
+## The cluster job's map-all maps every trial (2026-10-01)
+
+`scripts/run_ollama_mapping.sh map-all` ran `main.py map --all`, which maps
+only the NCT trials updated in the last `MAPPING_CUTOFF_DAYS` (1 day, the
+nightly incremental setting). The first gpt-oss corpus run (job of
+2026-10-01, run `20261001T125000Z-0bd723`) therefore mapped 277 trials, the
+recently updated NCT ones and the cached CTIS ones, not the corpus. map-all
+now passes `--cutoff-days 36500`; `CUTOFF_DAYS=N` restores an incremental
+run and `SOURCE=nct|ctis` maps one registry.
+
 ## gpt-oss:120b on Ollama is the default backend; runs record the served weights (2026-10-01)
 
 `config.py` now defaults to `LLM_PLATFORM = "Ollama"`, `LLM_AI_MODEL =
