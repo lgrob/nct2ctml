@@ -65,9 +65,9 @@ class TestEveryPromptIsStructured(unittest.TestCase):
         from utils.llm_platforms import OllamaPlatform
 
         platform = OllamaPlatform("gpt-oss:120b", "http://127.0.0.1")
-        self.assertIs(platform.get_request_body("p")["think"], False)
-        with mock.patch.object(config, "OLLAMA_THINK", "low", create=True):
-            self.assertEqual(platform.get_request_body("p")["think"], "low")
+        self.assertEqual(platform.get_request_body("p")["think"], "low")
+        with mock.patch.object(config, "OLLAMA_THINK", False):
+            self.assertIs(platform.get_request_body("p")["think"], False)
 
 
 class TestCandidateListsBecomeEnums(unittest.TestCase):

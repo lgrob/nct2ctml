@@ -210,6 +210,28 @@ class OllamaPlatform(LLMPlatform):
             dict_data = dict_data.get(key, {})
         return dict_data
 
+    def model_digest(self) -> str | None:
+        """
+        The digest of the weights the server holds under this model's tag.
+
+        A tag such as gpt-oss:120b can be re-published with new weights; the
+        digest cannot, so it is what a run records (utils/provenance) and what
+        config.OLLAMA_MODEL_DIGEST pins. None when the server cannot be asked.
+        """
+        import requests
+
+        try:
+            url = f"{self.hostname}:{self.port}/api/tags"
+            models = requests.get(url, timeout=5).json().get("models", [])
+        except Exception as ex:
+            logger.warning(f"could not read the model digest from Ollama: {ex}")
+            return None
+        names = {self.model, f"{self.model}:latest"}
+        for entry in models:
+            if entry.get("name") in names or entry.get("model") in names:
+                return entry.get("digest")
+        return None
+
     def get_request_body(self, prompt: str, json_schema: dict | None = None) -> dict[str, Any]:
 
         if self.chat_endpoint == "api/generate":

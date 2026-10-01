@@ -2,6 +2,23 @@
 
 What changed in this fork after the initial retargeting, newest first. Moved from CHANGES.md on 2026-09-28 (improvement plan step 13); the entries are unchanged. Measured decisions are in [decisions/](decisions/), mapping runs and queue reviews in [runs/](runs/).
 
+## gpt-oss:120b on Ollama is the default backend; runs record the served weights (2026-10-01)
+
+`config.py` now defaults to `LLM_PLATFORM = "Ollama"`, `LLM_AI_MODEL =
+"gpt-oss:120b"`, `OLLAMA_THINK = "low"` and `OLLAMA_NUM_PREDICT = 16384`, the
+settings of the benchmarked run, for reproducibility: the weights can be kept
+and rerun, a hosted snapshot cannot
+([decision](decisions/2026-10-01-gpt-oss-backend.md)). Haiku stays available
+through `NCT2CTML_LLM_PLATFORM=Anthropic`. The corpus in `cache/ctml` and the
+index are still Haiku's until remapped.
+
+A tag such as `gpt-oss:120b` can be re-published with new weights, so
+`OllamaPlatform.model_digest` asks the server for the digest it holds under
+the tag. `provenance.start_run` records it in `run.json` and every file's
+`_provenance`, and refuses to start when `OLLAMA_MODEL_DIGEST` pins another
+digest or the digest cannot be read. The offline test guard answers None
+rather than asking a server. 4 tests.
+
 ## A diagnosis call that answers with its candidate list goes to review (2026-10-01)
 
 The other shared failure in

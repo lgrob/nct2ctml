@@ -205,6 +205,26 @@ def _write_json(path, data):
     os.replace(tmp, path)
 
 
+def _check_model_digest(llm):
+    """
+    Add the served weights' digest to the run's settings, and refuse to start
+    when config.OLLAMA_MODEL_DIGEST pins another one (or the digest cannot be
+    read to check it). A self-hosted model's tag can be re-published with new
+    weights; without the digest a run could not say which weights it used.
+    """
+    lookup = getattr(transport._llm_platform, "model_digest", None)
+    if not callable(lookup):
+        return
+    digest = lookup()
+    llm["model_digest"] = digest
+    pinned = getattr(config, "OLLAMA_MODEL_DIGEST", None)
+    if pinned and digest != pinned:
+        raise RuntimeError(
+            f"{llm['model']} is served with digest {digest}, but OLLAMA_MODEL_DIGEST pins "
+            f"{pinned}. Pull the pinned weights, or change the pin with a decision record."
+        )
+
+
 def start_run(command, directory=None):
     """
     Start a run: write run.json and record every model call from here on.
@@ -215,6 +235,7 @@ def start_run(command, directory=None):
     directory = getattr(config, "RUNS_PATH", "runs") if directory is None else directory
     run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ") + "-" + secrets.token_hex(3)
     llm = llm_settings()
+    _check_model_digest(llm)
     info = {
         "run_id": run_id,
         "command": command,
@@ -331,6 +352,8 @@ def for_trial(trial_id):
         "llm": llm_settings(),
         "reference_sha256": reference_hashes(),
     }
+    if _run and "model_digest" in _run["info"]["llm"]:
+        block["llm"]["model_digest"] = _run["info"]["llm"]["model_digest"]
     if _run and _run["calls_path"]:
         block["llm_calls"] = _run["calls"].get(trial_id, 0)
         block["llm_call_log"] = _run["calls_path"]

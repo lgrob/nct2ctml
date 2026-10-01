@@ -37,6 +37,10 @@ class OfflinePlatform:
     def send(self, *args, **kwargs):
         raise RuntimeError(MESSAGE)
 
+    def model_digest(self):
+        # Asking an Ollama server for its digest is a network call too.
+        return None
+
 
 def install_offline_guard():
     """Wrap utils.llm.transport's platform unless live tests were asked for. Idempotent."""

@@ -210,6 +210,54 @@ class TestRecord(_Isolated):
         self.assertEqual(provenance.for_trial("NCT2")["llm_calls"], 0)
 
 
+class _ServedWeights:
+    """An Ollama-like platform that reports a digest and is never called."""
+
+    def __init__(self, digest):
+        self.model, self._digest = "gpt-oss:120b", digest
+
+    def model_digest(self):
+        return self._digest
+
+
+class TestModelDigest(_Isolated):
+    """
+    A self-hosted model's tag can be re-published with new weights, so a run
+    records the digest it was served, and OLLAMA_MODEL_DIGEST pins it.
+    """
+
+    def setUp(self):
+        super().setUp()
+        p = mock.patch.object(config, "LLM_PLATFORM", "Ollama")
+        p.start()
+        self.addCleanup(p.stop)
+
+    def test_the_run_and_every_file_record_the_served_digest(self):
+        self.use(_ServedWeights("sha256:abc"))
+        run_id = provenance.start_run("test")
+        with open(os.path.join(self.runs, run_id, provenance.RUN_FILE)) as handle:
+            self.assertEqual(json.load(handle)["llm"]["model_digest"], "sha256:abc")
+        self.assertEqual(provenance.for_trial("NCT1")["llm"]["model_digest"], "sha256:abc")
+
+    def test_a_pinned_digest_that_differs_refuses_the_run(self):
+        self.use(_ServedWeights("sha256:new"))
+        with mock.patch.object(config, "OLLAMA_MODEL_DIGEST", "sha256:old"):
+            with self.assertRaises(RuntimeError):
+                provenance.start_run("test")
+        self.assertIsNone(provenance.current_run_id())
+
+    def test_a_pin_that_cannot_be_checked_refuses_the_run(self):
+        self.use(_ServedWeights(None))
+        with mock.patch.object(config, "OLLAMA_MODEL_DIGEST", "sha256:old"):
+            with self.assertRaises(RuntimeError):
+                provenance.start_run("test")
+
+    def test_a_matching_pin_runs(self):
+        self.use(_ServedWeights("sha256:abc"))
+        with mock.patch.object(config, "OLLAMA_MODEL_DIGEST", "sha256:abc"):
+            self.assertTrue(provenance.start_run("test"))
+
+
 class TestReplay(_Isolated):
     def _record(self, calls):
         """Record (prompt, answer) pairs in a run; returns its llm_calls.jsonl."""

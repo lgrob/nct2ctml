@@ -45,9 +45,12 @@ criteria text, not the whole panel.)
 
 ## Running it
 
-    export ANTHROPIC_API_KEY=sk-ant-...          # required
-    # in config.py: LLM_PLATFORM = "Anthropic", LLM_AI_MODEL = "claude-haiku-4-5-20251001"
-    ./.venv/bin/python -m bench.benchmark_map
+    # the default backend, gpt-oss:120b on Ollama, through the cluster job:
+    sbatch scripts/run_ollama_mapping.sh benchmark     # see doc/cluster_setup.md
+    # Haiku, for comparison:
+    export ANTHROPIC_API_KEY=sk-ant-...
+    NCT2CTML_LLM_PLATFORM=Anthropic NCT2CTML_LLM_AI_MODEL=claude-haiku-4-5-20251001 \
+      ./.venv/bin/python -m bench.benchmark_map --out bench/output-haiku --json bench/output-haiku/report.json
 
 Roughly $8 and some minutes for the 50 trials on Haiku. Re-score an existing
 run without spending anything:

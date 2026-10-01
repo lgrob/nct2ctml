@@ -23,9 +23,11 @@ SCHEMA = {"type": "array", "items": {"type": "object"}}
 
 
 class TestRequestBody(unittest.TestCase):
-    def test_config_pins_a_dated_haiku_snapshot(self):
-        self.assertEqual(config.LLM_PLATFORM, "Anthropic")
-        self.assertRegex(config.LLM_AI_MODEL, r"^claude-haiku-4-5-\d{8}$")
+    def test_the_default_is_gpt_oss_on_ollama(self):
+        # Since 2026-10-01 (doc/decisions/2026-10-01-gpt-oss-backend.md); the
+        # Anthropic platform stays for comparison runs, tested below on Haiku.
+        self.assertEqual(config.LLM_PLATFORM, "Ollama")
+        self.assertEqual(config.LLM_AI_MODEL, "gpt-oss:120b")
 
     def test_haiku_gets_no_thinking_no_effort_and_temperature_zero(self):
         body = AnthropicPlatform(HAIKU, "").get_request_body("p", SCHEMA)

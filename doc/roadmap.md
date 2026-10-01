@@ -53,7 +53,7 @@ population recall 0.942, precision 0.798, name F1 0.741.
 |---|---|---|
 | 0.1 | **Done 2026-09-29.** `kispi-paediatric` pushed to `origin`. | `git status` shows the branch level with `origin`. |
 | 0.2 | **Done 2026-09-25.** Annotated tag `v0.1-prerun` on `cd51dd0`, with the 1.9 and 3.1 baseline numbers in the tag message. | Tag exists. Later benchmark deltas are quoted against it. |
-| 0.3 | **Done.** Mapping backend: Anthropic API, `claude-haiku-4-5-20251001`, forced-tool JSON, temperature 0, no thinking. Confirmed by 2.3 and 2.6. | Written in `config.py`; request shape tested offline. |
+| 0.3 | **Done, superseded 2026-10-01.** Mapping backend: Anthropic API, `claude-haiku-4-5-20251001`, forced-tool JSON, temperature 0, no thinking. Confirmed by 2.3 and 2.6. Replaced as the default by gpt-oss:120b on Ollama, for reproducibility ([decision](decisions/2026-10-01-gpt-oss-backend.md)); the corpus is still Haiku's until remapped. | Written in `config.py`; request shape tested offline. |
 | 0.4 | Live smoke test: map 3 benchmark trials with a real `ANTHROPIC_API_KEY` and compare with the benchmark scorer. This is the first live call through `utils/llm_platforms.py`; all measurements so far went through the replay harness. | 3 trials mapped, no API errors, cost per trial logged. |
 
 ## Phase 1 - Deterministic fixes that change mapping output

@@ -19,17 +19,20 @@ modified files carry a notice at the top.
 
 ## Quickstart
 
-Python 3.12 or newer. Mapping calls Claude through the Anthropic API, so it
-needs a key; pulling and building the index do not.
+Python 3.12 or newer. Mapping calls gpt-oss:120b on an Ollama server, by
+default on the GPU cluster ([doc/cluster_setup.md](doc/cluster_setup.md));
+pulling and building the index need neither. Without the GPU server, the
+Anthropic backend maps the same way with an API key
+([doc/llm_backends.md](doc/llm_backends.md)).
 
 ```bash
 git clone https://github.com/lgrob/nct2ctml.git && cd nct2ctml
 python3.12 -m venv .venv && ./.venv/bin/pip install -r requirements.lock
 source .venv/bin/activate
-export ANTHROPIC_API_KEY=...                  # never in config.py
-
 python main.py pull --nct_id NCT03643276      # one trial into cache/nct
-python main.py map --nct_id NCT03643276       # CTML into cache/ctml, or ctml/needs-review if flagged
+python main.py map --nct_id NCT03643276       # needs the Ollama server; CTML into cache/ctml, or ctml/needs-review if flagged
+# no GPU server: NCT2CTML_LLM_PLATFORM=Anthropic NCT2CTML_LLM_AI_MODEL=claude-haiku-4-5-20251001
+#                and ANTHROPIC_API_KEY in the environment (never in config.py)
 python -m utils.build_trial_index             # the flat index into index/
 python -m unittest discover -s tests -t .     # offline suite, no key needed
 ```

@@ -8,24 +8,25 @@
 #   sbatch scripts/run_ollama_mapping.sh benchmark
 #   sbatch scripts/run_ollama_mapping.sh map-all
 #
-# The platform and model come from NCT2CTML_* variables (doc/llm_backends.md),
-# for example:
+# The defaults are the adopted backend, gpt-oss:120b with think=low
+# (doc/decisions/2026-10-01-gpt-oss-backend.md). It needs an 80 GB GPU
+# (~65 GB of weights, hence --mem=96G below), and the full corpus takes about
+# a minute a trial, so map-all needs a longer limit than the default:
 #
-#   sbatch --export=ALL,NCT2CTML_LLM_PLATFORM=Ollama,NCT2CTML_LLM_AI_MODEL=qwen3.6:27b \
+#   sbatch --export=ALL,OLLAMA_SIF=...,OLLAMA_MODELS=... \
 #     scripts/run_ollama_mapping.sh benchmark
+#   sbatch --time=24:00:00 --export=ALL,OLLAMA_SIF=...,OLLAMA_MODELS=... \
+#     scripts/run_ollama_mapping.sh map-all
 #
-# gpt-oss cannot turn reasoning off; give it a level and room for the
-# reasoning tokens, and more host memory for the 120b (~65 GB of weights):
-#
-#   sbatch --mem=96G --export=ALL,NCT2CTML_LLM_PLATFORM=Ollama,NCT2CTML_LLM_AI_MODEL=gpt-oss:120b,\
-#   NCT2CTML_OLLAMA_THINK=low,NCT2CTML_OLLAMA_NUM_PREDICT=16384 scripts/run_ollama_mapping.sh benchmark
+# Another model through NCT2CTML_* variables (doc/llm_backends.md), e.g.
+#   --export=ALL,...,NCT2CTML_LLM_AI_MODEL=qwen3.6:27b,NCT2CTML_OLLAMA_THINK=false
 #
 # REP=2 (etc.) keeps a replicate's output apart from the first one's.
 #
 #SBATCH --job-name=nct2ctml
 #SBATCH --gpus=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=48G
+#SBATCH --mem=96G
 #SBATCH --time=08:00:00
 #SBATCH --output=logs/ollama_%j.out
 
@@ -80,9 +81,9 @@ if [ ! -x "$PY" ]; then
   echo "  python3.12 -m venv .venv && ./.venv/bin/pip install -r requirements.lock"
   exit 1
 fi
-# config.py selects the Anthropic API as the production backend. This script
-# is for the GPU backend only: refuse to run rather than ask Ollama to pull a
-# Claude model id, or map with the wrong backend.
+# config.py defaults to Ollama with gpt-oss:120b. An override to another
+# platform (NCT2CTML_LLM_PLATFORM=Anthropic) is refused here rather than
+# asking Ollama to pull a Claude model id, or mapping with the wrong backend.
 PLATFORM="$($PY -c 'import config; print(config.LLM_PLATFORM)')"
 if [ "$PLATFORM" != "Ollama" ]; then
     echo "ERROR: config.LLM_PLATFORM is '$PLATFORM'. Run with"

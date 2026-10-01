@@ -36,8 +36,9 @@ class TestConfig(unittest.TestCase):
         for raw, value in (("low", "low"), ("HIGH", "high"), ("false", False), ("1", True)):
             _, out = load({"NCT2CTML_OLLAMA_THINK": raw}, ["OLLAMA_THINK"])
             self.assertEqual(out["values"]["OLLAMA_THINK"], value, raw)
+        # The default is the adopted gpt-oss setting, which cannot be False.
         _, out = load(names=["OLLAMA_THINK"])
-        self.assertIs(out["values"]["OLLAMA_THINK"], False)
+        self.assertEqual(out["values"]["OLLAMA_THINK"], "low")
         result, _ = load({"NCT2CTML_OLLAMA_THINK": "max"}, ["OLLAMA_THINK"])
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("NCT2CTML_OLLAMA_THINK", result.stderr)
@@ -48,8 +49,8 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(
             out["values"],
             {
-                "LLM_PLATFORM": "Anthropic",
-                "LLM_AI_MODEL": "claude-haiku-4-5-20251001",
+                "LLM_PLATFORM": "Ollama",
+                "LLM_AI_MODEL": "gpt-oss:120b",
                 "GENOMIC_PROMPT": "roles",
                 "RUNS_PATH": "runs",
             },

@@ -18,6 +18,7 @@ policy. It is not a code change on its own; those go to
 | 2026-09-28 | 2.9 | [Genomic prompt: roles (roadmap 2.9, 2026-09-28)](2026-09-28-2.9-genomic-prompt-roles.md) | adopted: GENOMIC_PROMPT = roles |
 | 2026-09-28 | 2.9b | [Measured and rejected: roles_union (roadmap 2.9b, 2026-09-28)](2026-09-28-2.9b-roles-union.md) | rejected |
 | 2026-09-28 | 2.9, option A | [Genes kept out of the match tree are published, not queued (2026-09-28)](2026-09-28-option-a-genes-not-required.md) | adopted: published as genes_not_required, not queued |
+| 2026-10-01 | -, supersedes D1 | [Backend: gpt-oss:120b on Ollama, for reproducibility (2026-10-01)](2026-10-01-gpt-oss-backend.md) | adopted: gpt-oss:120b on Ollama replaces Haiku 4.5 as the default |
 
 ## Recording a new one
 

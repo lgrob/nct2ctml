@@ -49,9 +49,12 @@ def _env(name, default, cast=str, env=None):
 GPU_SERVER_HOSTNAME = _env("GPU_SERVER_HOSTNAME", "http://127.0.0.1")
 
 # Options: Local_ai, vllm, SGLang, Ollama, Anthropic, Replay
-# NCT2CTML_LLM_PLATFORM overrides it (e.g. Replay, or Ollama on the GPU
-# cluster); every mapped file records the platform it was made with.
-LLM_PLATFORM = _env("LLM_PLATFORM", "Anthropic")
+# NCT2CTML_LLM_PLATFORM overrides it (e.g. Replay, or Anthropic on a machine
+# without the GPU server); every mapped file records the platform it was made
+# with. Ollama with gpt-oss:120b since 2026-10-01, for reproducibility: the
+# weights can be archived and rerun, a hosted snapshot cannot
+# (doc/decisions/2026-10-01-gpt-oss-backend.md). Before that, Anthropic with Claude Haiku 4.5 (decision D1).
+LLM_PLATFORM = _env("LLM_PLATFORM", "Ollama")
 
 # Provenance (utils/provenance.py). Each `map` and benchmark run writes
 # RUNS_PATH/<run_id>/run.json and records every model call, prompt and raw
@@ -63,8 +66,9 @@ RUNS_PATH = _env("RUNS_PATH", "runs", "optional")
 # which rebuilds that run's CTML offline. Point this at its llm_calls.jsonl.
 LLM_REPLAY_FILE = _env("LLM_REPLAY_FILE", None, "optional", env="REPLAY_FILE")
 
-# Anthropic (hosted Claude API) settings - the production backend since
-# 2026-09-24 (roadmap D1). Auth comes from the ANTHROPIC_API_KEY environment
+# Anthropic (hosted Claude API) settings - the production backend from
+# 2026-09-24 (roadmap D1) to 2026-10-01; kept for comparison runs, with
+# NCT2CTML_LLM_PLATFORM=Anthropic NCT2CTML_LLM_AI_MODEL=claude-haiku-4-5-20251001. Auth comes from the ANTHROPIC_API_KEY environment
 # variable - do not put a key here. GPU_SERVER_HOSTNAME is ignored.
 #
 # Claude Haiku 4.5, pinned to its dated snapshot so a run is reproducible:
@@ -73,9 +77,13 @@ LLM_REPLAY_FILE = _env("LLM_REPLAY_FILE", None, "optional", env="REPLAY_FILE")
 # the stage-2 baseline) was made on this snapshot, with the request shape
 # utils/llm_platforms.AnthropicPlatform sends: JSON through a forced tool
 # call, no thinking. It is also the cheapest current Claude model ($1/$5 per
-# 1M tokens). Moving to another model is a roadmap step 2.3 decision, taken
-# on replicated benchmark numbers, not a config edit.
-LLM_AI_MODEL = _env("LLM_AI_MODEL", "claude-haiku-4-5-20251001")
+# 1M tokens).
+#
+# The default model since 2026-10-01 is gpt-oss:120b on Ollama
+# (doc/decisions/2026-10-01-gpt-oss-backend.md). The tag can be re-published with other weights, so
+# OLLAMA_MODEL_DIGEST below pins the weights themselves. Moving to another
+# model is a decision taken on benchmark numbers, not a config edit.
+LLM_AI_MODEL = _env("LLM_AI_MODEL", "gpt-oss:120b")
 # Thinking and effort. Haiku 4.5 supports neither adaptive thinking nor the
 # effort parameter (the API rejects the request), so both are off; the
 # platform refuses the combination rather than failing mid-run. On models
@@ -212,14 +220,22 @@ OLLAMA_NUM_CTX = _env("OLLAMA_NUM_CTX", 32768, int)
 # mid-string at ~1,900 tokens (char 7795, 7089, 8291 across three trials),
 # which surfaces as a JSONDecodeError rather than as a truncation. The genomic
 # criteria block for a multi-arm trial legitimately runs longer than that.
-# 8192 at ~40 tok/s is ~205s, inside LLM_REQUEST_TIMEOUT_SECONDS below.
-OLLAMA_NUM_PREDICT = _env("OLLAMA_NUM_PREDICT", 8192, int)
-# Ollama's "think" field. False (the default) turns reasoning off, which is
-# what structured extraction wants and what every Ollama measurement so far
-# used. gpt-oss cannot turn it off: it takes only "low", "medium" or "high",
-# and ignores False. Its reasoning tokens count against OLLAMA_NUM_PREDICT,
-# so raise that too (16384) when running it.
-OLLAMA_THINK = _env("OLLAMA_THINK", False, "ollama_think")
+# gpt-oss spends part of it on reasoning, so it gets 16384. None of the
+# 2026-09-30 benchmark's calls reached the cap, and the whole 56-trial run
+# took 51 minutes on one A100, so no call came near LLM_REQUEST_TIMEOUT_SECONDS.
+OLLAMA_NUM_PREDICT = _env("OLLAMA_NUM_PREDICT", 16384, int)
+# Ollama's "think" field. gpt-oss cannot turn reasoning off: it takes only
+# "low", "medium" or "high", and with False it reasons anyway, discards it and
+# answers nothing (324 of 324 empty answers on 2026-09-30). "low" is what the
+# adopted benchmark used. Set False for a model without a thinking mode, or
+# with one that structured extraction does not want (qwen3.6 was measured
+# with False).
+OLLAMA_THINK = _env("OLLAMA_THINK", "low", "ollama_think")
+# The digest of the weights the run must use (`ollama list` shows its first
+# 12 characters; /api/tags the whole). Checked when a run starts, which
+# refuses on a mismatch; every run records the digest it was served either
+# way. None: recorded but not enforced.
+OLLAMA_MODEL_DIGEST = _env("OLLAMA_MODEL_DIGEST", None, "optional")
 # Largest candidate list the prompts send as a JSON-schema enum (utils/llm/schema), per
 # LLM_PLATFORM (lower-case key; a platform not listed gets 400). Above it the
 # enum is dropped, the shape is still enforced and off-list answers become

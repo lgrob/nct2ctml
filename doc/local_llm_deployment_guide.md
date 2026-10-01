@@ -1,7 +1,7 @@
 # Local LLM Deployment Guide
 
 > Upstream's guide for its own GPU server at HKU, kept as upstream wrote it.
-> For this fork: the production backend is the Anthropic API
+> For this fork: the default backend is gpt-oss:120b on Ollama
 > ([llm_backends.md](llm_backends.md)), and a GPU cluster run is described
 > in [cluster_setup.md](cluster_setup.md). Where this guide says to set a
 > variable in `config.py`, `NCT2CTML_<NAME>` in the environment does the same.

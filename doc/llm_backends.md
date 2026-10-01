@@ -8,8 +8,8 @@ case-insensitively.
 
 | `LLM_PLATFORM` | Notes |
 |---|---|
-| `Anthropic` | **the production backend.** Hosted Claude API through the `anthropic` package, model pinned to `claude-haiku-4-5-20251001`. Reads the key from `ANTHROPIC_API_KEY` (never put a key in `config.py`); `GPU_SERVER_HOSTNAME` is ignored. A prompt's JSON schema is enforced through a forced tool call, at temperature 0 with no thinking. `anthropic` 1.x no longer takes `temperature` as an argument, so it is sent through `extra_body`; Haiku 4.5 still honours it. Haiku 4.5 rejects adaptive thinking and the effort parameter, so the platform refuses `ANTHROPIC_THINKING`/`ANTHROPIC_EFFORT` with it before any call. |
-| `Ollama` | the GPU backend; served at `GPU_SERVER_HOSTNAME`. Context and output limits come from `OLLAMA_NUM_CTX` and `OLLAMA_NUM_PREDICT`, reasoning from `OLLAMA_THINK` (off by default; gpt-oss cannot turn it off and needs `low`, `medium` or `high`, plus a larger `OLLAMA_NUM_PREDICT`, because its reasoning tokens count against it). |
+| `Anthropic` | the production backend until 2026-10-01, kept for comparison runs. Hosted Claude API through the `anthropic` package, model pinned to `claude-haiku-4-5-20251001`. Reads the key from `ANTHROPIC_API_KEY` (never put a key in `config.py`); `GPU_SERVER_HOSTNAME` is ignored. A prompt's JSON schema is enforced through a forced tool call, at temperature 0 with no thinking. `anthropic` 1.x no longer takes `temperature` as an argument, so it is sent through `extra_body`; Haiku 4.5 still honours it. Haiku 4.5 rejects adaptive thinking and the effort parameter, so the platform refuses `ANTHROPIC_THINKING`/`ANTHROPIC_EFFORT` with it before any call. |
+| `Ollama` | **the default backend since 2026-10-01**, with `gpt-oss:120b` ([decision](decisions/2026-10-01-gpt-oss-backend.md)); served at `GPU_SERVER_HOSTNAME`. Each run records the served weights' digest, and `OLLAMA_MODEL_DIGEST` pins it. Context and output limits come from `OLLAMA_NUM_CTX` and `OLLAMA_NUM_PREDICT`, reasoning from `OLLAMA_THINK` (off by default; gpt-oss cannot turn it off and needs `low`, `medium` or `high`, plus a larger `OLLAMA_NUM_PREDICT`, because its reasoning tokens count against it). |
 | `SGLang`, `vllm` | self-hosted, OpenAI-style chat endpoint at `GPU_SERVER_HOSTNAME`. |
 | `Local_ai` | a stub; raises `NotImplementedError`. |
 | `Replay` | answers from a recorded run instead of a model; see [Provenance and replay](provenance.md). |
@@ -42,8 +42,8 @@ named.
 
 Moved from `config.py` on 2026-09-29 (improvement plan step 10), unchanged.
 They are the alternatives and the notes on each: GPU sizes, benchmark
-scores, and why each was not adopted. The production model and why it was
-chosen are in [decisions/2026-09-24-D1-anthropic-haiku-backend.md](decisions/2026-09-24-D1-anthropic-haiku-backend.md).
+scores, and why each was not adopted. The default model and why it was
+chosen are in [decisions/2026-10-01-gpt-oss-backend.md](decisions/2026-10-01-gpt-oss-backend.md); the earlier Haiku choice in [decisions/2026-09-24-D1-anthropic-haiku-backend.md](decisions/2026-09-24-D1-anthropic-haiku-backend.md).
 Where a note says "uncomment this", set `NCT2CTML_LLM_AI_MODEL` instead.
 
 ```python
