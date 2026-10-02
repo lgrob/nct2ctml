@@ -21,6 +21,7 @@ policy. It is not a code change on its own; those go to
 | 2026-10-01 | -, supersedes D1 | [Backend: gpt-oss:120b on Ollama, for reproducibility (2026-10-01)](2026-10-01-gpt-oss-backend.md) | adopted: gpt-oss:120b on Ollama replaces Haiku 4.5 as the default |
 | 2026-10-02 | 3.4 follow-up | [Diagnosis text floor: populations named in the inclusion text (2026-10-02)](2026-10-02-diagnosis-text-floor.md) | adopted: DIAGNOSIS_TEXT_FLOOR = True |
 | 2026-10-02 | 3.4 follow-up | [Disease status is no longer published (2026-10-02)](2026-10-02-no-disease-status.md) | adopted: PUBLISH_DISEASE_STATUS = False |
+| 2026-10-02 | 3.4 follow-up | [Gene criteria: three encoding rules and a scope check (2026-10-02)](2026-10-02-gene-rules.md) | adopted: always on; scoped genes route to review |
 
 ## Recording a new one
 

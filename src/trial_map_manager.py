@@ -264,11 +264,15 @@ class TrialMapManager:
                     self._record_off_list(mapped_ctml, nct_id)
                     self._record_over_generated_diagnoses(mapped_ctml, nct_id)
                     self._flag_excluded_diagnoses(mapped_ctml, trial_data, "nct", nct_id)
+                    emptied_by_rules = self._fix_gene_encodings(
+                        mapped_ctml, trial_data, "nct", nct_id
+                    )
                     self._flag_contradictions(mapped_ctml, nct_id)
                     self._record_role_drops(mapped_ctml, nct_id)
-                    self._record_genomic_emptied(mapped_ctml, nct_id)
+                    self._record_genomic_emptied(mapped_ctml, nct_id, emptied_by_rules)
                     self._add_unspecified_all_lineage(mapped_ctml, trial_data, "nct", nct_id)
                     self._flag_gene_status(mapped_ctml, trial_data, "nct", nct_id)
+                    self._flag_gene_scope(mapped_ctml, trial_data, "nct", nct_id)
                     self._flag_age_units(mapped_ctml, trial_data, nct_id)
                     self._flag_diagnosis_seed(mapped_ctml, trial_data, "nct", nct_id)
 
@@ -397,11 +401,13 @@ class TrialMapManager:
             self._record_off_list(mapped_ctml, ct_number)
             self._record_over_generated_diagnoses(mapped_ctml, ct_number)
             self._flag_excluded_diagnoses(mapped_ctml, trial_data, "ctis", ct_number)
+            emptied_by_rules = self._fix_gene_encodings(mapped_ctml, trial_data, "ctis", ct_number)
             self._flag_contradictions(mapped_ctml, ct_number)
             self._record_role_drops(mapped_ctml, ct_number)
-            self._record_genomic_emptied(mapped_ctml, ct_number)
+            self._record_genomic_emptied(mapped_ctml, ct_number, emptied_by_rules)
             self._add_unspecified_all_lineage(mapped_ctml, trial_data, "ctis", ct_number)
             self._flag_gene_status(mapped_ctml, trial_data, "ctis", ct_number)
+            self._flag_gene_scope(mapped_ctml, trial_data, "ctis", ct_number)
             self._flag_diagnosis_seed(mapped_ctml, trial_data, "ctis", ct_number)
             # CTIS bypassed the review queue entirely until 2026-09-21: it saved
             # straight to the output directory, so a CTIS trial whose diagnosis
@@ -508,7 +514,7 @@ class TrialMapManager:
             mapped_ctml["diagnosis_over_generated"] = record
 
     @staticmethod
-    def _record_genomic_emptied(mapped_ctml: dict, trial_id: str) -> None:
+    def _record_genomic_emptied(mapped_ctml: dict, trial_id: str, by_rules=()) -> None:
         """
         Genes the model returned that post-processing dropped to nothing, so
         the trial carries no genomic criterion at all
@@ -517,7 +523,7 @@ class TrialMapManager:
         every patient with the diagnosis, which is the same failure the
         no-diagnosis rule guards against one level up.
         """
-        emptied = mcm.GENOMIC_EMPTIED.pop(trial_id, None)
+        emptied = list(mcm.GENOMIC_EMPTIED.pop(trial_id, None) or []) + list(by_rules or [])
         if emptied and isinstance(mapped_ctml, dict):
             mapped_ctml["genomic_emptied"] = "; ".join(emptied)
 
@@ -585,6 +591,76 @@ class TrialMapManager:
                 )
         except Exception as e:  # a check must never lose the trial
             logger.warning(f"{trial_id} | gene-status check skipped: {type(e).__name__}: {e}")
+
+    @staticmethod
+    def _criteria_texts(trial_data: dict, registry: str) -> tuple[str, str]:
+        if registry == "ctis":
+            import src.ctis as ctis
+
+            return ctis.split_inclusion_exclusion_criteria(trial_data)
+        return ctg.split_inclusion_exclusion_criteria(trial_data)
+
+    @staticmethod
+    def _fix_gene_encodings(
+        mapped_ctml: dict, trial_data: dict, registry: str, trial_id: str
+    ) -> list[str]:
+        """
+        Rewrite three gene encodings that are wrong whatever the trial means
+        (src.text_rules.fix_gene_encodings, from the 2026-10-02 gene audit): a
+        required ITD written only as a structural variant, a "V600E" exclusion
+        written for every BRAF mutation, and a medulloblastoma subgroup written
+        as a gene. Each change is recorded as gene_encoding_fixed, which does
+        not route to review. Returns a note when the rules removed the trial's
+        last required gene, for genomic_emptied: the trial then matches every
+        patient with the diagnosis. Removing an exclusion only widens the
+        match and is not reported there. Never loses the trial.
+        """
+        if not isinstance(mapped_ctml, dict):
+            return []
+
+        def required():
+            return [
+                g for g in text_rules.collect(mapped_ctml)["genomic"] if not text_rules._negated(g)
+            ]
+
+        try:
+            had = bool(required())
+            inc, exc = TrialMapManager._criteria_texts(trial_data, registry)
+            notes = text_rules.fix_gene_encodings(mapped_ctml, inc, exc)
+            if not notes:
+                return []
+            mapped_ctml["gene_encoding_fixed"] = "; ".join(notes)
+            logger.info(f"{trial_id} | gene encodings fixed: {'; '.join(notes)}")
+            if had and not required():
+                return [n for n in notes if "removed" in n]
+        except Exception as e:  # a rule must never lose the trial
+            logger.warning(f"{trial_id} | gene-encoding rules skipped: {type(e).__name__}: {e}")
+        return []
+
+    @staticmethod
+    def _flag_gene_scope(mapped_ctml: dict, trial_data: dict, registry: str, trial_id: str) -> None:
+        """
+        Write genes required of every patient although the inclusion text gives
+        them for one cohort or as one route among others into the CTML as
+        gene_scope_suspect, which routes the trial to review
+        (src.text_rules.gene_scope_suspect; the largest cause in the
+        2026-10-02 gene audit). Never loses the trial.
+        """
+        if not isinstance(mapped_ctml, dict):
+            return
+        try:
+            inc, _ = TrialMapManager._criteria_texts(trial_data, registry)
+            found = text_rules.gene_scope_suspect(mapped_ctml, inc)
+            if found:
+                mapped_ctml["gene_scope_suspect"] = "; ".join(
+                    f"{g} ({why})" for g, why in sorted(found.items())
+                )
+                logger.warning(
+                    f"{trial_id} | genes required of everyone although the text scopes them: "
+                    f"{', '.join(sorted(found))}"
+                )
+        except Exception as e:  # a check must never lose the trial
+            logger.warning(f"{trial_id} | gene-scope check skipped: {type(e).__name__}: {e}")
 
     @staticmethod
     def _flag_age_units(mapped_ctml: dict, trial_data: dict, trial_id: str) -> None:
@@ -783,6 +859,11 @@ class TrialMapManager:
             reasons.append(
                 "a gene is required although the text says it must be absent or does not matter"
             )
+        if "gene_scope_suspect" in keys:
+            reasons.append(
+                "a gene is required of every patient although the text gives it for one "
+                "cohort or as one route among others"
+            )
         if "diagnosis_seed_suspect" in keys:
             reasons.append(
                 "the diagnosis scope rests on a specialty word, or a B-lineage criterion "
@@ -842,11 +923,13 @@ class TrialMapManager:
             self._record_off_list(mapped_ctml, nct_id)
             self._record_over_generated_diagnoses(mapped_ctml, nct_id)
             self._flag_excluded_diagnoses(mapped_ctml, trial_data, "nct", nct_id)
+            emptied_by_rules = self._fix_gene_encodings(mapped_ctml, trial_data, "nct", nct_id)
             self._flag_contradictions(mapped_ctml, nct_id)
             self._record_role_drops(mapped_ctml, nct_id)
-            self._record_genomic_emptied(mapped_ctml, nct_id)
+            self._record_genomic_emptied(mapped_ctml, nct_id, emptied_by_rules)
             self._add_unspecified_all_lineage(mapped_ctml, trial_data, "nct", nct_id)
             self._flag_gene_status(mapped_ctml, trial_data, "nct", nct_id)
+            self._flag_gene_scope(mapped_ctml, trial_data, "nct", nct_id)
             self._flag_age_units(mapped_ctml, trial_data, nct_id)
             self._flag_diagnosis_seed(mapped_ctml, trial_data, "nct", nct_id)
 

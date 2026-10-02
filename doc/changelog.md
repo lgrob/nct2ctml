@@ -2,6 +2,27 @@
 
 What changed in this fork after the initial retargeting, newest first. Moved from CHANGES.md on 2026-09-28 (improvement plan step 13); the entries are unchanged. Measured decisions are in [decisions/](decisions/), mapping runs and queue reviews in [runs/](runs/).
 
+## Gene encoding rules and a gene-scope check (2026-10-02)
+
+`text_rules.fix_gene_encodings` runs after mapping (both registries) and
+records each change as `gene_encoding_fixed`, which does not route:
+- a required ITD written as a structural variant also matches as a mutation;
+- an exclusion on a whole gene gets the one protein change the text names
+  ("without a BRAFV600E mutation" -> `!Mutation p.V600E`);
+- SHH criteria are removed where "SHH" only names the medulloblastoma
+  subgroup.
+
+ITD exclusions are left as written: making them bite would lose patients
+where the exclusion belongs to one randomisation only (CHIP-AML22).
+`genomic_emptied` now also reports a required gene these rules removed.
+
+`text_rules.gene_scope_suspect` writes `gene_scope_suspect` (routes to review)
+for a gene required at step level although the inclusion text gives it for
+one cohort or as one route among others.
+
+Replayed on 1,133 trials: 40 change, 26 published trials move to review, none
+the other way ([decision](decisions/2026-10-02-gene-rules.md)). 21 tests.
+
 ## Disease status no longer published (2026-10-02)
 
 `config.PUBLISH_DISEASE_STATUS` (default False) gates the disease-status model

@@ -46,6 +46,7 @@ FLAG_KEYS = (
     "fusion_partner_unverified",
     "age_units_implausible",
     "diagnosis_seed_suspect",
+    "gene_scope_suspect",
 )
 
 
@@ -74,6 +75,15 @@ ADVICE = {
     "requirement (risk group, one cohort, conditional, an alternative route, an example, "
     "expression or germline) and kept them out of the match tree. They are published in "
     "trials.tsv as genes_not_required. Add a gene back only if every patient must carry it.",
+    "gene_scope_suspect": "A gene is required of every patient, but the inclusion text gives it for one "
+    "cohort, phase or stratum, or as one route beside routes that need no alteration "
+    "(MRD, immunophenotype, another diagnosis). Move the criterion into the arm it "
+    "belongs to, put it in an OR with the other routes, or remove it; then delete the "
+    "top-level `gene_scope_suspect:` line.",
+    "gene_encoding_fixed": "Information, not a flag: the mapper rewrote a gene criterion by rule (an ITD "
+    "also written as a mutation, an exclusion narrowed to the one protein change the "
+    "text names, or a medulloblastoma subgroup removed as a gene). Check the change "
+    "only if the text says otherwise.",
     "gene_status_contradiction": "The match tree requires an alteration in a gene that the inclusion text says "
     "must be absent (wild type, negative, 'no ... mutation') or does not matter "
     "('with or without'). Remove or negate the criterion, then delete the top-level "

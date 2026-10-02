@@ -526,6 +526,424 @@ def find_mentions(
     return sorted(hits)
 
 
+# --- Gene criteria: encoding fixes and scope (gene audit, 2026-10-02) -------
+#
+# doc/runs/2026-10-02-3.4-gene-audit.md read the gene criteria of 80 published
+# trials: 30 lost eligible patients. Two groups are handled here.
+# - fix_gene_encodings rewrites three encodings that are wrong whatever the
+#   trial means: a required ITD written as a structural variant, a "V600E" exclusion
+#   widened to every BRAF mutation, and a medulloblastoma subgroup written as
+#   a gene.
+# - gene_scope_suspect finds a gene required of every patient where the text
+#   gives it for one cohort, or as one route beside routes that need no
+#   alteration. It cannot tell what the tree should be, so it routes the
+#   trial to review.
+
+_ITD = r"[\s:-]*(?:ITD|internal\s+tandem\s+duplications?)(?![A-Za-z])"
+_FUSION_WORDS = r"[\s:-]*(?:fusions?|rearrange\w*|translocations?)"
+# A change written after the gene: "BRAF V600E", "BRAFV600E", "BRAF p.V600".
+_CHANGE_AFTER = re.compile(r"[\s-]*(?:p\.)?([A-Z]\d{1,4}(?:[A-Z]|\*)?)(?![A-Za-z0-9])")
+# A mention that names a drug class, not the alteration: "prior BRAF inhibitor".
+_DRUG_AFTER = re.compile(
+    r"[\s/-]*(?:and\s+MEK\s+)?(?:inhibitors?|targeted|-?directed|therap)", re.I
+)
+# Molecular subgroups written with a gene's name. SHH-activated medulloblastoma
+# is driven by PTCH1, SUFU or SMO: an SHH variant is almost never there, so a
+# criterion on the SHH gene matches nobody (2024-517133-40-00, COGNITO-MB) or
+# excludes nobody (NCT06193759).
+_SUBGROUP_NAMES = {
+    "SHH": re.compile(
+        r"SHH[\s-]*(?:activated|subgroups?|subtypes?|groups?|types?|MB\b|medulloblastoma|TP53|"
+        r"pathway|driven|\+|positive)",
+        re.I,
+    ),
+}
+
+
+def _negated(g: dict) -> bool:
+    return any(
+        str(g.get(k, "")).startswith("!")
+        for k in ("variant_category", "cnv_call", "protein_change")
+    )
+
+
+def _unescape(text: str | None) -> str:
+    """ClinicalTrials.gov markdown escapes: "\\[", "\\>", "\\*"."""
+    return re.sub(r"\\([\[\]<>*_-])", r"\1", text or "")
+
+
+def _gene_lists(node, parent_key=None):
+    """Yield (list, parent_key) for every list in a match tree."""
+    if isinstance(node, dict):
+        for k, v in node.items():
+            yield from _gene_lists(v, k)
+    elif isinstance(node, list):
+        yield node, parent_key
+        for v in node:
+            yield from _gene_lists(v, parent_key)
+
+
+def _says_itd(gene: str, text: str, ref: "Reference") -> bool:
+    terms = [t for t in ref.gene_terms(gene) if len(t) >= 3] + (["FLT"] if gene == "FLT3" else [])
+    names = "|".join(re.escape(t) for t in sorted(terms, key=len, reverse=True))
+    if not names:
+        return False
+    if re.search(rf"(?<![A-Za-z0-9])(?:{names}){_FUSION_WORDS}", text, re.I):
+        return False
+    if re.search(rf"(?<![A-Za-z0-9])(?:{names}){_ITD}", text, re.I):
+        return True
+    # In leukaemia texts a bare "ITD" is FLT3's.
+    return gene == "FLT3" and bool(re.search(r"(?<![A-Za-z])ITD(?![A-Za-z])", text))
+
+
+def _itd_as_mutation(tree, text, ref) -> list[str]:
+    """
+    An internal tandem duplication is an in-frame insertion: variant callers
+    and MatchMiner's genomic records file it as a mutation, not a structural
+    variant. "FLT3-ITD" written as a Structural Variation therefore matches no
+    ITD patient (NCT06262438, every patient lost), and an ITD exclusion
+    written that way excludes nobody (2025-522279-27-00).
+
+    The structural-variant criterion is kept, since a laboratory may still
+    report the ITD that way, and a mutation criterion is added beside it as
+    an alternative. Exclusions are left as they are: making an ITD exclusion
+    bite would lose patients wherever the exclusion belongs to one
+    randomisation or cohort only (2023-504999-25-00, CHIP-AML22), and
+    exclusion genes get no role check. A wrong exclusion that excludes nobody
+    over-matches; one that bites loses patients.
+    """
+    import copy
+
+    notes = []
+    for lst, parent in list(_gene_lists(tree)):
+        i = 0
+        while i < len(lst):
+            n = lst[i]
+            g = n.get("genomic") if isinstance(n, dict) else None
+            vc = str((g or {}).get("variant_category", ""))
+            if (
+                not isinstance(g, dict)
+                or vc != "Structural Variation"
+                or g.get("fusion_partner")
+                or not _says_itd(g.get("hugo_symbol", ""), text, ref)
+            ):
+                i += 1
+                continue
+            twin = copy.deepcopy(n)
+            twin["genomic"].pop("fusion_partner_unverified", None)
+            twin["genomic"]["variant_category"] = "Mutation"
+            if parent == "or":
+                if twin not in lst:
+                    lst.insert(i + 1, twin)
+                    i += 1
+            else:
+                lst[i] = {"or": [n, twin]}
+            notes.append(
+                f"{g['hugo_symbol']} ITD: mutation criterion added beside the structural variant"
+            )
+            i += 1
+    return notes
+
+
+def _exclusion_protein_change(tree, text, ref) -> list[str]:
+    """
+    An exclusion on a whole gene where the text names one change: "LGG
+    without a BRAFV600E mutation" published as BRAF !Mutation excludes every
+    BRAF-mutant glioma (NCT04166409, NCT05099003). When every mention of the
+    gene in the eligibility text carries the same protein change, the
+    exclusion gets that change. A mention without one ("BRAF mutation") or
+    two different changes leave it as it is. Mentions of a drug class ("prior
+    BRAF inhibitor") are not mentions of the alteration.
+    """
+    import utils.protein_change as protein_change
+
+    notes = []
+    for lst, _ in list(_gene_lists(tree)):
+        for n in list(lst):
+            g = n.get("genomic") if isinstance(n, dict) else None
+            if (
+                not isinstance(g, dict)
+                or str(g.get("variant_category")) not in ("!Mutation", "!Any Variation")
+                or g.get("protein_change")
+                or g.get("wildcard_protein_change")
+            ):
+                continue
+            gene = g.get("hugo_symbol", "")
+            changes, plain = set(), False
+            for _, e, _ in find_mentions(text, ref.gene_terms(gene), gene=gene):
+                right = text[e : e + 30]
+                if _DRUG_AFTER.match(right):
+                    continue
+                m = _CHANGE_AFTER.match(right)
+                if m:
+                    changes.add(m.group(1))
+                else:
+                    plain = True
+            if plain or len(changes) != 1:
+                continue
+            stated = changes.pop()
+            if not protein_change.normalise(gene, stated).verified:
+                continue
+            g["variant_category"] = "!Mutation"
+            g["protein_change"] = f"p.{stated}"
+            notes.append(f"{gene} exclusion narrowed to p.{stated}, the only change the text names")
+            # The model sometimes wrote both; keep one.
+            twins = [x for x in lst if x == n]
+            for extra in twins[1:]:
+                lst.remove(extra)
+    return notes
+
+
+def _drop_subgroup_genes(tree, text) -> list[str]:
+    """
+    Remove criteria on a gene whose every mention in the text is a subgroup
+    name ("SHH-activated medulloblastoma", "SHH subtype"), with the AND/OR
+    nodes they leave empty. A text that also names the gene as an alteration
+    ("SHH mutation") keeps it.
+    """
+    notes = []
+    for gene, subgroup in _SUBGROUP_NAMES.items():
+        mentions = list(re.finditer(rf"(?<![A-Za-z0-9]){gene}(?![a-z0-9])", text))
+        if not mentions or any(not subgroup.match(text, m.start()) for m in mentions):
+            continue
+        removed = 0
+        for lst, _ in list(_gene_lists(tree)):
+            keep = [
+                n
+                for n in lst
+                if not (isinstance(n, dict) and (n.get("genomic") or {}).get("hugo_symbol") == gene)
+            ]
+            removed += len(lst) - len(keep)
+            lst[:] = keep
+        if removed:
+            _prune_empty(tree)
+            notes.append(
+                f"{gene} removed: the text names the {gene} subgroup, not an {gene} alteration"
+            )
+    return notes
+
+
+def _prune_empty(node):
+    """Drop {"and": []} / {"or": []} left behind, bottom up."""
+    if isinstance(node, dict):
+        for v in node.values():
+            _prune_empty(v)
+    elif isinstance(node, list):
+        for v in node:
+            _prune_empty(v)
+        node[:] = [
+            n
+            for n in node
+            if not (isinstance(n, dict) and set(n) <= {"and", "or"} and not any(n.values()))
+        ]
+
+
+def fix_gene_encodings(
+    ctml: dict | None, inclusion: str | None, exclusion: str | None, ref: "Reference | None" = None
+) -> list[str]:
+    """
+    Apply the three encoding rules to the match tree in place and return a
+    note for each change. Deterministic, no model call.
+    """
+    if not isinstance(ctml, dict) or not ctml.get("treatment_list"):
+        return []
+    ref = ref or _shared_reference()
+    text = _unescape(inclusion) + "\n" + _unescape(exclusion)
+    tree = ctml["treatment_list"]
+    notes = (
+        _itd_as_mutation(tree, text, ref)
+        + _exclusion_protein_change(tree, text, ref)
+        + _drop_subgroup_genes(tree, text)
+    )
+    return list(dict.fromkeys(notes))
+
+
+# Cues for gene_scope_suspect, measured on the gene audit's 80 trials.
+_DX_WORD = re.compile(
+    r"tumou?r|cancer|carcinoma|sarcoma|leuka?emia|lymphoma|glioma|malignan|blastoma|myeloma|\bALL\b",
+    re.I,
+)
+_ROUTE_WORD = re.compile(
+    r"tumou?rs?|cancers?|carcinoma|sarcoma|leuka?emia|lymphoma|glioma|neoplasm|malignan|blastoma|"
+    r"myeloma|\bALL\b|\bAML\b|\bMDS\b|\bNHL\b|\bCLL\b|relapse|refractory|MRD|disease",
+    re.I,
+)
+# Segments about how or where a test is done, not about who is eligible.
+_NOT_A_ROUTE = re.compile(
+    r"measurable|evaluable|RECIST|tumou?r (?:tissue|sample|specimen)|plasma|sequencing|NGS|"
+    r"laboratory|\btest",
+    re.I,
+)
+_LIST_CUE = re.compile(
+    r"one of the following|any of the following|\beither\b|(?<![A-Za-z])OR(?![A-Za-z])", re.I
+)
+_SECTION_HEADER = re.compile(
+    r"(?im)^[\s*•\-\d.()]*((?:phase\s*(?:I{1,3}|[123])[ab]?|part\s+[A-Z0-9]+|stratum\s+\w+|"
+    r"arm\s+[A-Z0-9]+|cohorts?\s+[\w,\s-]{1,30}?|dose[- ](?:escalation|expansion)(?:\s+cohort)?)"
+    r"(?:\s+only)?)\s*(?::|\n|$)"
+)
+_COHORT_SCOPE = re.compile(
+    r"\b(?:for|in)\s+(?:the\s+)?[\w-]+\s+(?:cohort|arm|stratum|part)\b|"
+    r"\bcohort[\w\s,-]{0,25}\bonly\b|"
+    r"\bno\s+(?:\w+\s+)?(?:mutation|alteration)s?\s+(?:is\s+)?(?:needed|required)",
+    re.I,
+)
+
+
+def _step_required_genes(ctml: dict) -> set[str]:
+    """Genes required at step level: an arm's own criteria are already scoped."""
+    found = set()
+    for step in (ctml.get("treatment_list") or {}).get("step", []) or []:
+        for g in _genomic_nodes(step.get("match")):
+            if g.get("hugo_symbol") and not _negated(g):
+                found.add(g["hugo_symbol"])
+    return found
+
+
+def _criterion_bounds(text: str, start: int, end: int) -> tuple[int, int]:
+    """The top-level criterion holding [start, end): lines up to the next unindented one."""
+    starts = [m.start() for m in re.finditer(r"\n(?=\S)", text[:start])]
+    nxt = re.search(r"\n(?=\S)", text[end:])
+    return (starts[-1] if starts else 0), (end + nxt.start() if nxt else len(text))
+
+
+def _segments(text: str) -> list[str]:
+    parts = re.split(
+        r"\n+|\s[•*]\s|;|\s-\s|\s(?=\d{1,2}\.\s)|\s(?=[a-h][.)]\s)|\s(?:or|OR)\s", text
+    )
+    return [p for p in parts if len(p.strip()) >= 20]
+
+
+def gene_scope_suspect(
+    ctml: dict | None, inclusion: str | None, ref: "Reference | None" = None
+) -> dict[str, str]:
+    """
+    Genes the match tree requires of every patient although the inclusion
+    text gives them for one cohort, or as one route among others. Returns
+    {gene: reason and fragment}. Deterministic, no model call.
+
+    A mention of the gene counts as scoped when:
+    - the gene is named both positive and negative ("FOXO1 fusion negative
+      ... FOXO1 fusion positive", NCT07466316): a stratifier;
+    - its sentence limits it to a cohort ("for primary cohort; no mutation
+      needed for exploratory cohort", NCT06411821);
+    - it sits under a "... only" header ("Dose Expansion Cohort Only",
+      NCT05372640), or under a phase/cohort/arm header while another such
+      section names a population and no required gene (NCT04901702);
+    - its criterion opens alternatives ("one of the following", "either",
+      "OR") and one alternative names a population or disease state and no
+      gene (2024-515174-27-00, 2024-511336-28-00, NCT06961669);
+    - a stand-alone OR line joins its criterion to one that names a
+      population and no gene (NCT03150576, TNBC OR gBRCA);
+    - its criterion lists labelled alternatives and a label naming a disease
+      has no gene ("ETP-ALL: ... T-ALL with myeloid mutations: FLT3, ...",
+      NCT07159620).
+
+    Measured on the gene audit's 80 trials: 9 of its 10 scope losses found,
+    1 of 43 correct trials flagged (a phase 1 that does not require RET at
+    first, which the audit had missed). On all 982 published trials of the
+    replayed corpus it flags 24; of the 13 outside the audit, 10 were real.
+    """
+    if not isinstance(ctml, dict):
+        return {}
+    genes = _step_required_genes(ctml)
+    if not genes:
+        return {}
+    ref = ref or _shared_reference()
+    text = _unescape(inclusion)
+    mentions = {}
+    for g in genes:
+        mentions[g] = find_mentions(
+            text, [t for t in ref.gene_terms(g) if len(t) >= 3 or t == g], gene=g
+        )
+        if not mentions[g]:  # "NUT carcinoma" for NUTM1
+            mentions[g] = find_mentions(
+                text, [t for t in ref.weak_gene_terms(g) if len(t) >= 3], gene=g
+            )
+    spans = [s for g in genes for s, _, _ in mentions[g]]
+
+    def names_gene(a, b):
+        return any(a <= s < b for s in spans)
+
+    headers = list(_SECTION_HEADER.finditer(text))
+    out: dict[str, str] = {}
+    for gene in sorted(genes):
+        for s, e, _ in mentions[gene]:
+            reason = _scope_reason(text, s, e, headers, names_gene)
+            if reason:
+                out[gene] = f"{reason}: " + " ".join(text[max(0, s - 80) : e + 60].split())
+                break
+    return out
+
+
+def _scope_reason(text, s, e, headers, names_gene) -> str:
+    said = re.escape(text[s:e])
+    qualifier = r"[\s-]*(?:fusion|mutation|rearrangement|status)?[\s-]*"
+    if re.search(rf"{said}{qualifier}(?:negative|\(FN\))", text, re.I) and re.search(
+        rf"{said}{qualifier}(?:positive|\(FP\))", text, re.I
+    ):
+        return "named both positive and negative"
+
+    a = max(text.rfind(c, 0, s) for c in (".", "\n", ";")) + 1
+    ends = [x for x in (text.find(c, e) for c in (". ", ".\n", "\n", ";")) if x >= 0]
+    if _COHORT_SCOPE.search(text[a : min(ends or [len(text)])]):
+        return "limited to a cohort in its sentence"
+
+    above = [h for h in headers if h.start() < s]
+    if above:
+        own = above[-1]
+        if "only" in own.group(1).lower():
+            return f"under the header '{own.group(1).strip()}'"
+        bounds = [h.start() for h in headers] + [len(text)]
+        for i, h in enumerate(headers):
+            if h.start() != own.start() and not names_gene(h.end(), bounds[i + 1]):
+                if _DX_WORD.search(text[h.end() : bounds[i + 1]]):
+                    return f"section '{h.group(1).strip()}' names a population and no required gene"
+
+    ia, ib = _criterion_bounds(text, s, e)
+    item = text[ia:ib]
+    cues = [
+        m
+        for m in _LIST_CUE.finditer(item)
+        if ia + m.start() < s
+        and (m.group(0) == "OR" or m.group(0).lower() != "or")
+        # "either bone or soft tissue": two words, not two routes
+        and not (
+            m.group(0).lower() == "either"
+            and re.match(r"either\s.{0,40}?\sor\s", item[m.start() :], re.I | re.S)
+        )
+    ]
+    if cues:
+        for seg in _segments(item[cues[0].start() :]):
+            off = text.find(seg, ia)
+            if off >= 0 and not names_gene(off, off + len(seg)):
+                if _ROUTE_WORD.search(seg) and not _NOT_A_ROUTE.search(seg):
+                    return f"an alternative names no gene ('{' '.join(seg.split())[:70]}')"
+
+    before = re.search(r"((?:^|\n)\S[^\n]*(?:\n[ \t]+[^\n]*)*)\n\s*OR\s*\n\s*$", text[: ia + 1])
+    if (
+        before
+        and not names_gene(before.start(1), before.end(1))
+        and _DX_WORD.search(before.group(1))
+    ):
+        return f"an OR joins a criterion that names no gene ('{' '.join(before.group(1).split())[:70]}')"
+    after = re.match(r"\s*\n\s*OR\s*\n+(\S[^\n]*(?:\n[ \t]+[^\n]*)*)", text[ib:])
+    if (
+        after
+        and not names_gene(ib + after.start(1), ib + after.end(1))
+        and _DX_WORD.search(after.group(1))
+    ):
+        return f"an OR joins a criterion that names no gene ('{' '.join(after.group(1).split())[:70]}')"
+
+    labels = list(re.finditer(r"\n[ \t]+([A-Za-z][\w /+-]{1,40}):\s", item))
+    if len(labels) >= 2:
+        bounds = [m.start() for m in labels] + [len(item)]
+        for i, m in enumerate(labels):
+            if not names_gene(ia + m.start(), ia + bounds[i + 1]) and _DX_WORD.search(m.group(1)):
+                return f"the labelled alternative '{m.group(1)}' names no gene"
+    return ""
+
+
 class Reference:
     """Reference data loaded once per run."""
 

@@ -5,7 +5,7 @@ trial_id	verdict	effect	cause	note
 2023-504999-25-00	error	loses	subgroup-exclusion	CHIP-AML22 master protocol: FLT3 !SV comes from "Additional exclusion criteria for the induction randomization: Patients with FLT3-ITD/NPM1wt" - those patients go to the quizartinib sub-study instead, so excluding FLT3-ITD for everyone loses them.
 2023-506782-56-00	correct			RET mutation required (MTC).
 2023-507598-16-00	error	loses	subgroup-exclusion	PNOC022 (DMG): "Thalamic H3K27M DMG" is excluded in some cohorts only (site-based), but H3 K27M is published as excluded for everyone in all four H3 genes, which excludes nearly every DMG patient. The inclusion H3 genes were correctly kept out (cohort_specific); exclusion genes get no role check.
-2023-507702-13-00	correct			RET alteration required of every cohort (the "conditional" role note is spurious; the tree is right).
+2023-507702-13-00	borderline		scope	RET alteration required of every cohort, but phase 1 says "A RET gene alteration is not required initially. Once adequate PK exposure is achieved, evidence of RET gene alteration ... is required". Found by the gene-scope check (2026-10-02); the first reading had judged it correct.
 2023-508081-15-00	borderline		exclusion-proxy	MYC !SV stands for the Burkitt exclusion ("leukemia ... with FAB L3 morphology and/or a MYC translocation"); B-ALL with a MYC rearrangement is rare.
 2023-508953-16-00	correct			NTRK fusion required (HGG with NTRK fusion).
 2023-509810-13-00	correct			Ph+ excluded (BCR/ABL1 !SV); the high-risk genetic features correctly kept out as risk_group.
