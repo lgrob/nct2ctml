@@ -116,10 +116,17 @@ def map_nct_to_clinical_and_genomic_criteria(
     if gender_str:
         mapped_global_clinical_critera["gender"] = gender_str
 
-    logger.info(f"NCTID: {nct_id} | Mapping disease status")
-    disease_status_dict = biomarkers.map_disease_status(nct_id, global_nct_criteria, keywords)
-    if disease_status_dict and len(disease_status_dict.get("disease_status", {})) > 0:
-        mapped_global_clinical_critera.update(disease_status_dict)
+    # Not asked, and not published, unless config.PUBLISH_DISEASE_STATUS: a
+    # criterion on a field the patient record does not carry matches nobody,
+    # and the model's reading was wrong in 7 of the 60 audited trials (doc/
+    # decisions/2026-10-02-no-disease-status.md).
+    import config as settings  # the repository's config.py; `config` here is src.trial_config
+
+    if getattr(settings, "PUBLISH_DISEASE_STATUS", False):
+        logger.info(f"NCTID: {nct_id} | Mapping disease status")
+        disease_status_dict = biomarkers.map_disease_status(nct_id, global_nct_criteria, keywords)
+        if disease_status_dict and len(disease_status_dict.get("disease_status", {})) > 0:
+            mapped_global_clinical_critera.update(disease_status_dict)
 
     biomarker_status_dict = biomarkers._map_biomarker_statuses(
         nct_id, global_nct_criteria, keywords, level="global"

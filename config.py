@@ -116,6 +116,13 @@ DIAGNOSIS_INPUT = _env("DIAGNOSIS_INPUT", "labelled")
 # the audit's 11 missing-diagnosis failures, benchmark recall unchanged, NCT
 # precision 0.810 -> 0.681 where the curated keys are narrower than the text.
 DIAGNOSIS_TEXT_FLOOR = _env("DIAGNOSIS_TEXT_FLOOR", True, bool)
+# Whether ClinicalTrials.gov trials get a disease_status criterion (Untreated,
+# Recurrent, Refractory, ...). Off since 2026-10-02 by the user's decision
+# (doc/decisions/2026-10-02-no-disease-status.md): MatchMiner can only satisfy
+# it from a disease status in the patient record, which Kispi's records do not
+# reliably carry, so it could only lose patients; and the model's reading was
+# wrong in 7 of the 60 audited trials. Off also skips the model call.
+PUBLISH_DISEASE_STATUS = _env("PUBLISH_DISEASE_STATUS", False, bool)
 # Inclusion genomic prompt (roadmap 2.9): "baseline" (unchanged), "rules"
 # (explicit rules: only genes every entering patient must carry) or "roles"
 # (each gene is classified; only requirements enter the match tree, the rest

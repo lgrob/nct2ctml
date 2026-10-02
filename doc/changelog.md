@@ -2,6 +2,21 @@
 
 What changed in this fork after the initial retargeting, newest first. Moved from CHANGES.md on 2026-09-28 (improvement plan step 13); the entries are unchanged. Measured decisions are in [decisions/](decisions/), mapping runs and queue reviews in [runs/](runs/).
 
+## Disease status no longer published (2026-10-02)
+
+`config.PUBLISH_DISEASE_STATUS` (default False) gates the disease-status model
+call in `clinical_trials_gov.map_nct_to_ctml`. Off, the call is skipped and no
+`disease_status` criterion is written. MatchMiner can satisfy the criterion
+only from a disease status the patient records do not reliably carry, and the
+model's reading was wrong in 7 of the 60 audited trials
+([decision](decisions/2026-10-02-no-disease-status.md)). Replayed: 802 of
+1,133 trials lose the criterion; routing and benchmark scores are unchanged.
+The setting is read from the repository's `config.py`. In
+`clinical_trials_gov`, `config` is `src.trial_config`, so its existing
+`getattr(config, "DIAGNOSIS_INPUT", ...)` always sees "legacy"; that read
+only decides the inclusion_only title, so the current default is unaffected.
+3 tests.
+
 ## Index releases cover all three layers (2026-10-02)
 
 `utils/release_index.py create` builds from all three layers by default, the
