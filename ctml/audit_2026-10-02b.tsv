@@ -1,0 +1,61 @@
+trial_id	verdict	effect	note
+2022-501417-31-00	error	over-match	Exclusion "ocular, mucosal, or conjunctival melanoma" not written; the Melanoma parent (7 codes) includes them. Same cause as 2022-502354-14-00 in the first audit.
+2022-502741-10-00	correct		r/r AML, ALL or ALAL with KMT2A fusion or NPM1 mutation, >=12. APL excluded in the text but not written; the required KMT2A/NPM1 alteration makes that over-match negligible.
+2023-504795-20-00	borderline	over-match	"Aggressive Mature B-cell Neoplasms": Mature B-Cell Neoplasms (54 codes) also covers indolent entities (CLL, follicular, myeloma). Ages (>=1, up to 25 for Burkitt) correct.
+2023-505000-27-01	error	over-match	FLT3-ITD+ NPM1-wildtype AML, genes correct, but "Age from 1 month to <= 18 years old at initial diagnosis" is not published, so adults match.
+2023-505511-20-00	error	over-match	Mature B-NHL and CLL: published also B-Lymphoblastic Leukemia/Lymphoma, which the text does not name ("lymphocytic lymphoma (LL)" is SLL). The B-NHL list and age >=1 are correct.
+2023-505840-20-00	correct		CD19+ r/r B-ALL, >=12 (union of the 16-80 and >=12 cohorts), <=80.
+2023-506778-11-00	correct		Any r/r solid tumour <=18 (Parts A/B) or r/r neuroblastoma <21 (Part C): _SOLID_ plus neuroblastoma, <21.
+2023-507444-37-00	error	loses	"GEP-NET" and "PPGL" (pheochromocytoma and paraganglioma): published only Pancreatic Neuroendocrine Tumor and Pheochromocytoma, so gastrointestinal NETs and paragangliomas are lost. Ages 12-<18 correct.
+2023-509856-32-00	error	over-match	"from 1st September 2023 onwards only acute lymphoblastic leukemia with T-cell phenotype": B-ALL is still published. T-ALL, MPAL/AUL (ALAL), Ph+ exclusion and age <18 correct.
+2024-512135-80-00	error	over-match	"relapsed, or refractory pediatric solid malignancy excluding osteosarcoma", ages 2-21 (conditions): _SOLID_ is right, but neither the osteosarcoma exclusion nor any age bound is published.
+2024-513654-30-00	correct		Newly diagnosed DIPG, 2-21: DMG H3 K27-altered plus the H3-wildtype pHGG (the table's DIPG row).
+2024-513843-10-00	correct		Neuroblastoma (diagnostic imaging), 0-18.
+2024-514917-36-00	borderline	loses	High-risk neuroblastoma (HR-NBL2); MYCN/MYC/MYCL correctly kept out as cohort-specific. Published age <21 is the R-HDC randomisation limit; HR-NBL2 itself says "no upper age limit", so the rare adult patient is lost.
+2024-515174-27-00	error	both	CD19 CAR-T for r/r B-ALL and B-NHL. The step requires KMT2A-AFF1, TCF3-PBX1 or TP53 of every patient - genetic features that define one of several B-ALL relapse groups - so most patients are lost; the Non-Hodgkin Lymphoma parent adds T-cell lymphomas.
+2024-518912-37-01	error	loses	"Ewing sarcoma (ES) of bone or soft tissue, or 'Ewing-like' sarcoma but negative for EWSR1 gene rearrangement": published requires EWSR1 !Structural Variation of everyone, which excludes classic (EWSR1-rearranged) Ewing sarcoma - nearly every patient; Ewing-like sarcoma (Round Cell Sarcoma) is not published.
+2024-519174-39-00	correct		CD19+ r/r B-ALL (1-25) or DLBCL/PMBL (1-35); the high-risk genetic features are correctly kept out (risk_group), age union <36.
+NCT01542879	borderline	over-match	Imaging study for "a solid extra-cranial tumor like malignant lymphoma or malignant sarcoma": _SOLID_ and _LIQUID_ also cover CNS tumours and leukaemias. Ages 6-40 correct.
+NCT01949129	error	over-match	"Patients with ALL (except for patients with B-ALL)": B-Lymphoblastic Leukemia/Lymphoma is published (from the conditions seed's ALL -> B-ALL), so B-ALL patients match a T-ALL-only transplant protocol. Ages correct.
+NCT03258567	error	over-match	EBV-positive LPD (LYG, CAEBV, non-SOT PTLD) and EBV-positive B-NHL (LYG grade III, DLBCL): published also B-Lymphoblastic Leukemia/Lymphoma, not named anywhere, and the whole Mature B-Cell Neoplasms parent (54 codes). EBV status itself is not encodable. Age >=12 correct.
+NCT04150497	correct		CD22+ r/r B-ALL, 15-50.
+NCT04162353	borderline	both	Relapsed/refractory myeloma and "Plasmacytoid lymphoma": published Plasmablastic Lymphoma; the registry term more likely means lymphoplasmacytic lymphoma, which is not published. Myeloma correct.
+NCT04248569	error	loses	Cohort C: "DNAJB1-PRKACA fusion transcript positive solid tumor malignancies, non-FLC solid tumors" (adults) is not published; only fibrolamellar carcinoma with the fusion. Cohorts A/B and the fusion correct.
+NCT04305548	correct		Advanced mesenchymal chondrosarcoma with HEY1-NCOA2 fusion, >=16.
+NCT04546399	correct		First-relapse CD19+ B-ALL, 1-30; Ph+ and ABL-class Ph-like exclusions written as ABL1/ABL2/CSF1R/PDGFRB !SV. MYC !SV stands for the Burkitt exclusion, a slight over-exclusion of MYC-rearranged B-ALL; B-LLy cannot be separated from B-ALL in OncoTree.
+NCT04588922	error	both	"relapsed or refractory hematologic malignancies (AML, CLL/SLL and lymphoma)" plus newly diagnosed high-risk AML: the step publishes only AML and APL, so CLL/SLL and lymphoma patients are lost at step level; APL, excluded in the text ("acute promyelocytic leukemia (APL) patients are not included"), is published.
+NCT04684368	error	over-match	Newly diagnosed CNS NGGCT of the suprasellar/pineal region; "Patients with pure germinoma ... are excluded": Germinoma is published, and Non-Seminomatous Germ Cell Tumor is the testicular branch. The CNS germ cell entities and ages 3-<30 are correct.
+NCT04758000	correct		Osteosarcoma or Ewing sarcoma (bone sarcoma maintenance), >=14. Ewing sarcoma of soft tissue is a minor over-match.
+NCT04793919	correct		Newly diagnosed PML-RARA APL, <18 (partner written "RARα", unverified, as in the first audit).
+NCT04928677	correct		r/r primary extra-cranial solid tumour with GPC3 expression (IHC, not encodable), 1-<22. _SOLID_ also covers CNS tumours, a minor over-match.
+NCT05069220	correct		Neural crest tumours (neuroblastoma, NET, pheochromocytoma, paraganglioma) for imaging, 1-80.
+NCT05230758	correct		After primary therapy for medulloblastoma, ependymoma, craniopharyngioma or germ cell tumours, 7-21 (cognition study); "any other brain tumour ... at the discretion of the Study PI" is not encodable.
+NCT05660473	correct		De novo Ph-negative ALL, 14-60. BCR and ABL1 are excluded as "Any Variation" rather than as a fusion, a slight over-exclusion.
+NCT05807035	error	loses	"advanced solid cancers or hematological cancers (lymphomas only)": published _SOLID_ only, so lymphoma patients are lost. No age limit stated, none published.
+NCT05999994	correct		Paediatric master protocol, 1-39; disease is "measurable or evaluable ... by RECIST", i.e. solid tumours, so _SOLID_ fits; the addenda's own criteria are not in the record.
+NCT06027086	correct		Metastatic/unresectable FLC with DNAJB1-PRKACA, >=12.
+NCT06080191	correct		CD19+ relapsed B-ALL after alloHSCT or multiply refractory, 1-35.
+NCT06084819	correct		R/R AML, 14-75.
+NCT06099366	error	over-match	Standard-risk B-ALL, 1-<10; TCF3-HLF exclusion written, but the t(9;22) (BCR-ABL1) and t(4;11) (KMT2A-AFF1) exclusions are not, so those high-risk patients match. Hypodiploidy/iAMP21 not encodable.
+NCT06130579	error	over-match	MDS or TP53-mutated AML post alloHSCT, 12-65: B-ALL, T-ALL and ALAL are published because the text floor read "acute leukemia" inside the classification name "International Consensus Classification of Myeloid Neoplasms and Acute Leukemia". A false positive of the text floor (needs a naming guard like the RECIST one).
+NCT06307600	correct		CD19+ r/r B-ALL (Ph+ after TKIs allowed), 3-70.
+NCT06456892	correct		Newly diagnosed intermediate/high-risk RMS, 1-18.
+NCT06516679	error	both	Infant leukaemia: "ALL or ALAL (lymphoid predominant)", diagnosed <1 year. ALAL is not published (loses), and the registry's maximumAge 2 years gives <3, so 1-2-year-olds match (over-match).
+NCT06561074	correct		r/r T-ALL / T-LLy, 1 month-21 years.
+NCT06563245	error	over-match	Newly diagnosed classical HL, 2-<35, "Patients with nodular lymphocyte-predominant HL" excluded: published also the Hodgkin Lymphoma parent, which includes NLPHL. The text floor's "Hodgkin lymphoma" row fires inside "classical Hodgkin lymphoma" (needs a "classical" guard).
+NCT06625190	correct		r/r high-risk solid tumours listed by type plus "other high-risk solid tumors with <10% expected survival" (_SOLID_), 6 months-25 years.
+NCT06664411	error	over-match	Untreated DLBCL, "Patient is >= 18 years of age": published age >=14 (the registry minimumAge), so 14-17-year-olds match.
+NCT06742463	error	over-match	R/R T-ALL/LBL, 14-<75: AML and ALAL are published because the text floor read "acute leukemia" in "T-cell acute leukemia/lymphoma" - the "acute leukemia" row has no lineage guard (the veto removed B-ALL only).
+NCT06783816	error	over-match	CD19/CD22/BCMA-positive haematological malignancies (B-ALL, B-NHL, myeloma), 15-80: _LIQUID_ (from "hematologic malignancies"), T-ALL and the whole NHL parent are published, so AML, T-ALL and T/NK lymphomas match. The markers themselves are correctly kept out of the gene criteria.
+NCT06807606	correct		AML, ALL, other acute leukaemias, MDS or CMML relapsed after a first alloHSCT, 0-60 (no disease_status any more, so the "in morphologic remission" wording no longer restricts).
+NCT06856187	correct		Unresectable colorectal adenocarcinoma, second line; no age stated, none published.
+NCT06910124	correct		Newly diagnosed myeloma on lenalidomide maintenance; no age stated.
+NCT07087002	error	over-match	R/R medulloblastoma or other CNS embryonal tumours (ETMR, pineoblastoma, ATRT, "CNS neuroblastoma, FOXR2-activated"), 1-30: peripheral Neuroblastoma and Ganglioneuroblastoma are published because the text floor's neuroblastoma row fires inside "CNS neuroblastoma" (needs a "CNS" guard).
+NCT07144254	correct		R/R osteosarcoma, 1-30.
+NCT07152041	borderline	loses	Newly diagnosed Ph+ B-ALL, 1 month-<18, with BCR-ABL1 required: correct, but the diagnosis is the subtype leaf "B-ALL with t(9;22)", so a patient coded with the B-ALL parent plus the fusion as a genomic finding would not match; the parent with the required fusion would be safer.
+NCT07297667	error	over-match	GPNMB-high ASPS (>=15), "renal cell carcinoma (excluding clear cell)" and TNBC (>=18): the Renal Cell Carcinoma parent (18 codes) includes clear cell RCC; the triple-negative requirement sits on one arm only, and TNBC is reduced to Breast Invasive Ductal Carcinoma; the >=18 for RCC/TNBC is folded into >=15.
+NCT07445438	correct		Diagnostic multi-omics study for any haematological malignancy, >2 years: _LIQUID_ plus the named groups.
+NCT07490288	borderline	over-match	Newly diagnosed AML or MDS/AML (10-20% blasts), >=14; the APL, RUNX1-RUNX1T1 and BCR-ABL1 exclusions are written per gene. The Myelodysplastic Syndromes parent admits low-blast MDS the text does not.
+NCT07493161	correct		Newly diagnosed Ph+ (BCR-ABL1) ALL, >=14; BCR-ABL1 required.
+NCT07529782	error	loses	R/R myeloma "aged >=18 years": the registry's maximumAge "18 Years" (a registry error) is published as <19, so every patient over 18 is lost - the whole adult trial population.
+NCT07635056	correct		R/R high-risk neuroblastoma, 1-39.
