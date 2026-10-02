@@ -1,0 +1,81 @@
+trial_id	verdict	effect	cause	note
+2022-502668-20-00	correct			NTRK1-3 fusion required (OR); ETV6 correctly kept out (IFS/CMN/SBC with ETV6 rearrangement - in practice ETV6-NTRK3, still an NTRK3 fusion).
+2022-502741-10-00	correct			KMT2A fusion or NPM1 mutation required of every phase (OR).
+2023-504311-32-00	correct			BCR-ABL1 required; T315I/V299L excluded ("Documented prior history of T315I or V299L").
+2023-504999-25-00	error	loses	subgroup-exclusion	CHIP-AML22 master protocol: FLT3 !SV comes from "Additional exclusion criteria for the induction randomization: Patients with FLT3-ITD/NPM1wt" - those patients go to the quizartinib sub-study instead, so excluding FLT3-ITD for everyone loses them.
+2023-506782-56-00	correct			RET mutation required (MTC).
+2023-507598-16-00	error	loses	subgroup-exclusion	PNOC022 (DMG): "Thalamic H3K27M DMG" is excluded in some cohorts only (site-based), but H3 K27M is published as excluded for everyone in all four H3 genes, which excludes nearly every DMG patient. The inclusion H3 genes were correctly kept out (cohort_specific); exclusion genes get no role check.
+2023-507702-13-00	correct			RET alteration required of every cohort (the "conditional" role note is spurious; the tree is right).
+2023-508081-15-00	borderline		exclusion-proxy	MYC !SV stands for the Burkitt exclusion ("leukemia ... with FAB L3 morphology and/or a MYC translocation"); B-ALL with a MYC rearrangement is rare.
+2023-508953-16-00	correct			NTRK fusion required (HGG with NTRK fusion).
+2023-509810-13-00	correct			Ph+ excluded (BCR/ABL1 !SV); the high-risk genetic features correctly kept out as risk_group.
+2023-510063-35-00	error	loses	missing-alternative	at least one of the following: a. CCNE1 amplification b. FBXW7 deleterious mutations c. Proprietary gene [PPP2R1A, per the conditions] deleterious mutations: PPP2R1A is not published, so those patients are lost.
+2024-510578-25-00	error	loses	germline-and-subgroup-exclusion	SIOP-HRMB: the germline exclusion ("germline TP53, APC, PTCH1, SUFU, PALB2, BRCA2") is published as a tumour exclusion, which excludes the "somatic SHH-TP53 mutant tumours" the inclusion names as high-risk; MYCN amplification is excluded for everyone although only "Non-WNT/non-SHH Group 4 ... with MYCN amplification and no other high-risk factor" is excluded and MYC/MYCN-amplified tumours are an inclusion feature.
+2024-510691-20-00	error	loses	missing-alternative	FIREFLY-1: Arms 2 and 3 take "activating BRAF mutation or RAF fusion" / "activating RAF fusion"; only BRAF is published, so RAF1 (CRAF) fusions are lost.
+2024-511336-28-00	error	loses	gene-among-nongenetic-routes	The VHR alterations (KMT2A::AFF1, TP53, TCF3-PBX1, TCF3::HLF) are one route; the others are MRD after SCT/CAR-T, insufficient remission before SCT, or a second SCT, and low hypodiploidy is a non-gene alternative in the same list. Requiring the genes loses every MRD-route patient.
+2024-512469-15-00	correct			FLT3 ITD/TKD required in both phases.
+2024-512606-25-00	correct			ROS1 or NTRK1-3 fusion required; ALK is in the title only, not in the criteria.
+2024-513412-10-00	correct			ALK aberration required (IHC enough for ALCL, so Any Variation is right).
+2024-513455-33-00	borderline		text-describes-one-cohort	REGOBONE: the CTIS eligibility text describes only the CIC-rearranged sarcoma cohort, so CIC SV follows the text; the registry conditions (osteosarcoma, Ewing, chondrosarcoma, chordoma) suggest closed cohorts.
+2024-514243-29-01	correct			Ph+/BCR-ABL ALL excluded.
+2024-514266-39-00	correct			ALK rearrangement or activating ALK mutation required of every cohort.
+2024-515174-27-00	error	loses	gene-among-nongenetic-routes	DAN-CART (also in audit 2): VHR genetics are one of several B-ALL routes (very early relapse, MRD, second relapse, relapse after HSCT) and B-NHL has none; the genes are required of everyone.
+2024-516807-17-00	correct			ALK+ ALCL as ALK SV (ALK+ ALCL is the NPM1::ALK fusion in nearly all cases).
+2024-516896-34-00	error	loses	example	EPILOGUE: "activating RAF alteration (e.g. KIAA1549::BRAF fusion, BRAF V600E mutation, RAF1-fusions)" published as exactly those three, so other BRAF fusions and non-V600E BRAF mutations are lost. The NF-1 diagnosis exclusion as NF1 !Any Variation also excludes somatic NF1 (germline published as tumour).
+2024-517133-40-00	error	loses	subgroup-as-gene	COGNITO-MB: "SHH-activated MB" (a molecular subgroup) published as SHH Any Variation; SHH-MB is driven by PTCH1/SUFU/SMO, not SHH, so nearly every eligible patient is lost.
+2024-517253-27-00	correct			Ph+ (BCR::ABL1) ALL excluded.
+2024-518316-39-00	borderline		expression-alternative	CRLF2/JAK2/EPOR lesions required, as written; "or CRLF2 expression on leukemic cells' surface" is a non-genomic alternative that CRLF2 Any Variation only catches if the record carries the rearrangement.
+2024-518871-74-00	correct			MET amplification required.
+2024-519261-21-00	correct			EWSR1::WT1 required for DSRCT.
+2025-521390-14-00	correct			KMT2A-r, NUP98-r or NPM1-mut, as written; the extra NPM1 !SV has no textual basis but excludes no eligible patient (MLL-PTD exclusion not written: minor over-match).
+2025-522019-40-00	correct			Ph+ (ABL1 SV) or ABL-class Ph-like (ABL1/ABL2 SV); T315I allowed.
+2025-522138-29-00	error	loses	defining-alteration-contradiction	Ph+ CML: BCR SV required and ABL1 !Structural Variation published (from the exclusion "BCR::ABL mutation with known resistance"); every Ph+ CML carries the BCR::ABL1 fusion, so nobody can match.
+2025-522190-11-01	error	loses	subgroup-exclusion	AIEOP-BFM ALL 2025: "Patients < 1 year of age with KMT2A-rearranged B-ALL if enrollment in a study specifically designed for these patients is possible" published as KMT2A !SV for everyone, so every KMT2A-r ALL patient over 1 year is lost.
+2025-522279-27-00	error	over-match	wrong-category	REVEAL-ND: the FLT3 ITD exclusion (which applies to all) is published as FLT3 !Structural Variation; ITD is recorded as a mutation, so FLT3-ITD patients still match (over-match only).
+NCT03093116	error	loses	missing-alternative	TRIDENT-1: ALK, ROS1, NTRK1-3 rearrangement (phase 1) and ROS1 or NTRK1-3 fusion (phase 2) published as ROS1 only, so NTRK fusion patients are lost.
+NCT03150576	error	loses	gene-among-nongenetic-routes	TNBC ... OR germline BRCA mutation positive, HER2 negative: BRCA1/2 are required of everyone, so TNBC without gBRCA is lost; ER and HER2 negativity (expression) are written as ESR1/ERBB2 !Any Variation.
+NCT03383575	correct			IDH2 R140/R172 required; the high-risk MDS genes correctly dropped as alternative_route.
+NCT03959085	correct			known MYC translocation associated with mature (Burkitt) B-cell ALL, regardless of blast immunophenotype excluded as MYC !SV; it applies to everyone.
+NCT04166409	error	loses	exclusion-too-broad	LGG without a BRAFV600E mutation published as BRAF !Mutation, so LGG with a non-V600E BRAF mutation is lost; NF1 correctly kept out as germline.
+NCT04196413	correct			H3 K27M/K27I required (H3-3A/B, H3C2/C3, Any Variation: slightly wide, over-match only).
+NCT04305548	correct			HEY1::NCOA2 required for mesenchymal chondrosarcoma.
+NCT04329728	error	loses	example	CLL/SLL arm: del(17p)/TP53 mutation is one example of iwCLL high-risk features ("such as primary resistance ... or progression <3 years ... or del(17p)/TP53"), published as required, so high-risk CLL without TP53 is lost.
+NCT04469764	error	loses	subgroup-inclusion	CDK4/6 activation features applies to the ovarian cohort and "lack of CCNE amplification or RB loss" to the endometrial cohort; all four genes are published together, so endometrial patients need a CDK4/6 alteration and are lost.
+NCT04793919	correct			PML::RARA required (partner unverified, so the PML SV alone is applied).
+NCT04811560	correct			KMT2A, NPM1, NUP98 or NUP214 alterations required.
+NCT04855656	correct			CCNE1 amplification, FBXW7 or PPP2R1A deleterious mutation, as written (the same programme as 2023-510063-35-00, where PPP2R1A was hidden as "proprietary gene").
+NCT04872543	error	loses	expression-alternative	PRC2 loss MPNST (e.g. IHC loss of H3K27me2/me3 and/or inactivating mutations in EED, SUZ12, EZH2): the IHC route is lost, and most PRC2-loss MPNST are diagnosed by H3K27me3 IHC.
+NCT04901702	error	loses	subgroup-inclusion	EWSR1::FLI1 (Ewing, phase 2) required of everyone, so the phase 1 recurrent non-CNS solid tumours are lost; "or other EWS rearrangement" (EWSR1::ERG) is lost too.
+NCT05099003	error	loses	exclusion-too-broad	without BRAF V600 or IDH1 mutations published as BRAF !Mutation, losing HGG with non-V600 BRAF mutations; the H3 K27M-wild-type stratum's exclusion omits H3-3A (the commonest K27M gene), an over-match.
+NCT05118789	error	loses	defining-alteration-contradiction	ARROS-1: "known oncogenic driver alteration other than ROS1" published as ROS1 !Any Variation at step level, while every arm requires ROS1 SV; nobody can match.
+NCT05272709	error	loses	expression-alternative	CURATE: "MMRd, confirmed by either loss of MSH2/MSH6/MLH1/PMS2 by IHC OR loss-of-function mutation of MMR gene(s)": the IHC route is lost (MMR mutations required).
+NCT05372640	error	loses	subgroup-inclusion	NUTM1 SV (the NUT carcinoma expansion cohort) required of everyone; the dose-escalation cohort takes any metastatic solid tumour, including breast cancer, and is lost.
+NCT05533697	error	over-match	wrong-category	Arm 2b "no known EGFR or ALK positive tumor mutations": ALK published as !Mutation, so ALK-fusion NSCLC still matches (over-match only); scoped to the right arm.
+NCT05544526	correct			H3 K27M DMG: H3 genes required.
+NCT05588141	correct			IDH1 or IDH2 mutation required.
+NCT05629702	correct			BRAF mutation will be excluded applies to everyone; Any Variation also excludes rare BRAF fusions in GBM.
+NCT05640830	error	loses	expression-alternative	HER2-positive ... IHC 3+ or SISH+ (or FISH) ... or significant overexpression of HER2 protein: ERBB2 amplification required, so IHC 3+ and proteomic-only HER2-positive patients are lost.
+NCT05783323	correct			NTRK1-3 fusion required.
+NCT06031688	correct			MET exon 14 skipping required; the other drivers correctly dropped as examples.
+NCT06130579	correct			TP53-mutated myeloid malignancy (the title's "TP53+") required.
+NCT06193759	error	over-match	subgroup-as-gene	IMPACT: "Group A patients with medulloblastoma of the SHH subtype" (a molecular subgroup) published as SHH !Any Variation; SHH-MB rarely carries an SHH variant, so they still match (over-match only).
+NCT06247787	correct			APL (PML::RARA) excluded; JMML genes correctly dropped as alternative routes.
+NCT06262438	error	loses	wrong-category	FLT3-ITD required as FLT3 Structural Variation; an ITD is recorded as a mutation (in-frame insertion), so FLT3-ITD+ patients do not match. NPM1 wild type correctly written as NPM1 !Any Variation.
+NCT06411821	error	loses	subgroup-inclusion	Identified mutation in MAPK pathway genes, including but not limited to ARAF, BRAF ... NF1 (for primary cohort; no mutation needed for exploratory cohort): required of everyone, so the exploratory cohort is lost, and "not limited to" makes the list examples.
+NCT06519682	error	loses	expression-alternative	RRD HGG "by tumor IHC showing functional loss of MMR gene expression ... or prior germline testing confirming CMMRD or Lynch": tumour MMR variants are required, so IHC-only and germline-only patients are lost.
+NCT06611839	correct			IDH1-mutated AML required.
+NCT06666348	borderline		germline-route	NF1 or KIAA1549::BRAF pLGG, as written; NF1 can be "based on clinical NIH criteria" (no tumour variant) and the V600E exclusion is widened to BRAF !Mutation (patients eligible by NF1 with a non-V600E BRAF mutation are rare).
+NCT06744504	correct			RUNX1::RUNX1T1 required; APL (PML::RARA) and BCR::ABL1 AML excluded, as written.
+NCT06789198	correct			DNAJB1::PRKACA required.
+NCT06961669	error	loses	subgroup-inclusion	MYC + BCL2/BCL6 rearrangement ("double or triple hit" HGBL) is one entity in a list of eligible B-cell lymphomas, and the trial also takes myeloma and B-ALL; the rearrangements are required of everyone.
+NCT07013565	correct			ALK+ ALCL required; ALK-negative ALCL excluded.
+NCT07159620	error	loses	gene-among-nongenetic-routes	ETP-ALL and "near-ETP-ALL" are defined by immunophenotype; "T-ALL with myeloid mutations" is the third route. The mutations are required of everyone, and ASXL2, SF3B1, TET2, BCOR, BCORL1 from the same list are missing.
+NCT07196644	correct			MET amplification required.
+NCT07211958	correct			NPM1 mutation required.
+NCT07232134	correct			ML-DS: GATA1 mutation (somatic) required with AML/MDS.
+NCT07306299	correct			one or more of the following mutations: H3.3K27M, H3.1K27M, H3.3G34R, BRAF V600E, PIK3CA H1047R, IDH1 R132H, or EGFRvIII, all published as alternatives.
+NCT07328087	error	loses	exclusion-too-broad	MSS or pMMR ... no evidence of dMMR/MSI-H status or POLE ultramutated phenotype published as !Any Variation on MLH1/MSH2/MSH6/PMS2/POLE, so an MSS tumour with any variant in those genes (a VUS, a passenger mutation) is lost.
+NCT07328425	correct			EWSR1::WT1 required for DSRCT.
+NCT07356154	correct			NPM1c, KMT2A or NUP98 translocation required.
+NCT07466316	error	loses	subgroup-inclusion	Intermediate-risk RMS enrols by "FOXO1 fusion status" for both fusion-negative (stage 2/3 group III; stage 4 <10 y) and fusion-positive patients; FOXO1 SV is required of everyone, so every fusion-negative patient is lost.
+NCT07564453	correct			Ph+ (BCR::ABL1) ALL excluded.
