@@ -868,3 +868,202 @@ def diagnoses_from_conditions(conditions, trial_id=""):
                     found.append(name)
                 break
     return found
+
+
+_GROUP_ALIAS = re.compile(r'\(same as "(.+)"\)$')
+
+
+def _term_pattern(term, case_sensitive):
+    """
+    The regex for one ref/diagnosis_groups.tsv term: whole words, hyphen and
+    space interchangeable, an optional plural on the last word ("y" also as
+    "ies"), either apostrophe.
+    """
+    words = [w for w in re.split(r"[\s-]+", term.strip()) if w]
+    parts = [re.escape(w).replace("'", "['’]") for w in words]
+    last = words[-1]
+    if last.endswith("y") and not case_sensitive:
+        parts[-1] = re.escape(last[:-1]) + "(?:y|ies)"
+    else:
+        parts[-1] += "s?"
+    body = r"[\s-]+".join(parts)
+    return re.compile(rf"(?<![A-Za-z0-9]){body}(?![A-Za-z0-9])", 0 if case_sensitive else re.I)
+
+
+@lru_cache(maxsize=1)
+def _diagnosis_groups():
+    """
+    The rows of config.DIAGNOSIS_GROUP_FILE_PATH, longest term first, as
+    (term, pattern, guard, targets). `(same as "x")` rows take x's targets; a
+    target that is not an Oncotree display name or a wildcard is dropped with
+    a warning, and a row left with none is dropped. Empty when the file is
+    absent.
+    """
+    path = getattr(config, "DIAGNOSIS_GROUP_FILE_PATH", "")
+    try:
+        handle = open(path, newline="")
+    except OSError:
+        return ()
+    raw = {}
+    with handle:
+        for row in csv.reader(handle, delimiter="\t"):
+            if not row or row[0].lstrip().startswith("#") or len(row) < 2:
+                continue
+            term, target = row[0].strip(), row[1].strip()
+            if term and target:
+                raw[term] = (target, row[2].strip() if len(row) > 2 else "")
+
+    def targets_of(term, seen=()):
+        target = raw[term][0]
+        alias = _GROUP_ALIAS.match(target)
+        if not alias:
+            return [t.strip() for t in target.split(";") if t.strip()]
+        other = alias.group(1)
+        if other not in raw or other in seen:
+            logger.warning(f"Diagnosis group {term!r}: alias of {other!r}, which is not a row")
+            return []
+        return targets_of(other, seen + (term,))
+
+    groups = []
+    for term, (_, guard) in raw.items():
+        targets = []
+        for target in targets_of(term):
+            if canonical_diagnosis(target) == target:
+                targets.append(target)
+            else:
+                logger.warning(
+                    f"Diagnosis group {term!r}: target {target!r} dropped, not an Oncotree name"
+                )
+        if not targets:
+            continue
+        # A term in capitals is an abbreviation and is matched as written:
+        # "ALL" must not fire on "all patients".
+        case_sensitive = term.isupper()
+        guard_re = None
+        if guard:
+            # Two forms. Without "§" the guard is written against the text
+            # just before the term and ends in "$". With "§" it is matched
+            # against before + "§" + after, the term itself replaced by "§",
+            # so one regex can look both ways ("§\s*United"). Either way it
+            # must start at a word boundary, so that "B" in the ALL guard is
+            # the lineage letter and not the end of "IIB".
+            guard_re = re.compile(rf"(?:^|[^A-Za-z0-9])(?:{guard})", 0 if case_sensitive else re.I)
+        groups.append((term, _term_pattern(term, case_sensitive), guard_re, tuple(targets)))
+    groups.sort(key=lambda g: -len(g[0]))
+    return tuple(groups)
+
+
+_HYPHENS = str.maketrans({c: "-" for c in "\u2010\u2011\u2012\u2013\u2014\u2212"})
+# A term inside the name of an assessment method, or naming someone's
+# expertise, is not a population: "Response Evaluation Criteria in Solid
+# Tumors", "RANO criteria for patients with HGG", "pathologists with expertise
+# in bone sarcomas". Applied to every term, besides the row's own guard.
+_ASSESSMENT_CRITERIA = re.compile(
+    r"\b(?:(?:criteria|evaluation|assessment)\s+(?:in|for)\s+(?:(?:patients|participants)\s+with\s+)?"
+    r"|(?:expertise|experience|speciali[sz]ed|expert)\s+(?:in|with)\s+)$",
+    re.I,
+)
+# Characters of context a row guard sees on each side of the term.
+_GUARD_WINDOW = 80
+_B_ALL = "B-Lymphoblastic Leukemia/Lymphoma"
+_T_ALL = "T-Lymphoblastic Leukemia/Lymphoma"
+# What the lineage veto removes: the targets of the other lineage, when an
+# unqualified ALL, LBL or NHL floors both and the text names one lineage.
+_LINEAGE_TARGETS = {
+    "B": {_B_ALL, "Mature B-Cell Neoplasms"},
+    "T": {_T_ALL, "Mature T and NK Neoplasms"},
+}
+
+
+def _bracketed_repeat(text, start, ends, targets):
+    """A match's targets, or those of the term it abbreviates in brackets."""
+    head = text[max(0, start - 4) : start]
+    m = re.search(r"\s*\(\s*$", head)
+    if m:
+        previous = start - (len(head) - m.start())
+        if previous in ends:
+            return ends[previous]
+    return targets
+
+
+_LINEAGE_CUES = {
+    "B": re.compile(
+        r"(?<![A-Za-z0-9])(?:B-ALL|BCP-ALL|B-LBL|B-NHL|B-cell precursor|B[- ]cell (?:acute )?lymphoblastic|"
+        r"B[- ]cell (?:non-Hodgkin|lymphoma|malignanc)|mature B|B[- ]lineage|B-precursor|precursor B|"
+        r"pre-B|CD19|CD20|CD22)(?![A-Za-z0-9])",
+        re.I,
+    ),
+    "T": re.compile(
+        r"(?<![A-Za-z0-9])(?:T-ALL|T-LBL|T-NHL|T[- ]cell (?:acute )?lymphoblastic|"
+        r"T[- ]cell (?:non-Hodgkin|lymphoma|malignanc)|NK[- ]cell|NK/T|T/NK|T[- ]lineage|"
+        r"T-precursor|precursor T|ETP|CD1a|CD5|CD7|CD30)(?![A-Za-z0-9])",
+        re.I,
+    ),
+}
+
+
+def diagnoses_from_text(text, trial_id=""):
+    """
+    Oncotree terms for the populations a text names, from
+    ref/diagnosis_groups.tsv: the floor added to the model's diagnosis answer
+    when config.DIAGNOSIS_TEXT_FLOOR is on (src/mapping/diagnosis).
+
+    Built for what the 2026-10-02 audit found the model leaves out (doc/runs/
+    2026-10-02-3.4-audit.md): group words it answers with one example ("soft
+    tissue or bone sarcoma" -> Liposarcoma), pre-2021 WHO names with no node
+    of that name (anaplastic astrocytoma, DIPG), and bases named in the text
+    rather than the conditions ("any solid tumour").
+
+    Where matches overlap the longest term wins, so "non-Hodgkin lymphoma"
+    never also fires "Hodgkin lymphoma". A match whose guard fires on the
+    text just before it (a lineage prefix before "ALL") adds nothing but
+    still claims its span. Order-stable and deduplicated.
+    """
+    if not text:
+        return []
+    # Same length, so match offsets still index the original text.
+    text = text.translate(_HYPHENS)
+    matches = []
+    for term, pattern, guard, targets in _diagnosis_groups():
+        for m in pattern.finditer(text):
+            before = text[max(0, m.start() - _GUARD_WINDOW) : m.start()]
+            context = before
+            if guard is not None and "§" in guard.pattern:
+                context = before + "§" + text[m.end() : m.end() + _GUARD_WINDOW]
+            # A guarded match still claims its span and adds nothing, so a
+            # shorter term inside it cannot fire instead: "B-cell non-Hodgkin
+            # lymphoma" must not become "Hodgkin lymphoma".
+            blocked = bool(guard and guard.search(context)) or bool(
+                _ASSESSMENT_CRITERIA.search(before)
+            )
+            matches.append((m.start(), m.end(), term, () if blocked else targets))
+    matches.sort(key=lambda x: (-(x[1] - x[0]), x[0]))
+    taken, chosen = [], []
+    for start, end, term, targets in matches:
+        if any(start < e and s < end for s, e in taken):
+            continue
+        taken.append((start, end))
+        chosen.append((start, term, targets))
+    # An abbreviation in brackets right after a term ("B-cell non-Hodgkin
+    # lymphoma (NHL)") is the same mention and takes that term's targets -
+    # empty when the term was blocked.
+    ends = {end: targets for start, end, _, targets in matches if (start, end) in taken}
+    chosen = [
+        (start, term, _bracketed_repeat(text, start, ends, targets))
+        for start, term, targets in chosen
+    ]
+    found, seen = [], set()
+    for _, _term, targets in sorted(chosen):
+        for target in targets:
+            if target not in seen:
+                seen.add(target)
+                found.append(target)
+    # An unqualified "ALL" in a trial that states its lineage elsewhere ("B-ALL"
+    # in the title, "CD19 positive" in another bullet) means that lineage only.
+    lineages = {name for name, cue in _LINEAGE_CUES.items() if cue.search(text)}
+    if len(lineages) == 1:
+        other = _LINEAGE_TARGETS["T" if lineages.pop() == "B" else "B"]
+        found = [t for t in found if t not in other]
+    if found:
+        logger.info(f"{trial_id} | text names {sorted({t for _, t, _ in chosen})}: floor {found}")
+    return found

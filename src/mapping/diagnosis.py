@@ -7,6 +7,7 @@ diagnosis step is given (diagnosis_text, per config.DIAGNOSIS_INPUT).
 Moved from src/clinical_trials_gov.py on 2026-09-29 (step 11, phase 2).
 """
 
+import re
 from collections.abc import Iterable
 
 from loguru import logger
@@ -184,6 +185,19 @@ def diagnosis_text(
     return legacy
 
 
+_EXCLUSION_HEADING = re.compile(r"(?im)^\s*exclusion criteria\s*:?")
+
+
+def population_text(diagnosis_input: str) -> str:
+    """
+    The part of the diagnosis input that states who is eligible: everything
+    before the first "Exclusion Criteria" heading (title, conditions and the
+    inclusion criteria in the labelled input).
+    """
+    m = _EXCLUSION_HEADING.search(diagnosis_input or "")
+    return (diagnosis_input or "")[: m.start()] if m else (diagnosis_input or "")
+
+
 def seed_and_map_diagnosis(
     trial_id: str, conditions_list: Iterable[str] | None, eligibility_criteria: str = ""
 ) -> tuple[list[str], list[str]]:
@@ -227,6 +241,24 @@ def seed_and_map_diagnosis(
                 f"{trial_id} | Eligibility mapping did not return {sorted(overlooked)}, "
                 f"which the trial's own conditions name outright. Kept from the conditions."
             )
+
+    # The populations the text names in words the model does not map: group
+    # words ("soft tissue or bone sarcoma"), pre-2021 WHO names ("anaplastic
+    # astrocytoma"), "any solid tumour". Added after the model call, like the
+    # wildcards below, so the prompts - and the saved answers a replay reads -
+    # are unchanged.
+    import config
+
+    if getattr(config, "DIAGNOSIS_TEXT_FLOOR", False) and eligibility_criteria:
+        known = set(seeded) | set(from_eligibility)
+        from_text = [
+            t
+            for t in rv.diagnoses_from_text(population_text(eligibility_criteria), trial_id)
+            if t not in known
+        ]
+        if from_text:
+            logger.info(f"{trial_id} | Text floor adds {from_text}")
+            seeded = list(seeded) + from_text
 
     # A basket is a basket whatever else the conditions name. The wildcards
     # used to be reached only when nothing specific was found, so a

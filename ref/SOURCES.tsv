@@ -26,3 +26,4 @@ ref/gene_synonym_addendum.tsv	curated	this repository
 ref/scope_overrides.tsv	curated	this repository				
 ref/translocation_fusions.tsv	curated	this repository				
 ref/local_trial_info.csv	curated	this repository				
+ref/diagnosis_groups.tsv	curated	this repository				

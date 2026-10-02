@@ -616,7 +616,11 @@ def _provenance_columns(block):
     """The trials.tsv columns for a file's _provenance block; empty without one."""
     block = block if isinstance(block, dict) else {}
     llm = block.get("llm") or {}
-    prompts = [f"{k}={llm[k]}" for k in ("genomic_prompt", "diagnosis_input") if llm.get(k)]
+    prompts = [
+        f"{k}={llm[k]}"
+        for k in ("genomic_prompt", "diagnosis_input", "diagnosis_text_floor")
+        if llm.get(k)
+    ]
     return {
         "mapped_at": block.get("mapped_at") or "",
         "mapped_run": block.get("run_id") or "",

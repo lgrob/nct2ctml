@@ -2,6 +2,23 @@
 
 What changed in this fork after the initial retargeting, newest first. Moved from CHANGES.md on 2026-09-28 (improvement plan step 13); the entries are unchanged. Measured decisions are in [decisions/](decisions/), mapping runs and queue reviews in [runs/](runs/).
 
+## A diagnosis floor from the inclusion text, on by default (2026-10-02)
+
+`ref/diagnosis_groups.tsv` (110 terms, drafted by Claude, revised by the user)
+names how eligibility texts state a population - glioma and sarcoma groups,
+pre-2021 WHO names, leukaemia and lymphoma groups, baskets - and
+`reference_validation.diagnoses_from_text` adds the matching Oncotree terms to
+the model's diagnosis answer when `DIAGNOSIS_TEXT_FLOOR` is on (the default
+since this entry; mapped files record the setting in `_provenance`). It reads the title, conditions and inclusion criteria, runs after
+the model call so prompts and replays are unchanged, and never removes a term.
+Guards: per-row lineage and subtype guards, two-sided where a guard contains
+"§" (the table's TODO 2), a global guard against assessment criteria and stated
+expertise, bracketed abbreviations inheriting their term, and a lineage veto
+for unqualified ALL/LBL/NHL. Measured by replay of the gpt-oss corpus: 9 of the
+audit's 11 missing-diagnosis failures closed, benchmark recall unchanged, NCT
+population precision 0.810 -> 0.681, CTIS unchanged
+([decision](decisions/2026-10-02-diagnosis-text-floor.md), adopted). 19 tests.
+
 ## The cluster job's map-all maps every trial (2026-10-01)
 
 `scripts/run_ollama_mapping.sh map-all` ran `main.py map --all`, which maps

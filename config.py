@@ -109,6 +109,13 @@ ANTHROPIC_TEMPERATURE = _env("ANTHROPIC_TEMPERATURE", 0, float)
 # diagnoses 113 -> 57, recall unchanged; inclusion_only lost 16 curated
 # diagnoses and was rejected. See doc/decisions/2026-09-27-2.8-diagnosis-input.md.
 DIAGNOSIS_INPUT = _env("DIAGNOSIS_INPUT", "labelled")
+# Add the populations the title, conditions and inclusion criteria name
+# (ref/diagnosis_groups.tsv) to the model's diagnosis answer: a floor, never a
+# removal, applied after the model call so its prompts are unchanged. On since
+# 2026-10-02 (doc/decisions/2026-10-02-diagnosis-text-floor.md): closes 9 of
+# the audit's 11 missing-diagnosis failures, benchmark recall unchanged, NCT
+# precision 0.810 -> 0.681 where the curated keys are narrower than the text.
+DIAGNOSIS_TEXT_FLOOR = _env("DIAGNOSIS_TEXT_FLOOR", True, bool)
 # Inclusion genomic prompt (roadmap 2.9): "baseline" (unchanged), "rules"
 # (explicit rules: only genes every entering patient must carry) or "roles"
 # (each gene is classified; only requirements enter the match tree, the rest
@@ -192,6 +199,10 @@ DIAGNOSIS_SYNONYM_FILE_PATH = "ref/diagnosis_synonyms.tsv"
 # Short condition strings the conditions seed must never resolve to a diagnosis,
 # because the abbreviation means something else (GCT, RAS). See the file header.
 DIAGNOSIS_ABBREV_EXCLUSION_FILE_PATH = "ref/diagnosis_abbrev_exclusions.tsv"
+# How eligibility text names a population (group words, pre-2021 WHO names,
+# baskets), mapped to the Oncotree terms it covers. Read only when
+# DIAGNOSIS_TEXT_FLOOR is on. See the file header.
+DIAGNOSIS_GROUP_FILE_PATH = "ref/diagnosis_groups.tsv"
 
 # Mapping configuration
 # Number of days back to consider for mapping trials

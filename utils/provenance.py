@@ -167,6 +167,7 @@ def llm_settings():
         "model": platform.model,
         "genomic_prompt": config.GENOMIC_PROMPT,
         "diagnosis_input": config.DIAGNOSIS_INPUT,
+        "diagnosis_text_floor": getattr(config, "DIAGNOSIS_TEXT_FLOOR", False),
     }
     kind = name.lower()
     if kind == "anthropic":

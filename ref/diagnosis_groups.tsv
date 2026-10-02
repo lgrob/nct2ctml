@@ -1,0 +1,264 @@
+# How an eligibility text names a POPULATION, mapped to the Oncotree terms it
+# covers. Added to the model's diagnosis answer as a floor (never removes
+# anything), from the INCLUSION criteria and title only.
+# Tab-delimited: term, Oncotree targets (";"-separated), unless preceded by
+# (regex, optional), why.
+# Matching: whole words, case-insensitive, hyphen/space interchangeable, an
+# optional plural "s"; the longest matching term wins where terms overlap.
+# A term in ALL CAPS is matched case-sensitively (abbreviations).
+#
+# Format as before: every active row is term / targets or (same as "term") /
+# unless-preceded-by regex / why, one token per cell, no "/" in a term, and
+# (same as ...) rows carry no regex. Rows that would need more than that are
+# commented out at the end.
+#
+# --- revision 2026-10-02: what changed and why ---
+# sarcomas: IMT kept (paediatric NRSTS studies enrol it without naming it);
+#   GIST and desmoid out; NRSTS = STS minus RMS and Ewing of soft tissue; the
+#   STS, NRSTS and soft-tissue-or-bone lists rebuilt from two base sets - the
+#   old NRSTS and soft-tissue-or-bone rows had lost glomangiosarcoma,
+#   malignant glomus tumour and dendritic cell sarcoma; more qualifiers for
+#   bare "sarcoma"; Ewing-like, ESFT, pPNET, Askin.
+# gliomas: DMG explicit in the HGG and GBM rows; oligodendroglioma also maps
+#   to pediatric-type diffuse LGG, with an anaplastic row to stop that;
+#   pHGG/pLGG, glioneuronal tumour, optic pathway glioma.
+# leukaemias: lineage guard on ALL extended (Ph+, Ph-like, B/T-lineage, BCP,
+#   ETP, CD19/CD20/CD22 for B, CD1a/CD3/CD7 for T); "acute leukemia" guarded against MPAL wording and given a longer
+#   ALAL row; lymphoblastic lymphoma/LBL; leukemia-or-lymphoma basket.
+# new sections: lymphomas (CHECK node names), neuroblastoma, paediatric
+#   basket wordings; British and -ical spellings that fell through; the
+#   basket rows carry the pre-text half of the enumeration guard ("selected",
+#   "the following" ...), which works as a lookbehind today.
+# abbreviation rows now use (same as "...") so they cannot drift from the
+#   full-name row - except ALL, LBL and the two British leukaemia rows, which
+#   keep explicit targets because they carry a regex. Rows that need loader
+#   work sit at the end, commented out.
+#
+# --- 2026-10-02, the CHECKs against the pinned release (ref/oncotree_file.txt) ---
+# present and added: Rosette-forming Glioneuronal Tumor of the Fourth
+#   Ventricle and Papillary Glioneuronal Tumor (low-grade glioma, glioneuronal
+#   tumor); Extraskeletal Myxoid Chondrosarcoma (filed under Bone /
+#   Chondrosarcoma, added to STS, NRSTS and STB), Rhabdoid Cancer (kidney) and
+#   Malignant Rhabdoid Tumor of the Liver as the extracranial rhabdoid tumours
+#   (STS, NRSTS, STB). DMG, H3 G34 hemispheric and infant-type hemispheric
+#   glioma are children of Pediatric-Type Diffuse High-Grade Glioma.
+# not in the release: High-Grade Astrocytoma with Piloid Features, Diffuse
+#   Leptomeningeal Glioneuronal Tumor, Extraskeletal Osteosarcoma.
+# the lymphoma and neuroblastic node names all resolve as written.
+#
+# --- 2026-10-02, after the first replay measurement (doc/decisions/2026-10-02-diagnosis-text-floor.md) ---
+# ALL / LBL guards: "B-cell precursor" added, and a ")" or "]" may sit between
+#   the lineage and the term ("B-lineage (CD19 positive) ALL").
+# "sarcoma of bone", "sarcomas of bone": explicit targets plus an Ewing/Kaposi
+#   guard, so "Ewing sarcoma of bone or soft tissue" no longer floors the
+#   whole bone set.
+# In the loader, not the table: Unicode hyphens folded to "-" before
+#   matching; one global guard on every term against assessment criteria
+#   ("Response Evaluation Criteria in Solid Tumors", "RANO criteria for
+#   patients with HGG"); an unqualified ALL/LBL keeps only the lineage the
+#   population text names when it names exactly one.
+# NHL, non-Hodgkin('s) lymphoma: explicit targets and a lineage guard (B-cell,
+#   mature B, T-cell, NK ...), the NHL counterpart of the ALL guard.
+# rhabdomyosarcoma, RMS: a subtype guard (embryonal, alveolar, spindle cell,
+#   sclerosing, pleomorphic, fusion status), so a named subtype stays itself.
+#
+# --- loader TODOs ---
+# 1. normalise before matching: tumour->tumor, -aemia->-emia, haemat->hemat,
+#    -ical->-ic, "central nervous system"->"CNS", strip "'s"/"’s", treat "/"
+#    as a space (DIPG/DMG, ALL/LBL, relapsed/refractory), optional "s" on
+#    every noun of a term (sarcomas of bone). Retires the duplicate rows.
+# 2. DONE 2026-10-02. guard syntax: a guard containing "§" is matched against
+#    before+"§"+after (<=80 chars a side), so one regex can look both ways;
+#    guards without "§" keep today's before-text semantics.
+# 3. global guards on every term: enumeration
+#    "(selected|specific|certain|the following|one of the following)[- ]?§"
+#    and "§\s*(of the following|limited to|restricted to|listed below)"
+#    - fixes "solid tumors of the following types" and the same failure for
+#    "soft tissue sarcoma of the following subtypes"; negation
+#    "(other than|except|excluding|exclusion of|ineligible|must not have|no
+#    history of)[- ]?(\S+[- ]){0,3}§" - not bare "no"/"not"/"non", because
+#    "non-brainstem high-grade glioma" must keep firing. A same-sentence
+#    "(excluding X)" after the term: block the floor, or subtract X.
+# 4. ALL-CAPS titles (CTIS): skip case-sensitive abbreviations when a title
+#    is mostly upper-case, or "... IN ALL PATIENTS" floors B-ALL and T-ALL.
+# 5. tokens: _CNS_ (every code in the CNS/Brain branch),
+#    _SOLID_EXTRACRANIAL_ (_SOLID_ minus _CNS_), _NONE_ (a longer term that
+#    exists only to stop a shorter one from firing); and two tokens in one
+#    cell ("_SOLID_;_LIQUID_") or an _ANY_ token for the basket rows.
+# 6. named sets (STS, NRSTS, BONE) so the sarcoma rows cannot drift again.
+#
+# --- gliomas: WHO 2021 renamed most of them; trial texts use the old names
+high-grade glioma	High-Grade Glioma, NOS;Pediatric-Type Diffuse High-Grade Glioma;Diffuse Midline Glioma, H3 K27-Altered;Glioblastoma, IDH-Wildtype;Astrocytoma, IDH-Mutant, Grade 3;Astrocytoma, IDH-Mutant, Grade 4;Oligodendroglioma, IDH-mutant, and 1p/19q-Codeleted, Grade 3;Anaplastic Ganglioglioma;Anaplastic Pleomorphic Xanthoastrocytoma		every grade 3-4 glioma code; the model returned only High-Grade Glioma, NOS (2024-511350-41-00). DMG listed explicitly in case it is not a child of the pediatric-type parent in the pinned release; H3 G34 hemispheric and infant-type hemispheric glioma assumed to sit under that parent. CHECK: add High-Grade Astrocytoma with Piloid Features if the release has it
+HGG	(same as "high-grade glioma")		abbreviation of the above
+pHGG	(same as "high-grade glioma")		paediatric HGG is one word, so the HGG row never reaches it
+low-grade glioma	Low-Grade Glioma, NOS;Pediatric-Type Diffuse Low-Grade Glioma;Pilocytic Astrocytoma;Pilomyxoid Astrocytoma;Ganglioglioma;Gangliocytoma;Pleomorphic Xanthoastrocytoma;Dysembryoplastic Neuroepithelial Tumor;Desmoplastic Infantile Astrocytoma;Desmoplastic Infantile Ganglioglioma;Astrocytoma, IDH-Mutant, Grade 2;Oligodendroglioma, IDH-mutant, and 1p/19q-Codeleted, Grade 2;Rosette-forming Glioneuronal Tumor of the Fourth Ventricle;Papillary Glioneuronal Tumor	§(?i:\s*\(?(World Health Organization\s*)?\(?WHO\)?\s*grade\s*(I|1)(?![IV0-9])(?!\s*(-|to|or|and|/|,)\s*(II|2)))	WHO grade 1-2 gliomas and glioneuronal tumours; "Low-Grade Glioma, NOS" alone is one leaf and has no pilocytic astrocytoma (NCT06381570). CHECK: append Rosette-Forming Glioneuronal Tumor, Papillary Glioneuronal Tumor and Diffuse Leptomeningeal Glioneuronal Tumor here and in the glioneuronal tumor row if the release has them. SEGA left out: a trial that means it names it; guarded since TODO 2: "LGG WHO grade I" means grade 1 only and is left to the model (NCT07110246)
+LGG	Low-Grade Glioma, NOS;Pediatric-Type Diffuse Low-Grade Glioma;Pilocytic Astrocytoma;Pilomyxoid Astrocytoma;Ganglioglioma;Gangliocytoma;Pleomorphic Xanthoastrocytoma;Dysembryoplastic Neuroepithelial Tumor;Desmoplastic Infantile Astrocytoma;Desmoplastic Infantile Ganglioglioma;Astrocytoma, IDH-Mutant, Grade 2;Oligodendroglioma, IDH-mutant, and 1p/19q-Codeleted, Grade 2;Rosette-forming Glioneuronal Tumor of the Fourth Ventricle;Papillary Glioneuronal Tumor	§(?i:\s*\(?(World Health Organization\s*)?\(?WHO\)?\s*grade\s*(I|1)(?![IV0-9])(?!\s*(-|to|or|and|/|,)\s*(II|2)))	abbreviation of the above; explicit targets (it carries a regex now); same grade-I guard
+pLGG	(same as "low-grade glioma")		paediatric LGG is one word, so the LGG row never reaches it
+glioneuronal tumor	Ganglioglioma;Gangliocytoma;Dysembryoplastic Neuroepithelial Tumor;Desmoplastic Infantile Astrocytoma;Desmoplastic Infantile Ganglioglioma;Low-Grade Glioma, NOS;Rosette-forming Glioneuronal Tumor of the Fourth Ventricle;Papillary Glioneuronal Tumor		"low-grade glioma or glioneuronal tumour" is the standard pLGG trial wording; see the CHECK on the low-grade glioma row
+glioneuronal tumour	(same as "glioneuronal tumor")		British spelling
+optic pathway glioma	Pilocytic Astrocytoma;Low-Grade Glioma, NOS		NF1 trials name the population by site; nearly always pilocytic
+optic glioma	(same as "optic pathway glioma")		variant
+visual pathway glioma	(same as "optic pathway glioma")		variant
+OPG	(same as "optic pathway glioma")		abbreviation
+low-grade astrocytoma	Pilocytic Astrocytoma;Pilomyxoid Astrocytoma;Pleomorphic Xanthoastrocytoma;Astrocytoma, IDH-Mutant, Grade 2;Pediatric-Type Diffuse Low-Grade Glioma;Low-Grade Glioma, NOS		as NCT06381570 words it
+anaplastic astrocytoma	Astrocytoma, IDH-Mutant, Grade 3;Pediatric-Type Diffuse High-Grade Glioma		pre-2021 name, no Oncotree node of that name; children's AA is a paediatric-type HGG (NCT03911388, NCT05956821)
+diffuse astrocytoma	Astrocytoma, IDH-Mutant, Grade 2;Pediatric-Type Diffuse Low-Grade Glioma		pre-2021 name
+fibrillary astrocytoma	Astrocytoma, IDH-Mutant, Grade 2;Pediatric-Type Diffuse Low-Grade Glioma		pre-2021 name (NCT05956821)
+glioblastoma	Glioblastoma, IDH-Wildtype;Astrocytoma, IDH-Mutant, Grade 4;Pediatric-Type Diffuse High-Grade Glioma;Diffuse Midline Glioma, H3 K27-Altered		"GBM" in a child is a paediatric-type HGG under WHO 2021; DMG explicit for the same reason as in the high-grade glioma row
+GBM	(same as "glioblastoma")		abbreviation
+oligodendroglioma	Oligodendroglioma, IDH-mutant, and 1p/19q-Codeleted;Pediatric-Type Diffuse Low-Grade Glioma		no node named plainly "Oligodendroglioma" (NCT05956821); in a child, oligodendroglioma-like histology is mostly a pediatric-type diffuse LGG (FGFR1, MYB), not IDH-mutant/codeleted
+anaplastic oligodendroglioma	Oligodendroglioma, IDH-mutant, and 1p/19q-Codeleted, Grade 3		longer term, so the oligodendroglioma row (with its LGG target) does not fire on it
+oligoastrocytoma	Oligodendroglioma, IDH-mutant, and 1p/19q-Codeleted;Astrocytoma, IDH-Mutant		retired entity; WHO 2021 splits it into these two
+diffuse intrinsic pontine glioma	Diffuse Midline Glioma, H3 K27-Altered;Diffuse Pediatric-Type High-Grade Glioma, H3-Wildtype and IDH-Wildtype		radiological diagnosis; about 20% of DIPGs are H3-wildtype - the EZHIP-driven ones are still DMG, H3 K27-altered, the rest fall under the H3-wildtype/IDH-wildtype entity
+DIPG	(same as "diffuse intrinsic pontine glioma")		abbreviation (2024-511350-41-00, NCT07584499)
+diffuse midline glioma	Diffuse Midline Glioma, H3 K27-Altered		the WHO 2021 name; matched here because the model sometimes skips it
+DMG	(same as "diffuse midline glioma")		abbreviation
+ependymoma	Ependymomal Tumor		the parent covers anaplastic, myxopapillary and subependymoma (6 codes); "Ependymoma" alone is one leaf
+medulloblastoma	Medulloblastoma;Desmoplastic/Nodular Medulloblastoma;Large Cell/Anaplastic Medulloblastoma;Medulloblastoma with Extensive Nodularity;Melanotic Medulloblastoma		Oncotree keeps the histological variants beside "Medulloblastoma", not under it
+CNS embryonal tumor	Embryonal Tumor		the parent (27 codes)
+CNS embryonal tumour	(same as "CNS embryonal tumor")		British spelling
+embryonal tumor of the CNS	(same as "CNS embryonal tumor")		word order variant
+embryonal tumour of the CNS	(same as "CNS embryonal tumor")		British spelling
+embryonal brain tumor	(same as "CNS embryonal tumor")		variant
+embryonal brain tumour	(same as "CNS embryonal tumor")		British spelling
+# --- sarcomas: a group word, which the model answered with one example
+# SET STS (27): the malignant entities of the Soft Tissue branch plus MPNST
+#   and IMT. Left out, each a separate category with its own protocols and
+#   never meant unnamed: GIST (the imatinib trials name it; adult STS wording
+#   excludes it), desmoid / aggressive fibromatosis, DFSP, solitary fibrous
+#   tumour, tenosynovial giant cell tumour, hemangioma, leiomyoma, myxoma.
+#   Kept although WHO-intermediate: Infantile Fibrosarcoma and Inflammatory
+#   Myofibroblastic Tumor, because paediatric NRSTS studies enrol both without
+#   naming them (EpSSG's IMT series comes out of NRSTS 2005); the adult STS
+#   trials that mean to exclude IMT say so. Defensible either way
+#   (WHO-malignant, rarely meant): EHE, PEComa, Dendritic Cell Sarcoma. CHECK
+#   and add if the release has them:
+#   Extraskeletal Myxoid Chondrosarcoma, Extraskeletal Osteosarcoma,
+#   extracranial Malignant Rhabdoid Tumor. Organ-branch sarcomas (uterine,
+#   breast) are not here: paediatric index.
+# SET NRSTS (25) = STS minus Rhabdomyosarcoma and Ewing Sarcoma of Soft
+#   Tissue (the Ewing family runs on its own protocols in COG/EpSSG usage, so
+#   NRSTS lists leave it out). DSRCT kept - CHECK, borderline the same way.
+# SET BONE (5): the malignant entities of the Bone branch; chondroblastoma
+#   and giant cell tumour of bone left out.
+# SET STB (32) = STS + BONE. The lists below are derived by hand from these
+#   four - keep them in step until TODO 6.
+soft tissue sarcoma	Rhabdomyosarcoma;Synovial Sarcoma;Ewing Sarcoma of Soft Tissue;Desmoplastic Small-Round-Cell Tumor;Liposarcoma;Leiomyosarcoma;Angiosarcoma;Fibrosarcoma;Infantile Fibrosarcoma;Myxofibrosarcoma;Epithelioid Sarcoma;Clear Cell Sarcoma;Alveolar Soft Part Sarcoma;Undifferentiated Pleomorphic Sarcoma/Malignant Fibrous Histiocytoma/High-Grade Spindle Cell Sarcoma;Malignant Peripheral Nerve Sheath Tumor;Low-Grade Fibromyxoid Sarcoma;Intimal Sarcoma;Round Cell Sarcoma, NOS;Sarcoma, NOS;Soft Tissue Myoepithelial Carcinoma;Radiation-Associated Sarcoma;Glomangiosarcoma;Malignant Glomus Tumor;Dendritic Cell Sarcoma;Epithelioid Hemangioendothelioma;Perivascular Epithelioid Cell Tumor;Inflammatory Myofibroblastic Tumor;Extraskeletal Myxoid Chondrosarcoma;Rhabdoid Cancer;Malignant Rhabdoid Tumor of the Liver		SET STS
+STS	(same as "soft tissue sarcoma")		abbreviation of the above
+non-rhabdomyosarcoma soft tissue sarcoma	Synovial Sarcoma;Desmoplastic Small-Round-Cell Tumor;Liposarcoma;Leiomyosarcoma;Angiosarcoma;Fibrosarcoma;Infantile Fibrosarcoma;Myxofibrosarcoma;Epithelioid Sarcoma;Clear Cell Sarcoma;Alveolar Soft Part Sarcoma;Undifferentiated Pleomorphic Sarcoma/Malignant Fibrous Histiocytoma/High-Grade Spindle Cell Sarcoma;Malignant Peripheral Nerve Sheath Tumor;Low-Grade Fibromyxoid Sarcoma;Intimal Sarcoma;Round Cell Sarcoma, NOS;Sarcoma, NOS;Soft Tissue Myoepithelial Carcinoma;Radiation-Associated Sarcoma;Glomangiosarcoma;Malignant Glomus Tumor;Dendritic Cell Sarcoma;Epithelioid Hemangioendothelioma;Perivascular Epithelioid Cell Tumor;Inflammatory Myofibroblastic Tumor;Extraskeletal Myxoid Chondrosarcoma;Rhabdoid Cancer;Malignant Rhabdoid Tumor of the Liver		SET NRSTS
+NRSTS	(same as "non-rhabdomyosarcoma soft tissue sarcoma")		abbreviation of the above
+non-RMS soft tissue sarcoma	(same as "non-rhabdomyosarcoma soft tissue sarcoma")		variant
+non-rhabdomyosarcomatous soft tissue sarcoma	(same as "non-rhabdomyosarcoma soft tissue sarcoma")		variant
+bone sarcoma	Osteosarcoma;Ewing Sarcoma;Chondrosarcoma;Chordoma;Adamantinoma		SET BONE
+sarcoma of bone	Osteosarcoma;Ewing Sarcoma;Chondrosarcoma;Chordoma;Adamantinoma	(Ewing'?s?|Kaposi)[- ]?$	word order variant; guarded, so "Ewing sarcoma of bone or soft tissue" stays Ewing (2023-503322-39-00)
+sarcomas of bone	Osteosarcoma;Ewing Sarcoma;Chondrosarcoma;Chordoma;Adamantinoma	(Ewing'?s?|Kaposi)[- ]?$	the plural sits on the first noun (until TODO 1); guarded, so "Ewing sarcoma of bone or soft tissue" stays Ewing (2023-503322-39-00)
+malignant bone tumor	(same as "bone sarcoma")		as above
+malignant bone tumour	(same as "bone sarcoma")		British spelling
+soft tissue or bone sarcoma	Rhabdomyosarcoma;Synovial Sarcoma;Ewing Sarcoma of Soft Tissue;Desmoplastic Small-Round-Cell Tumor;Liposarcoma;Leiomyosarcoma;Angiosarcoma;Fibrosarcoma;Infantile Fibrosarcoma;Myxofibrosarcoma;Epithelioid Sarcoma;Clear Cell Sarcoma;Alveolar Soft Part Sarcoma;Undifferentiated Pleomorphic Sarcoma/Malignant Fibrous Histiocytoma/High-Grade Spindle Cell Sarcoma;Malignant Peripheral Nerve Sheath Tumor;Low-Grade Fibromyxoid Sarcoma;Intimal Sarcoma;Round Cell Sarcoma, NOS;Sarcoma, NOS;Soft Tissue Myoepithelial Carcinoma;Radiation-Associated Sarcoma;Glomangiosarcoma;Malignant Glomus Tumor;Dendritic Cell Sarcoma;Epithelioid Hemangioendothelioma;Perivascular Epithelioid Cell Tumor;Inflammatory Myofibroblastic Tumor;Osteosarcoma;Ewing Sarcoma;Chondrosarcoma;Chordoma;Adamantinoma;Extraskeletal Myxoid Chondrosarcoma;Rhabdoid Cancer;Malignant Rhabdoid Tumor of the Liver		SET STB (NCT06474676)
+bone or soft tissue sarcoma	(same as "soft tissue or bone sarcoma")		word order variant; implemented as an alias of the row above
+bone and soft tissue sarcoma	(same as "soft tissue or bone sarcoma")		word order variant
+soft tissue and bone sarcoma	(same as "soft tissue or bone sarcoma")		word order variant
+relapsed or refractory sarcoma	(same as "soft tissue or bone sarcoma")		an unqualified sarcoma population (NCT07725380); the qualifier is part of the term so that "Ewing sarcoma", "Kaposi sarcoma" etc. never fire it
+refractory sarcoma	(same as "soft tissue or bone sarcoma")		as above
+recurrent sarcoma	(same as "soft tissue or bone sarcoma")		as above
+metastatic sarcoma	(same as "soft tissue or bone sarcoma")		as above
+advanced sarcoma	(same as "soft tissue or bone sarcoma")		as above
+unresectable sarcoma	(same as "soft tissue or bone sarcoma")		as above
+high-grade sarcoma	(same as "soft tissue or bone sarcoma")		as above; "high-grade undifferentiated pleomorphic sarcoma" does not contain it
+pediatric sarcoma	(same as "soft tissue or bone sarcoma")		as above
+paediatric sarcoma	(same as "soft tissue or bone sarcoma")		British spelling
+childhood sarcoma	(same as "soft tissue or bone sarcoma")		as above
+rhabdomyosarcoma	Rhabdomyosarcoma	(embryonal|alveolar|spindle[- ]cell|sclerosing|spindle[- ]cell/sclerosing|pleomorphic|botryoid|fusion[- ]positive|fusion[- ]negative|FOXO1 fusion[- ](positive|negative)|PAX3|PAX7)[- ]?§|§\s*types|classification of §	the parent (6 codes); the model returned only Embryonal RMS (2024-511350-41-00); subtype guard, as for the qualified sarcomas: "alveolar rhabdomyosarcoma" is not the RMS group (NCT05304585); two-sided since TODO 2: "RMS types included under ...", "International Classification of Rhabdomyosarcoma" (NCT05304585)
+RMS	Rhabdomyosarcoma	(embryonal|alveolar|spindle[- ]cell|sclerosing|spindle[- ]cell/sclerosing|pleomorphic|botryoid|fusion[- ]positive|fusion[- ]negative|FOXO1 fusion[- ](positive|negative)|PAX3|PAX7)[- ]?§|§\s*types|classification of §	abbreviation; subtype guard, as for the qualified sarcomas: "alveolar rhabdomyosarcoma" is not the RMS group (NCT05304585); two-sided since TODO 2: "RMS types included under ...", "International Classification of Rhabdomyosarcoma" (NCT05304585)
+Ewing sarcoma	Ewing Sarcoma;Ewing Sarcoma of Soft Tissue		Oncotree has a bone and a soft tissue node
+Ewing's sarcoma	(same as "Ewing sarcoma")		spelling variant
+Ewing family of tumors	(same as "Ewing sarcoma")		older name; "Ewing sarcoma family of tumours" already contains "Ewing sarcoma"
+ESFT	(same as "Ewing sarcoma")		abbreviation
+peripheral primitive neuroectodermal tumor	(same as "Ewing sarcoma")		older name; "PNET" alone left out, it is ambiguous (CNS PNET, pancreatic NET)
+peripheral primitive neuroectodermal tumour	(same as "Ewing sarcoma")		British spelling
+pPNET	(same as "Ewing sarcoma")		abbreviation (mixed case, so matched case-insensitively)
+Askin tumor	(same as "Ewing sarcoma")		chest wall Ewing
+Askin tumour	(same as "Ewing sarcoma")		British spelling
+Ewing-like sarcoma	Round Cell Sarcoma, NOS		CIC- and BCOR-altered sarcomas; "Ewing-like sarcoma" does not contain the whole-word term "Ewing sarcoma", so it needs its own row
+# --- leukaemias
+acute leukemia	Acute Myeloid Leukemia;B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma;Acute Leukemias of Ambiguous Lineage	(mixed[- ]phenotype|biphenotypic|bilineal)[- ]?$	any lineage (2023-506581-31-00); "acute myeloid leukemia" does not contain this term, so needs no guard; the guard stops it inside "mixed phenotype acute leukemia"
+acute leukaemia	Acute Myeloid Leukemia;B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma;Acute Leukemias of Ambiguous Lineage	(mixed[- ]phenotype|biphenotypic|bilineal)[- ]?$	British spelling
+acute leukemia of ambiguous lineage	Acute Leukemias of Ambiguous Lineage		longer term, so "acute leukemia" (which would add AML and both ALLs) does not fire on it
+acute leukemias of ambiguous lineage	Acute Leukemias of Ambiguous Lineage		the plural sits on the first noun (until TODO 1)
+acute leukaemia of ambiguous lineage	Acute Leukemias of Ambiguous Lineage		British spelling
+acute leukaemias of ambiguous lineage	Acute Leukemias of Ambiguous Lineage		British spelling, plural
+mixed phenotype acute leukemia	Acute Leukemias of Ambiguous Lineage		the WHO name; the guard on "acute leukemia" only blocks, this row maps it
+mixed phenotype acute leukaemia	Acute Leukemias of Ambiguous Lineage		British spelling
+MPAL	Acute Leukemias of Ambiguous Lineage		abbreviation
+acute lymphoblastic leukemia	B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma	(B|T|B-cell|T-cell|B cell|T cell|precursor B|precursor T|B-precursor|T-precursor|B-cell precursor|BCP|pre-B|B-lineage|T-lineage|mature B|ETP|Ph\+|Ph-positive|Philadelphia chromosome[- ]positive|Philadelphia-positive|Ph-like|BCR-ABL1[- ]positive|(CD19|CD20|CD22|CD1a|CD3|CD7)([- ]?positive|\+)?)[)\]]?[- ]?§|§\s*[(,]?\s*(B-ALL|T-ALL|BCP-ALL|B-LBL|T-LBL|of B|of T|B-cell|T-cell|B cell|T cell|B-lineage|T-lineage|B-precursor|T-precursor)	no lineage stated means either; Oncotree has no lineage-free ALL node, and the conditions table maps it to B-ALL only (2025-522052-13-00). Ph+ and Ph-like are B-lineage in practice, ETP is T; CD19/CD20/CD22 define B, CD1a/CD3/CD7 T (the immunotherapy trials are worded by marker). A lineage stated AFTER the term ("acute lymphoblastic leukemia (B-ALL)", "ALL of B-cell lineage") still slips through until TODO 2; two-sided since TODO 2: a lineage stated after the term blocks it too
+acute lymphoblastic leukaemia	B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma	(B|T|B-cell|T-cell|B cell|T cell|precursor B|precursor T|B-precursor|T-precursor|B-cell precursor|BCP|pre-B|B-lineage|T-lineage|mature B|ETP|Ph\+|Ph-positive|Philadelphia chromosome[- ]positive|Philadelphia-positive|Ph-like|BCR-ABL1[- ]positive|(CD19|CD20|CD22|CD1a|CD3|CD7)([- ]?positive|\+)?)[)\]]?[- ]?§|§\s*[(,]?\s*(B-ALL|T-ALL|BCP-ALL|B-LBL|T-LBL|of B|of T|B-cell|T-cell|B cell|T cell|B-lineage|T-lineage|B-precursor|T-precursor)	British spelling; two-sided since TODO 2: a lineage stated after the term blocks it too
+ALL	B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma	(B-cell precursor|B cell precursor|B|T|Ph\+?|Ph-|BCP|pre-B|B-lineage|T-lineage|ETP|Ph-like|mature B|(CD19|CD20|CD22|CD1a|CD3|CD7)([- ]?positive|\+)?)[)\]]?[- ]?§|§\s*[(,]?\s*(B-ALL|T-ALL|BCP-ALL|B-LBL|T-LBL|of B|of T|B-cell|T-cell|B cell|T cell|B-lineage|T-lineage|B-precursor|T-precursor)	case-sensitive abbreviation; a lineage prefix (B-ALL, T-ALL, BCP-ALL) blocks it. Fires on the determiner in ALL-CAPS titles until TODO 4; two-sided since TODO 2: a lineage stated after the term blocks it too
+lymphoblastic lymphoma	B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma	(B-cell precursor|B cell precursor|B|T|B-cell|T-cell|B cell|T cell|precursor B|precursor T|B-precursor|T-precursor|B-lineage|T-lineage|(CD19|CD20|CD22|CD1a|CD3|CD7)([- ]?positive|\+)?)[)\]]?[- ]?§|§\s*[(,]?\s*(B-ALL|T-ALL|BCP-ALL|B-LBL|T-LBL|of B|of T|B-cell|T-cell|B cell|T cell|B-lineage|T-lineage|B-precursor|T-precursor)	same nodes as ALL (Oncotree keeps leukemia/lymphoma together); "ALL or LBL", "T-ALL/T-LBL" wording; two-sided since TODO 2: a lineage stated after the term blocks it too
+LBL	B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma	(B-cell precursor|B cell precursor|B|T|B-cell|T-cell|BCP|pre-B|(CD19|CD20|CD22|CD1a|CD3|CD7)([- ]?positive|\+)?)[)\]]?[- ]?§|§\s*[(,]?\s*(B-ALL|T-ALL|BCP-ALL|B-LBL|T-LBL|of B|of T|B-cell|T-cell|B cell|T cell|B-lineage|T-lineage|B-precursor|T-precursor)	abbreviation; two-sided since TODO 2: a lineage stated after the term blocks it too
+leukemia or lymphoma	_LIQUID_		paediatric phase 1 basket wording; longest match beats "acute leukemia" on "acute leukemia or lymphoma", and _LIQUID_ contains it anyway
+leukaemia or lymphoma	_LIQUID_		British spelling
+lymphoma or leukemia	_LIQUID_		word order variant
+lymphoma or leukaemia	_LIQUID_		British spelling
+# --- lymphomas (new; node names from the 2021 lymphoid branch - CHECK them
+# against the pinned release). Mature B-Cell Neoplasms also holds CLL/SLL and
+# the plasma cell neoplasms, so the NHL floor is wider than any paediatric
+# trial means; if that over-matches, replace the two parents by the
+# paediatric leaves (Burkitt Lymphoma; Diffuse Large B-Cell Lymphoma, NOS;
+# Primary Mediastinal (Thymic) Large B-Cell Lymphoma; the two Anaplastic
+# Large-Cell Lymphoma nodes; Pediatric-Type Follicular Lymphoma; Peripheral
+# T-Cell Lymphoma, NOS) - CHECK names.
+non-Hodgkin lymphoma	Mature B-Cell Neoplasms;Mature T and NK Neoplasms;B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma	(B|B-cell|B cell|mature B|mature B-cell|mature B cell|aggressive B-cell|aggressive mature B-cell|T|T-cell|T cell|NK|NK-cell|T/NK|NK/T|mature T|peripheral T-cell|CD19[- ]positive|CD20[- ]positive|CD22[- ]positive)[)\]]?[- ]?§|§\s*[(,]?\s*(of\s+)?(B|T|NK)[- ](cell|lineage)	the group word; lymphoblastic lymphoma is an NHL in paediatric usage. Longest match keeps "Hodgkin lymphoma" from firing inside it; lineage guard: "B-cell non-Hodgkin lymphoma", "mature B-NHL" contain the term and must not floor T/NK (NCT05533775, NCT06508931); two-sided since TODO 2: "NHL of B-cell origin"
+non-Hodgkin's lymphoma	Mature B-Cell Neoplasms;Mature T and NK Neoplasms;B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma	(B|B-cell|B cell|mature B|mature B-cell|mature B cell|aggressive B-cell|aggressive mature B-cell|T|T-cell|T cell|NK|NK-cell|T/NK|NK/T|mature T|peripheral T-cell|CD19[- ]positive|CD20[- ]positive|CD22[- ]positive)[)\]]?[- ]?§|§\s*[(,]?\s*(of\s+)?(B|T|NK)[- ](cell|lineage)	spelling variant; lineage guard: "B-cell non-Hodgkin lymphoma", "mature B-NHL" contain the term and must not floor T/NK (NCT05533775, NCT06508931); two-sided since TODO 2: "NHL of B-cell origin"
+NHL	Mature B-Cell Neoplasms;Mature T and NK Neoplasms;B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma	(B|B-cell|B cell|mature B|mature B-cell|mature B cell|aggressive B-cell|aggressive mature B-cell|T|T-cell|T cell|NK|NK-cell|T/NK|NK/T|mature T|peripheral T-cell|CD19[- ]positive|CD20[- ]positive|CD22[- ]positive)[)\]]?[- ]?§|§\s*[(,]?\s*(of\s+)?(B|T|NK)[- ](cell|lineage)	abbreviation; lineage guard: "B-cell non-Hodgkin lymphoma", "mature B-NHL" contain the term and must not floor T/NK (NCT05533775, NCT06508931); two-sided since TODO 2: "NHL of B-cell origin"
+Hodgkin lymphoma	Hodgkin Lymphoma		the parent (classical and nodular lymphocyte-predominant)
+Hodgkin's lymphoma	(same as "Hodgkin lymphoma")		spelling variant
+Hodgkin disease	(same as "Hodgkin lymphoma")		older name
+HL	(same as "Hodgkin lymphoma")		abbreviation; "cHL" is its own word and is left to the model
+relapsed or refractory lymphoma	Hodgkin Lymphoma;Mature B-Cell Neoplasms;Mature T and NK Neoplasms;B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma		an unqualified lymphoma population; the qualifier is part of the term for the same reason as the sarcoma rows ("Burkitt lymphoma", "primary CNS lymphoma" must not fire it)
+refractory lymphoma	(same as "relapsed or refractory lymphoma")		as above
+recurrent lymphoma	(same as "relapsed or refractory lymphoma")		as above
+pediatric lymphoma	(same as "relapsed or refractory lymphoma")		as above
+paediatric lymphoma	(same as "relapsed or refractory lymphoma")		British spelling
+childhood lymphoma	(same as "relapsed or refractory lymphoma")		as above
+# --- neuroblastic
+neuroblastoma	Neuroblastoma;Ganglioneuroblastoma		Oncotree keeps Ganglioneuroblastoma beside Neuroblastoma, not under it, and trials that say neuroblastoma mean both - CHECK the two names in the PNS branch
+# --- baskets named in the text rather than the conditions
+solid tumor	_SOLID_	(selected|specific|certain|the following|one of the following|these|eligible|listed)[- ]?§|§\s*(types?\s+|subtypes?\s+)?(of the following|from the following|limited to|restricted to|listed below|as follows)	"any solid tumour" (NCT07197554); CHECK: also fires on "solid tumors of the following types: ...", which over-matches - the guard catches the pre-text cues ("selected", "the following", "these"), the post-text cue ("of the following types") needs TODO 3; "extracranial solid tumor" needs TODO 5 (row at the end); two-sided since TODO 2: the post-text enumeration cue ("solid tumors of the following types") blocks it too
+solid tumour	_SOLID_	(selected|specific|certain|the following|one of the following|these|eligible|listed)[- ]?§|§\s*(types?\s+|subtypes?\s+)?(of the following|from the following|limited to|restricted to|listed below|as follows)	British spelling; two-sided since TODO 2: the post-text enumeration cue ("solid tumors of the following types") blocks it too
+solid malignancy	_SOLID_	(selected|specific|certain|the following|one of the following|these|eligible|listed)[- ]?§|§\s*(types?\s+|subtypes?\s+)?(of the following|from the following|limited to|restricted to|listed below|as follows)	as above; two-sided since TODO 2: the post-text enumeration cue ("solid tumors of the following types") blocks it too
+hematologic malignancy	_LIQUID_	(selected|specific|certain|the following|one of the following|these|eligible|listed)[- ]?§|§\s*(types?\s+|subtypes?\s+)?(of the following|from the following|limited to|restricted to|listed below|as follows)	as above; two-sided since TODO 2: the post-text enumeration cue ("solid tumors of the following types") blocks it too
+hematological malignancy	_LIQUID_	(selected|specific|certain|the following|one of the following|these|eligible|listed)[- ]?§|§\s*(types?\s+|subtypes?\s+)?(of the following|from the following|limited to|restricted to|listed below|as follows)	-ical variant (fell through before); two-sided since TODO 2: the post-text enumeration cue ("solid tumors of the following types") blocks it too
+haematologic malignancy	_LIQUID_	(selected|specific|certain|the following|one of the following|these|eligible|listed)[- ]?§|§\s*(types?\s+|subtypes?\s+)?(of the following|from the following|limited to|restricted to|listed below|as follows)	British spelling, -ic variant (fell through before); two-sided since TODO 2: the post-text enumeration cue ("solid tumors of the following types") blocks it too
+haematological malignancy	_LIQUID_	(selected|specific|certain|the following|one of the following|these|eligible|listed)[- ]?§|§\s*(types?\s+|subtypes?\s+)?(of the following|from the following|limited to|restricted to|listed below|as follows)	British spelling; two-sided since TODO 2: the post-text enumeration cue ("solid tumors of the following types") blocks it too
+blood cancer	_LIQUID_	§\s*United	lay wording in some titles; guard: "Blood Cancer United" is an organisation (NCT05183035)
+# --- PENDING loader support: uncomment each row once the TODO it names is in
+# TODO 5
+#brain tumor	_CNS_		"recurrent or refractory primary brain tumours", "pediatric brain tumors"; the model names a few entities instead of the branch
+#brain tumour	_CNS_		British spelling
+#CNS tumor	_CNS_		as above; "primary CNS tumor" and "malignant CNS tumor" contain it
+#CNS tumour	_CNS_		British spelling
+#central nervous system tumor	_CNS_		long form (TODO 1 would fold it into "CNS tumor")
+#central nervous system tumour	_CNS_		British spelling
+#extracranial solid tumor	_SOLID_EXTRACRANIAL_		contains "solid tumor", which today floors the CNS codes this wording excludes; longest match wins once this row exists
+#extracranial solid tumour	_SOLID_EXTRACRANIAL_		British spelling
+# TODO 1 (a "/" inside a term; the matcher's word rules do not mention it)
+#relapsed/refractory sarcoma	(same as "soft tissue or bone sarcoma")		slash variant (until TODO 1)
+#relapsed/refractory lymphoma	(same as "relapsed or refractory lymphoma")		slash variant (until TODO 1)
+#relapsed/refractory malignancy	_SOLID_;_LIQUID_		slash variant (until TODO 1)
+# TODO 5 (two tokens in one cell - may already work if the loader resolves each ";"-element on its own; then uncomment)
+#relapsed or refractory malignancy	_SOLID_;_LIQUID_		paediatric phase 1 basket wording ("relapsed or refractory malignancies", "recurrent or refractory pediatric cancers"); the qualifier is part of the term so that "B-cell malignancy", "myeloid malignancy" never fire it ("hematologic malignancy" is caught by longest match anyway)
+#recurrent or refractory malignancy	_SOLID_;_LIQUID_		as above
+#refractory malignancy	_SOLID_;_LIQUID_		as above
+#pediatric malignancy	_SOLID_;_LIQUID_		as above
+#paediatric malignancy	_SOLID_;_LIQUID_		British spelling
+#childhood malignancy	_SOLID_;_LIQUID_		as above
+#pediatric cancer	_SOLID_;_LIQUID_		as above; survivorship trials ("childhood cancer survivors") also fire it - a "§\s*survivor" guard once TODO 2 is in
+#paediatric cancer	_SOLID_;_LIQUID_		British spelling
+#childhood cancer	_SOLID_;_LIQUID_		as above
+# TODO 2: DONE 2026-10-02 - the row that stood here is merged into the active
+# acute lymphoblastic leukemia rows (with the guard fixes of the same day).
+# germ cell tumours: no row yet. Oncotree spreads them over sites; candidate
+# targets (CHECK names): Germ Cell Tumor, Brain; Ovarian Germ Cell Tumor;
+# Non-Seminomatous Germ Cell Tumor; Seminoma; Extra Gonadal Germ Cell Tumor.
+# Terms: germ cell tumor, germ cell tumour, malignant germ cell tumor (the
+# first already covers it), GCT left out - it collides with giant cell tumour.
