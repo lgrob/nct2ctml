@@ -60,7 +60,9 @@ class TestRelease(unittest.TestCase):
         cls.tmp = tempfile.mkdtemp()
         cls.root = os.path.join(cls.tmp, "repo")
         subprocess.run(["git", "clone", "--quiet", ROOT, cls.root], check=True)
-        cls.version, cls.archive, cls.digest = ri.create(root=cls.root, today=DAY)
+        cls.version, cls.archive, cls.digest = ri.create(
+            root=cls.root, today=DAY, layers="reviewed"
+        )
 
     @classmethod
     def tearDownClass(cls):
@@ -116,6 +118,88 @@ class TestRelease(unittest.TestCase):
         self.assertTrue(
             any("not clean" in p and "NCT00000001.yaml" in p for p in problems), problems
         )
+
+
+@unittest.skipUnless(os.path.isdir(os.path.join(ROOT, ".git")), "not a git checkout")
+class TestAllLayersRelease(unittest.TestCase):
+    """
+    The default release: all three layers, with the CTML that is not in git
+    packed into the archive and restored for --rebuild.
+    """
+
+    MAPPED = "NCT03643276"
+    QUEUED = "NCT04221035"
+
+    @classmethod
+    def setUpClass(cls):
+        cls.env = mock.patch.dict(os.environ, IDENTITY)
+        cls.env.start()
+        cls.tmp = tempfile.mkdtemp()
+        cls.root = os.path.join(cls.tmp, "repo")
+        subprocess.run(["git", "clone", "--quiet", ROOT, cls.root], check=True)
+        # Machine output stands in as copies of reviewed files: git-ignored, so
+        # the checkout stays clean, and the reviewed copy wins in the index.
+        reviewed = os.path.join(cls.root, "ctml", "reviewed")
+        for trial, layer in ((cls.MAPPED, "cache/ctml"), (cls.QUEUED, "ctml/needs-review")):
+            os.makedirs(os.path.join(cls.root, layer), exist_ok=True)
+            shutil.copy(
+                os.path.join(reviewed, f"{trial}.yaml"),
+                os.path.join(cls.root, layer, f"{trial}.yaml"),
+            )
+        cls.version, cls.archive, cls.digest = ri.create(
+            root=cls.root, today=DAY, note="Audit 2026-10-02: 55% of published trials need a fix."
+        )
+        cls.members = ri._extract(cls.archive)
+        cls.release = json.loads(cls.members[f"{cls.version}/release.json"])
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tmp, True)
+        cls.env.stop()
+
+    def test_the_inputs_outside_git_are_in_the_archive(self):
+        self.assertEqual(self.release["layers"], "all")
+        packed = sorted(self.release["inputs_sha256"])
+        self.assertEqual(
+            packed, [f"cache/ctml/{self.MAPPED}.yaml", f"ctml/needs-review/{self.QUEUED}.yaml"]
+        )
+        for path in packed:
+            self.assertIn(f"{self.version}/inputs/{path}", self.members)
+
+    def test_the_note_is_in_release_json_and_the_tag(self):
+        self.assertIn("55%", self.release["note"])
+        message = ri.git("tag", "--list", "--format=%(contents)", self.version, root=self.root)
+        self.assertIn("55%", message)
+
+    def test_it_rebuilds_byte_identical_from_the_packed_inputs(self):
+        # Gone from the checkout: --rebuild must take them from the archive.
+        for path in self.release["inputs_sha256"]:
+            os.remove(os.path.join(self.root, path))
+        try:
+            _, _, problems = ri.verify(self.archive, rebuild=True, root=self.root)
+        finally:
+            for path in self.release["inputs_sha256"]:
+                with open(os.path.join(self.root, path), "wb") as handle:
+                    handle.write(self.members[f"{self.version}/inputs/{path}"])
+        self.assertEqual(problems, [])
+
+    def test_a_changed_input_fails(self):
+        members = dict(self.members)
+        name = f"{self.version}/inputs/cache/ctml/{self.MAPPED}.yaml"
+        members[name] += b"# edited\n"
+        forged = os.path.join(self.tmp, "forged.tar.gz")
+        with open(forged, "wb") as handle:
+            handle.write(ri.archive_bytes(members))
+        _, _, problems = ri.verify(forged, root=self.root)
+        self.assertIn(
+            f"inputs/cache/ctml/{self.MAPPED}.yaml differs from the SHA-256 in release.json",
+            problems,
+        )
+
+    def test_nothing_to_release_is_refused(self):
+        with self.assertRaises(SystemExit):
+            with mock.patch.object(ri, "input_files", return_value={}):
+                ri.create(root=self.root, today=DAY, version="index-2026.10.01.9")
 
 
 if __name__ == "__main__":

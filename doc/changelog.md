@@ -2,6 +2,17 @@
 
 What changed in this fork after the initial retargeting, newest first. Moved from CHANGES.md on 2026-09-28 (improvement plan step 13); the entries are unchanged. Measured decisions are in [decisions/](decisions/), mapping runs and queue reviews in [runs/](runs/).
 
+## Index releases cover all three layers (2026-10-02)
+
+`utils/release_index.py create` builds from all three layers by default, the
+user's choice for the first release. The index inputs outside git (the
+mapped and needs-review CTML, `ctml/out-of-scope.tsv`) are packed into the
+archive under `<tag>/inputs/` with their SHA-256 in `release.json`.
+`verify` checks them, and `--rebuild` restores them into the tagged commit's
+worktree before requiring byte-identical tables. `--note` records a caveat (the
+audit) in `release.json` and the tag; `--layers reviewed` keeps the
+curated-only release. 5 tests.
+
 ## A diagnosis floor from the inclusion text, on by default (2026-10-02)
 
 `ref/diagnosis_groups.tsv` (110 terms, drafted by Claude, revised by the user)

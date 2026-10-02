@@ -89,30 +89,50 @@ cites must be a release.
 ## Index releases
 
 A release is a frozen, numbered index that can be cited in a report and
-rebuilt later from git alone (`utils/release_index.py`):
+rebuilt later from its tag and archive (`utils/release_index.py`):
 
 ```bash
-python -m utils.release_index create                   # tag index-YYYY.MM.DD[.N] at HEAD
+python -m utils.release_index create --note "..."     # tag index-YYYY.MM.DD[.N] at HEAD
+python -m utils.release_index create --layers reviewed
 python -m utils.release_index verify releases/index-2026.10.01.tar.gz --rebuild
 ```
 
-`create` refuses to run unless the checkout is clean (no uncommitted or
-untracked files, so every input is in the commit) and `ref/` matches
-`ref/SOURCES.tsv`. It then:
+There are two kinds (`--layers`):
 
-1. builds from `ctml/reviewed` only, with `--strict`;
-2. writes `release.json`: the commit, the SHA-256 of every reviewed CTML
-   file, every reference file and every output;
-3. packs it with the four tables and `manifest.json` into
+- **`all`, the default since 2026-10-02:** the index of all three layers as
+  the pipeline publishes it. The mapped and needs-review CTML and
+  `ctml/out-of-scope.tsv` are machine output and not in git, so the archive
+  carries them under `<tag>/inputs/`, each with its SHA-256 in
+  `release.json`.
+  - Such a release rests on unreviewed mapping. Record what is known about
+    its error rate with `--note`, for example the latest audit
+    ([runs/2026-10-02-3.4-audit.md](runs/2026-10-02-3.4-audit.md)). A report
+    citing it treats a match as a lead for a curator, not an eligibility
+    decision.
+- **`reviewed`:** `ctml/reviewed` only, so everything it rests on is in git
+  and curated.
+
+`create` refuses to run unless the checkout is clean (no uncommitted or
+untracked files) and `ref/` matches `ref/SOURCES.tsv`. It then:
+
+1. builds the chosen layers with `--strict`;
+2. writes `release.json`. It records:
+   - the commit and the layers;
+   - the note;
+   - the review-status counts and the mapping settings per trial;
+   - the SHA-256 of every reviewed CTML file, every packed input, every
+     reference file and every output;
+3. packs it with the four tables, `manifest.json` and the inputs into
    `releases/<tag>.tar.gz`, byte for byte reproducible, plus a `.sha256`
    file;
-4. creates an annotated git tag at HEAD whose message records the
-   archive's SHA-256 and every output's.
+4. creates an annotated git tag at HEAD. Its message records the archive's
+   SHA-256, every output's, and the note.
 
 `verify` checks an archive against its `.sha256` file, `release.json` and the
-tag. The tag is the one record not stored beside the archive, so rewriting
-all three together still fails. `--rebuild` builds again from the tagged
-commit in a temporary worktree and requires byte-identical outputs.
+tag, packed inputs included. The tag is the one record not stored beside the
+archive, so rewriting all three together still fails. `--rebuild` builds
+again from the tagged commit in a temporary worktree, with the packed inputs
+restored, and requires byte-identical outputs.
 
 Nothing leaves the machine until you publish: `create` tags locally and
 prints the commands to push the tag and upload the archive (a GitHub

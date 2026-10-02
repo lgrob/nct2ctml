@@ -1,8 +1,21 @@
 """
 Freeze the flat index as a numbered release that a report can cite.
 
-    python -m utils.release_index create [--version index-2026.10.01]
+    python -m utils.release_index create [--version index-2026.10.01] [--note "..."]
+    python -m utils.release_index create --layers reviewed
     python -m utils.release_index verify releases/index-2026.10.01.tar.gz [--rebuild]
+
+Two kinds of release (--layers):
+
+- all (the default since 2026-10-02): the index of all three layers, mapped,
+  needs-review and reviewed, as the pipeline publishes it. The mapped and
+  needs-review CTML and ctml/out-of-scope.tsv are not in git (machine output,
+  rewritten by every run), so the archive carries them under <tag>/inputs/
+  with their SHA-256 in release.json, and --rebuild restores them into the
+  tagged commit before building. A release of this kind rests on unreviewed
+  mapping; --note records what is known about its error rate (the audit),
+  and a report citing it should say so.
+- reviewed: the curated layer only, everything in git, as described below.
 
 Why
 ---
@@ -12,8 +25,9 @@ So an index that informed a patient report is gone by the next run, and it
 cannot be rebuilt, because its inputs in cache/ were not kept. A release
 fixes that for the indexes that matter:
 
-- built from ctml/reviewed only, with --strict (a protein change that fails
-  its reference check stops the build), so it rests on nothing unreviewed;
+- built with --strict (a protein change that fails its reference check stops
+  the build); with --layers reviewed, from ctml/reviewed only, so it rests on
+  nothing unreviewed;
 - built from a clean checkout, so every input - code, ref/, ctml/reviewed,
   ref/scope_overrides.tsv - is in the commit, and the commit is tagged;
 - packed with release.json (commit, input and output SHA-256) into a
@@ -45,6 +59,12 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 RELEASES = "releases"
 PREFIX = "index-"
 SOURCE = "ctml/reviewed"
+# The index inputs that are not in git, packed into an all-layers release:
+# directories of CTML (by suffix) and single files, relative to the root.
+INPUT_DIRS = ("cache/ctml", "ctml/needs-review")
+INPUT_FILES = ("ctml/out-of-scope.tsv",)
+INPUTS = "inputs"
+LAYERS = ("all", "reviewed")
 OUTPUTS = ("trials.tsv", "trial_diagnosis.tsv", "trial_genomic.tsv", "layer_conflicts.tsv")
 RELEASE_FILE = "release.json"
 
@@ -96,19 +116,11 @@ def preflight(root=ROOT):
     return problems
 
 
-def build(out_dir, root=ROOT):
-    """Build the reviewed-only strict index of `root` into out_dir; returns its manifest."""
+def build(out_dir, root=ROOT, layers="reviewed"):
+    """Build the strict index of `root` into out_dir; returns its manifest."""
+    source = ["--source", SOURCE] if layers == "reviewed" else []
     result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "utils.build_trial_index",
-            "--source",
-            SOURCE,
-            "--strict",
-            "--out",
-            out_dir,
-        ],
+        [sys.executable, "-m", "utils.build_trial_index", *source, "--strict", "--out", out_dir],
         cwd=root,
         capture_output=True,
         text=True,
@@ -128,6 +140,24 @@ def reviewed_hashes(root=ROOT):
     }
 
 
+def input_files(root=ROOT):
+    """{relative path: bytes} of the index inputs outside git (an all-layers release)."""
+    found = {}
+    for directory in INPUT_DIRS:
+        full = os.path.join(root, directory)
+        if os.path.isdir(full):
+            for name in sorted(os.listdir(full)):
+                if name.endswith((".yaml", ".yml", ".json")):
+                    with open(os.path.join(full, name), "rb") as handle:
+                        found[f"{directory}/{name}"] = handle.read()
+    for path in INPUT_FILES:
+        full = os.path.join(root, path)
+        if os.path.exists(full):
+            with open(full, "rb") as handle:
+                found[path] = handle.read()
+    return found
+
+
 def archive_bytes(members):
     """A tar.gz of {name: bytes} that depends only on the names and contents."""
     raw = io.BytesIO()
@@ -142,7 +172,9 @@ def archive_bytes(members):
     return out.getvalue()
 
 
-def create(version=None, root=ROOT, today=None):
+def create(version=None, root=ROOT, today=None, layers="all", note=""):
+    if layers not in LAYERS:
+        sys.exit(f"--layers is one of {', '.join(LAYERS)}")
     problems = preflight(root)
     if problems:
         sys.exit("Not releasing:\n- " + "\n- ".join(problems))
@@ -153,23 +185,33 @@ def create(version=None, root=ROOT, today=None):
     if git("tag", "--list", version, root=root).strip():
         sys.exit(f"tag {version} already exists")
 
+    inputs = input_files(root) if layers == "all" else {}
+    if layers == "all" and not any(p.startswith(INPUT_DIRS) for p in inputs):
+        sys.exit("no mapped or needs-review CTML to release; map first, or use --layers reviewed")
     with tempfile.TemporaryDirectory() as out:
-        manifest = build(out, root)
+        manifest = build(out, root, layers)
         members = {}
         for name in (*OUTPUTS, "manifest.json"):
             with open(os.path.join(out, name), "rb") as handle:
                 members[f"{version}/{name}"] = handle.read()
+    for path, data in inputs.items():
+        members[f"{version}/{INPUTS}/{path}"] = data
     release = {
         "release": version,
         "commit": commit,
         "created_at": (today or datetime.now(UTC)).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "python": sys.version.split()[0],
-        "source": SOURCE,
+        "layers": layers,
+        "source": SOURCE if layers == "reviewed" else [*INPUT_DIRS, SOURCE],
         "strict": True,
+        "note": note,
         "trials": manifest["trials"],
+        "review_status": manifest["review_status"],
+        "trials_by_mapping": manifest.get("trials_by_mapping", {}),
         "outputs": {name: manifest["outputs"][name] for name in OUTPUTS},
         "reference_sha256": manifest["reference_sha256"],
         "reviewed_ctml_sha256": reviewed_hashes(root),
+        "inputs_sha256": {path: sha256_bytes(data) for path, data in sorted(inputs.items())},
         "verify": f"python -m utils.release_index verify {RELEASES}/{version}.tar.gz --rebuild",
     }
     members[f"{version}/{RELEASE_FILE}"] = (
@@ -188,10 +230,18 @@ def create(version=None, root=ROOT, today=None):
     outputs = "\n".join(
         f"  {n}  {v['rows']} rows  {v['sha256']}" for n, v in release["outputs"].items()
     )
+    if layers == "all":
+        built = (
+            f"Built at this commit with --strict from all three layers: {release['trials']} "
+            f"trials {manifest['review_status']}. The mapped and needs-review CTML "
+            f"({len(inputs)} files) are in the archive under {INPUTS}/."
+        )
+    else:
+        built = f"Built from {SOURCE} at this commit with --strict: {release['trials']} trials."
     message = (
-        f"Trial index release {version}\n\n"
-        f"Built from {SOURCE} at this commit with --strict: {release['trials']} trials.\n"
-        f"Archive {version}.tar.gz sha256 {digest}\n\n{outputs}\n"
+        f"Trial index release {version}\n\n{built}\n"
+        + (f"\n{note}\n" if note else "")
+        + f"\nArchive {version}.tar.gz sha256 {digest}\n\n{outputs}\n"
     )
     git("tag", "-a", version, "-m", message, commit, root=root)
     return version, archive, digest
@@ -223,6 +273,19 @@ def verify(archive, rebuild=False, root=ROOT):
             problems.append(f"{name} missing from the archive")
         elif sha256_bytes(data) != info["sha256"]:
             problems.append(f"{name} differs from the SHA-256 in {RELEASE_FILE}")
+    inputs = release.get("inputs_sha256", {})
+    packed = {
+        n[len(f"{version}/{INPUTS}/") :]: d
+        for n, d in members.items()
+        if n.startswith(f"{version}/{INPUTS}/")
+    }
+    if set(packed) != set(inputs):
+        problems.append(
+            f"the archive's {INPUTS}/ holds {len(packed)} files, {RELEASE_FILE} lists {len(inputs)}"
+        )
+    for path, digest in inputs.items():
+        if path in packed and sha256_bytes(packed[path]) != digest:
+            problems.append(f"{INPUTS}/{path} differs from the SHA-256 in {RELEASE_FILE}")
 
     tagged = git("rev-list", "-n", "1", version, root=root, check=False).strip()
     if not tagged:
@@ -245,7 +308,13 @@ def verify(archive, rebuild=False, root=ROOT):
             tree, out = os.path.join(tmp, "tree"), os.path.join(tmp, "out")
             git("worktree", "add", "--detach", "--quiet", tree, release["commit"], root=root)
             try:
-                build(out, tree)
+                # The inputs outside git go back where the build reads them.
+                for path, data in packed.items():
+                    target = os.path.join(tree, path)
+                    os.makedirs(os.path.dirname(target), exist_ok=True)
+                    with open(target, "wb") as handle:
+                        handle.write(data)
+                build(out, tree, release.get("layers", "reviewed"))
                 if reviewed_hashes(tree) != release["reviewed_ctml_sha256"]:
                     problems.append(
                         f"{SOURCE} at {release['commit'][:12]} differs from the release"
@@ -265,13 +334,20 @@ def main(argv=None):
     sub = ap.add_subparsers(dest="command", required=True)
     c = sub.add_parser("create", help="build, pack and tag a release from a clean checkout")
     c.add_argument("--version", help=f"release tag (default {PREFIX}YYYY.MM.DD[.N])")
+    c.add_argument(
+        "--layers",
+        choices=LAYERS,
+        default="all",
+        help="all three layers, with the CTML outside git packed in (default), or reviewed only",
+    )
+    c.add_argument("--note", default="", help="a caveat recorded in release.json and the tag")
     v = sub.add_parser("verify", help="check an archive; --rebuild also rebuilds from its commit")
     v.add_argument("archive")
     v.add_argument("--rebuild", action="store_true")
     args = ap.parse_args(argv)
 
     if args.command == "create":
-        version, archive, digest = create(args.version)
+        version, archive, digest = create(args.version, layers=args.layers, note=args.note)
         rel = os.path.relpath(archive, ROOT)
         print(f"Released {version}: {rel}\n  sha256 {digest}\n  tagged locally at HEAD\n")
         print("To publish (nothing has left this machine yet):")

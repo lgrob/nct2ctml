@@ -136,9 +136,11 @@ index manifest's `reference_drift` counts how many trials are behind.
 ## Releasing the index
 
 An index a report cites is a release, never `index/`:
-`python -m utils.release_index create` on a clean, committed checkout, then
-push the tag and store the archive
-([doc/index_guide.md](doc/index_guide.md#index-releases)).
+`python -m utils.release_index create --note "<what the latest audit found>"`
+on a clean, committed checkout, then push the tag and store the archive
+([doc/index_guide.md](doc/index_guide.md#index-releases)). The default release
+covers all three layers and packs the mapped CTML into the archive;
+`--layers reviewed` releases the curated layer alone.
 
 ## Merging upstream
 
