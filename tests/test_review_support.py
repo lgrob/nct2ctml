@@ -165,3 +165,21 @@ class TestAuditConfirmation(unittest.TestCase):
             t = next(iter(audit_confirm.audit_rows()))
             self.assertIn("treatment_list", audit_confirm.basis_ctml(t))
             self.assertTrue(audit_confirm.criteria_lines(audit_confirm.basis_ctml(t)))
+
+
+class TestSaveLineEndings(unittest.TestCase):
+    def test_a_browser_save_is_written_with_lf(self):
+        import utils.review.app as app
+
+        d = tempfile.mkdtemp()
+        path = os.path.join(d, "NCT0.yaml")
+        with open(path, "w") as f:
+            f.write("nct_id: NCT0\n")
+        with (
+            mock.patch.object(app.common, "_layer_of", return_value=(path, "needs_review")),
+            mock.patch.object(app.gate, "problems", return_value=[]),
+        ):
+            ok, _ = app.save_trial("NCT0", "nct_id: NCT0\r\nphase: II\r\n")
+        self.assertTrue(ok)
+        with open(path, newline="") as f:
+            self.assertEqual(f.read(), "nct_id: NCT0\nphase: II\n")

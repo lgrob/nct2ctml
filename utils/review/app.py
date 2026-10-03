@@ -128,7 +128,12 @@ def save_trial(trial_id, text):
     Write edited CTML, keeping the previous version as .prev. Returns (ok, message).
     Refuses anything that does not parse as a YAML mapping, so a broken paste
     cannot replace a mapped trial.
+
+    Browsers submit a textarea with CRLF line endings; they are written as LF,
+    like every other file in the layers. Until 2026-10-03 they were kept, so a
+    saved file differed from its .prev on every line (2023-508926-91-00).
     """
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
     try:
         parsed = yaml.safe_load(text)
     except yaml.YAMLError as e:
