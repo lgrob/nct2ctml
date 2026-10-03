@@ -119,6 +119,10 @@ def _parser():
     fd.add_argument(
         "--apply", action="store_true", help="write the flag and move mapped trials to review"
     )
+    sub.add_parser(
+        "audit-summary",
+        help="curator-confirmed error rates from the audit-confirmation page (utils/review/audit_confirm.py)",
+    )
     ex = sub.add_parser("exclude")
     ex.add_argument("trial")
     ex.add_argument("--reviewer", required=True)
@@ -304,6 +308,12 @@ def _cmd_flag_diagnosis_seed(args):
     )
 
 
+def _cmd_audit_summary(args):
+    import utils.review.audit_confirm as audit_confirm
+
+    print(audit_confirm.summary_text())
+
+
 def _cmd_exclude(args):
     layers = gate.exclude(args.trial, args.reviewer, args.reason)
     print(
@@ -329,6 +339,7 @@ COMMANDS = {
     "flag-age-units": _cmd_flag_age_units,
     "flag-diagnosis-seed": _cmd_flag_diagnosis_seed,
     "exclude": _cmd_exclude,
+    "audit-summary": _cmd_audit_summary,
 }
 
 

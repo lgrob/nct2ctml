@@ -2,6 +2,22 @@
 
 What changed in this fork after the initial retargeting, newest first. Moved from CHANGES.md on 2026-09-28 (improvement plan step 13); the entries are unchanged. Measured decisions are in [decisions/](decisions/), mapping runs and queue reviews in [runs/](runs/).
 
+## Review support: queue order, text gaps, audit confirmation (2026-10-03)
+
+Aids for the human reviewer, none of which decides or edits anything
+([review guide](review_guide.md#three-aids-added-2026-10-03)):
+- **`utils/review/priority.py`** orders the review app's queue: open,
+  admits children, built for children/young adults, paediatric diagnosis,
+  quick-fix flag, Kispi trial. Every point is shown.
+- **`utils/review/alignment.py`** adds "Named in the text, not in the CTML" to
+  each sheet: unpublished populations, exclusions the published diagnoses
+  still admit, unused genes and stated ages. These are highlighted orange.
+- **`utils/review/audit_confirm.py`** and the app's `/audit` pages: blind curator
+  verdicts on the third audit's trials, read as audited from the release
+  archive. `review_helper audit-summary` gives curator-confirmed rates.
+
+14 tests.
+
 ## Arms narrower than their step go to review (2026-10-03)
 
 `text_rules.arm_narrower_than_step` writes `arm_narrower_than_step` (routes

@@ -436,6 +436,21 @@ def analyse(trial_id, ref):
         + _genomic_items(got, sections, tl_genes, ref)
         + [_age_item(got, record)]
     )
+    # The opposite direction: what the text names that the CTML does not carry
+    # (utils.review.alignment). Hints only; a failure must not hide the sheet.
+    try:
+        import utils.review.alignment as alignment
+
+        texts = {
+            "inclusion": inc,
+            "exclusion": exc,
+            "title": title,
+            "conditions": "; ".join(conditions),
+        }
+        gaps = alignment.gaps(ctml, texts)
+        ages_stated = alignment.stated_ages(texts)
+    except Exception as e:  # pragma: no cover - shown on the sheet instead
+        gaps, ages_stated = [], [f"(text check unavailable: {type(e).__name__}: {e})"]
     return {
         "trial_id": trial_id,
         "layer": layer,
@@ -447,4 +462,6 @@ def analyse(trial_id, ref):
         "items": items,
         "flags": sorted({i.flag for i in items if i.flag}),
         "mentions": _mentions(items, ref),
+        "gaps": gaps,
+        "ages_stated": ages_stated,
     }

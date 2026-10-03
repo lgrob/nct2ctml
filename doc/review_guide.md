@@ -27,6 +27,49 @@ request at a time, and has no authentication because it is not reachable off the
 machine. Two curators should not point it at the same checkout: there is no
 locking, so the second save would overwrite the first.
 
+### Three aids (added 2026-10-03)
+
+None of these decides anything or edits a trial; they are there so your time
+goes where it matters and your judgement is measured.
+
+- **The queue is ordered by priority.** A queued trial is published to
+  nobody until it is resolved, so open trials come first, along with trials
+  that admit children, are built for children or young adults (an upper age
+  of 30 or below), have a paediatric diagnosis, or carry a flag that is
+  usually a one-line fix. Every point is listed under the score, and adult-only
+  and closed trials sink to the bottom. A Kispi trial gets 5 points once
+  `ref/local_trial_info.csv` lists it (it is empty today). Swiss sites are not
+  used: the pull keeps no locations. The rules are in
+  `utils/review/priority.py`.
+- **"Named in the text, not in the CTML."** This table on each trial page is
+  the direction the sheet did not show before:
+  - a population the text names that the published diagnoses do not reach
+    (for example paraganglioma beside a published pheochromocytoma);
+  - an exclusion the published diagnoses still admit (APL under a published
+    AML, "excluding osteosarcoma" under `_SOLID_`);
+  - a gene stated with an alteration that is in no criterion;
+  - the sentences that state an age.
+
+  Those words are orange in the eligibility text, and published terms stay
+  yellow. They are hints, not findings: an exclusion may be an exception
+  ("prior basal cell carcinoma"), and a name may belong to a sub-study.
+  Coverage is judged on patient codes, so a published parent covers its
+  children. The code is in `utils/review/alignment.py`.
+- **Audit confirmation** (`/audit`, linked from the queue). These are the third
+  audit's verdicts, which were read by Claude, not a curator.
+  - You read each trial as it was audited (from the `index-2026.10.03`
+    release archive) and record your own verdict: correct, error (loses,
+    over-match or both) or borderline.
+  - The AI verdict stays hidden until you have recorded yours. If you reveal
+    it first, that is recorded.
+  - The sample is every AI error and borderline verdict plus 20 trials the AI
+    judged correct.
+  - `python -m utils.review_helper audit-summary` prints the agreement and
+    the curator-confirmed error and loss rates, weighted back to the 150
+    audited trials with 95% intervals.
+  - Decisions go to `ctml/audit_2026-10-03_confirmations.tsv`, one line each;
+    the last one per trial counts.
+
 Nothing here is a new rule. The static sheets (`review_helper sheets`) and the
 CLI still work unchanged; the interface exists so that resolving a flag does not
 mean a text editor in one window and a terminal in another.

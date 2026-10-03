@@ -18,7 +18,7 @@ h1{font-size:19px;margin:0 0 4px} h2{font-size:15px;margin:22px 0 6px;border-bot
 .flag{background:#fdecea;border-left:4px solid #c0392b;padding:6px 10px;margin:6px 0}
 .ok{color:#1e7e34} .warn{color:#b35900} .bad{color:#c0392b;font-weight:600}
 table{border-collapse:collapse;width:100%} td,th{border-bottom:1px solid #eee;padding:4px 6px;vertical-align:top;text-align:left}
-th{background:#f6f6f6} mark{background:#fff2a8} mark.hit{background:#ffd6d6}
+th{background:#f6f6f6} mark{background:#fff2a8} mark.hit{background:#ffd6d6} mark.gap{background:#ffc98a;outline:1px solid #e08a1e}
 .ev{font-size:12.5px;color:#444} .text{white-space:pre-wrap;background:#fafafa;border:1px solid #eee;padding:10px;font-size:13px}
 code{background:#f3f3f3;padding:1px 4px} .muted{color:#888}
 """
@@ -37,12 +37,60 @@ def _note_class(note):
     return "bad" if note else ""
 
 
-def _highlight(text, terms):
+def _highlight(text, terms, gap_spans=()):
+    """
+    Published terms in yellow; the words a gap points at (named in the text,
+    not in the CTML) in orange, which wins where the two overlap.
+    """
+    spans = [(s, e, "gap") for s, e in gap_spans]
+    spans += [
+        (s, e, "")
+        for s, e, _ in text_rules.find_mentions(text, terms)
+        if not any(s < ge and gs < e for gs, ge, _ in spans)
+    ]
     out, last = [], 0
-    for s, e, _ in text_rules.find_mentions(text, terms):
-        out.append(html.escape(text[last:s]) + "<mark>" + html.escape(text[s:e]) + "</mark>")
+    for s, e, cls in sorted(spans):
+        if s < last:
+            continue
+        mark = "<mark class='gap'>" if cls else "<mark>"
+        out.append(html.escape(text[last:s]) + mark + html.escape(text[s:e]) + "</mark>")
         last = e
     return "".join(out) + html.escape(text[last:])
+
+
+def _gap_section(a):
+    """The table of things the text names that the CTML does not carry."""
+    gaps = a.get("gaps") or []
+    h = [
+        "<h2>Named in the text, not in the CTML "
+        f"<span class='muted'>({len(gaps)} hints, orange in the text below)</span></h2>",
+        "<div class='ev'>Found by matching Oncotree names, aliases and the floor's group words; "
+        "coverage is judged on the patient codes. Hints for you to judge, not findings: an "
+        'exclusion may be an exception ("prior basal cell carcinoma"), a name may sit in a '
+        "sub-study.</div>",
+    ]
+    if gaps:
+        h.append(
+            "<table><tr><th>kind</th><th>words</th><th>where</th><th>means</th><th>context</th></tr>"
+        )
+        for g in gaps:
+            cls = "bad" if g.kind == "named, not published" else "warn"
+            h.append(
+                f"<tr><td class='{cls}'>{html.escape(g.kind)}<div class='muted'>{html.escape(g.status)}</div></td>"
+                f"<td>{html.escape(g.term)}</td><td>{g.where}</td>"
+                f"<td class='ev'>{html.escape('; '.join(g.targets[:4]))}{' ...' if len(g.targets) > 4 else ''}</td>"
+                f"<td class='ev'>{html.escape(g.snippet)}</td></tr>"
+            )
+        h.append("</table>")
+    else:
+        h.append("<p class='ok'>Nothing named in the text is missing from the CTML.</p>")
+    if a.get("ages_stated"):
+        h.append(
+            "<div class='ev'><b>Ages the inclusion text states</b> (compare with the Age row): "
+            + " &middot; ".join(html.escape(x) for x in a["ages_stated"])
+            + "</div>"
+        )
+    return "".join(h)
 
 
 def render(a):
@@ -82,6 +130,8 @@ def render(a):
             + "</div>"
         )
 
+    h.append(_gap_section(a))
+
     for kind, heading in (
         ("diagnosis", "Diagnoses"),
         ("gene", "Genomic criteria"),
@@ -104,8 +154,9 @@ def render(a):
         h.append("</table>")
 
     for name, text in a["sections"]:
+        spans = [g.span for g in a.get("gaps") or [] if g.where == name and g.span]
         h.append(
-            f"<h2>Eligibility: {name}</h2><div class='text'>{_highlight(text, a['mentions']) or '<i>empty</i>'}</div>"
+            f"<h2>Eligibility: {name}</h2><div class='text'>{_highlight(text, a['mentions'], spans) or '<i>empty</i>'}</div>"
         )
     h.append(
         f"<h2>To finish</h2><p>Edit <code>{html.escape(a['path'])}</code>, then run "
