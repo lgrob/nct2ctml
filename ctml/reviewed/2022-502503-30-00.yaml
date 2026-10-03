@@ -1,0 +1,143 @@
+nct_id: 2022-502503-30-00
+age: Children
+cancer_center_accrual_goal_upper: 0
+curated_on: '2026-10-02'
+study_start_date: '2022-12-15'
+study_completion_date: null
+data_table4: Interventional
+drug_list:
+  drug:
+  - drug_name: Mitoxantron Sandoz 2 mg/ml, concentraat voor oplossing voor infusie
+  - drug_name: Spectrila 10,000 U powder for concentrate for solution for infusion
+  - drug_name: Dexamethasone phosphate 4 mg/ml solution for injection
+  - drug_name: Dexamethason Teva 1,5 mg, tabletten
+  - drug_name: Methotrexaat Teva 2,5 mg, tabletten
+  - drug_name: Thiosix 10 mg, tabletten
+  - drug_name: Dexamethason Teva 0,5 mg, tabletten
+  - drug_name: Xaluprine 20 mg/ml oral suspension
+  - drug_name: Cytarabine Accord 100 mg/ml, oplossing voor injectie of infusie
+  - drug_name: Toposin, concentraat voor oplossing voor intraveneuze infusie 20 mg/ml
+  - drug_name: Solu-Medrone powder and solvent for solution for injection or concentrate
+      for solution for infusion 1000 mg/vial.
+  - drug_name: BLINCYTO 38.5 micrograms powder for concentrate and solution for solution
+      for infusion
+long_title: 'Interfant-21: International collaborative treatment protocol for infants
+  under one year with KMT2A-rearranged acute lymphoblastic leukemia or mixed phenotype
+  acute leukemia'
+last_updated: '2026-08-20'
+management_group_list:
+  management_group:
+  - is_primary: Y
+    management_group_name: Group1
+oncology_group_list:
+  oncology_group:
+  - group_name: Group1
+    is_primary: N
+phase: NA
+principal_investigator: NA
+principal_investigator_institution: Princess Maxima Center For Pediatric Oncology
+program_area_list:
+  program_area:
+  - is_primary: Y
+    program_area_name: Program1
+protocol_id: 0
+protocol_ids:
+- 2022-502503-30-00
+protocol_no: ''
+protocol_target_accrual: 54
+protocol_type: INTERVENTIONAL
+prior_treatment_requirements:
+- 1. Patients with newly diagnosed B- precursor ALL or B-cell MPAL (single lineage)
+  according to the WHO classification of tumours of haematopoietic and lymphoid tissues
+  (revised 4th edition 2017, with KMT2A-rearrangement.
+- "2. \u2264 365 days of age at the time of diagnosis of ALL."
+- 3. Written informed consent of the parent(s) or other legally authorized guardian
+  of the patient according to local law and regulations.
+- Exclude - 1. KMT2A-wildtype patients.
+- Exclude - 10. Down syndrome
+- Exclude - 11. Multilineage MPAL
+- Exclude - 2. Treatment with systemic corticosteroids (equivalent prednisone >10
+  mg/m2/day) for more than one week and/or any chemotherapeutic agent in the 4-week
+  interval prior to diagnosis. Patients who received corticosteroids by aerosol are
+  eligible for the study.
+- Exclude - 3. T-ALL.
+- Exclude - 4. Age > 365 days at the time of diagnosis.
+- Exclude - 5. Relapsed ALL.
+- 'Exclude - 6. Additional exclusion criteria for blinatumomab: 1. CD19 negative B-precursor
+  ALL at diagnosis'
+- 'Exclude - 7. Additional exclusion criteria for blinatumomab: 2. CNS involvement
+  (CNS2/CNS3/TLP+ status) at the EOI. Patients with CNS disease at the time of diagnosis
+  are eligible if CNS1 status is achieved prior to the start of the first blinatumomab
+  cycle (lumbar puncture at ~day 33 of induction).'
+- 'Exclude - 8. Additional exclusion criteria for blinatumomab: 3. Proven hypersensitivity
+  to the active substance or any of the excipients in blinatumomab.'
+- 'Exclude - 9. Additional exclusion criteria for blinatumomab: 4. Patients who have
+  received a live vaccine 28 days prior to blinatumomab administration or plan to
+  receive a live vaccine prior to Bcell recovery after the last dose of blinatumomab.'
+short_title: Treatment of infants under one year with acute lymphoblastic leukemia
+  according to the Interfant-21 protocol
+site_list:
+  site: []
+sponsor_list:
+  sponsor:
+  - is_principal_sponsor: Y
+    sponsor_name: Princess Maxima Center For Pediatric Oncology
+    sponsor_protocol_no: ''
+    sponsor_roles: sponsor
+staff_list:
+  protocol_staff: []
+status: open to accrual
+summary: To improve the outcome (in terms of event-free survival (EFS) as the primary
+  endpoint) of newly diagnosed KMT2Arearranged (KMT2A-r) infant acute lymphoblastic
+  leukemia (ALL) compared with the historical results of the Interfant06 protocol.
+treatment_list:
+  step:
+  - step_internal_id: 111
+    step_code: '1'
+    step_type: Registration
+    arm:
+    - arm_code: Registration
+      arm_internal_id: 0
+      arm_description: 'CTIS record: no per-arm eligibility published.'
+      arm_suspended: N
+      dose_level: []
+    match:
+    - and:
+      - and:
+        - or:
+          - clinical:
+              oncotree_primary_diagnosis: B-Lymphoblastic Leukemia/Lymphoma with t(v;11q23.3);KMT2A
+                Rearranged
+        - clinical:
+            age_numerical: <1
+      - genomic:
+          hugo_symbol: KMT2A
+          variant_category: Structural Variation
+_provenance:
+  run_id: 20261002T091118Z-bea7b4
+  mapped_at: '2026-10-02T09:11:20Z'
+  code:
+    commit: f3181b8a83e0a811cc3ed920e5710661d4e89836
+    dirty: false
+  llm:
+    platform: Replay
+    model: gpt-oss:120b
+    genomic_prompt: roles
+    diagnosis_input: labelled
+    diagnosis_text_floor: true
+    recorded_platform: Ollama
+    replay_of: /private/tmp/claude-501/-Users-admin-Desktop-nct2ctml/b0fe742e-25a7-44ba-9fdd-7dbb692d8d7a/scratchpad/replay_all.jsonl
+  reference_sha256:
+    ref/diagnosis_synonyms.tsv: 91af993c2fdba2a917e7e2d0f8987d6b5409fa2ac628769a3c342f8e17b06f3b
+    ref/diagnosis_text_terms.tsv: 61ac791a945c5581fe5fff8bfe0423d7aad2c9c501a66873bb1edcd289185774
+    ref/gene_rewrite_exclusions.tsv: 52955d78e2858cbba275e0d51891d68e2293ec89fde18742c80a310c5613f977
+    ref/gene_synonym_addendum.tsv: 30276eaef9350baa12ea37e100c4c707611b330e7dcae5fc687dd62b420cbd0b
+    ref/genes.txt: a3d78a6fc812766d3e7cc5690f6de1f8ace04d80f0861c6c0475cdb2fa54e54f
+    ref/genes_kispi.txt: ff7701189fc5481a89c3c792b930596e81b645f9a851239d8c141b7d73301a96
+    ref/local_trial_info.csv: d727ae22b9b491c6ec1821e7ae40655362d5cf2500a71970ff0a7a129f6c2e11
+    ref/mane_genes.tsv: 1990481028eb4b720785435ac56c729125707bd14865999976771a8577b804aa
+    ref/mane_select_proteins.tsv: 8a6d15de132866f7f65e126c17b77d886ae0a98d5264375ad80005ecc1eaa87f
+    ref/oncotree_file.txt: 5f344b79667f5d29c12fef3956100505193eaaa09c2f6b4215025a9070563226
+    ref/scope_overrides.tsv: 0759aea946633327e68bd6c6159a21b8629aeaeb8d79ad4818fb8a16b3562818
+    ref/synonym_to_gene_symbol.tsv: 85e3b9f98a5b3d30f4a481b849b597b324429cf65bafa68202548dc64a6d91c1
+    ref/translocation_fusions.tsv: 2aa3e9fc38b8ec24871a2435ad304a1d2492d35b231268dea83c774eb52994ce
