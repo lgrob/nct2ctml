@@ -2,6 +2,16 @@
 
 What changed in this fork after the initial retargeting, newest first. Moved from CHANGES.md on 2026-09-28 (improvement plan step 13); the entries are unchanged. Measured decisions are in [decisions/](decisions/), mapping runs and queue reviews in [runs/](runs/).
 
+## Arms narrower than their step go to review (2026-10-03)
+
+`text_rules.arm_narrower_than_step` writes `arm_narrower_than_step` (routes
+to review) when a step lists diagnoses that no open arm admits, compared on
+the patient codes each side reaches. An arm without a diagnosis criterion
+clears the step. Replayed: 44 trials flagged, 31 published ones move to
+review, all 4 audit cases among them; about half are arms too narrow, half
+steps too broad ([decision](decisions/2026-10-03-arm-narrower-than-step.md)).
+6 tests.
+
 ## The text floor reads the title and conditions; eight more groups (2026-10-03)
 
 `seed_and_map_diagnosis` takes the title, and the floor reads title,

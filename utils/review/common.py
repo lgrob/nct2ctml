@@ -48,6 +48,7 @@ FLAG_KEYS = (
     "diagnosis_seed_suspect",
     "gene_scope_suspect",
     "age_registry_conflict",
+    "arm_narrower_than_step",
 )
 
 
@@ -76,6 +77,12 @@ ADVICE = {
     "requirement (risk group, one cohort, conditional, an alternative route, an example, "
     "expression or germline) and kept them out of the match tree. They are published in "
     "trials.tsv as genes_not_required. Add a gene back only if every patient must carry it.",
+    "arm_narrower_than_step": "A patient must satisfy the step's criteria and one arm's. These step "
+    "diagnoses are admitted by no open arm, so the step and its arms disagree. Either an arm "
+    "is too narrow (patients the trial enrols cannot match: add the diagnoses to their arm, "
+    "or drop the arm's diagnosis criterion if the arm is for every population), or the step "
+    "is too broad (remove the diagnoses the trial does not enrol). Then delete the top-level "
+    "`arm_narrower_than_step:` line.",
     "age_registry_conflict": "The registry's minimumAge/maximumAge contradict the ages the eligibility text "
     "states (an adult trial capped at 18, a minimum of 14 against '18 or older'). The "
     "published bounds are the registry's. Set age_numerical to what the trial enrols, then "

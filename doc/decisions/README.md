@@ -24,6 +24,7 @@ policy. It is not a code change on its own; those go to
 | 2026-10-02 | 3.4 follow-up | [Gene criteria: three encoding rules and a scope check (2026-10-02)](2026-10-02-gene-rules.md) | adopted: always on; scoped genes route to review |
 | 2026-10-03 | 3.4 follow-up | [Three small fixes from the audits: contradictions, floor guards, registry ages (2026-10-03)](2026-10-03-audit-2-small-fixes.md) | adopted: always on |
 | 2026-10-03 | 3.4 follow-up | [Text floor: eight more groups, and it now reads the title and conditions (2026-10-03)](2026-10-03-floor-groups-and-title.md) | adopted |
+| 2026-10-03 | 3.4 follow-up | [Arms narrower than their step go to review (2026-10-03)](2026-10-03-arm-narrower-than-step.md) | adopted: routes to review |
 
 ## Recording a new one
 

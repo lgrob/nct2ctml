@@ -944,6 +944,62 @@ def _scope_reason(text, s, e, headers, names_gene) -> str:
     return ""
 
 
+# --- Arms narrower than their step (third audit, 2026-10-03) ----------------
+
+
+def arm_narrower_than_step(ctml: dict | None) -> dict[str, str]:
+    """
+    Step diagnoses that no open arm admits. A patient must satisfy the step's
+    match AND one arm's, so a diagnosis the step lists but every arm leaves
+    out shuts those patients out of the trial: Perfume (NCT06159478) lists
+    pilocytic astrocytoma at step level while its only arm allows "Low-Grade
+    Glioma, NOS" and pancreatic adenocarcinoma; the MIBG trial (NCT00107289)
+    lists pheochromocytoma while its only arm requires neuroblastoma.
+
+    Coverage is computed on the patient codes each side reaches
+    (utils.build_trial_index.diagnosis_population: subtrees, NOS leaves,
+    _SOLID_/_LIQUID_), so an arm with a broader term covers its children. An
+    open arm with no diagnosis criterion, or no match at all, admits every
+    diagnosis and clears the step. Suspended arms admit nobody. Returns
+    {step diagnosis: how many of its codes no open arm reaches}.
+    """
+    from utils.build_trial_index import diagnosis_population
+
+    out: dict[str, str] = {}
+    for step in ((ctml or {}).get("treatment_list") or {}).get("step", []) or []:
+        step_dx = [
+            d
+            for d in collect({"treatment_list": step.get("match")})["diagnoses"]
+            if not d.startswith("!")
+        ]
+        arms = [
+            a
+            for a in step.get("arm", []) or []
+            if isinstance(a, dict) and str(a.get("arm_suspended", "N")).upper() != "Y"
+        ]
+        if not step_dx or not arms:
+            continue
+        reached = set()
+        for arm in arms:
+            arm_dx = [
+                d
+                for d in collect({"treatment_list": arm.get("match")})["diagnoses"]
+                if not d.startswith("!")
+            ]
+            if not arm.get("match") or not arm_dx:
+                reached = None  # this arm admits every diagnosis
+                break
+            reached |= diagnosis_population(arm_dx)
+        if reached is None:
+            continue
+        for d in dict.fromkeys(step_dx):
+            codes = diagnosis_population([d])
+            missing = codes - reached
+            if missing:
+                out[d] = f"{len(missing)} of {len(codes)} codes in no arm"
+    return out
+
+
 class Reference:
     """Reference data loaded once per run."""
 

@@ -274,6 +274,7 @@ class TrialMapManager:
                     self._add_unspecified_all_lineage(mapped_ctml, trial_data, "nct", nct_id)
                     self._flag_gene_status(mapped_ctml, trial_data, "nct", nct_id)
                     self._flag_gene_scope(mapped_ctml, trial_data, "nct", nct_id)
+                    self._flag_arm_coverage(mapped_ctml, nct_id)
                     self._flag_age_units(mapped_ctml, trial_data, nct_id)
                     self._record_age_conflict(mapped_ctml, nct_id)
                     self._flag_diagnosis_seed(mapped_ctml, trial_data, "nct", nct_id)
@@ -410,6 +411,7 @@ class TrialMapManager:
             self._add_unspecified_all_lineage(mapped_ctml, trial_data, "ctis", ct_number)
             self._flag_gene_status(mapped_ctml, trial_data, "ctis", ct_number)
             self._flag_gene_scope(mapped_ctml, trial_data, "ctis", ct_number)
+            self._flag_arm_coverage(mapped_ctml, ct_number)
             self._flag_diagnosis_seed(mapped_ctml, trial_data, "ctis", ct_number)
             # CTIS bypassed the review queue entirely until 2026-09-21: it saved
             # straight to the output directory, so a CTIS trial whose diagnosis
@@ -676,6 +678,26 @@ class TrialMapManager:
             mapped_ctml["age_registry_conflict"] = reason
 
     @staticmethod
+    def _flag_arm_coverage(mapped_ctml: dict, trial_id: str) -> None:
+        """
+        Write step diagnoses that no open arm admits into the CTML as
+        arm_narrower_than_step, which routes the trial to review
+        (src.text_rules.arm_narrower_than_step; four losing trials in the
+        2026-10-03 audit). Never loses the trial.
+        """
+        if not isinstance(mapped_ctml, dict):
+            return
+        try:
+            found = text_rules.arm_narrower_than_step(mapped_ctml)
+            if found:
+                mapped_ctml["arm_narrower_than_step"] = "; ".join(
+                    f"{d} ({why})" for d, why in found.items()
+                )
+                logger.warning(f"{trial_id} | step diagnoses no arm admits: {', '.join(found)}")
+        except Exception as e:  # a check must never lose the trial
+            logger.warning(f"{trial_id} | arm-coverage check skipped: {type(e).__name__}: {e}")
+
+    @staticmethod
     def _flag_age_units(mapped_ctml: dict, trial_data: dict, trial_id: str) -> None:
         """
         Write age_units_implausible when the structured age fields are in days,
@@ -872,6 +894,11 @@ class TrialMapManager:
             reasons.append(
                 "a gene is required although the text says it must be absent or does not matter"
             )
+        if "arm_narrower_than_step" in keys:
+            reasons.append(
+                "a diagnosis the step admits is admitted by no arm, so those patients "
+                "cannot match the trial"
+            )
         if "gene_scope_suspect" in keys:
             reasons.append(
                 "a gene is required of every patient although the text gives it for one "
@@ -945,6 +972,7 @@ class TrialMapManager:
             self._add_unspecified_all_lineage(mapped_ctml, trial_data, "nct", nct_id)
             self._flag_gene_status(mapped_ctml, trial_data, "nct", nct_id)
             self._flag_gene_scope(mapped_ctml, trial_data, "nct", nct_id)
+            self._flag_arm_coverage(mapped_ctml, nct_id)
             self._flag_age_units(mapped_ctml, trial_data, nct_id)
             self._record_age_conflict(mapped_ctml, nct_id)
             self._flag_diagnosis_seed(mapped_ctml, trial_data, "nct", nct_id)

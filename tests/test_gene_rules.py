@@ -318,3 +318,59 @@ class TestRegistryAgeConflict(unittest.TestCase):
 
     def test_it_routes_to_review(self):
         self.assertIn("age_registry_conflict", common.FLAG_KEYS)
+
+
+class TestArmNarrowerThanStep(unittest.TestCase):
+    """src.text_rules.arm_narrower_than_step (third audit)."""
+
+    @staticmethod
+    def trial(step_dx, *arms):
+        def dx(names):
+            return [{"or": [{"clinical": {"oncotree_primary_diagnosis": n}} for n in names]}]
+
+        return {
+            "treatment_list": {
+                "step": [
+                    {
+                        "match": dx(step_dx),
+                        "arm": [
+                            {"arm_code": f"A{i}", "match": dx(a)}
+                            if a is not None
+                            else {"arm_code": f"A{i}"}
+                            for i, a in enumerate(arms)
+                        ],
+                    }
+                ]
+            }
+        }
+
+    def test_a_step_diagnosis_no_arm_admits(self):
+        # NCT00107289: the only arm requires neuroblastoma.
+        t = self.trial(["Neuroblastoma", "Pheochromocytoma"], ["Neuroblastoma"])
+        self.assertEqual(list(text_rules.arm_narrower_than_step(t)), ["Pheochromocytoma"])
+
+    def test_a_broader_arm_covers_its_children(self):
+        t = self.trial(["Pilocytic Astrocytoma", "Ganglioglioma"], ["Encapsulated Glioma"])
+        self.assertEqual(text_rules.arm_narrower_than_step(t), {})
+
+    def test_the_arms_together_cover_the_step(self):
+        t = self.trial(["Neuroblastoma", "Wilms' Tumor"], ["Neuroblastoma"], ["Wilms' Tumor"])
+        self.assertEqual(text_rules.arm_narrower_than_step(t), {})
+
+    def test_an_arm_without_a_diagnosis_admits_everyone(self):
+        t = self.trial(["Neuroblastoma", "Pheochromocytoma"], ["Neuroblastoma"], None)
+        self.assertEqual(text_rules.arm_narrower_than_step(t), {})
+
+    def test_a_suspended_arm_admits_nobody(self):
+        t = self.trial(
+            ["Neuroblastoma", "Pheochromocytoma"], ["Neuroblastoma"], ["Pheochromocytoma"]
+        )
+        t["treatment_list"]["step"][0]["arm"][1]["arm_suspended"] = "Y"
+        self.assertEqual(list(text_rules.arm_narrower_than_step(t)), ["Pheochromocytoma"])
+
+    def test_it_routes_to_review(self):
+        self.assertIn("arm_narrower_than_step", common.FLAG_KEYS)
+        t = self.trial(["Neuroblastoma", "Pheochromocytoma"], ["Neuroblastoma"])
+        TrialMapManager._flag_arm_coverage(t, "NCT0")
+        self.assertIn("arm_narrower_than_step", t)
+        self.assertEqual(TrialMapManager._destination_for(t, "out", "NCT0"), "ctml/needs-review")
