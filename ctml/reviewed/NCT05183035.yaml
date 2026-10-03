@@ -63,9 +63,6 @@ treatment_list:
           age_numerical: '>=0.08'
       - clinical:
           age_numerical: <22
-      - clinical:
-          disease_status:
-          - Recurrent
       - genomic:
           hugo_symbol: FLT3
           variant_category: '!Mutation'

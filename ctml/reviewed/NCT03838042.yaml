@@ -80,10 +80,6 @@ treatment_list:
           age_numerical: '>=2'
       - clinical:
           age_numerical: <=22
-      - clinical:
-          disease_status:
-          - Recurrent
-          - Refractory
       - or:
         - genomic:
             hugo_symbol: MYC

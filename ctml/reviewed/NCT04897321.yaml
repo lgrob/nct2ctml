@@ -189,7 +189,3 @@ treatment_list:
             oncotree_primary_diagnosis: Malignant Peripheral Nerve Sheath Tumor
       - clinical:
           age_numerical: <=22
-      - clinical:
-          disease_status:
-          - Recurrent
-          - Refractory

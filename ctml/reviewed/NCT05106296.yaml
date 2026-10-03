@@ -223,7 +223,3 @@ treatment_list:
           age_numerical: '>=3'
       - clinical:
           age_numerical: <=26
-      - clinical:
-          disease_status:
-          - Recurrent
-          - Refractory

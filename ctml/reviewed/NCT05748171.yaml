@@ -139,6 +139,3 @@ treatment_list:
           age_numerical: '>=1'
       - clinical:
           age_numerical: <18
-      - clinical:
-          disease_status:
-          - Recurrent

@@ -97,9 +97,6 @@ treatment_list:
           age_numerical: '>=1'
       - clinical:
           age_numerical: <21
-      - clinical:
-          disease_status:
-          - Recurrent
     arm:
     - arm_code: Registration
       arm_internal_id: 0

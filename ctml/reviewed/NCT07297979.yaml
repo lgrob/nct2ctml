@@ -177,7 +177,3 @@ treatment_list:
             variant_category: Structural Variation
       - clinical:
           age_numerical: '>=2'
-      - clinical:
-          disease_status:
-          - Recurrent
-          - Refractory

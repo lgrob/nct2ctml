@@ -205,7 +205,3 @@ treatment_list:
           oncotree_primary_diagnosis: Osteosarcoma
       - clinical:
           age_numerical: '>=10'
-      - clinical:
-          disease_status:
-          - Recurrent
-          - Refractory

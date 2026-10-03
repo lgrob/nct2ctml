@@ -49,10 +49,15 @@ trials, which the treating physician dismisses from the trial text. No
 patient is lost to the criterion any more.
 
 Not changed:
-- **The reviewed layer:** 21 of the 60 files in `ctml/reviewed` still carry
-  `disease_status`, put there or confirmed by a curator. The patient-side
-  argument applies to them as well; removing it there is a curation step,
-  left to the user.
+- **The reviewed layer:** 21 of the 60 files in `ctml/reviewed` carried
+  `disease_status`, put there or confirmed by a curator. On 2026-10-03 the
+  user decided the patient-side argument applies to them as well, and it was
+  removed from all 21.
+  - The removal was textual, 81 lines, so each file keeps its layout.
+  - Each file was checked to load as the same tree minus `disease_status`,
+    with the `clinical` nodes it emptied dropped.
+  - None of those nodes was an alternative under an `or`, so no match was
+    narrowed.
 - **Reversible:** if the patient data gains a reliable disease status,
   `NCT2CTML_PUBLISH_DISEASE_STATUS=true` restores the old behaviour for a run,
   and the decision can be revisited with a measurement against real patients.

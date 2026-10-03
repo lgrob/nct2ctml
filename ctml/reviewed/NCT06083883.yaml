@@ -225,7 +225,3 @@ treatment_list:
           age_numerical: '>=16'
       - clinical:
           age_numerical: <=81
-      - clinical:
-          disease_status:
-          - Recurrent
-          - Refractory
