@@ -23,6 +23,7 @@ import src.ctis as ctis
 import src.match_criteria_mapper as mcm
 import src.text_rules as text_rules
 import src.trial_data_helper as tdh
+import utils.age_bounds as age_bounds
 import utils.llm.prompts.genomic as genomic_prompts
 import utils.llm.schema as llm_schema
 import utils.oncology_scope as scope
@@ -274,6 +275,7 @@ class TrialMapManager:
                     self._flag_gene_status(mapped_ctml, trial_data, "nct", nct_id)
                     self._flag_gene_scope(mapped_ctml, trial_data, "nct", nct_id)
                     self._flag_age_units(mapped_ctml, trial_data, nct_id)
+                    self._record_age_conflict(mapped_ctml, nct_id)
                     self._flag_diagnosis_seed(mapped_ctml, trial_data, "nct", nct_id)
 
                     # Add local trial info if available
@@ -663,6 +665,17 @@ class TrialMapManager:
             logger.warning(f"{trial_id} | gene-scope check skipped: {type(e).__name__}: {e}")
 
     @staticmethod
+    def _record_age_conflict(mapped_ctml: dict, trial_id: str) -> None:
+        """
+        Write age_registry_conflict when the registry's age fields contradict
+        the prose the model read (utils.age_bounds.registry_conflict), which
+        routes the trial to review. The published bounds stay the registry's.
+        """
+        reason = age_bounds.REGISTRY_CONFLICT.pop(trial_id, None)
+        if reason and isinstance(mapped_ctml, dict):
+            mapped_ctml["age_registry_conflict"] = reason
+
+    @staticmethod
     def _flag_age_units(mapped_ctml: dict, trial_data: dict, trial_id: str) -> None:
         """
         Write age_units_implausible when the structured age fields are in days,
@@ -869,6 +882,8 @@ class TrialMapManager:
                 "the diagnosis scope rests on a specialty word, or a B-lineage criterion "
                 "sits on a trial whose text names only T-lineage disease"
             )
+        if "age_registry_conflict" in keys:
+            reasons.append("the registry's age fields contradict the ages the text states")
         if "age_units_implausible" in keys:
             reasons.append(
                 "the structured age fields are in days, weeks or months where the text "
@@ -931,6 +946,7 @@ class TrialMapManager:
             self._flag_gene_status(mapped_ctml, trial_data, "nct", nct_id)
             self._flag_gene_scope(mapped_ctml, trial_data, "nct", nct_id)
             self._flag_age_units(mapped_ctml, trial_data, nct_id)
+            self._record_age_conflict(mapped_ctml, nct_id)
             self._flag_diagnosis_seed(mapped_ctml, trial_data, "nct", nct_id)
 
             # Add local trial info if available

@@ -244,3 +244,77 @@ class TestGeneScope(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestContradictionsAcrossLevels(unittest.TestCase):
+    """match_criteria_mapper.find_unsatisfiable_genes, extended after the gene audit."""
+
+    def test_a_fusion_gene_implies_its_partner(self):
+        # 2025-522138-29-00: Ph+ CML as BCR SV with ABL1 !Structural Variation.
+        from src.match_criteria_mapper import find_unsatisfiable_genes
+
+        t = tree(gene("BCR", "Structural Variation"), gene("ABL1", "!Structural Variation"))
+        self.assertEqual(find_unsatisfiable_genes(t["treatment_list"]), ["ABL1"])
+
+    def test_ph_like_without_bcr_abl1_is_fine(self):
+        # ABL1 has many partners: ABL-class Ph-like ALL excluding BCR::ABL1 is real.
+        from src.match_criteria_mapper import find_unsatisfiable_genes
+
+        t = tree(gene("ABL1", "Structural Variation"), gene("BCR", "!Structural Variation"))
+        self.assertEqual(find_unsatisfiable_genes(t["treatment_list"]), [])
+
+    def test_a_step_exclusion_meets_each_arm(self):
+        # NCT05118789 (ARROS-1): "driver other than ROS1" as ROS1 !Any Variation.
+        from src.match_criteria_mapper import find_unsatisfiable_genes
+
+        t = {
+            "step": [
+                {
+                    "match": [{"and": [gene("ROS1", "!Any Variation")]}],
+                    "arm": [
+                        {"match": [{"and": [gene("ROS1", "Structural Variation")]}]},
+                        {"arm_code": "x"},
+                    ],
+                }
+            ]
+        }
+        self.assertEqual(find_unsatisfiable_genes(t), ["ROS1"])
+
+
+class TestRegistryAgeConflict(unittest.TestCase):
+    """utils.age_bounds.registry_conflict (audit 2)."""
+
+    def conflict(self, lo, hi, prose):
+        import utils.age_bounds as ab
+
+        return ab.registry_conflict(lo, hi, prose)
+
+    def test_an_adult_trial_capped_at_18(self):
+        # NCT07529782: maximumAge "18 Years" against "18 years or older".
+        prose = {"minimum": {"value": 18, "unit": "years", "inclusive": True}}
+        self.assertTrue(self.conflict(">=18", "<19", prose))
+
+    def test_a_registry_narrower_than_the_text(self):
+        prose = {
+            "minimum": {"value": 2, "unit": "years", "inclusive": True},
+            "maximum": {"value": 21, "unit": "years", "inclusive": True},
+        }
+        self.assertTrue(self.conflict(">=12", "<22", prose))
+        self.assertTrue(self.conflict(">=2", "<19", prose))
+
+    def test_a_registry_wider_than_the_text_is_left_alone(self):
+        # NCT06664411: minimumAge 14 against ">= 18" over-matches only.
+        prose = {"minimum": {"value": 18, "unit": "years", "inclusive": True}}
+        self.assertEqual(self.conflict(">=14", None, prose), "")
+
+    def test_the_inclusive_exclusive_year_is_tolerated(self):
+        prose = {"maximum": {"value": 21, "unit": "years", "inclusive": False}}
+        self.assertEqual(self.conflict(None, "<22", prose), "")
+
+    def test_an_infant_trial_is_not_a_cap(self):
+        # NCT05029531: under 1 year, text from birth.
+        prose = {"minimum": {"value": 0, "unit": "days", "inclusive": False}}
+        self.assertEqual(self.conflict(None, "<1", prose), "")
+
+    def test_it_routes_to_review(self):
+        self.assertIn("age_registry_conflict", common.FLAG_KEYS)

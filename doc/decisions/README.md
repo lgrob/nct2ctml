@@ -22,6 +22,7 @@ policy. It is not a code change on its own; those go to
 | 2026-10-02 | 3.4 follow-up | [Diagnosis text floor: populations named in the inclusion text (2026-10-02)](2026-10-02-diagnosis-text-floor.md) | adopted: DIAGNOSIS_TEXT_FLOOR = True |
 | 2026-10-02 | 3.4 follow-up | [Disease status is no longer published (2026-10-02)](2026-10-02-no-disease-status.md) | adopted: PUBLISH_DISEASE_STATUS = False |
 | 2026-10-02 | 3.4 follow-up | [Gene criteria: three encoding rules and a scope check (2026-10-02)](2026-10-02-gene-rules.md) | adopted: always on; scoped genes route to review |
+| 2026-10-03 | 3.4 follow-up | [Three small fixes from the audits: contradictions, floor guards, registry ages (2026-10-03)](2026-10-03-audit-2-small-fixes.md) | adopted: always on |
 
 ## Recording a new one
 

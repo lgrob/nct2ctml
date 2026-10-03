@@ -2,6 +2,22 @@
 
 What changed in this fork after the initial retargeting, newest first. Moved from CHANGES.md on 2026-09-28 (improvement plan step 13); the entries are unchanged. Measured decisions are in [decisions/](decisions/), mapping runs and queue reviews in [runs/](runs/).
 
+## Contradictions across levels, four floor guards, registry age conflicts (2026-10-03)
+
+- **Contradictions:** `find_unsatisfiable_genes` now sees the partner a
+  required structural variant implies (curated: BCR→ABL1 and six more) and a
+  step's criteria together with each arm's.
+- **Floor guards:** `ref/diagnosis_groups.tsv` guards "acute leukemia" against
+  a T/B-cell prefix, "Hodgkin lymphoma" against "classical" and NLP, and
+  "neuroblastoma" against "CNS". The loader's global guard skips terms inside
+  "classification of ...".
+- **Registry ages:** `age_bounds.registry_conflict` writes
+  `age_registry_conflict` (routes to review) where the registry's age fields
+  shut out patients the text admits.
+
+Replayed: 33 trials change, 15 published trials move to review
+([decision](decisions/2026-10-03-audit-2-small-fixes.md)). 13 tests.
+
 ## Gene encoding rules and a gene-scope check (2026-10-02)
 
 `text_rules.fix_gene_encodings` runs after mapping (both registries) and

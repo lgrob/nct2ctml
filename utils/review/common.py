@@ -47,6 +47,7 @@ FLAG_KEYS = (
     "age_units_implausible",
     "diagnosis_seed_suspect",
     "gene_scope_suspect",
+    "age_registry_conflict",
 )
 
 
@@ -75,6 +76,10 @@ ADVICE = {
     "requirement (risk group, one cohort, conditional, an alternative route, an example, "
     "expression or germline) and kept them out of the match tree. They are published in "
     "trials.tsv as genes_not_required. Add a gene back only if every patient must carry it.",
+    "age_registry_conflict": "The registry's minimumAge/maximumAge contradict the ages the eligibility text "
+    "states (an adult trial capped at 18, a minimum of 14 against '18 or older'). The "
+    "published bounds are the registry's. Set age_numerical to what the trial enrols, then "
+    "delete the top-level `age_registry_conflict:` line.",
     "gene_scope_suspect": "A gene is required of every patient, but the inclusion text gives it for one "
     "cohort, phase or stratum, or as one route beside routes that need no alteration "
     "(MRD, immunophenotype, another diagnosis). Move the criterion into the arm it "

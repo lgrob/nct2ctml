@@ -112,6 +112,36 @@ class TestTwoSidedGuards(unittest.TestCase):
         self.assertEqual(floor("pathologists with expertise in bone sarcomas"), [])
 
 
+class TestAudit2FalsePositives(unittest.TestCase):
+    """The four floor false positives of doc/runs/2026-10-02-3.4-audit-2.md."""
+
+    def test_a_classification_name_is_not_a_population(self):
+        # NCT06130579.
+        self.assertEqual(
+            floor(
+                "diagnosed per the International Consensus Classification of Myeloid Neoplasms and Acute Leukemia"
+            ),
+            [],
+        )
+
+    def test_a_lineage_before_acute_leukemia_is_left_to_the_model(self):
+        # NCT06742463.
+        self.assertEqual(floor("T-cell acute leukemia/lymphoma"), [])
+        self.assertIn("Acute Myeloid Leukemia", floor("relapsed acute leukemia"))
+
+    def test_cns_neuroblastoma_is_not_neuroblastoma(self):
+        # NCT07087002.
+        self.assertEqual(floor("CNS neuroblastoma, FOXR2-activated"), [])
+        self.assertEqual(
+            floor("high-risk neuroblastoma"), ["Neuroblastoma", "Ganglioneuroblastoma"]
+        )
+
+    def test_classical_hodgkin_does_not_add_the_parent(self):
+        # NCT06563245.
+        self.assertEqual(floor("classical Hodgkin lymphoma"), [])
+        self.assertEqual(floor("relapsed Hodgkin lymphoma"), ["Hodgkin Lymphoma"])
+
+
 class TestFloorInTheMapper(unittest.TestCase):
     TEXT = (
         "Title: A sarcoma trial\nInclusion Criteria: relapsed or refractory sarcoma\n"

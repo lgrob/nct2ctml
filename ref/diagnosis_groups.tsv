@@ -34,6 +34,15 @@
 #   keep explicit targets because they carry a regex. Rows that need loader
 #   work sit at the end, commented out.
 #
+# --- 2026-10-03, the floor false positives of audit 2 (doc/runs/2026-10-02-3.4-audit-2.md) ---
+# acute leukemia/leukaemia: a T/B-cell or T/B-lineage prefix blocks the row.
+# Hodgkin lymphoma rows: "classical" or "nodular lymphocyte-predominant"
+#   before the term blocks the parent.
+# neuroblastoma: "CNS" or "central nervous system" before it blocks the row.
+# In the loader, not the table: the global guard also blocks a term inside a
+#   classification's name ("International Consensus Classification of Myeloid
+#   Neoplasms and Acute Leukemia").
+#
 # --- 2026-10-02, the CHECKs against the pinned release (ref/oncotree_file.txt) ---
 # present and added: Rosette-forming Glioneuronal Tumor of the Fourth
 #   Ventricle and Papillary Glioneuronal Tumor (low-grade glioma, glioneuronal
@@ -181,8 +190,8 @@ Askin tumor	(same as "Ewing sarcoma")		chest wall Ewing
 Askin tumour	(same as "Ewing sarcoma")		British spelling
 Ewing-like sarcoma	Round Cell Sarcoma, NOS		CIC- and BCOR-altered sarcomas; "Ewing-like sarcoma" does not contain the whole-word term "Ewing sarcoma", so it needs its own row
 # --- leukaemias
-acute leukemia	Acute Myeloid Leukemia;B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma;Acute Leukemias of Ambiguous Lineage	(mixed[- ]phenotype|biphenotypic|bilineal)[- ]?$	any lineage (2023-506581-31-00); "acute myeloid leukemia" does not contain this term, so needs no guard; the guard stops it inside "mixed phenotype acute leukemia"
-acute leukaemia	Acute Myeloid Leukemia;B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma;Acute Leukemias of Ambiguous Lineage	(mixed[- ]phenotype|biphenotypic|bilineal)[- ]?$	British spelling
+acute leukemia	Acute Myeloid Leukemia;B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma;Acute Leukemias of Ambiguous Lineage	(mixed[- ]phenotype|biphenotypic|bilineal|[TB][- ]?cell|[TB][- ]lineage)[- ]?$	any lineage (2023-506581-31-00); "acute myeloid leukemia" does not contain this term, so needs no guard; the guard stops it inside "mixed phenotype acute leukemia" lineage-qualified forms are left to the model ("T-cell acute leukemia/lymphoma", NCT06742463, audit 2)
+acute leukaemia	Acute Myeloid Leukemia;B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma;Acute Leukemias of Ambiguous Lineage	(mixed[- ]phenotype|biphenotypic|bilineal|[TB][- ]?cell|[TB][- ]lineage)[- ]?$	British spelling lineage-qualified forms are left to the model ("T-cell acute leukemia/lymphoma", NCT06742463, audit 2)
 acute leukemia of ambiguous lineage	Acute Leukemias of Ambiguous Lineage		longer term, so "acute leukemia" (which would add AML and both ALLs) does not fire on it
 acute leukemias of ambiguous lineage	Acute Leukemias of Ambiguous Lineage		the plural sits on the first noun (until TODO 1)
 acute leukaemia of ambiguous lineage	Acute Leukemias of Ambiguous Lineage		British spelling
@@ -210,9 +219,9 @@ lymphoma or leukaemia	_LIQUID_		British spelling
 non-Hodgkin lymphoma	Mature B-Cell Neoplasms;Mature T and NK Neoplasms;B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma	(B|B-cell|B cell|mature B|mature B-cell|mature B cell|aggressive B-cell|aggressive mature B-cell|T|T-cell|T cell|NK|NK-cell|T/NK|NK/T|mature T|peripheral T-cell|CD19[- ]positive|CD20[- ]positive|CD22[- ]positive)[)\]]?[- ]?§|§\s*[(,]?\s*(of\s+)?(B|T|NK)[- ](cell|lineage)	the group word; lymphoblastic lymphoma is an NHL in paediatric usage. Longest match keeps "Hodgkin lymphoma" from firing inside it; lineage guard: "B-cell non-Hodgkin lymphoma", "mature B-NHL" contain the term and must not floor T/NK (NCT05533775, NCT06508931); two-sided since TODO 2: "NHL of B-cell origin"
 non-Hodgkin's lymphoma	Mature B-Cell Neoplasms;Mature T and NK Neoplasms;B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma	(B|B-cell|B cell|mature B|mature B-cell|mature B cell|aggressive B-cell|aggressive mature B-cell|T|T-cell|T cell|NK|NK-cell|T/NK|NK/T|mature T|peripheral T-cell|CD19[- ]positive|CD20[- ]positive|CD22[- ]positive)[)\]]?[- ]?§|§\s*[(,]?\s*(of\s+)?(B|T|NK)[- ](cell|lineage)	spelling variant; lineage guard: "B-cell non-Hodgkin lymphoma", "mature B-NHL" contain the term and must not floor T/NK (NCT05533775, NCT06508931); two-sided since TODO 2: "NHL of B-cell origin"
 NHL	Mature B-Cell Neoplasms;Mature T and NK Neoplasms;B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma	(B|B-cell|B cell|mature B|mature B-cell|mature B cell|aggressive B-cell|aggressive mature B-cell|T|T-cell|T cell|NK|NK-cell|T/NK|NK/T|mature T|peripheral T-cell|CD19[- ]positive|CD20[- ]positive|CD22[- ]positive)[)\]]?[- ]?§|§\s*[(,]?\s*(of\s+)?(B|T|NK)[- ](cell|lineage)	abbreviation; lineage guard: "B-cell non-Hodgkin lymphoma", "mature B-NHL" contain the term and must not floor T/NK (NCT05533775, NCT06508931); two-sided since TODO 2: "NHL of B-cell origin"
-Hodgkin lymphoma	Hodgkin Lymphoma		the parent (classical and nodular lymphocyte-predominant)
-Hodgkin's lymphoma	(same as "Hodgkin lymphoma")		spelling variant
-Hodgkin disease	(same as "Hodgkin lymphoma")		older name
+Hodgkin lymphoma	Hodgkin Lymphoma	(classic(al)?|nodular[- ]lymphocyte[- ]predominant)[- ]?$	the parent (classical and nodular lymphocyte-predominant); a named subtype is left to the model, so "classical Hodgkin lymphoma" does not add NLPHL through the parent (NCT06563245, audit 2)
+Hodgkin's lymphoma	(same as "Hodgkin lymphoma")	(classic(al)?|nodular[- ]lymphocyte[- ]predominant)[- ]?$	spelling variant; a named subtype is left to the model, so "classical Hodgkin lymphoma" does not add NLPHL through the parent (NCT06563245, audit 2)
+Hodgkin disease	(same as "Hodgkin lymphoma")	(classic(al)?|nodular[- ]lymphocyte[- ]predominant)[- ]?$	older name; a named subtype is left to the model, so "classical Hodgkin lymphoma" does not add NLPHL through the parent (NCT06563245, audit 2)
 HL	(same as "Hodgkin lymphoma")		abbreviation; "cHL" is its own word and is left to the model
 relapsed or refractory lymphoma	Hodgkin Lymphoma;Mature B-Cell Neoplasms;Mature T and NK Neoplasms;B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma		an unqualified lymphoma population; the qualifier is part of the term for the same reason as the sarcoma rows ("Burkitt lymphoma", "primary CNS lymphoma" must not fire it)
 refractory lymphoma	(same as "relapsed or refractory lymphoma")		as above
@@ -221,7 +230,7 @@ pediatric lymphoma	(same as "relapsed or refractory lymphoma")		as above
 paediatric lymphoma	(same as "relapsed or refractory lymphoma")		British spelling
 childhood lymphoma	(same as "relapsed or refractory lymphoma")		as above
 # --- neuroblastic
-neuroblastoma	Neuroblastoma;Ganglioneuroblastoma		Oncotree keeps Ganglioneuroblastoma beside Neuroblastoma, not under it, and trials that say neuroblastoma mean both - CHECK the two names in the PNS branch
+neuroblastoma	Neuroblastoma;Ganglioneuroblastoma	(CNS|central[- ]nervous[- ]system)[- ]?$	Oncotree keeps Ganglioneuroblastoma beside Neuroblastoma, not under it, and trials that say neuroblastoma mean both - CHECK the two names in the PNS branch; "CNS neuroblastoma, FOXR2-activated" is a CNS embryonal tumour, not this (NCT07087002, audit 2)
 # --- baskets named in the text rather than the conditions
 solid tumor	_SOLID_	(selected|specific|certain|the following|one of the following|these|eligible|listed)[- ]?§|§\s*(types?\s+|subtypes?\s+)?(of the following|from the following|limited to|restricted to|listed below|as follows)	"any solid tumour" (NCT07197554); CHECK: also fires on "solid tumors of the following types: ...", which over-matches - the guard catches the pre-text cues ("selected", "the following", "these"), the post-text cue ("of the following types") needs TODO 3; "extracranial solid tumor" needs TODO 5 (row at the end); two-sided since TODO 2: the post-text enumeration cue ("solid tumors of the following types") blocks it too
 solid tumour	_SOLID_	(selected|specific|certain|the following|one of the following|these|eligible|listed)[- ]?§|§\s*(types?\s+|subtypes?\s+)?(of the following|from the following|limited to|restricted to|listed below|as follows)	British spelling; two-sided since TODO 2: the post-text enumeration cue ("solid tumors of the following types") blocks it too

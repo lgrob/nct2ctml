@@ -672,17 +672,49 @@ def resolve_contradictory_genes(
     return keep_inc, keep_exc, notes
 
 
+# A structural variant in the first gene is, in practice, one fusion: requiring
+# it requires the partner too. Curated, not read from
+# ref/translocation_fusions.tsv: that table lists the partners it has rows for,
+# and ABL1 or ALK alone would wrongly imply BCR or NPM1 ("ABL-class Ph-like ALL,
+# not BCR::ABL1" is a real eligibility pattern).
+_DEFINING_PARTNER = {
+    "BCR": "ABL1",
+    "PML": "RARA",
+    "RUNX1T1": "RUNX1",
+    "CBFB": "MYH11",
+    "MYH11": "CBFB",
+    "AFF1": "KMT2A",
+    "PBX1": "TCF3",
+    "HLF": "TCF3",
+}
+
+
 def find_unsatisfiable_genes(match_node) -> list:
     """
     Report genes that a match tree both requires and forbids under an 'and'.
 
     A defence-in-depth check over the finished tree, independent of how it was
     assembled, so a contradiction introduced anywhere still gets surfaced.
+
+    Since 2026-10-03 (gene audit) it also sees:
+    - the partner a required structural variant implies (_DEFINING_PARTNER):
+      Ph+ CML as BCR SV with "ABL1 !Structural Variation" (2025-522138-29-00);
+    - a step's criteria together with each arm's, which MatchMiner combines
+      with AND: ARROS-1's step-level "ROS1 !Any Variation" against every
+      arm's ROS1 rearrangement (NCT05118789).
     """
     findings: list[str] = []
 
     def walk(node):
         if isinstance(node, dict):
+            if isinstance(node.get("match"), list) and isinstance(node.get("arm"), list):
+                for arm in node["arm"]:
+                    if (
+                        isinstance(arm, dict)
+                        and isinstance(arm.get("match"), list)
+                        and arm["match"]
+                    ):
+                        walk({"and": list(node["match"]) + list(arm["match"])})
             if "and" in node and isinstance(node["and"], list):
                 positive, negative = {}, {}
 
@@ -704,6 +736,14 @@ def find_unsatisfiable_genes(match_node) -> list:
                             partner = n["genomic"].get("fusion_partner")
                             if partner and not _negated(c):
                                 positive.setdefault(partner, set()).add(_base_category(c))
+                            implied = _DEFINING_PARTNER.get(g)
+                            if (
+                                implied
+                                and not partner
+                                and not _negated(c)
+                                and _base_category(c) == "structural variation"
+                            ):
+                                positive.setdefault(implied, set()).add("structural variation")
                         if isinstance(n.get("and"), list):
                             for child in n["and"]:
                                 collect(child)

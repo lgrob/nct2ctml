@@ -960,7 +960,10 @@ _HYPHENS = str.maketrans({c: "-" for c in "\u2010\u2011\u2012\u2013\u2014\u2212"
 # in bone sarcomas". Applied to every term, besides the row's own guard.
 _ASSESSMENT_CRITERIA = re.compile(
     r"\b(?:(?:criteria|evaluation|assessment)\s+(?:in|for)\s+(?:(?:patients|participants)\s+with\s+)?"
-    r"|(?:expertise|experience|speciali[sz]ed|expert)\s+(?:in|with)\s+)$",
+    r"|(?:expertise|experience|speciali[sz]ed|expert)\s+(?:in|with)\s+"
+    # A term inside a classification's name: "International Consensus
+    # Classification of Myeloid Neoplasms and Acute Leukemia" (NCT06130579).
+    r"|classification\s+of\s+(?:[\w/-]+\s+){0,5})$",
     re.I,
 )
 # Characters of context a row guard sees on each side of the term.

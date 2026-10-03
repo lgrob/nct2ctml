@@ -121,6 +121,64 @@ def stated_exclusive_maximum(result):
     return None
 
 
+# Trials whose registry age fields disagree with the prose: trial_id -> reason.
+# Filled by reconcile_with_structured and popped by
+# TrialMapManager._record_age_conflict, which writes age_registry_conflict to
+# the CTML and routes the trial to review. Same hand-off as
+# genomic_prompts.ROLE_DROPS.
+REGISTRY_CONFLICT: dict[str, str] = {}
+
+# How far apart the two readings may be before they disagree, in years. One
+# year absorbs the inclusive/exclusive ambiguity of every maximum (see the
+# module docstring); a minimum has no such ambiguity, but trials round it
+# ("from 12 years" beside a registry "11 Years" for 11.5).
+_TOLERANCE = 1.0
+
+
+def _years_of(expr):
+    """The number in a CTML age expression (">=18", "<19.5"), or None."""
+    import re
+
+    m = re.match(r"^\s*[<>]=?\s*(\d+(?:\.\d+)?)\s*$", str(expr or ""))
+    return float(m.group(1)) if m else None
+
+
+def registry_conflict(structured_minimum, structured_maximum, prose) -> str:
+    """
+    Why the registry's age fields shut out patients the prose admits, or "".
+
+    Found by the second audit (doc/runs/2026-10-02-3.4-audit-2.md):
+    NCT07529782, an adult myeloma trial whose maximumAge is "18 Years" (so
+    nobody over 18 matches) against "18 years or older" in the text. Reported,
+    not resolved: which one the sponsor meant is a curator's call, as for
+    age_units_implausible.
+
+    Only the direction that loses patients is reported:
+    - the registry caps within a year of where the text starts;
+    - the registry starts at or after where the text stops;
+    - the registry minimum is more than a year above the text's;
+    - the registry maximum (completed-units reading) is more than a year
+      below the text's.
+
+    A registry wider than the text (minimumAge 14 against ">= 18",
+    NCT06664411) only over-matches, and often means the text quoted one
+    cohort; measured on the replayed corpus it was half of 40 disagreements,
+    so it is left alone.
+    """
+    p_min, p_max = prose_bounds(prose) if prose else (None, None)
+    s_lo, s_hi = _years_of(structured_minimum), _years_of(structured_maximum)
+    t_lo, t_hi = _years_of(p_min), _years_of(p_max)
+    if s_hi is not None and t_lo is not None and t_lo >= 1 and s_hi - t_lo <= _TOLERANCE:
+        return f"the registry maximum ({structured_maximum}) ends where the text's minimum ({p_min}) begins"
+    if s_lo is not None and t_hi is not None and s_lo >= t_hi:
+        return f"the registry minimum ({structured_minimum}) is above the text's maximum ({p_max})"
+    if s_lo is not None and t_lo is not None and s_lo - t_lo > _TOLERANCE:
+        return f"the registry minimum ({structured_minimum}) is above the text's ({p_min})"
+    if s_hi is not None and t_hi is not None and t_hi - s_hi > _TOLERANCE:
+        return f"the registry maximum ({structured_maximum}) is below the text's ({p_max})"
+    return ""
+
+
 def reconcile_with_structured(
     structured_minimum, structured_maximum, stated_maximum_years, prose, trial_id=""
 ):
@@ -134,6 +192,11 @@ def reconcile_with_structured(
     Returns the list of expressions, lower first.
     """
     prose_minimum, prose_maximum = prose_bounds(prose, trial_id) if prose else (None, None)
+    REGISTRY_CONFLICT.pop(trial_id, None)
+    conflict = registry_conflict(structured_minimum, structured_maximum, prose)
+    if conflict and trial_id:
+        REGISTRY_CONFLICT[trial_id] = conflict
+        logger.warning(f"{trial_id} | registry age fields contradict the text: {conflict}")
 
     minimum = structured_minimum or prose_minimum
     if not structured_minimum and prose_minimum:
