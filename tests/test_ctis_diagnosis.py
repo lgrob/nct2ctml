@@ -29,7 +29,8 @@ class TestSharedSeeding(unittest.TestCase):
             seeded, from_eligibility = diagnosis.seed_and_map_diagnosis(
                 "2023-500000-00-00", ["Neuroblastoma"], "some criteria"
             )
-        self.assertEqual(seeded, ["Neuroblastoma"])
+        # The text floor adds Ganglioneuroblastoma beside a named neuroblastoma.
+        self.assertEqual(seeded, ["Neuroblastoma", "Ganglioneuroblastoma"])
         self.assertEqual(from_eligibility, [])
 
     def test_the_seed_is_passed_to_the_model_as_a_floor(self):
@@ -49,7 +50,7 @@ class TestSharedSeeding(unittest.TestCase):
                 "2023-500000-00-00", ["Neuroblastoma"], ""
             )
         mapper.assert_not_called()
-        self.assertEqual(seeded, ["Neuroblastoma"])
+        self.assertEqual(seeded, ["Neuroblastoma", "Ganglioneuroblastoma"])
 
     def test_british_spelling_in_ctis_conditions_resolves(self):
         # CTIS is the European half of the corpus and spells it this way.

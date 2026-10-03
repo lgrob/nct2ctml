@@ -142,6 +142,87 @@ class TestAudit2FalsePositives(unittest.TestCase):
         self.assertEqual(floor("relapsed Hodgkin lymphoma"), ["Hodgkin Lymphoma"])
 
 
+class TestAudit3Groups(unittest.TestCase):
+    """Group rows for the populations the third audit found missing."""
+
+    def test_ppgl_is_both(self):
+        # NCT07680205.
+        self.assertEqual(
+            floor("phaeochromocytoma or paraganglioma"), ["Pheochromocytoma", "Paraganglioma"]
+        )
+
+    def test_germ_cell_tumour_means_every_extracranial_site(self):
+        # 2024-520054-38-00 was published testis only.
+        found = floor("de novo or recurrent germ cell tumour")
+        self.assertIn("Ovarian Germ Cell Tumor", found)
+        self.assertIn("Extra Gonadal Germ Cell Tumor", found)
+        self.assertNotIn("Germ Cell Tumor, Brain", found)
+        self.assertEqual(floor("CNS germ cell tumours"), ["Germ Cell Tumor, Brain"])
+        self.assertEqual(floor("non-seminomatous germ cell tumor"), [])
+
+    def test_b_cell_malignancies_include_b_all(self):
+        # NCT06092047.
+        self.assertEqual(
+            floor("CD19-positive B-cell hematolymphatic malignancies"),
+            [B_ALL, "Mature B-Cell Neoplasms"],
+        )
+        self.assertEqual(floor("mature B-cell malignancies"), ["Mature B-Cell Neoplasms"])
+
+    def test_myelofibrosis_and_head_and_neck(self):
+        self.assertIn("Polycythaemia Vera Myelofibrosis", floor("myelofibrosis"))
+        self.assertEqual(floor("primary myelofibrosis"), [])
+        self.assertIn("Nasopharyngeal Carcinoma", floor("history of head and neck cancer"))
+
+    def test_solid_and_hematologic_malignancies(self):
+        self.assertEqual(floor("solid and hematologic malignancies"), ["_SOLID_", "_LIQUID_"])
+
+    def test_myeloid_acute_leukemia_is_left_to_the_model(self):
+        # NCT05503134 (KARMA).
+        self.assertEqual(floor("Relapsed/Refractory Myeloid Acute Leukemia"), [])
+
+
+class TestFloorReadsTitleAndConditions(unittest.TestCase):
+    def _run(self, conditions, text, title):
+        with (
+            mock.patch.object(config, "DIAGNOSIS_TEXT_FLOOR", True),
+            mock.patch.object(
+                diagnosis, "map_eligibility_criteria_to_oncotree_term", return_value=[]
+            ),
+        ):
+            return diagnosis.seed_and_map_diagnosis("NCT0", conditions, text, title=title)[0]
+
+    def test_the_title_names_the_population(self):
+        # NCT07573111: "acute leukemia" only in the title and conditions.
+        seeded = self._run(
+            [],
+            "Inclusion Criteria: HSCT for high-risk malignant disease",
+            "High-Risk Acute Leukemias",
+        )
+        self.assertIn(T_ALL, seeded)
+
+    def test_a_title_basket_only_when_nothing_specific_is_found(self):
+        # 2023-510424-68-00 against NCT05658640 (an umbrella title over a subprotocol).
+        self.assertIn(
+            "_LIQUID_",
+            self._run([], "Inclusion Criteria: malignancy", "Solid Tumours and Blood Cancer"),
+        )
+        seeded = self._run(
+            [],
+            "Inclusion Criteria: relapsed ALL",
+            "Relapsed or Refractory Hematological Malignancies, Subprotocol D",
+        )
+        self.assertNotIn("_LIQUID_", seeded)
+
+    def test_a_conditions_header_is_not_a_basket(self):
+        seeded = self._run(["Pediatric Solid Tumor", "Osteosarcoma"], "", "")
+        self.assertNotIn("_SOLID_", seeded)
+
+    def test_the_title_never_removes_what_the_text_gave(self):
+        # NCT04099966: a "B-cell" title must not veto the T-lineage the text admits.
+        seeded = self._run([], "Inclusion Criteria: ALL", "B-cell depleted transplant")
+        self.assertIn(T_ALL, seeded)
+
+
 class TestFloorInTheMapper(unittest.TestCase):
     TEXT = (
         "Title: A sarcoma trial\nInclusion Criteria: relapsed or refractory sarcoma\n"

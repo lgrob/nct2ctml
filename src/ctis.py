@@ -241,7 +241,9 @@ def map_ctis_to_ctml(trial_data: dict, gene_synonym_mapping: dict[str, list[str]
         conditions=conditions,
         legacy="\n".join(conditions + [criteria]),
     )
-    seeded, from_eligibility = diagnosis.seed_and_map_diagnosis(ct, conditions, diagnosis_text)
+    seeded, from_eligibility = diagnosis.seed_and_map_diagnosis(
+        ct, conditions, diagnosis_text, title=" | ".join(t for t in get_titles(trial_data) if t)
+    )
     diagnoses = sorted(set(seeded) | set(from_eligibility))
 
     if not diagnoses:

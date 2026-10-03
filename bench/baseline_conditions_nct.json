@@ -1,14 +1,15 @@
 {
  "means": {
-  "dx_f1": 0.739,
-  "dx_p": 0.9156,
-  "dx_r": 0.6774,
-  "pop_f1": 0.7919,
-  "pop_p": 0.9196,
-  "pop_r": 0.7841
+  "dx_f1": 0.6766,
+  "dx_p": 0.7065,
+  "dx_r": 0.7954,
+  "pop_f1": 0.7449,
+  "pop_p": 0.7353,
+  "pop_r": 0.9087
  },
  "trials": {
   "NCT01704716": [
+   "Ganglioneuroblastoma",
    "Neuroblastoma"
   ],
   "NCT02332668": [
@@ -17,14 +18,18 @@
    "_SOLID_"
   ],
   "NCT02393157": [
+   "B-Lymphoblastic Leukemia/Lymphoma",
    "Burkitt Lymphoma",
    "Diffuse Large B-Cell Lymphoma, NOS",
+   "Mature B-Cell Neoplasms",
    "Non-Hodgkin Lymphoma"
   ],
   "NCT02443831": [
-   "B-Lymphoblastic Leukemia/Lymphoma"
+   "B-Lymphoblastic Leukemia/Lymphoma",
+   "T-Lymphoblastic Leukemia/Lymphoma"
   ],
   "NCT02559778": [
+   "Ganglioneuroblastoma",
    "Neuroblastoma"
   ],
   "NCT02813135": [
@@ -33,10 +38,15 @@
   ],
   "NCT03067181": [
    "Embryonal Carcinoma",
-   "Ovarian Choriocarcinoma, NOS"
+   "Extra Gonadal Germ Cell Tumor",
+   "Non-Seminomatous Germ Cell Tumor",
+   "Ovarian Choriocarcinoma, NOS",
+   "Ovarian Germ Cell Tumor",
+   "Seminoma"
   ],
   "NCT03643276": [
-   "B-Lymphoblastic Leukemia/Lymphoma"
+   "B-Lymphoblastic Leukemia/Lymphoma",
+   "T-Lymphoblastic Leukemia/Lymphoma"
   ],
   "NCT03838042": [
    "_SOLID_"
@@ -50,14 +60,25 @@
   "NCT04185038": [
    "Atypical Teratoid/Rhabdoid Tumor",
    "Choroid Plexus Carcinoma",
+   "Desmoplastic/Nodular Medulloblastoma",
    "Diffuse Glioma",
    "Diffuse Midline Glioma, H3 K27-Altered",
+   "Diffuse Pediatric-Type High-Grade Glioma, H3-Wildtype and IDH-Wildtype",
    "Ependymoma",
+   "Ependymomal Tumor",
+   "Extra Gonadal Germ Cell Tumor",
+   "Large Cell/Anaplastic Medulloblastoma",
    "Medulloblastoma",
+   "Medulloblastoma with Extensive Nodularity",
+   "Melanotic Medulloblastoma",
+   "Non-Seminomatous Germ Cell Tumor",
+   "Ovarian Germ Cell Tumor",
    "Pineoblastoma",
-   "Primitive Neuroectodermal Tumor"
+   "Primitive Neuroectodermal Tumor",
+   "Seminoma"
   ],
   "NCT04221035": [
+   "Ganglioneuroblastoma",
    "Neuroblastoma"
   ],
   "NCT04322318": [
@@ -73,35 +94,103 @@
    "Hepatoblastoma"
   ],
   "NCT04655404": [
+   "Anaplastic Ganglioglioma",
+   "Anaplastic Pleomorphic Xanthoastrocytoma",
+   "Astrocytoma, IDH-Mutant, Grade 3",
+   "Astrocytoma, IDH-Mutant, Grade 4",
    "Diffuse Midline Glioma, H3 K27-Altered",
-   "High-Grade Glioma, NOS"
+   "Diffuse Pediatric-Type High-Grade Glioma, H3-Wildtype and IDH-Wildtype",
+   "Glioblastoma, IDH-Wildtype",
+   "High-Grade Glioma, NOS",
+   "Oligodendroglioma, IDH-mutant, and 1p/19q-Codeleted, Grade 3",
+   "Pediatric-Type Diffuse High-Grade Glioma"
   ],
   "NCT04696029": [
-   "Medulloblastoma"
+   "Desmoplastic/Nodular Medulloblastoma",
+   "Large Cell/Anaplastic Medulloblastoma",
+   "Medulloblastoma",
+   "Medulloblastoma with Extensive Nodularity",
+   "Melanotic Medulloblastoma"
   ],
   "NCT04732065": [
-   "Ependymoma"
+   "Astrocytoma, IDH-Mutant, Grade 4",
+   "Diffuse Midline Glioma, H3 K27-Altered",
+   "Ependymoma",
+   "Ependymomal Tumor",
+   "Glioblastoma, IDH-Wildtype",
+   "Pediatric-Type Diffuse High-Grade Glioma"
   ],
   "NCT04775485": [
-   "Low-Grade Glioma, NOS"
+   "Astrocytoma, IDH-Mutant, Grade 2",
+   "Desmoplastic Infantile Astrocytoma",
+   "Desmoplastic Infantile Ganglioglioma",
+   "Dysembryoplastic Neuroepithelial Tumor",
+   "Gangliocytoma",
+   "Ganglioglioma",
+   "Low-Grade Glioma, NOS",
+   "Oligodendroglioma, IDH-mutant, and 1p/19q-Codeleted, Grade 2",
+   "Papillary Glioneuronal Tumor",
+   "Pediatric-Type Diffuse Low-Grade Glioma",
+   "Pilocytic Astrocytoma",
+   "Pilomyxoid Astrocytoma",
+   "Pleomorphic Xanthoastrocytoma",
+   "Rosette-forming Glioneuronal Tumor of the Fourth Ventricle"
   ],
   "NCT04897321": [
+   "Alveolar Soft Part Sarcoma",
+   "Angiosarcoma",
    "Clear Cell Sarcoma",
+   "Dendritic Cell Sarcoma",
    "Desmoplastic Small-Round-Cell Tumor",
+   "Epithelioid Hemangioendothelioma",
+   "Epithelioid Sarcoma",
    "Ewing Sarcoma",
+   "Ewing Sarcoma of Soft Tissue",
+   "Extraskeletal Myxoid Chondrosarcoma",
+   "Fibrosarcoma",
+   "Ganglioneuroblastoma",
+   "Glomangiosarcoma",
    "Hepatoblastoma",
+   "Infantile Fibrosarcoma",
+   "Inflammatory Myofibroblastic Tumor",
+   "Intimal Sarcoma",
+   "Leiomyosarcoma",
+   "Liposarcoma",
+   "Low-Grade Fibromyxoid Sarcoma",
+   "Malignant Glomus Tumor",
+   "Malignant Peripheral Nerve Sheath Tumor",
+   "Malignant Rhabdoid Tumor of the Liver",
    "Melanoma",
+   "Myxofibrosarcoma",
    "Neuroblastoma",
    "Osteosarcoma",
+   "Perivascular Epithelioid Cell Tumor",
+   "Radiation-Associated Sarcoma",
+   "Rhabdoid Cancer",
    "Rhabdomyosarcoma",
+   "Round Cell Sarcoma, NOS",
+   "Sarcoma, NOS",
+   "Soft Tissue Myoepithelial Carcinoma",
+   "Synovial Sarcoma",
+   "Undifferentiated Pleomorphic Sarcoma/Malignant Fibrous Histiocytoma/High-Grade Spindle Cell Sarcoma",
    "Wilms' Tumor"
   ],
   "NCT05009992": [
-   "Diffuse Midline Glioma, H3 K27-Altered"
+   "Diffuse Midline Glioma, H3 K27-Altered",
+   "Diffuse Pediatric-Type High-Grade Glioma, H3-Wildtype and IDH-Wildtype"
   ],
   "NCT05106296": [
+   "Astrocytoma, IDH-Mutant, Grade 4",
+   "Desmoplastic/Nodular Medulloblastoma",
+   "Diffuse Midline Glioma, H3 K27-Altered",
    "Ependymoma",
+   "Ependymomal Tumor",
+   "Glioblastoma, IDH-Wildtype",
+   "Large Cell/Anaplastic Medulloblastoma",
    "Medulloblastoma",
+   "Medulloblastoma with Extensive Nodularity",
+   "Melanotic Medulloblastoma",
+   "Pediatric-Type Diffuse High-Grade Glioma",
    "Primary Brain Tumor"
   ],
   "NCT05180825": [
@@ -115,9 +204,11 @@
    "Spindle Cell/Sclerosing Rhabdomyosarcoma"
   ],
   "NCT05366218": [
-   "B-Lymphoblastic Leukemia/Lymphoma"
+   "B-Lymphoblastic Leukemia/Lymphoma",
+   "T-Lymphoblastic Leukemia/Lymphoma"
   ],
   "NCT05489887": [
+   "Ganglioneuroblastoma",
    "Neuroblastoma"
   ],
   "NCT05504291": [
@@ -127,17 +218,21 @@
    "Diffuse Glioma"
   ],
   "NCT05658640": [
-   "B-Lymphoblastic Leukemia/Lymphoma"
+   "B-Lymphoblastic Leukemia/Lymphoma",
+   "T-Lymphoblastic Leukemia/Lymphoma"
   ],
   "NCT05745714": [
-   "B-Lymphoblastic Leukemia/Lymphoma"
+   "B-Lymphoblastic Leukemia/Lymphoma",
+   "T-Lymphoblastic Leukemia/Lymphoma"
   ],
   "NCT05748171": [
-   "B-Lymphoblastic Leukemia/Lymphoma"
+   "B-Lymphoblastic Leukemia/Lymphoma",
+   "T-Lymphoblastic Leukemia/Lymphoma"
   ],
   "NCT05918640": [
    "Desmoplastic Small-Round-Cell Tumor",
-   "Ewing Sarcoma"
+   "Ewing Sarcoma",
+   "Ewing Sarcoma of Soft Tissue"
   ],
   "NCT05985161": [
    "Malignant Peripheral Nerve Sheath Tumor",
@@ -155,9 +250,11 @@
    "Synovial Sarcoma"
   ],
   "NCT06172296": [
+   "Ganglioneuroblastoma",
    "Neuroblastoma"
   ],
   "NCT06177067": [
+   "Acute Leukemias of Ambiguous Lineage",
    "Acute Myeloid Leukemia"
   ],
   "NCT06239272": [
@@ -184,25 +281,48 @@
    "Well-Differentiated Liposarcoma"
   ],
   "NCT06528691": [
-   "High-Grade Glioma, NOS"
+   "Anaplastic Ganglioglioma",
+   "Anaplastic Pleomorphic Xanthoastrocytoma",
+   "Astrocytoma, IDH-Mutant, Grade 3",
+   "Astrocytoma, IDH-Mutant, Grade 4",
+   "Diffuse Midline Glioma, H3 K27-Altered",
+   "Glioblastoma, IDH-Wildtype",
+   "High-Grade Glioma, NOS",
+   "Oligodendroglioma, IDH-mutant, and 1p/19q-Codeleted, Grade 3",
+   "Pediatric-Type Diffuse High-Grade Glioma"
   ],
   "NCT06865664": [
    "Rhabdomyosarcoma"
   ],
   "NCT07012447": [
+   "Acute Leukemias of Ambiguous Lineage",
    "Mixed Phenotype Acute Leukemia, T/Myeloid, NOS"
   ],
   "NCT07059975": [
    "Acute Myeloid Leukemia"
   ],
   "NCT07110246": [
-   "Low-Grade Glioma, NOS"
+   "Astrocytoma, IDH-Mutant, Grade 2",
+   "Desmoplastic Infantile Astrocytoma",
+   "Desmoplastic Infantile Ganglioglioma",
+   "Dysembryoplastic Neuroepithelial Tumor",
+   "Gangliocytoma",
+   "Ganglioglioma",
+   "Low-Grade Glioma, NOS",
+   "Oligodendroglioma, IDH-mutant, and 1p/19q-Codeleted, Grade 2",
+   "Papillary Glioneuronal Tumor",
+   "Pediatric-Type Diffuse Low-Grade Glioma",
+   "Pilocytic Astrocytoma",
+   "Pilomyxoid Astrocytoma",
+   "Pleomorphic Xanthoastrocytoma",
+   "Rosette-forming Glioneuronal Tumor of the Fourth Ventricle"
   ],
   "NCT07215910": [
    "Astrocytoma, IDH-Mutant, Grade 3"
   ],
   "NCT07297979": [
-   "Ewing Sarcoma"
+   "Ewing Sarcoma",
+   "Ewing Sarcoma of Soft Tissue"
   ],
   "NCT07440290": [
    "Diffuse Glioma",

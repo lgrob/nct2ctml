@@ -716,8 +716,12 @@ def map_global_diagnosis_to_oncotree_term(
     conditions_list = (
         tdh.safe_get(trial_data, ["protocolSection", "conditionsModule", "conditions"]) or []
     )
+    ident = tdh.safe_get(trial_data, ["protocolSection", "identificationModule"]) or {}
     seeded, from_eligibility = diagnosis.seed_and_map_diagnosis(
-        nct_id, conditions_list, global_eligibility_criteria
+        nct_id,
+        conditions_list,
+        global_eligibility_criteria,
+        title=ident.get("officialTitle") or ident.get("briefTitle") or "",
     )
     all_possible_diagnoses.update(seeded)
     all_possible_diagnoses.update(from_eligibility)

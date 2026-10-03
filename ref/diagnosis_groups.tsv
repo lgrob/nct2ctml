@@ -190,8 +190,8 @@ Askin tumor	(same as "Ewing sarcoma")		chest wall Ewing
 Askin tumour	(same as "Ewing sarcoma")		British spelling
 Ewing-like sarcoma	Round Cell Sarcoma, NOS		CIC- and BCOR-altered sarcomas; "Ewing-like sarcoma" does not contain the whole-word term "Ewing sarcoma", so it needs its own row
 # --- leukaemias
-acute leukemia	Acute Myeloid Leukemia;B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma;Acute Leukemias of Ambiguous Lineage	(mixed[- ]phenotype|biphenotypic|bilineal|[TB][- ]?cell|[TB][- ]lineage)[- ]?$	any lineage (2023-506581-31-00); "acute myeloid leukemia" does not contain this term, so needs no guard; the guard stops it inside "mixed phenotype acute leukemia" lineage-qualified forms are left to the model ("T-cell acute leukemia/lymphoma", NCT06742463, audit 2)
-acute leukaemia	Acute Myeloid Leukemia;B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma;Acute Leukemias of Ambiguous Lineage	(mixed[- ]phenotype|biphenotypic|bilineal|[TB][- ]?cell|[TB][- ]lineage)[- ]?$	British spelling lineage-qualified forms are left to the model ("T-cell acute leukemia/lymphoma", NCT06742463, audit 2)
+acute leukemia	Acute Myeloid Leukemia;B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma;Acute Leukemias of Ambiguous Lineage	(mixed[- ]phenotype|biphenotypic|bilineal|[TB][- ]?cell|[TB][- ]lineage|myeloid|lymphoblastic)[- ]?$	any lineage (2023-506581-31-00); "acute myeloid leukemia" does not contain this term, so needs no guard; the guard stops it inside "mixed phenotype acute leukemia" lineage-qualified forms are left to the model ("T-cell acute leukemia/lymphoma", NCT06742463, audit 2)
+acute leukaemia	Acute Myeloid Leukemia;B-Lymphoblastic Leukemia/Lymphoma;T-Lymphoblastic Leukemia/Lymphoma;Acute Leukemias of Ambiguous Lineage	(mixed[- ]phenotype|biphenotypic|bilineal|[TB][- ]?cell|[TB][- ]lineage|myeloid|lymphoblastic)[- ]?$	British spelling lineage-qualified forms are left to the model ("T-cell acute leukemia/lymphoma", NCT06742463, audit 2)
 acute leukemia of ambiguous lineage	Acute Leukemias of Ambiguous Lineage		longer term, so "acute leukemia" (which would add AML and both ALLs) does not fire on it
 acute leukemias of ambiguous lineage	Acute Leukemias of Ambiguous Lineage		the plural sits on the first noun (until TODO 1)
 acute leukaemia of ambiguous lineage	Acute Leukemias of Ambiguous Lineage		British spelling
@@ -271,3 +271,40 @@ blood cancer	_LIQUID_	§\s*United	lay wording in some titles; guard: "Blood Canc
 # Non-Seminomatous Germ Cell Tumor; Seminoma; Extra Gonadal Germ Cell Tumor.
 # Terms: germ cell tumor, germ cell tumour, malignant germ cell tumor (the
 # first already covers it), GCT left out - it collides with giant cell tumour.
+# --- 2026-10-03, populations the third audit found missing (doc/runs/2026-10-03-3.4-audit-3.md) ---
+pheochromocytoma and paraganglioma	Pheochromocytoma;Paraganglioma		PPGL is one population (NCT06398444, NCT07680205)
+phaeochromocytoma and paraganglioma	(same as "pheochromocytoma and paraganglioma")		British spelling
+pheochromocytoma or paraganglioma	(same as "pheochromocytoma and paraganglioma")		
+phaeochromocytoma or paraganglioma	(same as "pheochromocytoma and paraganglioma")		NCT07680205
+PPGL	(same as "pheochromocytoma and paraganglioma")		abbreviation
+paraganglioma	Paraganglioma		named beside pheochromocytoma and missed (NCT00107289 "malignant pheochromocytoma or malignant paraganglioma")
+phaeochromocytoma	Pheochromocytoma		British spelling of the Oncotree name
+germ cell tumor	Non-Seminomatous Germ Cell Tumor;Seminoma;Ovarian Germ Cell Tumor;Extra Gonadal Germ Cell Tumor	(non[- ]?seminomatous|mixed|CNS|intracranial|brain|central[- ]nervous[- ]system|testicular|ovarian|extra[- ]?gonadal)[- ]?$	extracranial germ-cell tumours of any site, as paediatric protocols mean them (2024-520054-38-00 published testis only); CNS germ-cell tumours have their own protocols and their own row; a qualified form is left to the model
+germ cell tumour	(same as "germ cell tumor")		British spelling
+malignant germ cell tumor	(same as "germ cell tumor")		
+malignant germ cell tumour	(same as "germ cell tumor")		
+extracranial germ cell tumor	Non-Seminomatous Germ Cell Tumor;Seminoma;Ovarian Germ Cell Tumor;Extra Gonadal Germ Cell Tumor		longer term, so the CNS guard of "germ cell tumor" does not apply
+extracranial germ cell tumour	(same as "extracranial germ cell tumor")		British spelling
+CNS germ cell tumor	Germ Cell Tumor, Brain		
+CNS germ cell tumour	(same as "CNS germ cell tumor")		British spelling
+intracranial germ cell tumor	Germ Cell Tumor, Brain		
+intracranial germ cell tumour	(same as "intracranial germ cell tumor")		British spelling
+B-cell malignancy	B-Lymphoblastic Leukemia/Lymphoma;Mature B-Cell Neoplasms	mature[- ]?$	precursor and mature B-cell disease (NCT06092047 "CD19-positive ... B-cell hematolymphatic malignancies" published as mature B only)
+B-cell hematologic malignancy	B-Lymphoblastic Leukemia/Lymphoma;Mature B-Cell Neoplasms	mature[- ]?$	
+B-cell hematological malignancy	B-Lymphoblastic Leukemia/Lymphoma;Mature B-Cell Neoplasms	mature[- ]?$	
+B-cell haematological malignancy	B-Lymphoblastic Leukemia/Lymphoma;Mature B-Cell Neoplasms	mature[- ]?$	British spelling
+B-cell hematolymphatic malignancy	B-Lymphoblastic Leukemia/Lymphoma;Mature B-Cell Neoplasms	mature[- ]?$	
+B-cell lymphoid malignancy	B-Lymphoblastic Leukemia/Lymphoma;Mature B-Cell Neoplasms	mature[- ]?$	
+B-cell neoplasm	B-Lymphoblastic Leukemia/Lymphoma;Mature B-Cell Neoplasms	mature[- ]?$	
+mature B-cell malignancy	Mature B-Cell Neoplasms		the qualified form
+non-uveal melanoma	Melanoma;Head and Neck Mucosal Melanoma;Anorectal Mucosal Melanoma;Mucosal Melanoma of the Esophagus;Mucosal Melanoma of the Urethra;Mucosal Melanoma of the Vulva/Vagina;Conjunctival Melanoma		cutaneous, acral, mucosal and conjunctival melanoma; Oncotree's Melanoma node is skin only (2024-516914-39-00)
+mucosal melanoma	Head and Neck Mucosal Melanoma;Anorectal Mucosal Melanoma;Mucosal Melanoma of the Esophagus;Mucosal Melanoma of the Urethra;Mucosal Melanoma of the Vulva/Vagina		the mucosal sites sit under their organs, not under Melanoma
+myelofibrosis	Primary Myelofibrosis;Polycythaemia Vera Myelofibrosis;Essential Thrombocythemia Myelofibrosis	(primary|panmyelosis[- ]with)[- ]?$	primary and post-PV/post-ET myelofibrosis (NCT04888741 published primary only)
+head and neck cancer	Head and Neck Squamous Cell Carcinoma;Nasopharyngeal Carcinoma;Salivary Carcinoma;Head and Neck Carcinoma, Other;Head and Neck Mucosal Melanoma	(squamous[- ]cell|mucosal|melanoma of the)[- ]?$	the Head and Neck branch's malignancies (NCT06912763 published "Other" only)
+head and neck carcinoma	Head and Neck Squamous Cell Carcinoma;Nasopharyngeal Carcinoma;Salivary Carcinoma;Head and Neck Carcinoma, Other	(squamous[- ]cell)[- ]?$	
+solid and hematologic malignancy	_SOLID_;_LIQUID_		"solid" here qualifies malignancy, so the hematologic row alone gave _LIQUID_ only
+solid and hematological malignancy	(same as "solid and hematologic malignancy")		
+solid and haematological malignancy	(same as "solid and hematologic malignancy")		British spelling
+solid or hematologic malignancy	(same as "solid and hematologic malignancy")		
+solid or hematological malignancy	(same as "solid and hematologic malignancy")		
+solid and liquid tumor	(same as "solid and hematologic malignancy")		

@@ -38,7 +38,7 @@ answer as a floor, recover these without costing too much precision?
   - an abbreviation in brackets inherits its term's result;
   - a lineage veto: an unqualified ALL/LBL/NHL keeps only the lineage the
     text names, if it names exactly one.
-- **Text read:** the title, the conditions and the inclusion criteria only.
+- **Text read:** the inclusion criteria only. This record said "the title, the conditions and the inclusion criteria"; in fact neither registry passed the title, and ClinicalTrials.gov did not pass the conditions (corrected 2026-10-03; since then all three are read, see [2026-10-03-floor-groups-and-title.md](2026-10-03-floor-groups-and-title.md)).
 - **Applied** in `seed_and_map_diagnosis` after the model call, so the
   prompts are unchanged.
 - **Measured by replay**, not a new model run: both gpt-oss corpus runs

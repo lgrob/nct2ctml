@@ -185,6 +185,7 @@ def diagnosis_text(
     return legacy
 
 
+_WILDCARDS = frozenset({"_SOLID_", "_LIQUID_"})
 _EXCLUSION_HEADING = re.compile(r"(?im)^\s*exclusion criteria\s*:?")
 
 
@@ -199,7 +200,10 @@ def population_text(diagnosis_input: str) -> str:
 
 
 def seed_and_map_diagnosis(
-    trial_id: str, conditions_list: Iterable[str] | None, eligibility_criteria: str = ""
+    trial_id: str,
+    conditions_list: Iterable[str] | None,
+    eligibility_criteria: str = "",
+    title: str = "",
 ) -> tuple[list[str], list[str]]:
     """
     The diagnosis path both registries share: read the conditions, then ask
@@ -249,13 +253,47 @@ def seed_and_map_diagnosis(
     # are unchanged.
     import config
 
-    if getattr(config, "DIAGNOSIS_TEXT_FLOOR", False) and eligibility_criteria:
+    # The floor reads the title and the conditions as well as the inclusion
+    # text. Until 2026-10-03 it read only the diagnosis input, which carries
+    # neither title nor (for ClinicalTrials.gov) conditions in labelled mode,
+    # so "High-Risk Acute Leukemias" in a title (NCT07573111) or "solid
+    # tumours and blood cancer" in a CTIS title (2023-510424-68-00) never
+    # reached it (third audit, doc/runs/2026-10-03-3.4-audit-3.md).
+    if getattr(config, "DIAGNOSIS_TEXT_FLOOR", False) and (
+        eligibility_criteria or title or conditions_list
+    ):
         known = set(seeded) | set(from_eligibility)
-        from_text = [
-            t
-            for t in rv.diagnoses_from_text(population_text(eligibility_criteria), trial_id)
-            if t not in known
+        population = population_text(eligibility_criteria or "")
+        conditions_text = "; ".join(c for c in (conditions_list or []) if c)
+        # Named populations from all three texts in one pass, so the lineage
+        # veto sees the whole trial: a B-ALL CAR-T trial's "CD19" in the
+        # inclusion text keeps its unqualified "ALL" title B-lineage.
+        combined = "\n".join(
+            part
+            for part in (
+                f"Title: {title}" if title else "",
+                f"Conditions: {conditions_text}" if conditions_text else "",
+                population,
+            )
+            if part
+        )
+        # The union with the eligibility text's own pass keeps everything the
+        # floor gave before: with the title and conditions in view, the lineage
+        # veto can see a "B-cell" title and drop a T-lineage the inclusion text
+        # admits (NCT04099966, an HSCT trial for ALL and lymphoma).
+        from_population = rv.diagnoses_from_text(population, trial_id)
+        from_text = [t for t in from_population if t not in _WILDCARDS] + [
+            t for t in rv.diagnoses_from_text(combined, trial_id) if t not in _WILDCARDS
         ]
+        # A basket wildcard from the eligibility text, as before. From the
+        # title only when nothing specific has been found: an umbrella title
+        # ("Relapsed or Refractory HEMatological Malignancies in Children,
+        # Subprotocol D", NCT05658640) heads a subprotocol for one disease. The
+        # conditions list never gives one here; _basket_wildcards decides that.
+        from_text += [t for t in from_population if t in _WILDCARDS]
+        if title and not ((known | set(from_text)) - _WILDCARDS):
+            from_text += [t for t in rv.diagnoses_from_text(title, trial_id) if t in _WILDCARDS]
+        from_text = [t for t in dict.fromkeys(from_text) if t not in known]
         if from_text:
             logger.info(f"{trial_id} | Text floor adds {from_text}")
             seeded = list(seeded) + from_text

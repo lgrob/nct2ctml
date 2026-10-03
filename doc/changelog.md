@@ -2,6 +2,25 @@
 
 What changed in this fork after the initial retargeting, newest first. Moved from CHANGES.md on 2026-09-28 (improvement plan step 13); the entries are unchanged. Measured decisions are in [decisions/](decisions/), mapping runs and queue reviews in [runs/](runs/).
 
+## The text floor reads the title and conditions; eight more groups (2026-10-03)
+
+`seed_and_map_diagnosis` takes the title, and the floor reads title,
+conditions and inclusion text. Until now it read the inclusion text only, so
+a population named only in a title or condition list never reached it.
+- **Named terms:** come from one combined pass, unioned with the inclusion
+  pass, so nothing the floor gave before is lost.
+- **Basket wildcards:** come from the inclusion text, and from the title
+  only when nothing specific is found.
+- **New rows in `ref/diagnosis_groups.tsv`:** PPGL, germ-cell tumours,
+  B-cell malignancies, non-uveal and mucosal melanoma, myelofibrosis, head
+  and neck cancer, "solid and hematologic malignancies".
+- **Guard:** "myeloid" and "lymphoblastic" now block "acute leukemia".
+
+Replayed: 142 trials gain terms, none lose one; benchmark NCT population
+recall 0.94 -> 0.96, precision 0.68 -> 0.65
+([decision](decisions/2026-10-03-floor-groups-and-title.md)). 10 tests; the
+conditions baseline was updated.
+
 ## Contradictions across levels, four floor guards, registry age conflicts (2026-10-03)
 
 - **Contradictions:** `find_unsatisfiable_genes` now sees the partner a
