@@ -110,3 +110,24 @@ Not done:
 - **Arm narrower than its step:** NCT06159478, and 3 more trials in the
   audit. A separate check.
 - **Rows for the 12 losses no group row reaches.**
+
+## Addendum: three small rows (2026-10-03)
+
+Added after the arm check, by the user's instruction:
+- **`BALL`:** B-ALL without the hyphen, capitals only (2023-508357-58-00).
+- **"aggressive (mature) B-cell lymphoma / B-NHL":** DLBCL, Burkitt and
+  Burkitt-like, the HGBLs, PMBCL, the IRF4, ALK+, T-cell/histiocyte-rich and
+  EBV+ large B-cell lymphomas (NCT05533775).
+  - Guarded against history and AIDS-defining-cancer clauses ("No history of
+    AIDS-defining cancers (e.g. ... aggressive B-cell lymphoma ...)",
+    NCT04055220).
+- **"solid tumor(s)/malignancy or/and lymphoma(s)":** `_SOLID_` plus the
+  lymphoma groups (NCT04084067), with the solid tumor row's enumeration
+  guard.
+
+**Replay:**
+- 20 trials gain terms, none lose one, and no routing changes.
+- The benchmark is unchanged: NCT population recall 0.96, precision 0.65.
+- The third audit's three trials are now covered: 2023-508357-58-00
+  (B-ALL), NCT05533775 and NCT04084067.
+

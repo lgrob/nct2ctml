@@ -181,6 +181,29 @@ class TestAudit3Groups(unittest.TestCase):
         self.assertEqual(floor("Relapsed/Refractory Myeloid Acute Leukemia"), [])
 
 
+class TestAudit3SmallRows(unittest.TestCase):
+    def test_ball_is_b_all_in_capitals_only(self):
+        # 2023-508357-58-00.
+        self.assertEqual(floor("CD123+ BALL"), [B_ALL])
+        self.assertEqual(floor("play with a ball"), [])
+
+    def test_aggressive_b_nhl_lists_the_aggressive_types(self):
+        # NCT05533775: published Burkitt, DLBCL and PMBCL only.
+        found = floor("aggressive mature B-cell non-Hodgkin lymphoma (B-NHL)")
+        self.assertIn("High-Grade B-Cell Lymphoma, NOS", found)
+        self.assertNotIn("Follicular Lymphoma", found)
+        # NCT04055220: an HIV clause, not the population.
+        self.assertEqual(
+            floor("No history of AIDS-defining cancers (e.g. aggressive B-cell lymphoma)"), []
+        )
+
+    def test_solid_tumor_or_lymphoma(self):
+        # NCT04084067: published _SOLID_ only.
+        found = floor("primary or relapsed solid tumor or lymphoma")
+        self.assertIn("_SOLID_", found)
+        self.assertIn("Hodgkin Lymphoma", found)
+
+
 class TestFloorReadsTitleAndConditions(unittest.TestCase):
     def _run(self, conditions, text, title):
         with (
