@@ -19,6 +19,7 @@ alternatives also has a file in [../decisions/](../decisions/).
 | 2026-10-02 | 3.4 | [Audit of the gpt-oss mapping run (roadmap 3.4, 2026-10-02)](2026-10-02-3.4-audit.md) |
 | 2026-10-02 | 3.4 | [Second audit: the pipeline after the text floor and without disease status (2026-10-02)](2026-10-02-3.4-audit-2.md) |
 | 2026-10-02 | 3.4 | [Gene-criteria audit: how often the published gene criteria lose patients (2026-10-02)](2026-10-02-3.4-gene-audit.md) |
+| 2026-10-03 | 3.4 | [Third audit: 150 published trials of release index-2026.10.03 (2026-10-03)](2026-10-03-3.4-audit-3.md) |
 
 ## Recording a new one
 
