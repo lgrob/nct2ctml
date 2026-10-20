@@ -131,8 +131,8 @@ trial without this flag is not checked, only not contested.
 
 The comparison runs against what the index publishes: `cache/ctml`, with the
 `ctml/needs-review` copy taking precedence. A trial in `ctml/reviewed` is never
-compared. `--route narrows` (or `NCT2CTML_TWO_READERS_ROUTE=narrows`) sends
-only the narrowing disagreements to review.
+compared. Only narrowing disagreements go to review by default. `--route any`
+(or `NCT2CTML_TWO_READERS_ROUTE=any`) sends every disagreement.
 
 `exclude` takes a trial out of scope: it adds a `skip` row with the reason to
 `ref/scope_overrides.tsv` and logs it in `ctml/review_log.tsv`. `map --all`

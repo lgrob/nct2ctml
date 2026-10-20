@@ -285,7 +285,7 @@ def reconcile(
     second_dir: str,
     review_dir: str,
     reviewed_dir: str = "ctml/reviewed",
-    route: str = "any",
+    route: str = "narrows",
     apply: bool = False,
 ) -> list[dict[str, Any]]:
     """
@@ -294,8 +294,9 @@ def reconcile(
 
     The primary side is what the index publishes: `primary_dir` and
     `review_dir`, the review copy winning, curated trials (`reviewed_dir`)
-    left out. `route` is "any" (every disagreement goes to review) or
-    "narrows" (only one where the primary shuts patients out).
+    left out. `route` is "narrows" (only a disagreement where the primary
+    shuts patients out; the default, see config.TWO_READERS_ROUTE) or "any"
+    (every disagreement goes to review).
     """
     primary = _primary_copies(primary_dir, review_dir, reviewed_dir)
     second = _trials(second_dir)

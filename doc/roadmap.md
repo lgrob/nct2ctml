@@ -179,7 +179,7 @@ something a diagnostic lab can defend.
 
 | id | Decision | Options | Needed by |
 |---|---|---|---|
-| D1 | ~~Mapping backend~~ | **Decided:** Claude Haiku 4.5 via the Anthropic API. Sonnet 5 (whole path, and stage 2 only) and Opus 5.5 measured and not adopted: none improves recall. | done |
+| D1 | ~~Mapping backend~~ | **Decided 2026-10-01:** gpt-oss:120b on the cluster, with pinned weights, for reproducibility ([decisions/2026-10-01-gpt-oss-backend.md](decisions/2026-10-01-gpt-oss-backend.md)). This superseded the earlier Haiku 4.5 choice. Sonnet 5 and Opus 5.5 were measured and not adopted because neither improves recall. **Proposed 2026-10-20:** Haiku 4.5 as a second reader whose disagreements route to review ([decisions/2026-10-20-two-readers.md](decisions/2026-10-20-two-readers.md)). | done; follow-up awaiting the user |
 | D2 | Which SNVs and CNVs count as matchable | For example OncoKB (likely) oncogenic, the lab's own tiering, impact class; amplification threshold relative to ploidy | 4.3 |
 | D3 | Where unreviewed-trial hits may appear | Curator view only, or tumour-board report flagged as unreviewed | 4.4 |
 | D4 | Curator time | Who reviews, and a target review rate | 1.6, 5.2 |

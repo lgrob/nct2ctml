@@ -7,3 +7,4 @@ date	trial_id	reviewer	from_layer	flags_resolved	sha256	note
 2026-10-02	2022-502051-56-00	Linda	needs_review	diagnosis_excluded	897b1310eab821fbafc32f10b42320d64df28e50425cd2b779cc7835f389b891	
 2026-10-02	2022-502503-30-00	Linda	needs_review	diagnosis_excluded	a1b9ad6178663b90ae3dbdacfeaa07cdeac1d52a6e22b70759225e7202f1b177	
 2026-10-02	2023-504071-24-00	Linda	needs_review	excluded		not a cancer treatment involved
+2026-10-04	2024-510575-38-00	Linda	needs_review	diagnosis_excluded	741103804a98555d78bf7d30a652f983dff54497bc55f709e99685f4b3046c9d	

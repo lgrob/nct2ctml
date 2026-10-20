@@ -19,7 +19,9 @@ it never compares a trial in `ctml/reviewed`.
 - `reader_disagreement` is in `FLAG_KEYS` with curator advice, has a routing
   reason in `_destination_for`, and gives one review-sheet item per
   difference, narrowing ones first.
-- `config.TWO_READERS_ROUTE` is `any` (the default) or `narrows`.
+- `config.TWO_READERS_ROUTE` is `narrows` (the default, measured in
+  [decisions/2026-10-20-two-readers.md](decisions/2026-10-20-two-readers.md))
+  or `any`.
 - The flag is a review trigger, not a verdict. The gene comparison ignores
   OR/AND structure, and the comparator cannot see an error both readers
   share. On the 2026-09-30 benchmark those shared errors were the larger
@@ -37,7 +39,7 @@ cluster.
 **`bench/two_readers_measure.py`** measures whether disagreement points at
 errors, either against the curated key (`benchmark`) or against the third
 audit's verdicts, reading the audited release archive directly (`audit`).
-Whether to adopt two readers waits on those numbers.
+Measured in [decisions/2026-10-20-two-readers.md](decisions/2026-10-20-two-readers.md); adoption awaits the user.
 
 A by-product measurement, not a second reader: the audited release
 `index-2026.10.03` against today's rebuilt gpt-oss corpus (replay at

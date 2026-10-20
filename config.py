@@ -159,10 +159,14 @@ CTML_REVIEW_PATH = "ctml/needs-review"
 CTML_MAPPED_PATH = "cache/ctml"
 CTML_REVIEWED_PATH = "ctml/reviewed"
 # Two independent readers (utils/two_readers.py): which disagreements between
-# the primary mapping and a second model's send the trial to review. "any"
-# routes every one; "narrows" only those where the primary shuts out patients
-# the second reader admits - a diagnosis population, a gene or an age bound.
-TWO_READERS_ROUTE = _env("TWO_READERS_ROUTE", "any")
+# the primary mapping and a second model's send the trial to review. "narrows"
+# routes only those where the primary shuts out patients the second reader
+# admits - a diagnosis population, a gene or an age bound; "any" routes every
+# one. narrows, measured on the third audit's trials the rebuild left
+# unchanged: 10 of 16 patient-losing trials caught at a 22% review load,
+# against 13 of 16 at 38% for any
+# (doc/decisions/2026-10-20-two-readers.md).
+TWO_READERS_ROUTE = _env("TWO_READERS_ROUTE", "narrows")
 # Where the pull stage caches raw registry records, one JSON per trial, keyed
 # by NCT id or EU CT number. The benchmark reads both, because 5 of the 55
 # curated keys in ctml/reviewed are CTIS trials.
