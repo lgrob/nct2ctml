@@ -21,6 +21,7 @@ alternatives also has a file in [../decisions/](../decisions/).
 | 2026-10-02 | 3.4 | [Gene-criteria audit: how often the published gene criteria lose patients (2026-10-02)](2026-10-02-3.4-gene-audit.md) |
 | 2026-10-03 | 3.4 | [Third audit: 150 published trials of release index-2026.10.03 (2026-10-03)](2026-10-03-3.4-audit-3.md) |
 | 2026-10-20 | 0.4 | [Live smoke test of the Anthropic backend (roadmap 0.4, 2026-10-20)](2026-10-20-0.4-anthropic-smoke-test.md) |
+| 2026-10-20 | D1 | [Benchmark: Claude Haiku 4.5 on the live API at the current pipeline (2026-10-20)](2026-10-20-haiku-benchmark-current.md) |
 
 ## Recording a new one
 
