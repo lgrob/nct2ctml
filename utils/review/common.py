@@ -39,6 +39,7 @@ FLAG_KEYS = (
     "diagnosis_excluded",
     "genomic_contradiction",
     "genomic_emptied",
+    "reader_disagreement",
     "remap_dropped_diagnoses",
     "gene_status_contradiction",
     "protein_change_unverified",
@@ -108,6 +109,11 @@ ADVICE = {
     "nobody. Often an exclusion written for the whole gene ('!Any Variation') where the "
     "text excludes one variant, or a gene also required as a fusion partner. Narrow or "
     "remove the exclusion, then delete the top-level `genomic_contradiction:` line.",
+    "reader_disagreement": "A second model, of a different family, mapped this trial "
+    "differently (utils/two_readers.py). Each line is one difference; 'narrows' means the "
+    "published mapping shuts out patients the second reader admits, which is the error that "
+    "loses patients. Check each against the text, correct the CTML where the second reader "
+    "is right, then delete the top-level `reader_disagreement:` line.",
     "genomic_emptied": "The model returned these genes and post-processing dropped every one, so the "
     "trial now matches on its clinical criteria alone - every patient with the "
     "diagnosis, whatever their sequencing says. Usual causes: the alteration was "

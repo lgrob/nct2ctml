@@ -258,6 +258,32 @@ def _gene_status_items(ctml, inc, ref):
     ]
 
 
+def _reader_disagreement_items(ctml):
+    """
+    What a second, independent reader mapped differently (utils/two_readers).
+    One item per difference, so a curator sees each on its own line; the
+    narrowing ones first, because those are the ones that lose patients.
+    """
+    raw = ctml.get("reader_disagreement")
+    if not raw:
+        return []
+    reader, _, rest = str(raw).partition(": ")
+    parts = [p.strip() for p in rest.split("; ") if p.strip()] or [str(raw)]
+    parts.sort(key=lambda p: " narrows:" not in p)
+    items = []
+    for part in parts:
+        kind = part.split(" ", 1)[0]
+        items.append(
+            common.Item(
+                kind if kind in ("diagnosis", "gene", "age") else "diagnosis",
+                part,
+                flag="reader_disagreement",
+                note=f"second reader: {reader}" if rest else "",
+            )
+        )
+    return items
+
+
 def _gene_item(g, sym, side, sections, tl_genes, ref):
     label = f"{sym} {g.get('variant_category', '')}".strip()
     it = common.Item(
@@ -412,7 +438,8 @@ def analyse(trial_id, ref):
     """
     Everything a review sheet shows for one trial, as items in a fixed order:
     no diagnosis, genes kept out of the tree, diagnoses a re-map dropped, each
-    diagnosis, gene-status contradictions, each genomic criterion (gene,
+    diagnosis, gene-status contradictions, what a second reader mapped
+    differently, each genomic criterion (gene,
     partner, protein change), and the age.
     """
     path, layer = common._layer_of(trial_id)
@@ -433,6 +460,7 @@ def analyse(trial_id, ref):
         + _remap_drop_items(ctml, sections_with_title, ref)
         + _diagnosis_items(ctml, got, sections, sections_with_title, ref)
         + _gene_status_items(ctml, inc, ref)
+        + _reader_disagreement_items(ctml)
         + _genomic_items(got, sections, tl_genes, ref)
         + [_age_item(got, record)]
     )

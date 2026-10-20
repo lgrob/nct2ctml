@@ -115,6 +115,7 @@ Examples:
   python main.py map --all                           # Map all eligible trials (uses config default)
   python main.py map --all --cutoff-days 14          # Map trials updated in last 14 days
   python main.py map --nct_id NCT03997435            # Map specific trial
+  python main.py map --ids @audit_ids.txt --out DIR  # Map a list (review copies stay in DIR)
         """,
     )
     map_group = map_parser.add_mutually_exclusive_group(required=True)
@@ -132,6 +133,13 @@ Examples:
         type=str,
         metavar="CT_NUMBER",
         help="Map a specific CTIS trial number (EU registry) to CTML format",
+    )
+    map_group.add_argument(
+        "--ids",
+        type=str,
+        metavar="IDS",
+        help="Map a list of trials in one run: comma-separated NCT ids and EU CT numbers, "
+        "or @FILE with one id per line (e.g. a second reader on an audit sample)",
     )
 
     map_parser.add_argument(
@@ -228,6 +236,14 @@ Examples:
             ctml_files_path = config.CTML_MAPPED_PATH
         os.makedirs(ctml_files_path, exist_ok=True)
         logger.info(f"Writing mapped CTML to {ctml_files_path}")
+        # Output anywhere but the published layer keeps its review-routed
+        # trials beside it. Until 2026-10-20 they went to the curators'
+        # ctml/needs-review whatever --out said, so a development run or a
+        # second reader's run wrote model output into the review queue (the
+        # benchmark already avoided this: bench.benchmark_map.review_dir).
+        if os.path.realpath(ctml_files_path) != os.path.realpath(config.CTML_MAPPED_PATH):
+            config.CTML_REVIEW_PATH = os.path.join(ctml_files_path, "needs-review")
+            logger.info(f"Review-routed trials go to {config.CTML_REVIEW_PATH}")
         # A run: run.json and every model call under config.RUNS_PATH, and its
         # id in each file's _provenance block (utils/provenance.py).
         from utils import provenance
@@ -239,12 +255,28 @@ Examples:
                     map_all(nct_files_path, ctml_files_path, args)
                 if args.source in ("ctis", "all"):
                     map_all_ctis(ctis_files_path, ctml_files_path, args)
+            elif args.ids:
+                for trial_id in _read_ids(args.ids):
+                    if trial_id.upper().startswith("NCT"):
+                        map_nct(trial_id, nct_files_path, ctml_files_path)
+                    else:
+                        map_ctis(trial_id, ctis_files_path, ctml_files_path)
             elif args.ct_number:
                 map_ctis(args.ct_number, ctis_files_path, ctml_files_path)
             else:
                 map_nct(args.nct_id, nct_files_path, ctml_files_path)
         finally:
             provenance.finish_run(output=ctml_files_path)
+
+
+def _read_ids(spec):
+    """Trial ids from "A,B,C" or "@file" (one per line, '#' comments allowed)."""
+    if spec.startswith("@"):
+        with open(spec[1:], encoding="utf-8") as handle:
+            raw = [line.split("#", 1)[0] for line in handle]
+    else:
+        raw = spec.split(",")
+    return list(dict.fromkeys(i.strip() for i in raw if i.strip()))
 
 
 def map_ctis(ct_number, ctis_files_path, ctml_files_path):

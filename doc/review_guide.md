@@ -106,6 +106,34 @@ review. `flag-exclusions` applies the same check to CTML already written;
 with `--apply` it adds the flag and moves mapped trials to the review queue.
 `ctml/reviewed` is never touched.
 
+**A second reader disagrees** (`reader_disagreement`). The trial was mapped
+twice, by two models of different families (for example gpt-oss:120b and
+Claude Haiku 4.5), and the two mappings reach different patients
+(`utils/two_readers.py`). Each line of the flag is one difference:
+
+- **`narrows`:** the published mapping shuts out patients the second reader
+  admits. This is the line to read first, because it is the error that loses
+  patients.
+- **`widens`:** the published mapping admits patients the second reader
+  shuts out.
+
+Read each line against the text. Where the second reader is right, correct the
+CTML. Then delete the `reader_disagreement:` line. The comparison is on effect
+and not on wording: a parent and its children, or a wildcard and its members,
+count as the same patients. It cannot see an error both readers share. So a
+trial without this flag is not checked, only not contested.
+
+```
+./.venv/bin/python main.py map --ids @ids.txt --out DIR   # second reader; review copies stay in DIR
+./.venv/bin/python -m utils.two_readers --second DIR      # dry run: counts, nothing written
+./.venv/bin/python -m utils.two_readers --second DIR --tsv out.tsv --apply
+```
+
+The comparison runs against what the index publishes: `cache/ctml`, with the
+`ctml/needs-review` copy taking precedence. A trial in `ctml/reviewed` is never
+compared. `--route narrows` (or `NCT2CTML_TWO_READERS_ROUTE=narrows`) sends
+only the narrowing disagreements to review.
+
 `exclude` takes a trial out of scope: it adds a `skip` row with the reason to
 `ref/scope_overrides.tsv` and logs it in `ctml/review_log.tsv`. `map --all`
 then no longer maps the trial, and the index build drops it from every layer

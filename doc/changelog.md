@@ -2,6 +2,56 @@
 
 What changed in this fork after the initial retargeting, newest first. Moved from CHANGES.md on 2026-09-28 (improvement plan step 13); the entries are unchanged. Measured decisions are in [decisions/](decisions/), mapping runs and queue reviews in [runs/](runs/).
 
+## Two independent readers (2026-10-20)
+
+**A second model's mapping can now be compared with the published one.**
+`utils/two_readers.py` maps nothing itself. It takes two mappings of the same
+trials from different model families and compares each pair on who the trial
+reaches: the diagnosis population (descendants expanded, `!` exclusions taken
+out), the required and excluded genes, and the age window. Every difference
+carries a direction from the published side. `narrows` means the published
+mapping shuts out patients the second reader admits; `widens` means the
+reverse. `python -m utils.two_readers --second DIR` is a dry run by default;
+with `--apply` it writes a top-level `reader_disagreement` line and moves the
+trial to review. It writes by text append, so curator comments survive, and
+it never compares a trial in `ctml/reviewed`.
+
+- `reader_disagreement` is in `FLAG_KEYS` with curator advice, has a routing
+  reason in `_destination_for`, and gives one review-sheet item per
+  difference, narrowing ones first.
+- `config.TWO_READERS_ROUTE` is `any` (the default) or `narrows`.
+- The flag is a review trigger, not a verdict. The gene comparison ignores
+  OR/AND structure, and the comparator cannot see an error both readers
+  share. On the 2026-09-30 benchmark those shared errors were the larger
+  finding.
+
+**`main.py map --out DIR` no longer writes into the curators' queue.**
+Review-routed trials went to `ctml/needs-review` whatever `--out` said, so a
+development run or a second reader's run would have put model output into
+the review queue. Output anywhere but `CTML_MAPPED_PATH` now keeps them in
+`DIR/needs-review`. The benchmark already did this through `review_dir`.
+`map --ids A,B` or `--ids @file` maps a list of trials in one run, and
+`scripts/run_anthropic_mapping.sh reader` (with `IDS_FILE=`) runs it on the
+cluster.
+
+**`bench/two_readers_measure.py`** measures whether disagreement points at
+errors, either against the curated key (`benchmark`) or against the third
+audit's verdicts, reading the audited release archive directly (`audit`).
+Whether to adopt two readers waits on those numbers.
+
+A by-product measurement, not a second reader: the audited release
+`index-2026.10.03` against today's rebuilt gpt-oss corpus (replay at
+`905fd0d`).
+
+- 0 of the 59 trials the audit judged correct changed.
+- 14 of the 30 trials it found losing patients now reach more patients.
+- 6 audited trials are no longer published: the 4 arm-narrower trials the
+  audit named, NCT05286788 and NCT06540963.
+
+So the fixes since the audit landed on its errors and not on its correct
+trials. "Reaches more patients" is not "now correct", which only a re-read
+can settle.
+
 ## Review support: queue order, text gaps, audit confirmation (2026-10-03)
 
 Aids for the human reviewer, none of which decides or edits anything

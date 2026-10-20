@@ -158,6 +158,11 @@ CTML_REVIEW_PATH = "ctml/needs-review"
 # layer replaces an earlier one for the same trial (utils/build_trial_index.py).
 CTML_MAPPED_PATH = "cache/ctml"
 CTML_REVIEWED_PATH = "ctml/reviewed"
+# Two independent readers (utils/two_readers.py): which disagreements between
+# the primary mapping and a second model's send the trial to review. "any"
+# routes every one; "narrows" only those where the primary shuts out patients
+# the second reader admits - a diagnosis population, a gene or an age bound.
+TWO_READERS_ROUTE = _env("TWO_READERS_ROUTE", "any")
 # Where the pull stage caches raw registry records, one JSON per trial, keyed
 # by NCT id or EU CT number. The benchmark reads both, because 5 of the 55
 # curated keys in ctml/reviewed are CTIS trials.

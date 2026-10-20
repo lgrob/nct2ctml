@@ -880,6 +880,10 @@ class TrialMapManager:
             reasons.append(
                 "the match tree requires and forbids the same gene, so it matches nobody"
             )
+        if "reader_disagreement" in keys:
+            reasons.append(
+                "a second, independent reader mapped the trial differently on who it reaches"
+            )
         if "genomic_emptied" in keys:
             reasons.append(
                 "the model returned genomic criteria and post-processing dropped all of them, "

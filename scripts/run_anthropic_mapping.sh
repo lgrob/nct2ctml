@@ -5,6 +5,8 @@
 #   sbatch scripts/run_anthropic_mapping.sh benchmark   # the curated trials
 #   sbatch --time=24:00:00 scripts/run_anthropic_mapping.sh map-all
 #   (SOURCE=nct|ctis for one registry, CUTOFF_DAYS=N for recent NCT trials)
+#   sbatch --export=ALL,IDS_FILE=ids.txt scripts/run_anthropic_mapping.sh reader
+#   (a second, independent reader on a list of trials; see utils/two_readers.py)
 #
 # The Anthropic backend is an HTTPS client, so unlike
 # scripts/run_ollama_mapping.sh this job needs no GPU, no Apptainer image and
@@ -170,6 +172,19 @@ case "$MODE" in
     echo "[$(date +%T)] benchmarking against the curated trials -> $OUT"
     $PY -m bench.benchmark_map --out "$OUT" --json "$OUT/report.json"
     ;;
+  reader)
+    # A second reader (utils/two_readers.py): map a list of trials into its
+    # own directory, review copies included, so nothing reaches cache/ctml or
+    # the curators' queue. Compare afterwards with
+    #   ./.venv/bin/python -m utils.two_readers --second "$OUT"
+    if [ -z "${IDS_FILE:-}" ] || [ ! -f "$IDS_FILE" ]; then
+      echo "FATAL: reader mode needs IDS_FILE=<file with one trial id per line>."
+      exit 1
+    fi
+    OUT="${OUT:-cache/ctml_reader-$(echo "$MODEL" | tr ':/' '--')-${SLURM_JOB_ID:-local}}"
+    echo "[$(date +%T)] second reader: $(grep -cvE '^\s*(#|$)' "$IDS_FILE") trials from $IDS_FILE -> $OUT"
+    $PY main.py map --ids "@$IDS_FILE" --out "$OUT"
+    ;;
   map-all)
     CUTOFF_DAYS="${CUTOFF_DAYS:-36500}"
     SOURCE="${SOURCE:-all}"
@@ -183,7 +198,7 @@ case "$MODE" in
     fi
     ;;
   *)
-    echo "unknown mode '$MODE' (expected: smoke | benchmark | map-all)"; exit 2 ;;
+    echo "unknown mode '$MODE' (expected: smoke | benchmark | map-all | reader)"; exit 2 ;;
 esac
 
 # --- what it cost ----------------------------------------------------------
