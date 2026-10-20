@@ -31,10 +31,10 @@ Standing rules for every step:
 
 | Phase | State |
 |---|---|
-| 0 - Now | 0.1, 0.2 and 0.3 done. Open: 0.4 (live SDK smoke test, needs an API key). |
+| 0 - Now | Done. 0.4, the live SDK smoke test, passed 2026-10-20 (doc/runs/2026-10-20-0.4-anthropic-smoke-test.md). |
 | 1 - Deterministic fixes | 1.1-1.5, 1.7, 1.8, 1.9 done; 1.4b measured and not adopted. Open: 1.6 (curator time). |
 | 2 - Stage-2 diagnosis | Closed as measured: no narrowing arm (2.4) and no model swap (2.3, 2.6) beats production without losing curated diagnoses. Production stage 2 stays. Open: 2.7 (quote grounding) and optional 2.5. |
-| 3 - Full run | 3.0-3.2 done: first full run 2026-09-25 (1,171/1,171 trials; doc/runs/2026-09-25-3.2-full-run.md), second 2026-09-28 at `d61a30c` on refreshed registries (1,080/1,080; 911 published, 169 in review; doc/runs/2026-09-28-3.2-second-full-run.md). 3.3: the release tool exists (`utils/release_index.py`), no release made yet. 3.4 awaits the go-ahead; 0.4 still needs an API key. |
+| 3 - Full run | 3.0-3.2 done: first full run 2026-09-25 (1,171/1,171 trials; doc/runs/2026-09-25-3.2-full-run.md), second 2026-09-28 at `d61a30c` on refreshed registries (1,080/1,080; 911 published, 169 in review; doc/runs/2026-09-28-3.2-second-full-run.md). 3.3: the release tool exists (`utils/release_index.py`), no release made yet. 3.4 awaits the go-ahead. |
 | 4-5 | Not started. 4.1-4.2 can start on synthetic fixtures at any time. |
 | 6 - Hardening | 6.3 done (CI); 6.2 tooling done, first release pending; 6.4 procedure written, not yet run on a real reference update; 6.6 run records done, `print()` in library code still open; 6.9 done. |
 | 7 | 7.7 done; the rest as capacity allows. |
@@ -54,7 +54,7 @@ population recall 0.942, precision 0.798, name F1 0.741.
 | 0.1 | **Done 2026-09-29.** `kispi-paediatric` pushed to `origin`. | `git status` shows the branch level with `origin`. |
 | 0.2 | **Done 2026-09-25.** Annotated tag `v0.1-prerun` on `cd51dd0`, with the 1.9 and 3.1 baseline numbers in the tag message. | Tag exists. Later benchmark deltas are quoted against it. |
 | 0.3 | **Done, superseded 2026-10-01.** Mapping backend: Anthropic API, `claude-haiku-4-5-20251001`, forced-tool JSON, temperature 0, no thinking. Confirmed by 2.3 and 2.6. Replaced as the default by gpt-oss:120b on Ollama, for reproducibility ([decision](decisions/2026-10-01-gpt-oss-backend.md)); the corpus is still Haiku's until remapped. | Written in `config.py`; request shape tested offline. |
-| 0.4 | Live smoke test: map 3 benchmark trials with a real `ANTHROPIC_API_KEY` and compare with the benchmark scorer. This is the first live call through `utils/llm_platforms.py`; all measurements so far went through the replay harness. | 3 trials mapped, no API errors, cost per trial logged. |
+| 0.4 | **Done 2026-10-20** on the cluster (`scripts/run_anthropic_mapping.sh smoke`, run `20261020T112358Z-4e0fa9`): 3/3 trials, 47 calls, 0 API errors, $0.040 a trial at list price. Originally: Live smoke test: map 3 benchmark trials with a real `ANTHROPIC_API_KEY` and compare with the benchmark scorer. This is the first live call through `utils/llm_platforms.py`; all measurements so far went through the replay harness. | 3 trials mapped, no API errors, cost per trial logged. |
 
 ## Phase 1 - Deterministic fixes that change mapping output
 
@@ -189,7 +189,7 @@ something a diagnostic lab can defend.
 ## Suggested order
 
 1. ~~0.1 (push), then 0.2~~ - done.
-2. 0.4 (needs the API key).
+2. ~~0.4~~ - done 2026-10-20.
 3. 3.1 dry run, then 3.2-3.4.
 4. 2.7 alongside 3.1, entering the full run only if it is measured in time.
 5. Phase 4 at 4.1-4.2 at any time on synthetic fixtures; 4.3-4.5 need [D2],

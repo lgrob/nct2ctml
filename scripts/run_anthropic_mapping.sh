@@ -90,7 +90,10 @@ if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
   exit 1
 fi
 # Never echoed, not even partially: the job log is written into the repo tree.
-echo "[$(date +%T)] ANTHROPIC_API_KEY present (from ${KEY_FILE/#$HOME/~})"
+# A literal "~" in the replacement of ${var/pattern/repl} is tilde-expanded
+# back to $HOME, so it has to come from a variable.
+TILDE='~'
+echo "[$(date +%T)] ANTHROPIC_API_KEY present (from ${KEY_FILE/#$HOME/$TILDE})"
 
 # --- backend ---------------------------------------------------------------
 # config.py defaults to Ollama with gpt-oss:120b (the adopted backend), so a
