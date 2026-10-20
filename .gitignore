@@ -66,3 +66,11 @@ releases/
 
 # HTML review sheets (utils/review_helper.py). Regenerated on demand.
 review_sheets/
+
+# Never commit credentials. ANTHROPIC_API_KEY belongs in the shell, not in the
+# repository (utils/llm_platforms.py refuses a hardcoded key); these lines are
+# a guard in case a key ever lands in a local file by accident.
+.env
+.env.*
+*.env
+secrets.*
