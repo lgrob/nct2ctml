@@ -138,18 +138,28 @@ print("  forced-tool JSON came back intact")
 PREFLIGHT
 
 # --- run -------------------------------------------------------------------
-BEFORE="$(ls -1 runs 2>/dev/null | wc -l)"
+# Remember which run records exist now, so the summary covers exactly the
+# ones this job creates: map-all starts two (NCT, then CTIS), and a run
+# directory is named by its start time, not by this job.
+mkdir -p runs
+ls -1 runs > "logs/.runs_before_${SLURM_JOB_ID:-$$}"
 case "$MODE" in
   smoke)
     # Roadmap 0.4: three benchmark trials through the production map path.
-    # Acceptance is "3 trials mapped, no API errors, cost per trial logged",
-    # which the run summary below reports.
-    OUT="${OUT:-/tmp/anthropic-smoke-$USER}"
-    mkdir -p "$OUT"
-    for T in ${SMOKE_TRIALS:-NCT01704716 NCT03838042 NCT04221035}; do
-      echo "[$(date +%T)] mapping $T -> $OUT"
-      $PY main.py map --nct_id "$T" --out "$OUT"
-    done
+    # Acceptance is "3 trials mapped, no API errors, cost per trial logged".
+    #
+    # Through the benchmark rather than three `main.py map --nct_id` calls,
+    # for three reasons: one run record instead of one per trial (each `map`
+    # starts its own); a trial routed to review stays inside $OUT instead of
+    # landing in the curators' ctml/needs-review (bench.benchmark_map
+    # .review_dir); and the three trials are scored against the answer key,
+    # so a run that makes calls but maps badly is visible too. The output goes
+    # under the repo, not /tmp, which on a compute node is node-local and
+    # usually wiped when the job ends.
+    OUT="${OUT:-bench/output-anthropic-smoke-${SLURM_JOB_ID:-local}}"
+    echo "[$(date +%T)] smoke: the first 3 curated NCT trials -> $OUT"
+    $PY -m bench.benchmark_map --source nct --limit "${SMOKE_N:-3}" \
+        --out "$OUT" --json "$OUT/report.json"
     ;;
   benchmark)
     TAG="$(echo "$MODEL" | tr ':/' '--')${REP:+-rep$REP}"
@@ -178,31 +188,40 @@ esac
 # stores the whole response, so the run record carries the token counts. Price
 # is deliberately not applied here: the rate card changes and a stale constant
 # in a script is worse than none.
-AFTER="$(ls -1 runs 2>/dev/null | wc -l)"
-if [ "$AFTER" -gt "$BEFORE" ]; then
-  RUN_DIR="runs/$(ls -1t runs | head -1)"
-  echo "[$(date +%T)] run record: $RUN_DIR"
-  $PY - "$RUN_DIR" <<'SUMMARY'
-import json, sys, collections
-run_dir = sys.argv[1]
-calls, errors = 0, 0
-tok_in = tok_out = 0
+BEFORE_FILE="logs/.runs_before_${SLURM_JOB_ID:-$$}"
+NEW_RUNS="$(ls -1 runs | grep -vxF -f "$BEFORE_FILE" || true)"
+rm -f "$BEFORE_FILE"
+if [ -z "$NEW_RUNS" ]; then
+  echo "WARNING: this job created no run record under runs/, so nothing was mapped."
+else
+  echo "[$(date +%T)] run records from this job:"
+  for R in $NEW_RUNS; do echo "  runs/$R"; done
+  # shellcheck disable=SC2086
+  $PY - $NEW_RUNS <<'SUMMARY'
+import collections, json, sys
+
+calls = errors = tok_in = tok_out = 0
 per_trial = collections.Counter()
-with open(f"{run_dir}/llm_calls.jsonl", encoding="utf-8") as handle:
-    for line in handle:
-        if not line.strip():
-            continue
-        call = json.loads(line)
-        calls += 1
-        if call.get("error") is not None:
-            errors += 1
-            continue
-        usage = ((call.get("response") or {}).get("usage")) or {}
-        tok_in += usage.get("input_tokens") or 0
-        tok_out += usage.get("output_tokens") or 0
-        per_trial[call.get("trial_id")] += 1
+error_kinds = collections.Counter()
+for run_id in sys.argv[1:]:
+    with open(f"runs/{run_id}/llm_calls.jsonl", encoding="utf-8") as handle:
+        for line in handle:
+            if not line.strip():
+                continue
+            call = json.loads(line)
+            calls += 1
+            if call.get("error") is not None:
+                errors += 1
+                error_kinds[str(call["error"]).split(":")[0][:60]] += 1
+                continue
+            usage = ((call.get("response") or {}).get("usage")) or {}
+            tok_in += usage.get("input_tokens") or 0
+            tok_out += usage.get("output_tokens") or 0
+            per_trial[call.get("trial_id")] += 1
 n = len(per_trial) or 1
 print(f"  calls {calls}, API errors {errors}, trials with calls {len(per_trial)}")
+for kind, count in error_kinds.most_common(5):
+    print(f"    {count} x {kind}")
 print(f"  tokens in {tok_in:,} out {tok_out:,}")
 print(f"  per trial: {calls / n:.1f} calls, {tok_in / n:,.0f} in, {tok_out / n:,.0f} out")
 print("  multiply by the current rate card for the cost per trial")
