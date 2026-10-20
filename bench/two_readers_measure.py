@@ -109,6 +109,9 @@ def benchmark(a_dir: str, b_dir: str, truth_dir: str, tsv: str | None) -> None:
                 "a_dx": _prf(pop_a, pop_k),
                 "b_dx": _prf(pop_b, pop_k),
                 "union_dx": _prf(pop_a | pop_b, pop_k),
+                # Already sent to review by the reader's own run, second reader or not.
+                "a_routed": os.path.basename(os.path.dirname(a[t])) == "needs-review",
+                "b_routed": os.path.basename(os.path.dirname(b[t])) == "needs-review",
                 "differences": " | ".join(str(d) for d in pair.differences),
             }
         )
@@ -119,31 +122,38 @@ def benchmark(a_dir: str, b_dir: str, truth_dir: str, tsv: str | None) -> None:
         f"A and B disagree on {_pct(len(flagged), n)}, narrowing on "
         f"{_pct(sum(r['flag'] == 'narrows' for r in rows), n)}"
     )
-    for side, label in (("a_vs_key", "A"), ("b_vs_key", "B")):
+    for side, label, routed in (("a_vs_key", "A", "a_routed"), ("b_vs_key", "B", "b_routed")):
         loses = [r for r in rows if r[side] == "loses"]
         over = [r for r in rows if r[side] == "over"]
         correct = [r for r in rows if r[side] == "correct"]
+
         print(
-            f"\nreader {label} against the key: {len(loses)} lose patients, "
+            f"\nreader {label} as the published mapping: {len(loses)} lose patients, "
             f"{len(over)} over-match only, {len(correct)} correct"
         )
+        print(f"  {'':22s} {'own routing':>14s} {'+ any':>14s} {'+ narrows':>14s}")
+        for name, group in (("losing", loses), ("over-match only", over), ("correct", correct)):
+            own = sum(r[routed] for r in group)
+            with_any = sum(r[routed] or r["flag"] != "agree" for r in group)
+            with_narrows = sum(r[routed] or r["flag"] == "narrows" for r in group)
+            print(
+                f"  {name + ' in review':22s} {_pct(own, len(group)):>14s} "
+                f"{_pct(with_any, len(group)):>14s} {_pct(with_narrows, len(group)):>14s}"
+            )
+        load_own = sum(r[routed] for r in rows)
+        load_any = sum(r[routed] or r["flag"] != "agree" for r in rows)
+        load_nar = sum(r[routed] or r["flag"] == "narrows" for r in rows)
         print(
-            f"  losing trials flagged by the disagreement: "
-            f"{_pct(sum(r['flag'] != 'agree' for r in loses), len(loses))}"
-        )
-        print(
-            f"  over-matching trials flagged: "
-            f"{_pct(sum(r['flag'] != 'agree' for r in over), len(over))}"
-        )
-        print(
-            f"  correct trials flagged anyway: "
-            f"{_pct(sum(r['flag'] != 'agree' for r in correct), len(correct))}"
+            f"  {'all trials in review':22s} {_pct(load_own, n):>14s} "
+            f"{_pct(load_any, n):>14s} {_pct(load_nar, n):>14s}"
         )
     either = [r for r in rows if "loses" in (r["a_vs_key"], r["b_vs_key"])]
     both = [r for r in rows if r["a_vs_key"] == r["b_vs_key"] == "loses"]
+    blind = [r for r in both if r["flag"] == "agree"]
     print(
-        f"\ntrials where either reader loses patients: {len(either)}; "
-        f"both lose: {len(both)} - a shared error the disagreement cannot see"
+        f"\ntrials where either reader loses patients: {len(either)}; both lose: {len(both)}, "
+        f"of which the readers agree on {len(blind)} - the shared errors a second reader "
+        f"cannot see" + (f": {', '.join(r['trial_id'] for r in blind)}" if blind else "")
     )
     print("\npopulation precision / recall, mean over trials:")
     for key, label in (("a_dx", "A"), ("b_dx", "B"), ("union_dx", "A or B")):
